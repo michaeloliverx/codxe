@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<xex>
+    <baseaddr addr="0x91D00000" />
+    <sysdll />
+    <format>
+        <compressed />
+    </format>
+    <mediatypes>
+        <default />
+        <allpackages />
+    </mediatypes>
+    <gameregion>
+        <all />
+    </gameregion>
+</xex>
