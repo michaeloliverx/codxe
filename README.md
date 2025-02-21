@@ -1,1 +1,1 @@
-# iw3-xenon-cj
+# iw3-xenon
