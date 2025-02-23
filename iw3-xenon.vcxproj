@@ -70,6 +70,7 @@
     <ClCompile Include="src\dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\mp\structs.h" />
     <ClInclude Include="src\detour.h" />
   </ItemGroup>
 </Project>
