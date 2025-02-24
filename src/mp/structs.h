@@ -4,14 +4,6 @@ namespace game
 {
     namespace mp
     {
-        // struct cmd_function_s
-        // {
-        //     cmd_function_s *next;
-        //     const char *name;
-        //     const char *autoCompleteDir;
-        //     const char *autoCompleteExt;
-        //     void (*function)();
-        // };
 
         // typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
         // typedef void (*CG_GameMessage_t)(int localClientNum, const char *msg);
@@ -151,6 +143,422 @@ namespace game
             int numVoicePacketsSentStart;
         };
 
+        struct field_t
+        {
+            int cursor;
+            int scroll;
+            int drawWidth;
+            int widthInPixels;
+            float charHeight;
+            int fixedSize;
+            char buffer[256];
+        };
+
+        struct KeyState
+        {
+            int down;
+            int repeats;
+            const char *binding;
+        };
+
+        enum LocSelInputState
+        {
+            LOC_SEL_INPUT_NONE = 0x0,
+            LOC_SEL_INPUT_CONFIRM = 0x1,
+            LOC_SEL_INPUT_CANCEL = 0x2,
+        };
+
+        struct PlayerKeyState
+        {
+            field_t chatField;
+            int chat_team;
+            int overstrikeMode;
+            int anyKeyDown;
+            KeyState keys[256];
+            LocSelInputState locSelInputState;
+        };
+
+        struct keyname_t
+        {
+            const char *name;
+            int keynum;
+        };
+
+        struct ConDrawInputGlob
+        {
+            char autoCompleteChoice[64];
+            int matchIndex;
+            int matchCount;
+            const char *inputText;
+            int inputTextLen;
+            bool hasExactMatch;
+            bool mayAutoComplete;
+            float x;
+            float y;
+            float leftX;
+            float fontHeight;
+        };
+
+        enum DvarSetSource
+        {
+            DVAR_SOURCE_INTERNAL = 0x0,
+            DVAR_SOURCE_EXTERNAL = 0x1,
+            DVAR_SOURCE_SCRIPT = 0x2,
+        };
+
+        union DvarValue
+        {
+            bool enabled;
+            int integer;
+            unsigned int unsignedInt;
+            float value;
+            float vector[4];
+            const char *string;
+            unsigned __int8 color[4];
+        };
+
+        union DvarLimits
+        {
+            struct
+            {
+                int stringCount;
+                const char **strings;
+            } enumeration;
+
+            struct
+            {
+                int min;
+                int max;
+            } integer;
+
+            struct
+            {
+                float min;
+                float max;
+            } value;
+
+            struct
+            {
+                float min;
+                float max;
+            } vector;
+        };
+
+        struct dvar_s
+        {
+            const char *name;
+            const char *description;
+            unsigned __int16 flags;
+            unsigned __int8 type;
+            bool modified;
+            DvarValue current;
+            DvarValue latched;
+            DvarValue reset;
+            DvarLimits domain;
+            dvar_s *hashNext;
+        };
+
+        struct clientStatic_t
+        {
+            int quit;
+            int hunkUsersStarted;
+            char servername[256];
+            _XSESSION_INFO hostInfo;
+            int rendererStarted;
+            int soundStarted;
+            int uiStarted;
+            int frametime;
+            int realtime;
+            int realFrametime;
+            // clientLogo_t logo;
+            // float mapCenter[3];
+            // int numlocalservers;
+            // serverInfo_t localServers[16];
+            // int pingUpdateSource;
+            // Material *whiteMaterial;
+            // Material *consoleMaterial;
+            // Font_s *consoleFont;
+            // vidConfig_t vidConfig;
+            // clientDebug_t debug;
+            // XNADDR xnaddrs[24];
+            // volatile int scriptError;
+            // float debugRenderPos[3];
+        };
+
+        struct Material;
+
+        struct rectDef_s
+        {
+            float x;
+            float y;
+            float w;
+            float h;
+            int horzAlign;
+            int vertAlign;
+        };
+
+        struct windowDef_t
+        {
+            const char *name;
+            rectDef_s rect;
+            rectDef_s rectClient;
+            const char *group;
+            int style;
+            int border;
+            int ownerDraw;
+            int ownerDrawFlags;
+            float borderSize;
+            int staticFlags;
+            int dynamicFlags[4];
+            int nextTime;
+            float foreColor[4];
+            float backColor[4];
+            float borderColor[4];
+            float outlineColor[4];
+            Material *background;
+        };
+
+        struct expressionEntry;
+
+        struct statement_s
+        {
+            int numEntries;
+            expressionEntry **entries;
+        };
+
+        struct snd_alias_list_t;
+
+        struct columnInfo_s
+        {
+            int pos;
+            int width;
+            int maxChars;
+            int alignment;
+        };
+
+        struct listBoxDef_s
+        {
+            int startPos[4];
+            int endPos[4];
+            int drawPadding;
+            float elementWidth;
+            float elementHeight;
+            int elementStyle;
+            int numColumns;
+            columnInfo_s columnInfo[16];
+            const char *doubleClick;
+            int notselectable;
+            int noScrollBars;
+            int usePaging;
+            float selectBorder[4];
+            float disableColor[4];
+            Material *selectIcon;
+        };
+
+        struct editFieldDef_s
+        {
+            float minVal;
+            float maxVal;
+            float defVal;
+            float range;
+            int maxChars;
+            int maxCharsGotoNext;
+            int maxPaintChars;
+            int paintOffset;
+        };
+
+        struct multiDef_s
+        {
+            const char *dvarList[32];
+            const char *dvarStr[32];
+            float dvarValue[32];
+            int count;
+            int strDef;
+        };
+
+        union itemDefData_t
+        {
+            listBoxDef_s *listBox;
+            editFieldDef_s *editField;
+            multiDef_s *multi;
+            const char *enumDvarName;
+            void *data;
+        };
+
+        struct menuDef_t; // Forward declaration
+        struct ItemKeyHandler
+        {
+            int key;
+            const char *action;
+            ItemKeyHandler *next;
+        };
+
+        struct itemDef_s
+        {
+            windowDef_t window;
+            rectDef_s textRect[4];
+            int type;
+            int dataType;
+            int alignment;
+            int fontEnum;
+            int textAlignMode;
+            float textalignx;
+            float textaligny;
+            float textscale;
+            int textStyle;
+            int gameMsgWindowIndex;
+            int gameMsgWindowMode;
+            const char *text;
+            int itemFlags;
+            menuDef_t *parent;
+            const char *mouseEnterText;
+            const char *mouseExitText;
+            const char *mouseEnter;
+            const char *mouseExit;
+            const char *action;
+            const char *onAccept;
+            const char *onFocus;
+            const char *leaveFocus;
+            const char *dvar;
+            const char *dvarTest;
+            ItemKeyHandler *onKey;
+            const char *enableDvar;
+            int dvarFlags;
+            snd_alias_list_t *focusSound;
+            float special;
+            int cursorPos[4];
+            itemDefData_t typeData;
+            int imageTrack;
+            statement_s visibleExp;
+            statement_s textExp;
+            statement_s materialExp;
+            statement_s rectXExp;
+            statement_s rectYExp;
+            statement_s rectWExp;
+            statement_s rectHExp;
+            statement_s forecolorAExp;
+        };
+
+        struct menuDef_t
+        {
+            windowDef_t window;
+            const char *font;
+            int fullScreen;
+            int itemCount;
+            int fontIndex;
+            int cursorItem[4];
+            int fadeCycle;
+            float fadeClamp;
+            float fadeAmount;
+            float fadeInAmount;
+            float blurRadius;
+            const char *onOpen;
+            const char *onClose;
+            const char *onESC;
+            ItemKeyHandler *onKey;
+            statement_s visibleExp;
+            const char *allowedBinding;
+            const char *soundName;
+            int imageTrack;
+            float focusColor[4];
+            float disableColor[4];
+            statement_s rectXExp;
+            statement_s rectYExp;
+            itemDef_s **items;
+        };
+
+        enum uiMenuCommand_t
+        {
+            UIMENU_NONE = 0x0,
+            UIMENU_MAIN = 0x1,
+            UIMENU_INGAME = 0x2,
+            UIMENU_PREGAME = 0x3,
+            UIMENU_POSTGAME = 0x4,
+            UIMENU_WM_QUICKMESSAGE = 0x5,
+            UIMENU_SCRIPT_POPUP = 0x6,
+            UIMENU_SCOREBOARD = 0x7,
+            UIMENU_SPLITSCREENGAMESETUP = 0x8,
+            UIMENU_SYSTEMLINKJOINGAME = 0x9,
+            UIMENU_PARTY = 0xA,
+            UIMENU_GAMELOBBY = 0xB,
+            UIMENU_PRIVATELOBBY = 0xC,
+        };
+
+        enum UILocalVarType
+        {
+            UILOCALVAR_INT = 0x0,
+            UILOCALVAR_FLOAT = 0x1,
+            UILOCALVAR_STRING = 0x2,
+        };
+
+        struct UILocalVar
+        {
+            UILocalVarType type;
+            const char *name;
+            union
+            {
+
+                int integer;
+                float value;
+                const char *string;
+
+            } u;
+        };
+
+        struct UILocalVarContext
+        {
+            UILocalVar table[256];
+        };
+
+        struct UiContext
+        {
+            int localClientNum;
+            float bias;
+            int realTime;
+            int frameTime;
+            struct
+            {
+                float x;
+                float y;
+            } cursor;
+            int isCursorVisible;
+            int screenWidth;
+            int screenHeight;
+            float screenAspect;
+            float FPS;
+            float blurRadiusOut;
+            menuDef_t *Menus[512];
+            int menuCount;
+            menuDef_t *menuStack[16];
+            int openMenuCount;
+            UILocalVarContext localVars;
+        };
+
+        struct __declspec(align(4)) uiInfo_s
+        {
+            UiContext uiDC;
+            int myTeamCount;
+            int playerRefresh;
+            int playerIndex;
+            int timeIndex;
+            int previousTimes[4];
+            uiMenuCommand_t currentMenuType;
+            bool allowScriptMenuResponse;
+        };
+
+        struct ScreenPlacement
+        {
+            float scaleVirtualToReal[2];
+            float scaleVirtualToFull[2];
+            float scaleRealToVirtual[2];
+            float virtualViewableMin[2];
+            float virtualViewableMax[2];
+            float realViewportSize[2];
+            float realViewableMin[2];
+            float realViewableMax[2];
+            float subScreenLeft;
+        };
+
         enum sysEventType_t
         {
             SE_NONE = 0x0,
@@ -158,13 +566,54 @@ namespace game
             SE_CONSOLE = 0x2,
         };
 
+        struct sysEvent_t
+        {
+            int evPortIndex;
+            int evTime;
+            sysEventType_t evType;
+            int evValue;
+            int evValue2;
+            int evPtrLength;
+            void *evPtr;
+        };
+
+        struct cmd_function_s
+        {
+            cmd_function_s *next;
+            const char *name;
+            const char *autoCompleteDir;
+            const char *autoCompleteExt;
+            void (*function)();
+        };
+
+        typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
+        typedef void (*CL_CharEvent_t)(int localClientNum, int key);
         typedef void (*CL_ConsoleCharEvent_t)(int localClientNum, int key);
-        typedef void (*CL_GamepadButtonEvent_t)(int localClientNum, int controllerIndex, int key, int down, int time);
+        typedef void (*CL_GamepadButtonEvent_t)(int localClientNum, int controllerIndex, int key, int down, unsigned int time);
         typedef void (*CL_GamepadButtonEventForPort_t)(int portIndex, int key, int down, unsigned int time);
         typedef int (*Com_GetLocalClientNumForEventOnPort_t)(int portIndex);
         typedef void (*IN_GamepadsMove_t)();
         typedef int (*Key_SetCatcher_t)(int localClientNum, int catcher);
         typedef unsigned int (*Sys_Milliseconds_t)();
-
+        typedef int (*Con_CancelAutoComplete_t)();
+        typedef void (*Con_Close_t)(int localClientNum);
+        typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
+        typedef int (*Com_sprintf_t)(char *dest, unsigned int size, const char *fmt, ...);
+        typedef void (*Dvar_SetStringFromSource_t)(dvar_s *dvar, const char *string, DvarSetSource source);
+        typedef int (*I_strnicmp_t)(const char *s0, const char *s1, int n);
+        typedef int (*UI_KeyEvent_t)(int localClientNum, int key, int down);
+        typedef int (*UI_SetActiveMenu_t)(int localClientNum, int menu);
+        typedef void (*CL_StopLogoOrCinematic_t)(int localClientNum);
+        typedef void (*CL_DisconnectLocalClient_t)(int localClientNum);
+        typedef int (*CL_AllLocalClientsDisconnected_t)();
+        typedef void (*SCR_UpdateScreen_t)();
+        typedef void (*Field_AdjustScroll_t)(const ScreenPlacement *scrPlace, field_t *edit);
+        typedef int (*Con_AnySpaceAfterCommand_t)();
+        typedef int (*Scoreboard_HandleInputXboxLive_t)(unsigned int localClientNum, int key);
+        typedef int (*Scoreboard_HandleInputNonXboxLive_t)(int localClientNum, int key);
+        typedef void (*Menu_HandleKey_t)(UiContext *dc, menuDef_t *menu, int key, int down);
+        typedef menuDef_t *(*Menu_GetFocused_t)(UiContext *dc);
+        typedef sysEvent_t *(*Sys_GetEvent_t)(sysEvent_t *result);
+        typedef void (*CL_Input_t)(int localClientNum);
     }
 }
