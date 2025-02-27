@@ -244,12 +244,26 @@ namespace game
             } vector;
         };
 
+        enum DvarType
+        {
+            DVAR_TYPE_BOOL = 0x0,
+            DVAR_TYPE_FLOAT = 0x1,
+            DVAR_TYPE_FLOAT_2 = 0x2,
+            DVAR_TYPE_FLOAT_3 = 0x3,
+            DVAR_TYPE_FLOAT_4 = 0x4,
+            DVAR_TYPE_INT = 0x5,
+            DVAR_TYPE_ENUM = 0x6,
+            DVAR_TYPE_STRING = 0x7,
+            DVAR_TYPE_COLOR = 0x8,
+            DVAR_TYPE_COUNT = 0x9,
+        };
+
         struct dvar_s
         {
             const char *name;
             const char *description;
             unsigned __int16 flags;
-            unsigned __int8 type;
+            DvarType type;
             bool modified;
             DvarValue current;
             DvarValue latched;
@@ -586,6 +600,38 @@ namespace game
             void (*function)();
         };
 
+        struct GfxViewInfo;
+
+        struct CmdArgs
+        {
+            int nesting;
+            int localClientNum[8];
+            int controllerIndex[8];
+            int argc[8];
+            const char **argv[8];
+        };
+
+        struct CmdArgsPrivate
+        {
+            char textPool[8192];
+            const char *argvPool[512];
+            int usedTextPool[8];
+            int totalUsedArgvPool;
+            int totalUsedTextPool;
+        };
+
+        enum errorParm_t
+        {
+            ERR_FATAL = 0x0,
+            ERR_DROP = 0x1,
+            ERR_SERVERDISCONNECT = 0x2,
+            ERR_DISCONNECT = 0x3,
+            ERR_SCRIPT = 0x4,
+            ERR_SCRIPT_DROP = 0x5,
+            ERR_LOCALIZATION = 0x6,
+            ERR_MAPLOADERRORSUMMARY = 0x7,
+        };
+
         typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
         typedef void (*CL_CharEvent_t)(int localClientNum, int key);
         typedef void (*CL_ConsoleCharEvent_t)(int localClientNum, int key);
@@ -615,5 +661,61 @@ namespace game
         typedef menuDef_t *(*Menu_GetFocused_t)(UiContext *dc);
         typedef sysEvent_t *(*Sys_GetEvent_t)(sysEvent_t *result);
         typedef void (*CL_Input_t)(int localClientNum);
+        typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos);
+        typedef void (*R_DrawAllDynEnt_t)(const GfxViewInfo *viewInfo);
+        // typedef const dvar_s *(*Dvar_RegisterVariant_t)(const char *dvarName, unsigned __int8 type, unsigned __int16 flags, DvarValue *value, DvarLimits *domain, const char *description, const char *a7);
+
+        //         // local variable allocation has failed, the output may be wrong!
+        // const dvar_s *__fastcall Dvar_RegisterNew(
+        //     const char *dvarName,
+        //     unsigned __int8 type,
+        //     unsigned __int16 flags,
+        //     __int64 domain,
+        //     const char *description,
+        //     unsigned int a6)
+
+        // using RegisterNew - INT / BOOL (02)
+        // static utils::function<dvar_s* (const char *dvar_name, DvarType type_bool, std::uint16_t flags, const char *description, std::int32_t default_value, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t null4, std::int32_t null5)>
+        // 	Dvar_RegisterBool_r = 0x56C130;
+
+        // inline dvar_s* Dvar_RegisterBool(const char* dvar_name, const char* description, std::int32_t default_value, std::uint16_t flags) {
+        // return Dvar_RegisterBool_r(dvar_name, DvarType::DVAR_TYPE_BOOL, flags, description, default_value, 0, 0, 0, 0, 0);
+        // }
+
+        // typedef dvar_s *(*Dvar_RegisterNew_t)(const char *dvarName, unsigned __int8 type, unsigned __int16 flags, __int64 domain, const char *description, unsigned int a6);
+
+        // const dvar_s * Dvar_RegisterBool(
+        //     const char *dvarName,
+        //     bool value,
+        //     unsigned __int16 flags,
+        //     const char *description)
+
+        // enum dvar_flags : std::uint16_t
+        // {
+        //     none = 0x0,
+        //     saved = 0x1,
+        //     user_info = 0x2, // sent to server on connect or change
+        //     server_info = 0x4, // sent in response to front end requests
+        //     replicated = 0x8,
+        //     write_protected = 0x10,
+        //     latched = 0x20,
+        //     read_only = 0x40,
+        //     cheat_protected = 0x80,
+        //     temp = 0x100,
+        //     no_restart = 0x400, // do not clear when a cvar_restart is issued
+        //     user_created = 0x4000, // created by a set command
+        // };
+
+        typedef dvar_s *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags, const char *description);
+        typedef void (*Dvar_SetIntByName_t)(const char *dvarName, int value);
+        typedef bool (*Con_IsDvarCommand_t)(const char *cmd);
+        typedef char *(*Con_TokenizeInput_t)();
+        typedef int (*SEH_PrintStrlen_t)(char *string);
+        typedef void (*PrintMatches_t)(const char *s);
+        typedef void (*FindMatches_t)(const char *s);
+        typedef void (*Dvar_ForEachName_t)(void (*callback)(const char *));
+        typedef void (*Com_Error_t)(errorParm_t code, const char *fmt, ...);
+        typedef void (*I_strncat_t)(char *dest, int size, const char *src);
+        typedef dvar_s *(*Dvar_FindMalleableVar_t)(const char *dvarName);
     }
 }

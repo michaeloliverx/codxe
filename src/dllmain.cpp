@@ -2,6 +2,10 @@
 #include <cstdint>
 #include <string>
 #include <ppcintrinsics.h>
+#include <algorithm>
+#include <fstream>
+#include <vector>
+#include <sstream>
 
 #include "mp\structs.h"
 #include "detour.h"
@@ -55,6 +59,29 @@ namespace game
 		Menu_GetFocused_t Menu_GetFocused = reinterpret_cast<Menu_GetFocused_t>(0x821DE8A8);
 		Sys_GetEvent_t Sys_GetEvent = reinterpret_cast<Sys_GetEvent_t>(0x821AA1F0);
 		CL_Input_t CL_Input = reinterpret_cast<CL_Input_t>(0x822DCBC8);
+		R_DrawAllDynEnt_t R_DrawAllDynEnt = reinterpret_cast<R_DrawAllDynEnt_t>(0x8215FF98);
+		// Dvar_RegisterVariant_t Dvar_RegisterVariant = reinterpret_cast<Dvar_RegisterVariant_t>(0x821D4D08);
+		Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
+		// Dvar_RegisterNew_t Dvar_RegisterNew = reinterpret_cast<Dvar_RegisterNew_t>(0x821D4958);
+		Dvar_RegisterBool_t Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x821D5180);
+		Dvar_SetIntByName_t Dvar_SetIntByName = reinterpret_cast<Dvar_SetIntByName_t>(0x821D47E8);
+		Con_IsDvarCommand_t Con_IsDvarCommand = reinterpret_cast<Con_IsDvarCommand_t>(0x822DFEE0);
+		Con_TokenizeInput_t Con_TokenizeInput = reinterpret_cast<Con_TokenizeInput_t>(0x822E0948);
+		SEH_PrintStrlen_t SEH_PrintStrlen = reinterpret_cast<SEH_PrintStrlen_t>(0x821FA758);
+		PrintMatches_t PrintMatches = reinterpret_cast<PrintMatches_t>(0x822D7E78);
+		FindMatches_t FindMatches = reinterpret_cast<FindMatches_t>(0x822D6B10);
+		Dvar_ForEachName_t Dvar_ForEachName = reinterpret_cast<Dvar_ForEachName_t>(0x821D2A68);
+		Com_Error_t Com_Error = reinterpret_cast<Com_Error_t>(0x82236640);
+		I_strncat_t I_strncat = reinterpret_cast<I_strncat_t>(0x821CD918);
+		Dvar_FindMalleableVar_t Dvar_FindMalleableVar = reinterpret_cast<Dvar_FindMalleableVar_t>(0x821D4C10);
+
+		// // using RegisterNew - INT / BOOL (02)
+		// static utils::function<dvar_s* (const char *dvar_name, DvarType type_bool, std::uint16_t flags, const char *description, std::int32_t default_value, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t null4, std::int32_t null5)>
+		// 	Dvar_RegisterBool_r = 0x56C130;
+
+		// inline dvar_s* Dvar_RegisterBool(const char* dvar_name, const char* description, std::int32_t default_value, std::uint16_t flags) {
+		// 	return Dvar_RegisterBool_r(dvar_name, DvarType::DVAR_TYPE_BOOL, flags, description, default_value, 0, 0, 0, 0, 0);
+		// }
 
 		// Variables
 		auto con = reinterpret_cast<Console *>(0x82407590);
@@ -74,10 +101,23 @@ namespace game
 		auto cls = reinterpret_cast<clientStatic_t *>(0x824303A0);
 		auto scrPlaceFull = reinterpret_cast<ScreenPlacement *>(0x8246F420);
 		auto uiInfoArray = reinterpret_cast<uiInfo_s *>(0x849F4288);
-		auto eventHead = *reinterpret_cast<int *>(0x84C2A5B4);
-		auto eventTail = *reinterpret_cast<int *>(0x84C2C998);
+		// auto eventHead = reinterpret_cast<int *>(0x84C2A5B4);
+		// auto eventTail = reinterpret_cast<int *>(0x84C2C998);
 		auto eventQue = reinterpret_cast<sysEvent_t *>(0x84C2AD90);
 		cmd_function_s *cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
+		auto cmd_args = reinterpret_cast<CmdArgs *>(0x82A2A560);
+		auto cmd_argsPrivate = reinterpret_cast<CmdArgsPrivate *>(0x82A7CED8);
+		auto s_shortestMatch = reinterpret_cast<char *>(0x8242A618);
+		auto con_ignoreMatchPrefixOnly = reinterpret_cast<bool *>(0x823B9D59);
+		auto con_matchPrefixOnly = reinterpret_cast<dvar_s *>(0x8240718C);
+		auto s_completionString = reinterpret_cast<const char *>(0x8242A610);
+		auto s_hasExactMatch = reinterpret_cast<bool *>(0x823B9D5A);
+
+		auto dword_8242A898 = reinterpret_cast<int *>(0x8242AB30);
+		auto dword_8242A378 = reinterpret_cast<int *>(0x8242A614);
+
+		auto developer = reinterpret_cast<dvar_s *>(0x82A7CED4);
+		auto developer_script = reinterpret_cast<dvar_s *>(0x82A7F774);
 
 		const unsigned __int8 virtualKeyConvert[146][2] =
 			{
@@ -1052,15 +1092,470 @@ namespace game
 			return result;
 		}
 
+		void Cmd_ForEach(void (*callback)(const char *))
+		{
+			cmd_function_s *i; // r31
+
+			for (i = cmd_functions; i; i = i->next)
+				callback(i->name);
+		}
+
+		void UpdateMatches(bool searchCmds, int *matchLenAfterCmds, int *matchLenAfterDvars)
+		{
+			char *v3; // r31
+			char *v6; // r11
+			int v8;	  // r11
+
+			v3 = s_shortestMatch;
+			*dword_8242A898 = 0;
+			*dword_8242A378 = 0;
+			s_shortestMatch[0] = 0;
+			if (searchCmds)
+			{
+				Cmd_ForEach(FindMatches);
+				v6 = s_shortestMatch;
+				while (*v6++)
+					;
+				v8 = v6 - s_shortestMatch - 1;
+			}
+			else
+			{
+				v8 = 0;
+			}
+			*matchLenAfterCmds = v8;
+			Dvar_ForEachName(FindMatches);
+			while (*v3++)
+				;
+			*matchLenAfterDvars = v3 - s_shortestMatch - 1;
+		}
+
+		auto unk_8204B4F3 = reinterpret_cast<char *>(0x8204B4C3);
+
+		void keyConcatArgs()
+		{
+			int v0;			 // r25
+			int v1;			 // r22
+			char *buffer;	 // r11
+			int v4;			 // r30
+			int v5;			 // r31
+			char *v6;		 // r30
+			int nesting;	 // r10
+			int v8;			 // r11
+			const char *v9;	 // r27
+			int v10;		 // r11
+			const char *v11; // r29
+			char *v12;		 // r11
+			int v14;		 // r30
+			int v15;		 // r31
+			char *v16;		 // r30
+
+			v0 = 1;
+			if (cmd_args->argc[cmd_args->nesting] > 1)
+			{
+				v1 = 1;
+				do
+				{
+					buffer = g_consoleField->buffer;
+					while (*buffer++)
+						;
+					v4 = buffer - g_consoleField->buffer - 1;
+					if (v4 >= 256)
+						Com_Error(ERR_FATAL, "byte_82078FF8");
+					v5 = 256 - v4;
+					v6 = &g_consoleField->buffer[v4];
+					strncpy(v6, " ", v5 - 1);
+					nesting = cmd_args->nesting;
+					v8 = cmd_args->nesting;
+					v6[v5 - 1] = 0;
+					if (v0 >= cmd_args->argc[v8])
+						v9 = (const char *)&unk_8204B4F3;
+					else
+						v9 = cmd_args->argv[v8][v1];
+					v10 = *v9;
+					if (*v9)
+					{
+						while (v10 != 32)
+						{
+							v10 = *++v9;
+							if (!*v9)
+								goto LABEL_15;
+						}
+						I_strncat(g_consoleField->buffer, 256, "\"");
+						nesting = cmd_args->nesting;
+					}
+				LABEL_15:
+					if (v0 >= cmd_args->argc[nesting])
+						v11 = (const char *)&unk_8204B4F3;
+					else
+						v11 = cmd_args->argv[nesting][v1];
+					v12 = g_consoleField->buffer;
+					while (*v12++)
+						;
+					v14 = v12 - g_consoleField->buffer - 1;
+					if (v14 >= 256)
+						Com_Error(ERR_FATAL, "byte_82078FF8");
+					v15 = 256 - v14;
+					v16 = &g_consoleField->buffer[v14];
+					strncpy(v16, v11, v15 - 1);
+					v16[v15 - 1] = 0;
+					if (*v9 == 32)
+						I_strncat(g_consoleField->buffer, 256, "\"");
+					++v0;
+					++v1;
+				} while (v0 < cmd_args->argc[cmd_args->nesting]);
+			}
+		}
+
+		void ConcatRemaining(const char *src, const char *start)
+		{
+			const char *v2; // r31
+			const char *v3; // r9
+			const char *v4; // r11
+
+			v2 = s_completionString;
+			v3 = strstr(src, s_completionString);
+			if (v3)
+			{
+				v4 = v2;
+				while (*(unsigned __int8 *)v4++)
+					;
+				I_strncat(g_consoleField->buffer, 256, &v3[v4 - v2 - 1]);
+			}
+			else
+			{
+				keyConcatArgs();
+			}
+		}
+
+		void Con_AutoCompleteFromList(
+			const char **strings,
+			unsigned int stringCount,
+			const char *prefix,
+			char *completed,
+			unsigned int sizeofCompleted)
+		{
+			const char *v7;			   // r11
+			int v9;					   // r30
+			unsigned int v11;		   // r27
+			const char *v12 = nullptr; // ✅ Initialize v12 to prevent uninitialized use
+			int v13;				   // r10
+			char *v14;				   // r11
+
+			v7 = prefix;
+			while (*(unsigned __int8 *)v7++)
+				;
+			v9 = v7 - prefix - 1;
+			*completed = 0;
+			if (stringCount)
+			{
+				v11 = stringCount;
+				do
+				{
+					if (!I_strnicmp(prefix, *strings, v9))
+					{
+						v12 = *strings; // ✅ Ensure v12 is assigned before use
+						if (*completed)
+						{
+							v13 = v9;
+							v14 = &completed[v9];
+							if (v12[v9] == completed[v9])
+							{
+								do
+								{
+									if (!*v14)
+										break;
+									++v14;
+									++v13;
+								} while (v14[v12 - completed] == *v14);
+							}
+							completed[v13] = 0;
+						}
+						else
+						{
+							strncpy(completed, v12, 0xFFu);
+							completed[255] = 0;
+						}
+					}
+					--v11;
+					++strings;
+				} while (v11);
+			}
+		}
+
+		void ReplaceConsoleInputArgument(int replaceCount, const char *replacement)
+		{
+			char *buffer; // r11
+			int v6;		  // r31
+			char *v7;	  // r30
+			int v8;		  // r11
+			int v9;		  // r31
+			char *v10;	  // r30
+
+			if (*replacement)
+			{
+				buffer = g_consoleField->buffer;
+				while (*buffer++)
+					;
+				v6 = buffer - g_consoleField->buffer - 1;
+				if (buffer - g_consoleField->buffer != 1)
+				{
+					v7 = &g_consoleField->buffer[buffer - g_consoleField->buffer - 2];
+					do
+					{
+						if (!isspace(*v7))
+							break;
+						--v6;
+						--v7;
+					} while (v6);
+				}
+				v8 = v6 - replaceCount;
+				v9 = 256 - (v6 - replaceCount);
+				v10 = &g_consoleField->buffer[v8];
+				strncpy(&g_consoleField->buffer[v8], replacement, v9 - 1);
+				v10[v9 - 1] = 0;
+			}
+		}
+
+		void CompleteDvarArgument()
+		{
+			const char *v0;		  // r3
+			dvar_s *MalleableVar; // r3
+			int v2;				  // r8
+			int v3;				  // r7
+			int v4;				  // r9
+			int nesting;		  // r9
+			const char *v6;		  // r30
+			const char *v7;		  // r11
+			int v9;				  // r8
+			char v10[264];		  // [sp+50h] [-120h] BYREF
+
+			v0 = Con_TokenizeInput();
+			MalleableVar = Dvar_FindMalleableVar(v0);
+			if (MalleableVar->type == 6)
+			{
+				nesting = cmd_args->nesting;
+				if (cmd_args->argc[cmd_args->nesting] <= 1)
+					v6 = (const char *)&unk_8204B4F3;
+				else
+					v6 = (const char *)*((uint32_t *)cmd_args->argv[cmd_args->nesting] + 1);
+				if (*v6)
+				{
+					Con_AutoCompleteFromList(
+						MalleableVar->domain.enumeration.strings,
+						MalleableVar->domain.enumeration.stringCount,
+						v6,
+						v10,
+						0x100u);
+					v7 = v6;
+					while (*(unsigned __int8 *)v7++)
+						;
+					ReplaceConsoleInputArgument(v7 - v6 - 1, v10);
+					nesting = cmd_args->nesting;
+				}
+				v9 = cmd_args->argc[nesting];
+				cmd_args->nesting = nesting - 1;
+				cmd_argsPrivate->totalUsedArgvPool -= v9;
+				v4 = cmd_argsPrivate->usedTextPool[nesting];
+			}
+			else
+			{
+				v2 = cmd_args->nesting;
+				v3 = cmd_args->argc[cmd_args->nesting--];
+				cmd_argsPrivate->totalUsedArgvPool -= v3;
+				v4 = cmd_argsPrivate->usedTextPool[v2];
+			}
+			cmd_argsPrivate->totalUsedTextPool -= v4;
+		}
+
 		void CompleteCommand()
 		{
-			DbgPrint("CompleteCommand\n");
+			const char *v0;		// r3
+			int v1;				// r10
+			int nesting;		// r8
+			int v3;				// r7
+			const char *v4;		// r25
+			int v5;				// r6
+			int v6;				// r30
+			bool IsDvarCommand; // r3
+			unsigned __int8 v8; // r11
+			unsigned int v9;	// r26
+			const char *v10;	// r11
+			unsigned int v11;	// r11
+			BOOL v12;			// r3
+			BOOL v13;			// r29
+			int v14;			// r30
+			int v15;			// r9
+			int v16;			// r8
+			bool v17;			// r11
+			bool v18;			// r30
+			char *buffer;		// r11
+			int v21;			// r11
+			char *v22;			// r11
+			int v24;			// r10
+			int v25;			// r8
+			int v26;			// [sp+80h] [-170h] BYREF
+			int v27[3];			// [sp+84h] [-16Ch] BYREF
+			char v28[352];		// [sp+90h] [-160h] BYREF
+
+			v0 = Con_TokenizeInput();
+			s_completionString = v0;
+			s_shortestMatch[0] = 0;
+			v1 = *(unsigned __int8 *)v0;
+			*dword_8242A898 = 0;
+			*dword_8242A378 = 0;
+			if (!v1)
+			{
+				nesting = cmd_args->nesting;
+				v3 = cmd_args->argc[cmd_args->nesting--];
+				cmd_argsPrivate->totalUsedArgvPool -= v3;
+				cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[nesting];
+				return;
+			}
+			v4 = v0;
+			v5 = cmd_args->nesting;
+			v6 = cmd_args->argc[cmd_args->nesting];
+			if (v6 <= 1 || (IsDvarCommand = Con_IsDvarCommand(v0), v8 = 1, !IsDvarCommand))
+				v8 = 0;
+			v9 = v8;
+			if (v8)
+			{
+				if (v6 <= 1)
+					v10 = (const char *)&unk_8204B4F3;
+				else
+					v10 = (const char *)*((uint32_t *)cmd_args->argv[v5] + 1);
+				s_completionString = v10;
+			}
+			v27[0] = 0;
+			v26 = 0;
+			v11 = _CountLeadingZeros(v9);
+			if (con_matchPrefixOnly->current.enabled)
+			{
+				v13 = (v11 >> 5) & 1;
+				*con_ignoreMatchPrefixOnly = 1;
+				UpdateMatches((v11 & 0x20) != 0, v27, &v26);
+				v14 = *dword_8242A898;
+				if (*dword_8242A898 <= 24)
+					goto LABEL_17;
+				*con_ignoreMatchPrefixOnly = 0;
+#pragma warning(push)
+#pragma warning(disable : 4800)
+				UpdateMatches(v13, v27, &v26);
+#pragma warning(pop)
+				v14 = *dword_8242A898;
+				if (*dword_8242A898)
+					goto LABEL_19;
+				*(reinterpret_cast<unsigned char *>(&v12)) = static_cast<unsigned char>(v13); // original - LOBYTE(v12) = v13;
+				*con_ignoreMatchPrefixOnly = 1;
+			}
+			else
+			{
+				v12 = (v11 >> 5) & 1;
+				*con_ignoreMatchPrefixOnly = 0;
+			}
+#pragma warning(push)
+#pragma warning(disable : 4800)
+			UpdateMatches(v12, v27, &v26);
+#pragma warning(pop)
+			v14 = *dword_8242A898;
+		LABEL_17:
+			if (!v14)
+			{
+				v15 = cmd_args->nesting;
+				v16 = cmd_args->argc[cmd_args->nesting--];
+				cmd_argsPrivate->totalUsedArgvPool -= v16;
+				cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[v15];
+				return;
+			}
+		LABEL_19:
+			memcpy(v28, &g_consoleField, 0x118u);
+			v17 = v9 || v14 == 1 || s_hasExactMatch && Con_AnySpaceAfterCommand();
+			v18 = v17;
+			if (v9)
+				Com_sprintf(g_consoleField->buffer, 256, "\\%s %s", v4, s_shortestMatch);
+			else
+				Com_sprintf(g_consoleField->buffer, 256, "\\%s", s_shortestMatch);
+			buffer = g_consoleField->buffer;
+			while (*buffer++)
+				;
+			g_consoleField->cursor = buffer - g_consoleField->buffer - 1;
+			ConcatRemaining(&v28[24], s_completionString);
+			if (v18)
+			{
+				if (!v9)
+				{
+					v21 = cmd_args->argc[cmd_args->nesting];
+					if (v21 == 1)
+					{
+						I_strncat(g_consoleField->buffer, 256, " ");
+					}
+					else if (v21 == 2 && v27[0] != v26)
+					{
+						CompleteDvarArgument();
+					}
+				}
+				v22 = g_consoleField->buffer;
+				while (*v22++)
+					;
+				g_consoleField->cursor = v22 - g_consoleField->buffer - 1;
+			}
+			else if (conDrawInputGlob->matchCount > 24)
+			{
+				Com_Printf(0, "]%s\n", g_consoleField->buffer);
+				Cmd_ForEach(PrintMatches);
+				Dvar_ForEachName(PrintMatches);
+			}
+			v24 = cmd_args->nesting;
+			v25 = cmd_args->argc[cmd_args->nesting--];
+			cmd_argsPrivate->totalUsedArgvPool -= v25;
+			cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[v24];
+			Field_AdjustScroll(scrPlaceFull, g_consoleField);
 		}
 
 		int Con_CommitToAutoComplete()
 		{
-			DbgPrint("Con_CommitToAutoComplete\n");
-			return 0;
+			char v0;		// r11
+			const char *v2; // r3
+			// const char *v3; // r6
+			int v4;		  // r11
+			int v5;		  // r10
+			char *buffer; // r9
+			int nesting;  // r7
+			int v8;		  // r6
+
+			if (conDrawInputGlob->matchIndex < 0 || (v0 = 1, !conDrawInputGlob->autoCompleteChoice[0]))
+				v0 = 0;
+			if (!v0)
+				return 0;
+			v2 = Con_TokenizeInput();
+			if (Con_IsDvarCommand(v2))
+			{
+				Com_sprintf(g_consoleField->buffer, 256, "%s %s", v2, conDrawInputGlob->autoCompleteChoice);
+			}
+			else
+			{
+				v4 = 0;
+				do
+				{
+					v5 = (unsigned __int8)conDrawInputGlob->autoCompleteChoice[v4];
+#pragma warning(push)
+#pragma warning(disable : 4244)
+					g_consoleField->buffer[v4++] = v5;
+#pragma warning(pop)
+				} while (v5);
+			}
+			buffer = g_consoleField->buffer;
+			nesting = cmd_args->nesting;
+			v8 = cmd_args->argc[cmd_args->nesting--];
+			cmd_argsPrivate->totalUsedArgvPool -= v8;
+			cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[nesting];
+			while (*buffer++)
+				;
+			g_consoleField->cursor = buffer - g_consoleField->buffer - 1;
+			g_consoleField->buffer[g_consoleField->cursor] = 32;
+			g_consoleField->buffer[++g_consoleField->cursor] = 0;
+			g_consoleField->drawWidth = SEH_PrintStrlen(g_consoleField->buffer);
+			Con_CancelAutoComplete();
+			return 1;
 		}
 
 		int Field_KeyDownEvent(int localClientNum, const ScreenPlacement *scrPlace, field_t *edit, int key)
@@ -1745,20 +2240,20 @@ namespace game
 
 #pragma warning(pop)
 
-		// Detour CL_CharEvent_Detour;
+		Detour CL_CharEvent_Detour;
 
-		// void CL_CharEvent_Hook(int localClientNum, int key)
-		// {
-		// 	DbgPrint("CL_CharEvent_Hook: localClientNum: %d, key: %d\n", localClientNum, key);
-		// 	CL_CharEvent_Detour.GetOriginal<decltype(&CL_CharEvent_Hook)>()(localClientNum, key);
-		// }
+		void CL_CharEvent_Hook(int localClientNum, int key)
+		{
+			DbgPrint("CL_CharEvent_Hook: localClientNum: %d, key: %d\n", localClientNum, key);
+			CL_CharEvent_Detour.GetOriginal<decltype(&CL_CharEvent_Hook)>()(localClientNum, key);
+		}
 
 		Detour IN_GamepadsMove_Detour;
 
 		void IN_GamepadsMove_Hook()
 		{
 			DbgPrint("IN_GamepadsMove_Hook\n");
-			// IN_XenonDevKeyboard();
+			IN_XenonDevKeyboard();
 			IN_GamepadsMove_Detour.GetOriginal<decltype(&IN_GamepadsMove_Hook)>()();
 		}
 
@@ -1811,9 +2306,154 @@ namespace game
 			CL_Input_Detour.GetOriginal<decltype(&CL_Input_Hook)>()(localClientNum);
 		}
 
-		void R_ImageDump_f()
+		// TODO: find Dvar_RegisterBool
+		dvar_s *cg_drawDynEnts = nullptr;
+		// bool cg_drawDynEnts = true;
+
+		Detour R_DrawAllDynEnt_Detour;
+
+		// Big Endian
+		// #define __SPAIR64__(high, low) (((__int64)(low)) | ((__int64)(high) << 32))
+
+		void R_DrawAllDynEnt_Hook()
 		{
-			Com_Printf(0, "R_ImageDump_f\n");
+			if (cg_drawDynEnts == nullptr)
+			{
+				// cg_drawDynEnts = Dvar_RegisterNew(
+				// 	"cg_drawDynEnts", // name
+				// 	DVAR_TYPE_INT,	  // type
+				// 	0,				  // flags
+				// 	__SPAIR64__(0, 1),
+				// 	"Draw dynamic entities in game",
+				// 	1);
+
+				cg_drawDynEnts = Dvar_RegisterBool("cg_drawDynEnts", 1, 0, "Draw dynamic entities in game");
+			}
+
+			if (!cg_drawDynEnts->current.enabled)
+				return;
+
+			R_DrawAllDynEnt_Detour.GetOriginal<decltype(&R_DrawAllDynEnt_Hook)>()();
+		}
+
+		// void cg_drawDynEnts_f()
+		// {
+
+		// 	// if (cg_drawDynEnts)
+		// 	// 	cg_drawDynEnts->current.enabled = !cg_drawDynEnts->current.enabled;
+
+		// 	typedef int (*DynEntCl_Shutdown_t)(int result);
+		// 	DynEntCl_Shutdown_t DynEntCl_Shutdown = (DynEntCl_Shutdown_t)0x8229A6A8;
+		// 	DynEntCl_Shutdown(0);
+		// }
+
+		// void RegisterDvars()
+		// {
+		// 	// dword_84CB3720 = Dvar_RegisterVariant((int)"ragdoll_enable", 0, v2, v3, v0, 0);
+		// 	// cg_drawDynEnts = Dvar_RegisterVariant("cg_drawDynEnts", 0, 0, "Draw dynamic entities.");
+		// 	cg_drawDynEnts = Dvar_RegisterVariant("cg_drawDynEnts", DVAR_TYPE_BOOL, 0,);
+		// }
+
+		// void R_ImageDump_f()
+		// {
+		// 	Com_Printf(0, "R_ImageDump_f\n");
+		// }
+
+		void create_directories(const std::string &path)
+		{
+			std::istringstream stream(path);
+			std::string segment;
+			std::vector<std::string> parts;
+			std::string current_path;
+
+			while (std::getline(stream, segment, '\\'))
+			{
+				if (segment.empty() || segment.back() == ':')
+				{ // Handle "game:" or similar
+					current_path += segment + "\\";
+					continue;
+				}
+				current_path += segment + "\\";
+				CreateDirectoryA(current_path.c_str(), nullptr);
+			}
+		}
+
+		bool FileExists(const std::string &filePath)
+		{
+			DWORD fileAttr = GetFileAttributesA(filePath.c_str());
+			return (fileAttr != 0xFFFFFFFF && !(fileAttr & FILE_ATTRIBUTE_DIRECTORY));
+		}
+
+		char *ReadFileContents(const std::string &filePath)
+		{
+			std::ifstream file(filePath, std::ios::ate | std::ios::binary);
+			if (!file.is_open())
+			{
+				DbgPrint("[PLUGIN] ERROR Failed to open file: %s\n", filePath.c_str());
+				return nullptr;
+			}
+
+			size_t fileSize = static_cast<size_t>(file.tellg());
+			char *fileContents = new char[fileSize + 1];
+
+			file.seekg(0, std::ios::beg);
+			file.read(fileContents, fileSize);
+			fileContents[fileSize] = '\0';
+
+			file.close();
+
+			return fileContents;
+		}
+
+		void DumpScript(const char *extFilename, const char *fileContents)
+		{
+			if (!extFilename || !fileContents)
+			{
+				DbgPrint("DumpScript: Invalid input (NULL filename or contents)\n");
+				return;
+			}
+
+			std::string filepath = std::string(extFilename);
+			std::replace(filepath.begin(), filepath.end(), '/', '\\'); // Ensure Xbox path format
+
+			std::string fullPath = "game:\\dump\\" + filepath;
+
+			// **Extract directory path only**
+			size_t lastSlash = fullPath.find_last_of('\\');
+			std::string directoryPath = (lastSlash != std::string::npos) ? fullPath.substr(0, lastSlash) : fullPath;
+
+			// **Now create only the necessary directories**
+			create_directories(directoryPath);
+
+			// Write to file
+			std::ofstream file(fullPath, std::ios::out | std::ios::binary);
+			if (file.is_open())
+			{
+				file.write(fileContents, strlen(fileContents));
+				file.close();
+			}
+		}
+
+		Detour Scr_ReadFile_FastFile_Detour;
+
+		char *Scr_ReadFile_FastFile_Hook(const char *filename, const char *extFilename, const char *codePos)
+		{
+			DbgPrint("[PLUGIN] INFO Scr_ReadFile_FastFile_Hook: %s\n", extFilename);
+			auto contents = Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos);
+			DumpScript(extFilename, contents);
+
+			std::string filepath = std::string(extFilename);
+			std::replace(filepath.begin(), filepath.end(), '/', '\\'); // Ensure Xbox path format
+
+			// **Check if script exists in game:\raw\**
+			std::string rawPath = "game:\\raw\\" + filepath;
+			if (FileExists(rawPath))
+			{
+				DbgPrint("[PLUGIN] Loading script from raw directory: %s\n", rawPath.c_str());
+				return ReadFileContents(rawPath);
+			}
+
+			return contents;
 		}
 
 		void init()
@@ -1825,8 +2465,8 @@ namespace game
 			// Sys_GetEvent_Detour = Detour(Sys_GetEvent, Sys_GetEvent_Hook);
 			// Sys_GetEvent_Detour.Install();
 
-			// CL_CharEvent_Detour = Detour(CL_CharEvent, CL_CharEvent_Hook);
-			// CL_CharEvent_Detour.Install();
+			CL_CharEvent_Detour = Detour(CL_CharEvent, CL_CharEvent_Hook);
+			CL_CharEvent_Detour.Install();
 
 			// IN_GamepadsMove_Detour = Detour(IN_GamepadsMove, IN_GamepadsMove_Hook);
 			// IN_GamepadsMove_Detour.Install();
@@ -1834,7 +2474,25 @@ namespace game
 			CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
 			CL_GamepadButtonEvent_Detour.Install();
 
-			XNotifyQueueUI(0, 0, XNOTIFY_SYSTEM, L"iw3 xenon mp", nullptr);
+			Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
+			Scr_ReadFile_FastFile_Detour.Install();
+
+			R_DrawAllDynEnt_Detour = Detour(R_DrawAllDynEnt, R_DrawAllDynEnt_Hook);
+			R_DrawAllDynEnt_Detour.Install();
+
+			// XNotifyQueueUI(0, 0, XNOTIFY_SYSTEM, L"iw3 xenon mp", nullptr);
+
+			// Sleep(20000);
+			// Dvar_SetIntByName("cg_drawFPS", 1);
+			// Sleep(10000);
+			// Dvar_SetIntByName("cg_drawDynEnts", 0);
+			// Sleep(10000);
+
+			// Cbuf_AddText(0, "set developer 1\n");
+			// Cbuf_AddText(0, "set developer_script 1\n");
+			// // Set developer and developer_script to 1
+			// developer->current.value = 1;
+			// developer_script->current.value = 1;
 
 			// clientUIActives[0].keyCatchers = 1;
 
@@ -1884,10 +2542,10 @@ namespace game
 			// CL_ConsoleCharEvent(0, 111);
 
 			// cmd_function_s *cmd = new cmd_function_s;
-			// cmd->name = "qwerty";
-			// cmd->autoCompleteDir = "autoCompleteDir\n";
-			// cmd->autoCompleteExt = "autoCompleteExt\n";
-			// cmd->function = R_ImageDump_f;
+			// cmd->name = "cg_drawDynEnts";
+			// cmd->autoCompleteDir = nullptr;
+			// cmd->autoCompleteExt = nullptr;
+			// cmd->function = cg_drawDynEnts_f;
 			// cmd->next = nullptr;
 
 			// // Traverse the list to find the last element
@@ -1901,9 +2559,28 @@ namespace game
 
 	namespace sp
 	{
+		typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
+		typedef void (*Cmd_ExecuteSingleCommand_t)(int localClientNum, int controllerIndex, const char *text);
+		typedef void (*Dvar_SetIntByName_t)(const char *dvarName, int value);
+
+		Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x821DE9D8);
+		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand = reinterpret_cast<Cmd_ExecuteSingleCommand_t>(0x821DF490);
+		Dvar_SetIntByName_t Dvar_SetIntByName = reinterpret_cast<Dvar_SetIntByName_t>(0x8218FB30);
+
 		void init()
 		{
-			XNotifyQueueUI(0, 0, XNOTIFY_SYSTEM, L"iw3 xenon sp", nullptr);
+			Sleep(5000);
+			// // Unlock all missions
+			// Dvar_SetIntByName("mis_cheat", 1);
+
+			// Unlock all missions and cheats
+			Cbuf_AddText(0, "seta mis_01 50\n");
+			Dvar_SetIntByName("cheat_points", 30); // All cheats unlocked
+
+			// Dvar_SetIntByName("sv_cheats", 1);
+
+			// // Unlock all missions and cheats
+			// Dvar_SetIntByName("mis_01", 50);
 		}
 	}
 
@@ -1911,24 +2588,29 @@ namespace game
 
 void init()
 {
-	if (strcmp((char *)0x82032AC4, "multiplayer") == 0)
-		game::mp::init();
-	else
-		game::sp::init();
+	game::mp::init();
+	// if (strcmp((char *)0x82032AC4, "multiplayer") == 0)
+	// {
+	// 	XNotifyQueueUI(0, 0, XNOTIFY_SYSTEM, L"iw3 xenon mp", nullptr);
+	// 	game::mp::init();
+	// }
+	// else if (strcmp((char *)0x82065E48, "startSingleplayer") == 0)
+	// {
+	// 	XNotifyQueueUI(0, 0, XNOTIFY_SYSTEM, L"iw3 xenon sp", nullptr);
+	// 	game::sp::init();
+	// }
+	// else
+	// {
+	// 	XNotifyQueueUI(0, 0, XNOTIFY_SYSTEM, L"iw3 xenon unsupported executable", nullptr);
+	// }
 }
 
 void monitor_title_id()
 {
-	for (;;)
-	{
-		if (XamGetCurrentTitleId() == game::XBOX_360_TITLE_ID)
-		{
-			init();
-			break;
-		}
-		else
-			Sleep(100);
-	}
+	while (XamGetCurrentTitleId() != game::XBOX_360_TITLE_ID)
+		Sleep(1);
+
+	init();
 }
 
 int DllMain(HANDLE hModule, DWORD reason, void *pReserved)
