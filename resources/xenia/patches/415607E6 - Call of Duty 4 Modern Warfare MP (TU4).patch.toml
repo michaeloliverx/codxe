@@ -1,0 +1,36 @@
+title_name = "Call of Duty 4: Modern Warfare"
+title_id = "415607E6"                         # AV-2022
+hash = "F5F903E4F326EB10"                     # default_mp.xex
+#media_id = "15E8CF88" # Disc (USA, Europe): http://redump.org/disc/12660
+
+[[patch]]
+name = "Native 1280x720 Resolution"
+desc = "Reduces flickering on upscaled resolutions x2 and x3"
+author = "mo"
+is_enabled = true
+
+# R_SetWndParms - Updates window parameters
+# wndParms->sceneWidth
+[[patch.be16]]
+address = 0x8216D2B2
+value = 0x0500       # 1024 -> 1280
+
+# wndParms->sceneHeight
+[[patch.be16]]
+address = 0x8216D2B6
+value = 0x02D0       # 600 -> 720
+
+# wndParms->aaSamples
+[[patch.be16]]
+address = 0x8216d2AE
+value = 0x0000       # 2 -> 0
+
+# Fix for Chinatown failing to load
+# PMem_Init - Updates memory allocation size for initialization
+[[patch.be16]]
+address = 0x821CFD1A
+value = 0x1E00       # Change 0x1970 → 0x1E00 (main allocation call)
+
+[[patch.be16]]
+address = 0x821CFD2A
+value = 0x1E00       # Change 0x1970 → 0x1E00 (secondary reference)
