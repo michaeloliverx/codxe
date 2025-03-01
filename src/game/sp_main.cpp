@@ -9,6 +9,7 @@
 
 namespace sp
 {
+    Scr_AddSourceBuffer_t Scr_AddSourceBuffer = reinterpret_cast<Scr_AddSourceBuffer_t>(0x821C5A18);
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x821C5978);
 
     Detour Scr_ReadFile_FastFile_Detour;
