@@ -10,6 +10,7 @@
 namespace mp
 {
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
+    Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
 
     Detour Load_MapEntsPtr_Detour;
 
@@ -81,11 +82,32 @@ namespace mp
         }
     }
 
+    Detour Scr_ReadFile_FastFile_Detour;
+
+    char *Scr_ReadFile_FastFile_Hook(const char *filename, const char *extFilename, const char *codePos, bool archive)
+    {
+
+        xbox::DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
+
+        auto contents = Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos, archive);
+
+        // Dump the file to disk
+        std::string file_path = "game:\\dump\\";
+        file_path += extFilename;
+        std::replace(file_path.begin(), file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
+        filesystem::write_file_to_disk(file_path.c_str(), contents, strlen(contents));
+
+        return contents;
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP logic...");
 
         Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
         Load_MapEntsPtr_Detour.Install();
+
+        Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
+        Scr_ReadFile_FastFile_Detour.Install();
     }
 }
