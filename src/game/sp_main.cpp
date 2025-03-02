@@ -36,6 +36,7 @@ namespace
 
 namespace sp
 {
+    // Functions
     Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x821DE9D8);
 
     CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x822D7040);
@@ -48,6 +49,7 @@ namespace sp
     Scr_AddSourceBuffer_t Scr_AddSourceBuffer = reinterpret_cast<Scr_AddSourceBuffer_t>(0x821C5A18);
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x821C5978);
 
+    // Variables
     auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82DDEFCC);
 
     Detour CL_ConsolePrint_Detour;
