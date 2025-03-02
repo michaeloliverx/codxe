@@ -8,27 +8,30 @@
 #include "../filesystem.h"
 #include "../xboxkrnl.h"
 
-uint32_t ShowKeyboard(const wchar_t *title, const wchar_t *description, const wchar_t *defaultText, std::string &result, size_t maxLength, uint32_t keyboardType)
+namespace
 {
-    size_t realMaxLength = maxLength + 1;
-    XOVERLAPPED overlapped = {};
-
-    std::vector<wchar_t> wideBuffer(realMaxLength);
-    std::vector<char> buffer(realMaxLength);
-
-    XShowKeyboardUI(0, keyboardType, defaultText, title, description, wideBuffer.data(), realMaxLength, &overlapped);
-
-    while (!XHasOverlappedIoCompleted(&overlapped))
-        Sleep(100);
-
-    if (XGetOverlappedResult(&overlapped, nullptr, TRUE) == ERROR_SUCCESS)
+    uint32_t ShowKeyboard(const wchar_t *title, const wchar_t *description, const wchar_t *defaultText, std::string &result, size_t maxLength, uint32_t keyboardType)
     {
-        wcstombs_s(nullptr, buffer.data(), realMaxLength, wideBuffer.data(), realMaxLength * sizeof(wchar_t));
-        result = buffer.data();
-        return ERROR_SUCCESS;
-    }
+        size_t realMaxLength = maxLength + 1;
+        XOVERLAPPED overlapped = {};
 
-    return ERROR_CANCELLED;
+        std::vector<wchar_t> wideBuffer(realMaxLength);
+        std::vector<char> buffer(realMaxLength);
+
+        XShowKeyboardUI(0, keyboardType, defaultText, title, description, wideBuffer.data(), realMaxLength, &overlapped);
+
+        while (!XHasOverlappedIoCompleted(&overlapped))
+            Sleep(100);
+
+        if (XGetOverlappedResult(&overlapped, nullptr, TRUE) == ERROR_SUCCESS)
+        {
+            wcstombs_s(nullptr, buffer.data(), realMaxLength, wideBuffer.data(), realMaxLength * sizeof(wchar_t));
+            result = buffer.data();
+            return ERROR_SUCCESS;
+        }
+
+        return ERROR_CANCELLED;
+    }
 }
 
 namespace sp

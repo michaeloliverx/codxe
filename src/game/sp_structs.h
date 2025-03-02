@@ -2,7 +2,6 @@
 
 namespace sp
 {
-
     enum keyNum_t : __int32
     {
         K_NONE = 0x0,
