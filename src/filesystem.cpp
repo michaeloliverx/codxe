@@ -10,25 +10,30 @@ namespace filesystem
 {
     void create_nested_dirs(const char *path)
     {
+        if (!path || !*path)
+            return;
+
         char temp_path[256];
-        strncpy(temp_path, path, sizeof(temp_path));
+        strncpy(temp_path, path, sizeof(temp_path) - 1);
+        temp_path[sizeof(temp_path) - 1] = '\0';
 
         char *p = temp_path;
-        while (*p)
+
+        // Skip leading drive letter (e.g., "C:\") or "game:\" prefix
+        if ((p[0] && p[1] == ':') || strncmp(p, "game:\\", 6) == 0)
+            p += (p[1] == ':' ? 3 : 6); // Move past "C:\" or "game:\"
+
+        for (; *p; p++)
         {
             if (*p == '\\' || *p == '/')
             {
                 *p = '\0';
-
-                // Create the directory if it doesn't exist
-                _mkdir(temp_path);
-
+                _mkdir(temp_path); // Attempt to create the directory
                 *p = '\\';
             }
-            p++;
         }
 
-        _mkdir(temp_path);
+        _mkdir(temp_path); // Create final directory
     }
 
     /**
