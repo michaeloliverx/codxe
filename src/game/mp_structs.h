@@ -2,7 +2,6 @@
 
 namespace mp
 {
-
     struct cmd_function_s
     {
         cmd_function_s *next;
@@ -157,6 +156,118 @@ namespace mp
         int numEntityChars;
     };
 
+    enum XAssetType : __int32
+    {
+        ASSET_TYPE_XMODELPIECES = 0x0,
+        ASSET_TYPE_PHYSPRESET = 0x1,
+        ASSET_TYPE_XANIMPARTS = 0x2,
+        ASSET_TYPE_XMODEL = 0x3,
+        ASSET_TYPE_MATERIAL = 0x4,
+        ASSET_TYPE_PIXELSHADER = 0x5,
+        ASSET_TYPE_TECHNIQUE_SET = 0x6,
+        ASSET_TYPE_IMAGE = 0x7,
+        ASSET_TYPE_SOUND = 0x8,
+        ASSET_TYPE_SOUND_CURVE = 0x9,
+        ASSET_TYPE_LOADED_SOUND = 0xA,
+        ASSET_TYPE_CLIPMAP = 0xB,
+        ASSET_TYPE_CLIPMAP_PVS = 0xC,
+        ASSET_TYPE_COMWORLD = 0xD,
+        ASSET_TYPE_GAMEWORLD_SP = 0xE,
+        ASSET_TYPE_GAMEWORLD_MP = 0xF,
+        ASSET_TYPE_MAP_ENTS = 0x10,
+        ASSET_TYPE_GFXWORLD = 0x11,
+        ASSET_TYPE_LIGHT_DEF = 0x12,
+        ASSET_TYPE_UI_MAP = 0x13,
+        ASSET_TYPE_FONT = 0x14,
+        ASSET_TYPE_MENULIST = 0x15,
+        ASSET_TYPE_MENU = 0x16,
+        ASSET_TYPE_LOCALIZE_ENTRY = 0x17,
+        ASSET_TYPE_WEAPON = 0x18,
+        ASSET_TYPE_SNDDRIVER_GLOBALS = 0x19,
+        ASSET_TYPE_FX = 0x1A,
+        ASSET_TYPE_IMPACT_FX = 0x1B,
+        ASSET_TYPE_AITYPE = 0x1C,
+        ASSET_TYPE_MPTYPE = 0x1D,
+        ASSET_TYPE_CHARACTER = 0x1E,
+        ASSET_TYPE_XMODELALIAS = 0x1F,
+        ASSET_TYPE_RAWFILE = 0x20,
+        ASSET_TYPE_STRINGTABLE = 0x21,
+        ASSET_TYPE_COUNT = 0x22,
+        ASSET_TYPE_STRING = 0x22,
+        ASSET_TYPE_ASSETLIST = 0x23,
+    };
+
+    struct RawFile
+    {
+        const char *name;
+        int len;
+        const char *buffer;
+    };
+
+    union XAssetHeader
+    {
+        // XModelPieces *xmodelPieces;
+        // PhysPreset *physPreset;
+        // XAnimParts *parts;
+        // XModel *model;
+        // Material *material;
+        // MaterialPixelShader *pixelShader;
+        // MaterialVertexShader *vertexShader;
+        // MaterialTechniqueSet *techniqueSet;
+        // GfxImage *image;
+        // snd_alias_list_t *sound;
+        // SndCurve *sndCurve;
+        // LoadedSound *loadSnd;
+        // clipMap_t *clipMap;
+        // ComWorld *comWorld;
+        // GameWorldSp *gameWorldSp;
+        // GameWorldMp *gameWorldMp;
+        // MapEnts *mapEnts;
+        // GfxWorld *gfxWorld;
+        // GfxLightDef *lightDef;
+        // Font_s *font;
+        // MenuList *menuList;
+        // menuDef_t *menu;
+        // LocalizeEntry *localize;
+        // WeaponDef *weapon;
+        // SndDriverGlobals *sndDriverGlobals;
+        // const FxEffectDef *fx;
+        // FxImpactTable *impactFx;
+        RawFile *rawfile;
+        // StringTable *stringTable;
+        void *data;
+    };
+
+    enum conChannel_t : __int32
+    {
+        CON_CHANNEL_DONT_FILTER = 0x0,
+        CON_CHANNEL_ERROR = 0x1,
+        CON_CHANNEL_GAMENOTIFY = 0x2,
+        CON_CHANNEL_BOLDGAME = 0x3,
+        CON_CHANNEL_SUBTITLE = 0x4,
+        CON_CHANNEL_OBITUARY = 0x5,
+        CON_CHANNEL_LOGFILEONLY = 0x6,
+        CON_CHANNEL_CONSOLEONLY = 0x7,
+        CON_CHANNEL_GFX = 0x8,
+        CON_CHANNEL_SOUND = 0x9,
+        CON_CHANNEL_FILES = 0xA,
+        CON_CHANNEL_DEVGUI = 0xB,
+        CON_CHANNEL_PROFILE = 0xC,
+        CON_CHANNEL_UI = 0xD,
+        CON_CHANNEL_CLIENT = 0xE,
+        CON_CHANNEL_SERVER = 0xF,
+        CON_CHANNEL_SYSTEM = 0x10,
+        CON_CHANNEL_PLAYERWEAP = 0x11,
+        CON_CHANNEL_AI = 0x12,
+        CON_CHANNEL_ANIM = 0x13,
+        CON_CHANNEL_PHYS = 0x14,
+        CON_CHANNEL_FX = 0x15,
+        CON_CHANNEL_LEADERBOARDS = 0x16,
+        CON_CHANNEL_PARSERSCRIPT = 0x17,
+        CON_CHANNEL_SCRIPT = 0x18,
+        CON_BUILTIN_CHANNEL_COUNT = 0x19,
+    };
+
     typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 
     typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags);
@@ -164,7 +275,12 @@ namespace mp
 
     typedef void (*Cmd_AddCommandInternal_t)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd);
 
-    typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
+    typedef void (*Com_PrintError_t)(conChannel_t channel, const char *fmt, ...);
+    typedef void (*Com_PrintMessage_t)(conChannel_t channel, const char *msg, int error);
+    typedef void (*Com_Printf_t)(conChannel_t channel, const char *fmt, ...);
+    typedef void (*Com_PrintWarning_t)(conChannel_t channel, const char *fmt, ...);
+
+    typedef void (*DB_EnumXAssets_FastFile_t)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride);
 
     typedef void (*Load_MapEntsPtr_t)();
 

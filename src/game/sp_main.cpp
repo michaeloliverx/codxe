@@ -44,7 +44,11 @@ namespace sp
 
     Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x821DFAD0);
 
+    Com_PrintError_t Com_PrintError = reinterpret_cast<Com_PrintError_t>(0x821DAC90);
     Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x821DC0A0);
+    Com_PrintWarning_t Com_PrintWarning = reinterpret_cast<Com_PrintWarning_t>(0x821DA798);
+
+    DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x822AEF88);
 
     Scr_AddSourceBuffer_t Scr_AddSourceBuffer = reinterpret_cast<Scr_AddSourceBuffer_t>(0x821C5A18);
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x821C5978);
@@ -89,19 +93,6 @@ namespace sp
     {
         xbox::DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
 
-        auto contents = Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos, archive);
-
-        // Dump the file to disk if it exists
-        // It might not exist if it's not a stock file
-        if (contents != nullptr)
-        {
-            // Dump the file to disk
-            std::string file_path = "game:\\dump\\";
-            file_path += extFilename;
-            std::replace(file_path.begin(), file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
-            filesystem::write_file_to_disk(file_path.c_str(), contents, strlen(contents));
-        }
-
         std::string raw_file_path = "game:\\raw\\";
         raw_file_path += extFilename;
         std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
@@ -131,12 +122,56 @@ namespace sp
             }
         }
 
-        return contents;
+        return Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos, archive);
     }
 
-    void Cmd_test_f()
+    const unsigned int MAX_RAWFILES = 2048;
+    struct RawFileList
     {
-        xbox::DbgPrint("test command\n");
+        unsigned int count;
+        RawFile *files[MAX_RAWFILES];
+    };
+
+    void R_AddRawFileToList(void *asset, void *inData)
+    {
+        RawFileList *rawFileList = reinterpret_cast<RawFileList *>(inData);
+        RawFile *rawFile = reinterpret_cast<RawFile *>(asset);
+
+        if (!rawFile)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: Null RawFile!\n");
+            return;
+        }
+
+        if (rawFileList->count >= MAX_RAWFILES)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: RawFileList is full!\n");
+            return;
+        }
+
+        rawFileList->files[rawFileList->count++] = rawFile;
+    }
+
+    void R_GetRawFileList(RawFileList *rawFileList)
+    {
+        rawFileList->count = 0;
+        DB_EnumXAssets_FastFile(ASSET_TYPE_RAWFILE, R_AddRawFileToList, rawFileList, true);
+    }
+
+    void Cmd_rawfilesdump()
+    {
+        RawFileList rawFileList;
+        R_GetRawFileList(&rawFileList);
+
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping %d raw files to `raw\\` %d\n", rawFileList.count);
+
+        for (unsigned int i = 0; i < rawFileList.count; i++)
+        {
+            auto rawfile = rawFileList.files[i];
+            std::string asset_name = rawfile->name;
+            std::replace(asset_name.begin(), asset_name.end(), '/', '\\'); // Replace forward slashes with backslashes
+            filesystem::write_file_to_disk(("game:\\dump\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
+        }
     }
 
     void init()
@@ -152,8 +187,7 @@ namespace sp
         Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
         Scr_ReadFile_FastFile_Detour.Install();
 
-        cmd_function_s *test_cmd = new cmd_function_s;
-
-        Cmd_AddCommandInternal("test", Cmd_test_f, test_cmd);
+        cmd_function_s *rawfilesdump_VAR = new cmd_function_s;
+        Cmd_AddCommandInternal("rawfilesdump", Cmd_rawfilesdump, rawfilesdump_VAR);
     }
 }
