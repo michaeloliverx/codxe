@@ -263,7 +263,6 @@ bool GenerateDDSHeaderFromGfxImage(const mp::GfxImage *image, DDSHeader &header)
     return true;
 }
 
-// Function to Write DDS File from GfxImage
 bool WriteDDSFileFromGfxImage(const mp::GfxImage *image)
 {
     if (!image || !image->pixels)
@@ -289,24 +288,246 @@ bool WriteDDSFileFromGfxImage(const mp::GfxImage *image)
         return false;
     }
 
-    // Write DDS header
+    // **Set Mip Levels** from GfxImage
+    int mipLevels = image->category + 1; // TODO: verify this assumption (mip levels = category + 1)
+
+    // if (mipLevels <= 0)
+    //     mipLevels = 1; // Ensure at least one level
+    header.mipMapCount = _byteswap_ulong(mipLevels);
+
+    // **Write DDS Header**
     file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
 
-    // // Write pixel data
-    // file.write(reinterpret_cast<const char *>(image->pixels), image->baseSize);
+    // **Process Each Mipmap Level**
+    uint32_t width = image->width;
+    uint32_t height = image->height;
+    uint32_t offset = 0;
 
-    // Convert pixel data to linear texture
-    std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
-    for (size_t i = 0; i < pixelData.size(); i += 2)
+    for (int level = 0; level < mipLevels; ++level)
     {
-        std::swap(pixelData[i], pixelData[i + 1]); // Swap adjacent bytes
+        // Compute the mip level size
+        uint32_t mipWidth = max(1U, width >> level);
+        uint32_t mipHeight = max(1U, height >> level);
+
+        // Extract pixel data for this mip level
+        uint32_t mipSize = image->baseSize / (1 << (2 * level)); // Size decreases with each mip level
+        std::vector<uint8_t> mipData(image->pixels + offset, image->pixels + offset + mipSize);
+
+        for (size_t i = 0; i < mipData.size(); i += 2)
+        {
+            std::swap(mipData[i], mipData[i + 1]); // Swap adjacent bytes
+        }
+
+        // **Convert Swizzled -> Linear**
+        auto linearData = Xbox360ConvertToLinearTexture(mipData, mipWidth, mipHeight,
+                                                        static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+
+        // **Write Mip Level Data**
+        file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
+
+        offset += mipSize; // Move to the next mip level
     }
-    auto linearData = Xbox360ConvertToLinearTexture(pixelData, image->width, image->height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
-    file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
 
     file.close();
-    DbgPrint("[Plugin] Successfully wrote DDS file: %s\n", filename.c_str());
+    DbgPrint("[Plugin] Successfully wrote DDS file with %d mip levels: %s\n", mipLevels, filename.c_str());
     return true;
+}
+
+struct DDSImage
+{
+    DDSHeader header;
+    std::vector<uint8_t> data;
+};
+
+// Function to swap all necessary fields from little-endian to big-endian
+void SwapDDSHeaderEndian(DDSHeader &header)
+{
+    header.magic = _byteswap_ulong(header.magic);
+    header.size = _byteswap_ulong(header.size);
+    header.flags = _byteswap_ulong(header.flags);
+    header.height = _byteswap_ulong(header.height);
+    header.width = _byteswap_ulong(header.width);
+    header.pitchOrLinearSize = _byteswap_ulong(header.pitchOrLinearSize);
+    header.depth = _byteswap_ulong(header.depth);
+    header.mipMapCount = _byteswap_ulong(header.mipMapCount);
+
+    for (int i = 0; i < 11; i++)
+        header.reserved1[i] = _byteswap_ulong(header.reserved1[i]);
+
+    header.pixelFormat.size = _byteswap_ulong(header.pixelFormat.size);
+    header.pixelFormat.flags = _byteswap_ulong(header.pixelFormat.flags);
+    header.pixelFormat.fourCC = _byteswap_ulong(header.pixelFormat.fourCC);
+    header.pixelFormat.rgbBitCount = _byteswap_ulong(header.pixelFormat.rgbBitCount);
+    header.pixelFormat.rBitMask = _byteswap_ulong(header.pixelFormat.rBitMask);
+    header.pixelFormat.gBitMask = _byteswap_ulong(header.pixelFormat.gBitMask);
+    header.pixelFormat.bBitMask = _byteswap_ulong(header.pixelFormat.bBitMask);
+    header.pixelFormat.aBitMask = _byteswap_ulong(header.pixelFormat.aBitMask);
+
+    header.caps = _byteswap_ulong(header.caps);
+    header.caps2 = _byteswap_ulong(header.caps2);
+    header.caps3 = _byteswap_ulong(header.caps3);
+    header.caps4 = _byteswap_ulong(header.caps4);
+    header.reserved2 = _byteswap_ulong(header.reserved2);
+}
+
+DDSImage ReadDDSFile(const std::string &filepath)
+{
+    DDSImage ddsImage;
+    std::ifstream file(filepath, std::ios::binary);
+
+    if (!file.is_open())
+    {
+        DbgPrint("ERROR: Unable to open file: %s\n", filepath.c_str());
+        return ddsImage; // Return empty DDSImage
+    }
+
+    // Read DDS header (raw, little-endian)
+    file.read(reinterpret_cast<char *>(&ddsImage.header), sizeof(DDSHeader));
+
+    // Swap only the magic number to big-endian for proper validation
+    uint32_t magicSwapped = _byteswap_ulong(ddsImage.header.magic);
+
+    if (magicSwapped != 0x20534444) // 'DDS ' in big-endian
+    {
+        DbgPrint("ERROR: Invalid DDS file: %s\n", filepath.c_str());
+        file.close();
+        return ddsImage;
+    }
+
+    // Swap header fields to big-endian for Xbox 360
+    SwapDDSHeaderEndian(ddsImage.header);
+
+    // Move to end of file to get total file size
+    file.seekg(0, std::ios::end);
+    std::streampos fileSize = file.tellg();
+
+    // Ensure fileSize is valid before proceeding
+    if (fileSize == std::streampos(-1))
+    {
+        DbgPrint("ERROR: Failed to determine file size.\n");
+        file.close();
+        return ddsImage;
+    }
+
+    // Move back to after the header
+    file.seekg(sizeof(DDSHeader), std::ios::beg);
+
+    // Compute data size safely
+    size_t dataSize = static_cast<size_t>(fileSize) - sizeof(DDSHeader);
+
+    // Read image data
+    ddsImage.data.resize(dataSize);
+    file.read(reinterpret_cast<char *>(ddsImage.data.data()), dataSize);
+
+    file.close();
+
+    // Debug output
+    DbgPrint("INFO: DDS file '%s' loaded successfully.\n", filepath.c_str());
+    DbgPrint("      Resolution: %ux%u\n", ddsImage.header.width, ddsImage.header.height);
+    DbgPrint("      MipMaps: %u\n", ddsImage.header.mipMapCount);
+    DbgPrint("      Data Size: %u bytes\n", static_cast<unsigned int>(dataSize));
+
+    return ddsImage;
+}
+
+std::vector<uint8_t> Xbox360ConvertToTiledTexture(const std::vector<uint8_t> &linearData, int pixelWidth, int pixelHeight, GPUTEXTUREFORMAT textureFormat)
+{
+    std::vector<uint8_t> tiledData(linearData.size());
+    uint32_t blockPixelSize;
+    uint32_t texelBytePitch;
+
+    switch (textureFormat)
+    {
+    case GPUTEXTUREFORMAT_8_8:
+        blockPixelSize = 1;
+        texelBytePitch = 2;
+        break;
+    case GPUTEXTUREFORMAT_8: // LinearPaletteIndex8bpp:
+        blockPixelSize = 1;
+        texelBytePitch = 1;
+        break;
+    case GPUTEXTUREFORMAT_DXT1: // Bc1Dxt1
+        blockPixelSize = 4;
+        texelBytePitch = 8;
+        break;
+    case GPUTEXTUREFORMAT_DXT2_3: // Bc2Dxt2 & Bc2Dxt3
+    case GPUTEXTUREFORMAT_DXT4_5: // Bc3Dxt4 & Bc3Dxt5
+    case GPUTEXTUREFORMAT_DXN:
+        blockPixelSize = 4;
+        texelBytePitch = 16;
+        break;
+    case GPUTEXTUREFORMAT_8_8_8_8: // {b8,g8,r8,ap8}
+        blockPixelSize = 1;
+        texelBytePitch = 4;
+        break;
+    case GPUTEXTUREFORMAT_4_4_4_4: // {b4,g4,r4,x4}
+    case GPUTEXTUREFORMAT_5_6_5:   // {b5,g6,r5}
+        blockPixelSize = 1;
+        texelBytePitch = 2;
+        break;
+    default:
+        throw std::invalid_argument("Bad texture type!");
+    }
+
+    uint32_t widthInBlocks = pixelWidth / blockPixelSize;
+    uint32_t heightInBlocks = pixelHeight / blockPixelSize;
+
+    // The function should operate in reverse of `Xbox360ConvertToLinearTexture`
+    for (uint32_t y = 0; y < heightInBlocks; y++)
+    {
+        for (uint32_t x = 0; x < widthInBlocks; x++)
+        {
+            uint32_t blockOffset = y * widthInBlocks + x;
+
+            // Get the *tiled* coordinates from a linear block offset
+            uint32_t tiledX = XGAddress2DTiledX(blockOffset, widthInBlocks, texelBytePitch);
+            uint32_t tiledY = XGAddress2DTiledY(blockOffset, widthInBlocks, texelBytePitch);
+
+            // Compute the correct offsets (swap src and dest logic)
+            uint32_t srcByteOffset = tiledY * widthInBlocks * texelBytePitch + tiledX * texelBytePitch;
+            uint32_t destByteOffset = y * widthInBlocks * texelBytePitch + x * texelBytePitch;
+
+            if (srcByteOffset + texelBytePitch > linearData.size() || destByteOffset + texelBytePitch > tiledData.size())
+                continue;
+
+            memcpy(&tiledData[destByteOffset], &linearData[srcByteOffset], texelBytePitch);
+        }
+    }
+
+    return tiledData;
+}
+
+std::vector<std::string> ListFilesInDirectory(const std::string &directory)
+{
+    std::vector<std::string> filenames;
+    WIN32_FIND_DATAA findFileData;
+    HANDLE hFind = FindFirstFileA((directory + "\\*").c_str(), &findFileData);
+
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        DbgPrint("ERROR: Directory '%s' does not exist or cannot be accessed.\n", directory.c_str());
+        return filenames; // Return empty vector
+    }
+
+    do
+    {
+        // Ignore "." and ".." and only include regular files (not directories)
+        if (!(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            std::string filename(findFileData.cFileName);
+            filenames.push_back(filename);
+            DbgPrint("File: %s\n", filename.c_str());
+        }
+    } while (FindNextFileA(hFind, &findFileData) != 0);
+
+    FindClose(hFind);
+
+    if (filenames.empty())
+    {
+        DbgPrint("INFO: Directory '%s' contains no files.\n", directory.c_str());
+    }
+
+    return filenames;
 }
 
 namespace mp
@@ -550,7 +771,79 @@ namespace mp
             WriteDDSFileFromGfxImage(image);
         }
 
+        // images bundled in xex
         // TODO: investigate     v2 = g_imageProgs; imagelist all
+    }
+
+    void Cmd_imagesreplace_f()
+    {
+
+        mp::ImageList imageList;
+        mp::R_GetImageList(&imageList);
+
+        std::string path = "game:\\raw\\images";
+        std::vector<std::string> files = ListFilesInDirectory(path);
+
+        for (unsigned int i = 0; i < imageList.count; i++)
+        {
+            auto image = imageList.image[i];
+
+            DbgPrint("Loading from disk Image %d: Name='%s', Type=%d, Dimensions=%dx%dx%d, MipLevels=%d, Format=%d\n",
+                     i, image->name, image->mapType, image->width, image->height, image->depth, image->category, image->texture.loadDef ? image->texture.loadDef->format : -1);
+
+            // Check if the asset name is in the files list
+            auto it = std::find_if(files.begin(), files.end(), [&](const std::string &filename)
+                                   {
+                                       return filename.find(image->name) != std::string::npos; // Simple name matching
+                                   });
+
+            if (it != files.end())
+            {
+                std::string filePath = path + "\\" + *it;
+                DbgPrint("INFO: Found matching texture file: %s for asset: %s\n", filePath.c_str(), image->name);
+
+                // Read the DDS file
+                DDSImage ddsImage = ReadDDSFile(filePath);
+                if (ddsImage.data.empty())
+                {
+                    DbgPrint("ERROR: Failed to load DDS file: %s\n", filePath.c_str());
+                    continue;
+                }
+
+                // Determine GPU texture format (assuming it's stored in asset metadata)
+                GPUTEXTUREFORMAT textureFormat = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
+
+                // Convert the DDS image to tiled texture format
+                std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(ddsImage.data, ddsImage.header.width, ddsImage.header.height, textureFormat);
+
+                if (tiledData.empty())
+                {
+                    DbgPrint("ERROR: Failed to convert texture to tiled format: %s\n", image->name);
+                    continue;
+                }
+
+                // TODO: handle mipmaps
+                // // Ensure tiledData size matches expected baseSize
+                // if (tiledData.size() != entry->entry.asset.header.image->baseSize)
+                // {
+                //     DbgPrint("WARNING: Skipping %s: Tiled texture size (%u bytes) does not match expected base size (%u bytes).\n",
+                //              entry->entry.asset.header.image->name, static_cast<unsigned int>(tiledData.size()), entry->entry.asset.header.image->baseSize);
+
+                //     continue; // Skip this image and move to the next
+                // }
+
+                // Swap adjacent bytes in the tiled data
+                for (size_t i = 0; i < tiledData.size(); i += 2)
+                {
+                    std::swap(tiledData[i], tiledData[i + 1]); // Swap adjacent bytes
+                }
+
+                // Overwrite the existing pixel data in-place
+                memcpy(image->pixels, tiledData.data(), tiledData.size());
+
+                DbgPrint("SUCCESS: Replaced texture %s with new tiled data.\n", image->name);
+            }
+        }
     }
 
     void init()
@@ -574,5 +867,8 @@ namespace mp
 
         cmd_function_s *imagesdump_VAR = new cmd_function_s;
         Cmd_AddCommandInternal("imagedump", Cmd_imagesdump, imagesdump_VAR);
+
+        cmd_function_s *imagesreplace_f_VAR = new cmd_function_s;
+        Cmd_AddCommandInternal("imageload", Cmd_imagesreplace_f, imagesreplace_f_VAR);
     }
 }
