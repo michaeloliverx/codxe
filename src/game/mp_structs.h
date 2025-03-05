@@ -350,6 +350,7 @@ namespace mp
     typedef void (*Load_MapEntsPtr_t)();
 
     typedef void (*R_GetImageList_t)(ImageList *imageList);
+    typedef int (*R_StreamLoadFileSynchronously_t)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData);
 
     typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
 }

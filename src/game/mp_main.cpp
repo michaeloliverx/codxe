@@ -549,6 +549,7 @@ namespace mp
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
 
     R_GetImageList_t R_GetImageList = reinterpret_cast<R_GetImageList_t>(0x82152A58);
+    R_StreamLoadFileSynchronously_t R_StreamLoadFileSynchronously = reinterpret_cast<R_StreamLoadFileSynchronously_t>(0x82151510);
 
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
 
@@ -654,6 +655,26 @@ namespace mp
         {
             xbox::DbgPrint("Hooked Load_MapEntsPtr: varMapEntsPtr is NULL or invalid.\n");
         }
+    }
+
+    Detour R_StreamLoadFileSynchronously_Detour;
+
+    int R_StreamLoadFileSynchronously_Hook(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
+    {
+        if (strncmp(filename, "D:\\", 3) == 0) // Check if path starts with "D:\"
+        {
+            char newPath[MAX_PATH];
+            _snprintf(newPath, sizeof(newPath), "game:\\raw\\%s", filename + 3); // Change "D:\" to "game:\raw\"
+
+            // Try loading from the modified path first
+            if (R_StreamLoadFileSynchronously_Detour.GetOriginal<decltype(R_StreamLoadFileSynchronously)>()(newPath, bytesToRead, outData))
+            {
+                return 1; // Success with the new path
+            }
+        }
+
+        // Fallback to original path if modified path failed
+        return R_StreamLoadFileSynchronously_Detour.GetOriginal<decltype(R_StreamLoadFileSynchronously)>()(filename, bytesToRead, outData);
     }
 
     Detour Scr_ReadFile_FastFile_Detour;
@@ -858,6 +879,9 @@ namespace mp
 
         Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
         Load_MapEntsPtr_Detour.Install();
+
+        R_StreamLoadFileSynchronously_Detour = Detour(R_StreamLoadFileSynchronously, R_StreamLoadFileSynchronously_Hook);
+        R_StreamLoadFileSynchronously_Detour.Install();
 
         Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
         Scr_ReadFile_FastFile_Detour.Install();
