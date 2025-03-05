@@ -50,6 +50,8 @@ namespace sp
 
     DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x822AEF88);
 
+    Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822B9788);
+
     Scr_AddSourceBuffer_t Scr_AddSourceBuffer = reinterpret_cast<Scr_AddSourceBuffer_t>(0x821C5A18);
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x821C5978);
 
@@ -84,6 +86,70 @@ namespace sp
             {
                 xbox::DbgPrint("ShowKeyboard cancelled.\n");
             }
+        }
+    }
+
+    Detour Load_MapEntsPtr_Detour;
+
+    void Load_MapEntsPtr_Hook()
+    {
+        // TODO: don't write null byte to file
+        // and add null byte to entityString when reading from file
+
+        xbox::DbgPrint("Load_MapEntsPtr_Hook\n");
+
+        // TODO: write comment what this is ***
+        // Get pointer to pointer stored at 0x82475914
+        MapEnts **varMapEntsPtr = *(MapEnts ***)0x825875D8;
+
+        Load_MapEntsPtr_Detour.GetOriginal<decltype(&Load_MapEntsPtr_Hook)>()();
+
+        // Validate pointer before dereferencing
+        if (varMapEntsPtr && *varMapEntsPtr)
+        {
+            MapEnts *mapEnts = *varMapEntsPtr;
+
+            // Write stock map ents to disk
+            std::string file_path = "game:\\dump\\";
+            file_path += mapEnts->name;
+            file_path += ".ents";                                        //  iw4x naming convention
+            std::replace(file_path.begin(), file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
+            filesystem::write_file_to_disk(file_path.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
+
+            // Load map ents from file
+            // Path to check for existing entity file
+            std::string raw_file_path = "game:\\raw\\";
+            raw_file_path += mapEnts->name;
+            raw_file_path += ".ents";                                            // IW4x naming convention
+            std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
+
+            // If the file exists, replace entityString
+            if (filesystem::file_exists(raw_file_path))
+            {
+                xbox::DbgPrint("Found entity file: %s\n", raw_file_path.c_str());
+                std::string new_entity_string = filesystem::read_file_to_string(raw_file_path);
+                if (!new_entity_string.empty())
+                {
+                    // Allocate new memory and copy the data
+                    size_t new_size = new_entity_string.size() + 1; // Include null terminator
+                    char *new_memory = static_cast<char *>(malloc(new_size));
+
+                    if (new_memory)
+                    {
+                        memcpy(new_memory, new_entity_string.c_str(), new_size); // Copy with null terminator
+                        mapEnts->entityString = new_memory;
+                        xbox::DbgPrint("Replaced entityString from file: %s\n", raw_file_path.c_str());
+                    }
+                    else
+                    {
+                        xbox::DbgPrint("Failed to allocate memory for entityString replacement.\n");
+                    }
+                }
+            }
+        }
+        else
+        {
+            xbox::DbgPrint("Hooked Load_MapEntsPtr: varMapEntsPtr is NULL or invalid.\n");
         }
     }
 
@@ -183,6 +249,9 @@ namespace sp
 
         CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
         CL_GamepadButtonEvent_Detour.Install();
+
+        Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
+        Load_MapEntsPtr_Detour.Install();
 
         Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
         Scr_ReadFile_FastFile_Detour.Install();
