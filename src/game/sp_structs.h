@@ -2,6 +2,15 @@
 
 namespace sp
 {
+    struct cmd_function_s
+    {
+        cmd_function_s *next;
+        const char *name;
+        const char *autoCompleteDir;
+        const char *autoCompleteExt;
+        void(__fastcall *function)();
+    };
+
     enum keyNum_t : __int32
     {
         K_NONE = 0x0,
@@ -140,13 +149,11 @@ namespace sp
         K_LAST_KEY = 0xDF,
     };
 
-    struct cmd_function_s
+    struct MapEnts
     {
-        cmd_function_s *next;
         const char *name;
-        const char *autoCompleteDir;
-        const char *autoCompleteExt;
-        void(__fastcall *function)();
+        char *entityString;
+        int numEntityChars;
     };
 
     enum XAssetType : __int32
@@ -274,6 +281,8 @@ namespace sp
     typedef void (*Com_PrintWarning_t)(conChannel_t channel, const char *fmt, ...);
 
     typedef void (*DB_EnumXAssets_FastFile_t)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride);
+
+    typedef void (*Load_MapEntsPtr_t)();
 
     typedef char *(*Scr_AddSourceBuffer_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
     typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
