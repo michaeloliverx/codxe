@@ -83,13 +83,17 @@ std::vector<uint8_t> Xbox360ConvertToLinearTexture(const std::vector<uint8_t> &d
 
     switch (textureFormat)
     {
+    case GPUTEXTUREFORMAT_8: // LinearPaletteIndex8bpp:
+        blockPixelSize = 1;
+        texelBytePitch = 1;
+        break;
     case GPUTEXTUREFORMAT_8_8:
         blockPixelSize = 1;
         texelBytePitch = 2;
         break;
-    case GPUTEXTUREFORMAT_8: // LinearPaletteIndex8bpp:
+    case GPUTEXTUREFORMAT_8_8_8_8: // {b8,g8,r8,ap8}
         blockPixelSize = 1;
-        texelBytePitch = 1;
+        texelBytePitch = 4;
         break;
     case GPUTEXTUREFORMAT_DXT1: // Bc1Dxt1
         blockPixelSize = 4;
@@ -100,18 +104,6 @@ std::vector<uint8_t> Xbox360ConvertToLinearTexture(const std::vector<uint8_t> &d
     case GPUTEXTUREFORMAT_DXN:
         blockPixelSize = 4;
         texelBytePitch = 16;
-        break;
-    case GPUTEXTUREFORMAT_8_8_8_8: // {b8,g8,r8,ap8}
-        blockPixelSize = 1;
-        texelBytePitch = 4;
-        break;
-    case GPUTEXTUREFORMAT_4_4_4_4: // {b4,g4,r4,x4}
-        blockPixelSize = 1;
-        texelBytePitch = 2;
-        break;
-    case GPUTEXTUREFORMAT_5_6_5: // {b5,g6,r5}
-        blockPixelSize = 1;
-        texelBytePitch = 2;
         break;
     default:
         throw std::invalid_argument("Bad texture type!");
@@ -156,12 +148,22 @@ const uint32_t DDPF_RGB = 0x40;
 const uint32_t DDPF_ALPHAPIXELS = 0x1;
 const uint32_t DDSCAPS_TEXTURE = 0x1000;
 const uint32_t DDSCAPS_MIPMAP = 0x400000;
+const uint32_t DDPF_LUMINANCE = 0x20000;
 
 // DDS Pixel Formats (FourCC Codes)
 const uint32_t DXT1_FOURCC = 0x31545844; // 'DXT1'
 const uint32_t DXT3_FOURCC = 0x33545844; // 'DXT3'
 const uint32_t DXT5_FOURCC = 0x35545844; // 'DXT5'
 const uint32_t DXN_FOURCC = 0x32495441;  // 'ATI2' (DXN / BC5)
+
+// Additional DDS Cubemap Flags
+const uint32_t DDSCAPS2_CUBEMAP = 0x200;
+const uint32_t DDSCAPS2_CUBEMAP_POSITIVEX = 0x400;
+const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEX = 0x800;
+const uint32_t DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000;
+const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000;
+const uint32_t DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000;
+const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
 
 // DDS Header Structure (with inline endian swapping)
 struct DDSHeader
@@ -193,7 +195,9 @@ struct DDSHeader
     uint32_t reserved2;
 };
 
-// Function to Generate DDS Header from GfxImage
+static_assert(sizeof(DDSHeader) == 128, "");
+
+// Function to Generate DDS Header with Cubemap Support
 bool GenerateDDSHeaderFromGfxImage(const mp::GfxImage *image, DDSHeader &header)
 {
     if (!image || !image->texture.basemap)
@@ -212,33 +216,29 @@ bool GenerateDDSHeaderFromGfxImage(const mp::GfxImage *image, DDSHeader &header)
     header.depth = _byteswap_ulong(image->depth); // Usually 0 for 2D textures
     header.mipMapCount = _byteswap_ulong(1);      // Assuming 1 mip level
 
-    // Extract texture format from basemap
+    // Extract texture format
     uint32_t format = image->texture.basemap->Format.DataFormat;
 
-    // Set pixel format based on the given texture format
+    // Set pixel format based on texture format
     switch (format)
     {
     case GPUTEXTUREFORMAT_DXT1:
         header.pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
         header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 8); // DXT1 block size
-        DbgPrint("[Plugin] Texture Format: DXT1\n");
         break;
     case GPUTEXTUREFORMAT_DXT2_3:
         header.pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
         header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16); // DXT3 block size
-        DbgPrint("[Plugin] Texture Format: DXT3\n");
         break;
     case GPUTEXTUREFORMAT_DXT4_5:
         header.pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
         header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16); // DXT5 block size
-        DbgPrint("[Plugin] Texture Format: DXT5\n");
         break;
     case GPUTEXTUREFORMAT_DXN:
         header.pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
         header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16); // DXN block size
-        DbgPrint("[Plugin] Texture Format: DXN\n");
         break;
-    case GPUTEXTUREFORMAT_8_8_8_8: // RGBA8
+    case GPUTEXTUREFORMAT_8_8_8_8:
         header.pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
         header.pixelFormat.rgbBitCount = _byteswap_ulong(32);
         header.pixelFormat.rBitMask = _byteswap_ulong(0x00FF0000);
@@ -246,7 +246,6 @@ bool GenerateDDSHeaderFromGfxImage(const mp::GfxImage *image, DDSHeader &header)
         header.pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
         header.pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
         header.pitchOrLinearSize = _byteswap_ulong(header.width * header.height * 4);
-        DbgPrint("[Plugin] Texture Format: 8_8_8_8 (RGBA)\n");
         break;
     default:
         DbgPrint("[Plugin] Error: Unsupported texture format %d!\n", format);
@@ -260,11 +259,27 @@ bool GenerateDDSHeaderFromGfxImage(const mp::GfxImage *image, DDSHeader &header)
     // Set texture capabilities
     header.caps = _byteswap_ulong(DDSCAPS_TEXTURE | DDSCAPS_MIPMAP);
 
+    // Handle Cubemaps
+    if (image->mapType == mp::MAPTYPE_CUBE)
+    {
+        header.caps2 = _byteswap_ulong(DDSCAPS2_CUBEMAP |
+                                       DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
+                                       DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
+                                       DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ);
+    }
+
     return true;
 }
 
 bool WriteDDSFileFromGfxImage(const mp::GfxImage *image)
 {
+    // Only process textures ending with "_ft"
+    std::string name = image->name;
+    if (name.find("_ft") == std::string::npos)
+    {
+        return false;
+    }
+
     if (!image || !image->pixels)
     {
         DbgPrint("[Plugin] Error: Invalid GfxImage or missing pixel data!\n");
@@ -288,49 +303,76 @@ bool WriteDDSFileFromGfxImage(const mp::GfxImage *image)
         return false;
     }
 
-    // **Set Mip Levels** from GfxImage
-    int mipLevels = image->category + 1; // TODO: verify this assumption (mip levels = category + 1)
+    // **Force 1 mip level for testing**
+    header.mipMapCount = _byteswap_ulong(1);
+    header.caps2 = _byteswap_ulong(DDSCAPS2_CUBEMAP |
+                                   DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
+                                   DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
+                                   DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ);
 
-    // if (mipLevels <= 0)
-    //     mipLevels = 1; // Ensure at least one level
-    header.mipMapCount = _byteswap_ulong(mipLevels);
-
-    // **Write DDS Header**
+    // // **Write DDS Header**
     file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
 
-    // **Process Each Mipmap Level**
-    uint32_t width = image->width;
-    uint32_t height = image->height;
-    uint32_t offset = 0;
+    unsigned int face_size = (image->width / 4) * (image->height / 4) * 8; // DXT1 block size
+    // unsigned int total_size = face_size * 6;                               // 6 faces in a cubemap
 
-    for (int level = 0; level < mipLevels; ++level)
+    for (int i = 0; i < 6; i++)
     {
-        // Compute the mip level size
-        uint32_t mipWidth = max(1U, width >> level);
-        uint32_t mipHeight = max(1U, height >> level);
+        unsigned char *face_pixels = image->pixels + (i * face_size); // Offset for each face
 
-        // Extract pixel data for this mip level
-        uint32_t mipSize = image->baseSize / (1 << (2 * level)); // Size decreases with each mip level
-        std::vector<uint8_t> mipData(image->pixels + offset, image->pixels + offset + mipSize);
-
-        for (size_t i = 0; i < mipData.size(); i += 2)
+        // Swap bytes before unswizzling
+        std::vector<uint8_t> swappedFace(face_size);
+        for (size_t j = 0; j < face_size; j += 2)
         {
-            std::swap(mipData[i], mipData[i + 1]); // Swap adjacent bytes
+            swappedFace[j] = face_pixels[j + 1];
+            swappedFace[j + 1] = face_pixels[j];
         }
 
-        // **Convert Swizzled -> Linear**
-        auto linearData = Xbox360ConvertToLinearTexture(mipData, mipWidth, mipHeight,
-                                                        static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+        // Convert swizzled texture to linear layout
+        std::vector<uint8_t> linearFace = Xbox360ConvertToLinearTexture(
+            swappedFace, image->width, image->height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
 
-        // **Write Mip Level Data**
-        file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
-
-        offset += mipSize; // Move to the next mip level
+        file.write(reinterpret_cast<const char *>(linearFace.data()), linearFace.size());
     }
 
-    file.close();
-    DbgPrint("[Plugin] Successfully wrote DDS file with %d mip levels: %s\n", mipLevels, filename.c_str());
     return true;
+
+    // uint32_t width = image->width;
+    // uint32_t height = image->height;
+    // uint32_t bytesPerPixel = 4; // Assuming RGBA8
+    // uint32_t faceSize = width * height * bytesPerPixel;
+
+    // // DDS expects faces in the order: +X, -X, +Y, -Y, +Z, -Z
+    // const int ddsFaceOrder[6] = {0, 1, 2, 3, 4, 5}; // Adjust if needed
+
+    // // **Write each cubemap face correctly**
+    // for (int i = 0; i < 6; ++i)
+    // {
+    //     int face = ddsFaceOrder[i]; // Get the correct face order
+
+    //     // Extract only this face's data
+    //     uint8_t *faceData = image->pixels + (face * faceSize);
+    //     std::vector<uint8_t> swappedData(faceData, faceData + faceSize);
+
+    //     // **Byte Swap ONLY this face's data**
+    //     for (size_t j = 0; j < swappedData.size(); j += 2)
+    //     {
+    //         std::swap(swappedData[j], swappedData[j + 1]); // Swap adjacent bytes
+    //     }
+
+    //     // **Convert Swizzled -> Linear**
+    //     auto linearData = Xbox360ConvertToLinearTexture(swappedData, width, height,
+    //                                                     static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+
+    //     // **Write Only This Face**
+    //     file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
+
+    //     DbgPrint("[Plugin] Wrote face %d to DDS file with byte swap.\n", face);
+    // }
+
+    // file.close();
+    // DbgPrint("[Plugin] Successfully wrote DDS cubemap with 6 faces and byte swapping: %s\n", filename.c_str());
+    // return true;
 }
 
 struct DDSImage
@@ -438,13 +480,17 @@ std::vector<uint8_t> Xbox360ConvertToTiledTexture(const std::vector<uint8_t> &li
 
     switch (textureFormat)
     {
+    case GPUTEXTUREFORMAT_8: // LinearPaletteIndex8bpp:
+        blockPixelSize = 1;
+        texelBytePitch = 1;
+        break;
     case GPUTEXTUREFORMAT_8_8:
         blockPixelSize = 1;
         texelBytePitch = 2;
         break;
-    case GPUTEXTUREFORMAT_8: // LinearPaletteIndex8bpp:
+    case GPUTEXTUREFORMAT_8_8_8_8: // {b8,g8,r8,ap8}
         blockPixelSize = 1;
-        texelBytePitch = 1;
+        texelBytePitch = 4;
         break;
     case GPUTEXTUREFORMAT_DXT1: // Bc1Dxt1
         blockPixelSize = 4;
@@ -455,15 +501,6 @@ std::vector<uint8_t> Xbox360ConvertToTiledTexture(const std::vector<uint8_t> &li
     case GPUTEXTUREFORMAT_DXN:
         blockPixelSize = 4;
         texelBytePitch = 16;
-        break;
-    case GPUTEXTUREFORMAT_8_8_8_8: // {b8,g8,r8,ap8}
-        blockPixelSize = 1;
-        texelBytePitch = 4;
-        break;
-    case GPUTEXTUREFORMAT_4_4_4_4: // {b4,g4,r4,x4}
-    case GPUTEXTUREFORMAT_5_6_5:   // {b5,g6,r5}
-        blockPixelSize = 1;
-        texelBytePitch = 2;
         break;
     default:
         throw std::invalid_argument("Bad texture type!");
@@ -764,10 +801,202 @@ namespace mp
         }
     }
 
+    void Image_Dump(const GfxImage *image)
+    {
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, Format=%d\n",
+                   image->name,
+                   image->mapType,
+                   image->width,
+                   image->height,
+                   image->texture.basemap->Format.MaxMipLevel + 1,
+                   image->texture.basemap->Format.DataFormat);
+
+        // TODO: cleanup empty files if failed
+
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image '%s'\n", image->name);
+
+        if (!image)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Null GfxImage!\n");
+            return;
+        }
+
+        if (!image->pixels || image->baseSize == 0)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Image '%s' has no valid pixel data!\n", image->name);
+            return;
+        }
+
+        if (image->mapType != MAPTYPE_2D && image->mapType != MAPTYPE_CUBE)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported map type %d!\n", image->mapType);
+            return;
+        }
+
+        DDSHeader header;
+        memset(&header, 0, sizeof(DDSHeader));
+
+        header.magic = _byteswap_ulong(DDS_MAGIC);
+        header.size = _byteswap_ulong(DDS_HEADER_SIZE);
+        header.flags = _byteswap_ulong(DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE);
+        header.height = _byteswap_ulong(image->height);
+        header.width = _byteswap_ulong(image->width);
+        header.depth = _byteswap_ulong(image->depth);
+        header.mipMapCount = _byteswap_ulong(image->texture.basemap->Format.MaxMipLevel + 1);
+
+        auto format = image->texture.basemap->Format.DataFormat;
+        switch (format)
+        {
+        case GPUTEXTUREFORMAT_DXT1:
+            header.pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
+            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 8);
+            break;
+        case GPUTEXTUREFORMAT_DXT2_3:
+            header.pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
+            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16);
+            break;
+        case GPUTEXTUREFORMAT_DXT4_5:
+            header.pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
+            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16);
+            break;
+        case GPUTEXTUREFORMAT_DXN:
+            header.pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
+            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16);
+            break;
+        case GPUTEXTUREFORMAT_8:
+            header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE);
+            header.pixelFormat.rgbBitCount = _byteswap_ulong(8);
+            header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
+            header.pixelFormat.gBitMask = 0;
+            header.pixelFormat.bBitMask = 0;
+            header.pixelFormat.aBitMask = 0;
+            header.pitchOrLinearSize = _byteswap_ulong(header.width * header.height * 1);
+            break;
+        case GPUTEXTUREFORMAT_8_8:
+            header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
+            header.pixelFormat.rgbBitCount = _byteswap_ulong(16);
+            header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
+            header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
+            header.pixelFormat.bBitMask = 0;
+            header.pixelFormat.aBitMask = 0;
+            header.pitchOrLinearSize = _byteswap_ulong(header.width * header.height * 2);
+            break;
+        case GPUTEXTUREFORMAT_8_8_8_8:
+            header.pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
+            header.pixelFormat.rgbBitCount = _byteswap_ulong(32);
+            header.pixelFormat.rBitMask = _byteswap_ulong(0x00FF0000);
+            header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
+            header.pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
+            header.pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
+            header.pitchOrLinearSize = _byteswap_ulong(header.width * header.height * 4);
+            break;
+        default:
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
+            return;
+        }
+
+        // Set texture capabilities
+        header.caps = _byteswap_ulong(DDSCAPS_TEXTURE | DDSCAPS_MIPMAP);
+
+        // Handle Cubemaps
+        if (image->mapType == mp::MAPTYPE_CUBE)
+        {
+            header.caps2 = _byteswap_ulong(DDSCAPS2_CUBEMAP |
+                                           DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
+                                           DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
+                                           DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ);
+        }
+
+        std::string filename = "game:\\dump\\images\\";
+        std::string sanitized_name = image->name;
+
+        // Remove invalid characters
+        sanitized_name.erase(std::remove_if(sanitized_name.begin(), sanitized_name.end(), [](char c)
+                                            { return c == '*'; }),
+                             sanitized_name.end());
+
+        filename += sanitized_name + ".dds";
+
+        std::ofstream file(filename, std::ios::binary);
+        if (!file)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", filename.c_str());
+            return;
+        }
+
+        if (image->mapType == MAPTYPE_CUBE)
+        {
+            file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
+
+            unsigned int face_size = 0;
+
+            switch (image->texture.basemap->Format.DataFormat)
+            {
+            case GPUTEXTUREFORMAT_DXT1:
+                face_size = (image->width / 4) * (image->height / 4) * 8;
+                break;
+            case GPUTEXTUREFORMAT_8_8_8_8:
+                face_size = image->width * image->height * 4;
+                break;
+            default:
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported cube map format %d!\n", image->texture.basemap->Format.DataFormat);
+                return;
+            }
+
+            // TODO: handle mip levels per face for cubemaps
+            for (int i = 0; i < 6; i++)
+            {
+                unsigned char *face_pixels = image->pixels + (i * face_size); // Offset for each face
+
+                // Swap bytes before unswizzling
+                std::vector<uint8_t> swappedFace(face_size);
+                for (size_t j = 0; j < face_size; j += 2)
+                {
+                    swappedFace[j] = face_pixels[j + 1];
+                    swappedFace[j + 1] = face_pixels[j];
+                }
+
+                // Convert swizzled texture to linear layout
+                std::vector<uint8_t> linearFace = Xbox360ConvertToLinearTexture(
+                    swappedFace, image->width, image->height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+
+                file.write(reinterpret_cast<const char *>(linearFace.data()), linearFace.size());
+            }
+
+            file.close();
+        }
+        else if (image->mapType == MAPTYPE_2D)
+        {
+            // TODO: write mip levels
+            file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
+            std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
+            for (size_t i = 0; i < pixelData.size(); i += 2)
+            {
+                std::swap(pixelData[i], pixelData[i + 1]); // Swap adjacent bytes
+            }
+            auto linearData = Xbox360ConvertToLinearTexture(pixelData, image->width, image->height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+            file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
+
+            file.close();
+        }
+        else
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported map type %d!\n", image->mapType);
+            return;
+        }
+    }
+
     void Cmd_imagesdump()
     {
         ImageList imageList;
         R_GetImageList(&imageList);
+
+        // images bundled in xex
+        auto g_imageProgs = reinterpret_cast<GfxImage *>(0x84FEA6D0);
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            imageList.image[imageList.count++] = &g_imageProgs[i];
+        }
 
         Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping %d images to 'raw\\images\\' %d\n", imageList.count);
 
@@ -777,94 +1006,137 @@ namespace mp
         for (unsigned int i = 0; i < imageList.count; i++)
         {
             auto image = imageList.image[i];
+            // xbox::DbgPrint(
+            //     "Image %d: Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, Format=%d\n",
+            //     i,
+            //     image->name,
+            //     image->mapType,
+            //     image->width,
+            //     image->height,
+            //     image->texture.basemap->Format.MaxMipLevel + 1,
+            //     image->texture.basemap->Format.DataFormat
+            // );
 
-            xbox::DbgPrint(
-                "Image %d: Name='%s', Type=%d, Dimensions=%dx%dx%d, MipLevels=%d, Format=%d\n",
-                i,
-                image->name,
-                image->mapType,
-                image->width,
-                image->height,
-                image->depth,
-                image->category,
-                image->texture.loadDef ? image->texture.loadDef->format : -1);
-
-            WriteDDSFileFromGfxImage(image);
+            Image_Dump(image);
         }
-
-        // images bundled in xex
-        // TODO: investigate     v2 = g_imageProgs; imagelist all
     }
 
     void Cmd_imagesreplace_f()
     {
+        // mp::ImageList imageList;
+        // mp::R_GetImageList(&imageList);
+        // imageList.count = 0;
 
-        mp::ImageList imageList;
-        mp::R_GetImageList(&imageList);
+        // GfxImage g_imageProgs[10] = reinterpret_cast<GfxImage *>(0x82A1F8A0);
 
-        std::string path = "game:\\raw\\images";
-        std::vector<std::string> files = ListFilesInDirectory(path);
+        // std::string path = "game:\\raw\\images";
+        // std::vector<std::string> files = ListFilesInDirectory(path);
 
-        for (unsigned int i = 0; i < imageList.count; i++)
-        {
-            auto image = imageList.image[i];
+        // for (unsigned int i = 0; i < imageList.count; i++)
+        // {
+        //     auto image = imageList.image[i];
+        //     // Only process textures ending with "_ft"
+        //     std::string name = image->name;
+        //     if (name.find("_ft") == std::string::npos)
+        //     {
+        //         // Check if the asset name is in the files list
+        //         auto it = std::find_if(files.begin(), files.end(), [&](const std::string &filename)
+        //                                {
+        //                                    return filename.find(image->name) != std::string::npos; // Simple name matching
+        //                                });
+        //         if (it != files.end())
+        //         {
+        //             std::string filePath = path + "\\" + *it;
+        //             DbgPrint("INFO: Found matching texture file: %s for asset: %s\n", filePath.c_str(), image->name);
 
-            DbgPrint("Loading from disk Image %d: Name='%s', Type=%d, Dimensions=%dx%dx%d, MipLevels=%d, Format=%d\n",
-                     i, image->name, image->mapType, image->width, image->height, image->depth, image->category, image->texture.loadDef ? image->texture.loadDef->format : -1);
+        //             // Read the DDS file
+        //             DDSImage ddsImage = ReadDDSFile(filePath);
+        //             if (ddsImage.data.empty())
+        //             {
+        //                 DbgPrint("ERROR: Failed to load DDS file: %s\n", filePath.c_str());
+        //                 continue;
+        //             }
 
-            // Check if the asset name is in the files list
-            auto it = std::find_if(files.begin(), files.end(), [&](const std::string &filename)
-                                   {
-                                       return filename.find(image->name) != std::string::npos; // Simple name matching
-                                   });
+        //             unsigned int face_size = (image->width / 4) * (image->height / 4) * 8; // DXT1 block size
+        //             for (int i = 0; i < 6; i++)
+        //             {
+        //                 unsigned char *face_pixels = ddsImage.data.data() + (i * face_size); // Offset for each face
+        //                 auto tiledData = Xbox360ConvertToTiledTexture(
+        //                     std::vector<uint8_t>(face_pixels, face_pixels + face_size),
+        //                     image->width, image->height,
+        //                     static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+        //                 auto swappedData = std::vector<uint8_t>(tiledData.size());
+        //                 for (size_t j = 0; j < tiledData.size(); j += 2)
+        //                 {
+        //                     swappedData[j] = tiledData[j + 1];
+        //                     swappedData[j + 1] = tiledData[j];
+        //                 }
+        //                 memcpy(image->pixels + (i * face_size), swappedData.data(), face_size);
+        //             }
+        //         }
+        //     }
+        // }
 
-            if (it != files.end())
-            {
-                std::string filePath = path + "\\" + *it;
-                DbgPrint("INFO: Found matching texture file: %s for asset: %s\n", filePath.c_str(), image->name);
+        // for (unsigned int i = 0; i < imageList.count; i++)
+        // {
+        //     auto image = imageList.image[i];
 
-                // Read the DDS file
-                DDSImage ddsImage = ReadDDSFile(filePath);
-                if (ddsImage.data.empty())
-                {
-                    DbgPrint("ERROR: Failed to load DDS file: %s\n", filePath.c_str());
-                    continue;
-                }
+        //     DbgPrint("Loading from disk Image %d: Name='%s', Type=%d, Dimensions=%dx%dx%d, MipLevels=%d, Format=%d\n",
+        //              i, image->name, image->mapType, image->width, image->height, image->depth, image->category, image->texture.loadDef ? image->texture.loadDef->format : -1);
 
-                // Determine GPU texture format (assuming it's stored in asset metadata)
-                GPUTEXTUREFORMAT textureFormat = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
+        //     // Check if the asset name is in the files list
+        //     auto it = std::find_if(files.begin(), files.end(), [&](const std::string &filename)
+        //                            {
+        //                                return filename.find(image->name) != std::string::npos; // Simple name matching
+        //                            });
 
-                // Convert the DDS image to tiled texture format
-                std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(ddsImage.data, ddsImage.header.width, ddsImage.header.height, textureFormat);
+        //     if (it != files.end())
+        //     {
+        //         std::string filePath = path + "\\" + *it;
+        //         DbgPrint("INFO: Found matching texture file: %s for asset: %s\n", filePath.c_str(), image->name);
 
-                if (tiledData.empty())
-                {
-                    DbgPrint("ERROR: Failed to convert texture to tiled format: %s\n", image->name);
-                    continue;
-                }
+        //         // Read the DDS file
+        //         DDSImage ddsImage = ReadDDSFile(filePath);
+        //         if (ddsImage.data.empty())
+        //         {
+        //             DbgPrint("ERROR: Failed to load DDS file: %s\n", filePath.c_str());
+        //             continue;
+        //         }
 
-                // TODO: handle mipmaps
-                // // Ensure tiledData size matches expected baseSize
-                // if (tiledData.size() != entry->entry.asset.header.image->baseSize)
-                // {
-                //     DbgPrint("WARNING: Skipping %s: Tiled texture size (%u bytes) does not match expected base size (%u bytes).\n",
-                //              entry->entry.asset.header.image->name, static_cast<unsigned int>(tiledData.size()), entry->entry.asset.header.image->baseSize);
+        //         // Determine GPU texture format (assuming it's stored in asset metadata)
+        //         GPUTEXTUREFORMAT textureFormat = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
 
-                //     continue; // Skip this image and move to the next
-                // }
+        //         // Convert the DDS image to tiled texture format
+        //         std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(ddsImage.data, ddsImage.header.width, ddsImage.header.height, textureFormat);
 
-                // Swap adjacent bytes in the tiled data
-                for (size_t i = 0; i < tiledData.size(); i += 2)
-                {
-                    std::swap(tiledData[i], tiledData[i + 1]); // Swap adjacent bytes
-                }
+        //         if (tiledData.empty())
+        //         {
+        //             DbgPrint("ERROR: Failed to convert texture to tiled format: %s\n", image->name);
+        //             continue;
+        //         }
 
-                // Overwrite the existing pixel data in-place
-                memcpy(image->pixels, tiledData.data(), tiledData.size());
+        //         // TODO: handle mipmaps
+        //         // // Ensure tiledData size matches expected baseSize
+        //         // if (tiledData.size() != entry->entry.asset.header.image->baseSize)
+        //         // {
+        //         //     DbgPrint("WARNING: Skipping %s: Tiled texture size (%u bytes) does not match expected base size (%u bytes).\n",
+        //         //              entry->entry.asset.header.image->name, static_cast<unsigned int>(tiledData.size()), entry->entry.asset.header.image->baseSize);
 
-                DbgPrint("SUCCESS: Replaced texture %s with new tiled data.\n", image->name);
-            }
-        }
+        //         //     continue; // Skip this image and move to the next
+        //         // }
+
+        //         // Swap adjacent bytes in the tiled data
+        //         for (size_t i = 0; i < tiledData.size(); i += 2)
+        //         {
+        //             std::swap(tiledData[i], tiledData[i + 1]); // Swap adjacent bytes
+        //         }
+
+        //         // Overwrite the existing pixel data in-place
+        //         memcpy(image->pixels, tiledData.data(), tiledData.size());
+
+        //         DbgPrint("SUCCESS: Replaced texture %s with new tiled data.\n", image->name);
+        //     }
+        // }
     }
 
     void init()
