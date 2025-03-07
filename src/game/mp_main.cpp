@@ -553,16 +553,16 @@ std::vector<std::string> ListFilesInDirectory(const std::string &directory)
         {
             std::string filename(findFileData.cFileName);
             filenames.push_back(filename);
-            DbgPrint("File: %s\n", filename.c_str());
+            // DbgPrint("File: %s\n", filename.c_str());
         }
     } while (FindNextFileA(hFind, &findFileData) != 0);
 
     FindClose(hFind);
 
-    if (filenames.empty())
-    {
-        DbgPrint("INFO: Directory '%s' contains no files.\n", directory.c_str());
-    }
+    // if (filenames.empty())
+    // {
+    //     DbgPrint("INFO: Directory '%s' contains no files.\n", directory.c_str());
+    // }
 
     return filenames;
 }
@@ -1021,6 +1021,114 @@ namespace mp
         }
     }
 
+    // TBC
+    void Cmd_imagesload_f()
+    {
+        ImageList imageList;
+        R_GetImageList(&imageList);
+
+        std::string load_path = "game:\\raw\\images";
+
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Loading images from %s' %d\n", load_path.c_str());
+
+        std::vector<std::string> files = ListFilesInDirectory(load_path);
+        if (files.empty())
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "No files found in %s\n", load_path.c_str());
+            return;
+        }
+
+        for (unsigned int i = 0; i < imageList.count; i++)
+        {
+            auto image = imageList.image[i];
+            std::string imageWithExt = std::string(image->name) + ".dds";
+
+            // Find the matching file with full path
+            auto it = std::find_if(files.begin(), files.end(), [&](const std::string &file)
+                                   { return file == imageWithExt; });
+
+            if (it == files.end())
+            {
+                continue;
+            }
+
+            std::string filePath = load_path + "\\" + *it;
+
+            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image '%s' exists in directory as '%s'\n", image->name, filePath.c_str());
+
+            DDSImage ddsImage = ReadDDSFile(filePath);
+            if (ddsImage.data.empty())
+            {
+                Com_PrintError(CON_CHANNEL_ERROR, "Failed to load DDS file: %s\n", filePath.c_str());
+                continue;
+            }
+
+            const auto format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
+            DbgPrint("INFO: Loading image '%s' from file: %s format=%d\n", image->name, filePath.c_str(), format);
+
+            // Opt in
+            if (image->mapType == MAPTYPE_CUBE)
+            {
+
+                unsigned int face_size = 0;
+                switch (format)
+                {
+                case GPUTEXTUREFORMAT_DXT1:
+                    face_size = (image->width / 4) * (image->height / 4) * 8;
+                    break;
+                case GPUTEXTUREFORMAT_8_8_8_8:
+                    face_size = image->width * image->height * 4;
+                    break;
+                default:
+                    Com_PrintError(CON_CHANNEL_ERROR, "Cmd_imagesload_f: Unsupported cube map format %d!\n", image->texture.basemap->Format.DataFormat);
+                    continue;
+                }
+                DbgPrint("INFO: Loading cube map '%s' from file: %s | Format: %d | FaceSize: %d | MapType: %d | Resolution: %dx%d\n",
+                         image->name, filePath.c_str(), format, face_size, image->mapType, image->width, image->height);
+
+                // TODO: bounds check for file and pixels
+                for (int i = 0; i < 6; i++)
+                {
+                    unsigned char *face_pixels = ddsImage.data.data() + (i * face_size);
+
+                    // Convert the DDS image to tiled texture format
+                    std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
+                        std::vector<uint8_t>(face_pixels, face_pixels + face_size),
+                        image->width, image->height, format);
+
+                    // Swap bytes before unswizzling
+                    for (size_t j = 0; j < tiledData.size(); j += 2)
+                    {
+                        std::swap(tiledData[j], tiledData[j + 1]); // Swap adjacent bytes
+                    }
+
+                    // Copy the data to the image
+                    memcpy(image->pixels + (i * face_size), tiledData.data(), face_size);
+                }
+            }
+            else if (image->mapType == MAPTYPE_2D)
+            {
+                // Convert the DDS image to tiled texture format
+                std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
+                    ddsImage.data, ddsImage.header.width, ddsImage.header.height, format);
+
+                // Swap bytes before unswizzling
+                for (size_t j = 0; j < tiledData.size(); j += 2)
+                {
+                    std::swap(tiledData[j], tiledData[j + 1]); // Swap adjacent bytes
+                }
+
+                // Copy the data to the image
+                memcpy(image->pixels, tiledData.data(), tiledData.size());
+            }
+            else
+            {
+                Com_PrintError(CON_CHANNEL_ERROR, "Cmd_imagesload_f: Unsupported map type %d!\n", image->mapType);
+                continue;
+            }
+        }
+    }
+
     void Cmd_imagesreplace_f()
     {
         // mp::ImageList imageList;
@@ -1165,6 +1273,6 @@ namespace mp
         Cmd_AddCommandInternal("imagedump", Cmd_imagesdump, imagesdump_VAR);
 
         cmd_function_s *imagesreplace_f_VAR = new cmd_function_s;
-        Cmd_AddCommandInternal("imageload", Cmd_imagesreplace_f, imagesreplace_f_VAR);
+        Cmd_AddCommandInternal("imageload", Cmd_imagesload_f, imagesreplace_f_VAR);
     }
 }
