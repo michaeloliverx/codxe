@@ -609,16 +609,65 @@ namespace mp
         }
     }
 
-    void Image_Dump(const GfxImage *image)
+    void Image_DbgPrint(const GfxImage *image)
     {
-        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, Format=%d\n",
+        const int format = image->texture.basemap->Format.DataFormat;
+        char *format_str;
+        switch (format)
+        {
+        case GPUTEXTUREFORMAT_DXT1:
+            format_str = "DXT1";
+            break;
+        case GPUTEXTUREFORMAT_DXT2_3:
+            format_str = "DXT2_3";
+            break;
+        case GPUTEXTUREFORMAT_DXT4_5:
+            format_str = "DXT4_5";
+            break;
+        case GPUTEXTUREFORMAT_DXN:
+            format_str = "DXN";
+            break;
+        case GPUTEXTUREFORMAT_8:
+            format_str = "8";
+            break;
+        case GPUTEXTUREFORMAT_8_8:
+            format_str = "8_8";
+            break;
+        case GPUTEXTUREFORMAT_8_8_8_8:
+            format_str = "8_8_8_8";
+            break;
+        default:
+            // std::string foo = "";
+            // foo += format;
+            // foo += " (UNKNOWN)";
+            format_str = "UNKNOWN";
+            break;
+        }
+
+        XGTEXTURE_DESC SourceDesc;
+        XGGetTextureDesc(image->texture.basemap, 0, &SourceDesc);
+        BOOL IsBorderTexture = XGIsBorderTexture(image->texture.basemap);
+        UINT MipTailBaseLevel = XGGetMipTailBaseLevel(SourceDesc.Width, SourceDesc.Height, IsBorderTexture);
+
+        // SourceDesc.BitsPerPixel;
+        // SourceDesc.BytesPerBlock;
+
+        UINT MipLevelCount = image->texture.basemap->GetLevelCount();
+
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_DbgPrint: Dumping image Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, MipTailBaseLevel=%d, Format=%s, BitsPerPixel=%d, BytesPerBlock=%d\n",
                    image->name,
                    image->mapType,
                    image->width,
                    image->height,
-                   image->texture.basemap->Format.MaxMipLevel + 1,
-                   image->texture.basemap->Format.DataFormat);
+                   MipLevelCount,
+                   MipTailBaseLevel,
+                   format_str,
+                   SourceDesc.BitsPerPixel,
+                   SourceDesc.BytesPerBlock);
+    }
 
+    void Image_Dump(const GfxImage *image)
+    {
         // TODO: cleanup empty files if failed
 
         Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image '%s'\n", image->name);
@@ -650,7 +699,7 @@ namespace mp
         header.height = _byteswap_ulong(image->height);
         header.width = _byteswap_ulong(image->width);
         header.depth = _byteswap_ulong(image->depth);
-        header.mipMapCount = _byteswap_ulong(image->texture.basemap->Format.MaxMipLevel + 1);
+        header.mipMapCount = _byteswap_ulong(image->texture.basemap->GetLevelCount());
 
         auto format = image->texture.basemap->Format.DataFormat;
         switch (format)
@@ -814,23 +863,24 @@ namespace mp
         for (unsigned int i = 0; i < imageList.count; i++)
         {
             auto image = imageList.image[i];
-            xbox::DbgPrint(
-                "Image %d: Name='%s', Type=%d, Dimensions=%dx%dx%d, MipLevels=%d, Format=%d, CardMemory=%d bytes, BaseSize=%d, Streaming=%d, DelayLoad=%d, Semantic=%d, StreamSlot=%d\n",
-                i,
-                image->name,
-                image->mapType,
-                image->width,
-                image->height,
-                image->depth, // Added depth for 3D textures
-                image->texture.basemap->Format.MaxMipLevel + 1,
-                image->texture.basemap->Format.DataFormat,
-                image->cardMemory.platform[1], // Total memory allocation for the texture
-                image->baseSize,               // Base memory size (for non-streaming textures)
-                image->streaming,              // Whether the image is streamed
-                image->delayLoadPixels,        // Whether pixel data is delayed in loading
-                image->semantic,               // Purpose of the texture in the engine
-                image->streamSlot              // Streaming slot ID
-            );
+            // xbox::DbgPrint(
+            //     "Image %d: Name='%s', Type=%d, Dimensions=%dx%dx%d, MipLevels=%d, Format=%d, CardMemory=%d bytes, BaseSize=%d, Streaming=%d, DelayLoad=%d, Semantic=%d, StreamSlot=%d\n",
+            //     i,
+            //     image->name,
+            //     image->mapType,
+            //     image->width,
+            //     image->height,
+            //     image->depth, // Added depth for 3D textures
+            //     image->texture.basemap->Format.MaxMipLevel + 1,
+            //     image->texture.basemap->Format.DataFormat,
+            //     image->cardMemory.platform[1], // Total memory allocation for the texture
+            //     image->baseSize,               // Base memory size (for non-streaming textures)
+            //     image->streaming,              // Whether the image is streamed
+            //     image->delayLoadPixels,        // Whether pixel data is delayed in loading
+            //     image->semantic,               // Purpose of the texture in the engine
+            //     image->streamSlot              // Streaming slot ID
+            // );
+            Image_DbgPrint(image);
 
             Image_Dump(image);
         }
