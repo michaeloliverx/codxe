@@ -347,6 +347,7 @@ namespace mp
 
     typedef void (*DB_EnumXAssets_FastFile_t)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride);
     typedef XAssetHeader *(*DB_FindXAssetHeader_t)(const XAssetType type, const char *name);
+    typedef int (*DB_GetAllXAssetOfType_FastFile_t)(XAssetType type, XAssetHeader *assets, int maxCount);
 
     typedef void (*Load_MapEntsPtr_t)();
 

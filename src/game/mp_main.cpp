@@ -422,6 +422,7 @@ namespace mp
 
     DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x8229ED48);
     DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x822A0298);
+    DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile = reinterpret_cast<DB_GetAllXAssetOfType_FastFile_t>(0x8229E8E0);
 
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
 
@@ -1172,6 +1173,102 @@ namespace mp
         }
     }
 
+    void Image_Replace2(GfxImage *image)
+    {
+        if (image->mapType != MAPTYPE_2D)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is not a 2D texture!\n", image->name);
+            return;
+        }
+
+        if (image->texture.basemap->Format.DataFormat != GPUTEXTUREFORMAT_DXT1)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is not a DXT1 texture!\n", image->name);
+            return;
+        }
+
+        const std::string replacement_base_dir = "game:\\raw\\images";
+        const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
+
+        if (!FileExists(replacement_path.c_str()))
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "File does not exist: %s\n", replacement_path.c_str());
+            return;
+        }
+
+        DDSImage ddsImage = ReadDDSFile(replacement_path.c_str());
+        if (ddsImage.data.empty())
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Failed to load DDS file: %s\n", replacement_path.c_str());
+            return;
+        }
+
+        if (image->width != ddsImage.header.width || image->height != ddsImage.header.height)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' dimensions do not match DDS file: %s\n", image->name, replacement_path.c_str());
+            return;
+        }
+
+        UINT MaxMipLevel = image->texture.basemap->GetLevelCount();
+
+        if (MaxMipLevel != ddsImage.header.mipMapCount)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' mip levels do not match DDS file: %s\n", image->name, replacement_path.c_str());
+            return;
+        }
+
+        UINT offset = 0; // Track position in DDS data
+
+        for (UINT i = 0; i < MaxMipLevel; i++)
+        {
+            // TODO: Ensure we're not reading out of bounds
+            // TODO: Don't assume DXT1 format blocks
+            // Compute width/height for this mip level
+            UINT width = max(1U, ddsImage.header.width >> i);
+            UINT height = max(1U, ddsImage.header.height >> i);
+
+            // Ensure width/height are at least 4x4 for DXT1 blocks
+            UINT blockWidth = (width + 3) / 4;
+            UINT blockHeight = (height + 3) / 4;
+            UINT CurrentLevelSize = blockWidth * blockHeight * 8; // 8 bytes per 4x4 block
+
+            // Ensure we're not reading out of bounds
+            if (offset + CurrentLevelSize > ddsImage.data.size())
+            {
+                DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", i);
+                break;
+            }
+
+            std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
+                std::vector<uint8_t>(ddsImage.data.begin() + offset, ddsImage.data.begin() + offset + CurrentLevelSize),
+                width, height,
+                static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+
+            for (size_t j = 0; j < tiledData.size(); j += 2)
+            {
+                std::swap(tiledData[j], tiledData[j + 1]);
+            }
+
+            memcpy(image->pixels + offset, tiledData.data(), tiledData.size());
+
+            offset += CurrentLevelSize;
+        }
+    }
+
+    void Cmd_imageload2_f()
+    {
+        const UINT MAX_IMAGES = 2048;
+        XAssetHeader assets[MAX_IMAGES];
+        UINT count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
+        DbgPrint("Cmd_imageload2_f: Found %d images\n", count);
+        for (UINT i = 0; i < count; i++)
+        {
+            GfxImage *image = assets[i].image;
+            DbgPrint("Cmd_imageload2_f: Image '%s' loaded\n", image->name);
+            Image_Replace2(image);
+        }
+    }
+
     void Cmd_test_f()
     {
         ImageList imageList;
@@ -1234,12 +1331,12 @@ namespace mp
 
                 UINT BaseSize;
                 XGGetTextureLayout(image->texture.basemap, 0, &BaseSize, 0, 0, 0, 0, 0, 0, 0, 0);
-                UINT MaxMipLevel = image->texture.basemap->Format.MaxMipLevel + 1;
+                UINT MaxMipLevel = image->texture.basemap->GetLevelCount();
                 BOOL IsBorderTexture = XGIsBorderTexture(image->texture.basemap);
                 UINT MipMapTailLevel = XGGetMipTailBaseLevel(SourceDesc.Width, SourceDesc.Height, IsBorderTexture);
 
                 DbgPrint("Base Texture Size: %u bytes\n", BaseSize);
-                DbgPrint("Max Mip Levels: %u\n", MaxMipLevel);
+                DbgPrint("Max Mip Levelss: %u\n", MaxMipLevel);
                 DbgPrint("Mip Map Tail Level: %u\n", MipMapTailLevel);
 
                 UINT offset = 0; // Track position in DDS data
@@ -1265,44 +1362,37 @@ namespace mp
                     DbgPrint("  - Computed Mip Size: %u bytes\n", CurrentLevelSize);
                     DbgPrint("  - Data Offset in DDS: %u bytes\n", offset);
 
-                    if (i < MipMapTailLevel)
+                    // Ensure we're not reading out of bounds
+                    if (offset + CurrentLevelSize > ddsImage.data.size())
                     {
-                        // Ensure we're not reading out of bounds
-                        if (offset + CurrentLevelSize > ddsImage.data.size())
-                        {
-                            DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", i);
-                            break;
-                        }
-
-                        // Extract correct slice of the DDS mip level
-                        DbgPrint("  - Extracting mip level from DDS data...\n");
-                        std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
-                            std::vector<uint8_t>(ddsImage.data.begin() + offset, ddsImage.data.begin() + offset + CurrentLevelSize),
-                            width, height,
-                            static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
-
-                        // Swap bytes (endianness fix for Xbox 360)
-                        DbgPrint("  - Performing byte swapping for Xbox 360...\n");
-                        for (size_t j = 0; j < tiledData.size(); j += 2)
-                        {
-                            std::swap(tiledData[j], tiledData[j + 1]);
-                        }
-
-                        // // Compute final memory offset in the GPU texture
-                        // UINT gpuOffset = XGGetMipLevelOffset(image->texture.basemap, 0, i + 1);
-                        // DbgPrint("  - GPU Memory Offset: %u bytes\n", gpuOffset);
-
-                        // Copy the converted mip level to the final texture memory
-                        DbgPrint("  - Copying %u bytes to GPU texture memory...\n", (UINT)tiledData.size());
-                        memcpy(image->pixels + offset, tiledData.data(), tiledData.size());
-
-                        // Move the offset forward
-                        offset += CurrentLevelSize;
+                        DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", i);
+                        break;
                     }
-                    else
+
+                    // Extract correct slice of the DDS mip level
+                    DbgPrint("  - Extracting mip level from DDS data...\n");
+                    std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
+                        std::vector<uint8_t>(ddsImage.data.begin() + offset, ddsImage.data.begin() + offset + CurrentLevelSize),
+                        width, height,
+                        static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+
+                    // Swap bytes (endianness fix for Xbox 360)
+                    DbgPrint("  - Performing byte swapping for Xbox 360...\n");
+                    for (size_t j = 0; j < tiledData.size(); j += 2)
                     {
-                        DbgPrint("  - [SKIPPING] Mip Tail starts at level %u, handling separately.\n", MipMapTailLevel);
+                        std::swap(tiledData[j], tiledData[j + 1]);
                     }
+
+                    // // Compute final memory offset in the GPU texture
+                    // UINT gpuOffset = XGGetMipLevelOffset(image->texture.basemap, 0, i + 1);
+                    // DbgPrint("  - GPU Memory Offset: %u bytes\n", gpuOffset);
+
+                    // Copy the converted mip level to the final texture memory
+                    DbgPrint("  - Copying %u bytes to GPU texture memory...\n", (UINT)tiledData.size());
+                    memcpy(image->pixels + offset, tiledData.data(), tiledData.size());
+
+                    // Move the offset forward
+                    offset += CurrentLevelSize;
                 }
 
                 // DEBUG CODE
@@ -1357,7 +1447,7 @@ namespace mp
         Cmd_AddCommandInternal("imagedump", Cmd_imagedump, imagedump_VAR);
 
         cmd_function_s *imageload_f_VAR = new cmd_function_s;
-        Cmd_AddCommandInternal("imageload", Cmd_imageload_f, imageload_f_VAR);
+        Cmd_AddCommandInternal("imageload", Cmd_imageload2_f, imageload_f_VAR);
 
         cmd_function_s *test_VAR = new cmd_function_s;
         Cmd_AddCommandInternal("test", Cmd_test_f, test_VAR);
