@@ -1173,53 +1173,23 @@ namespace mp
         }
     }
 
-    void Image_Replace2(GfxImage *image)
+    void Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
     {
         if (image->mapType != MAPTYPE_2D)
         {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is not a 2D texture!\n", image->name);
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is not a 2D map!\n", image->name);
             return;
         }
 
-        if (image->texture.basemap->Format.DataFormat != GPUTEXTUREFORMAT_DXT1)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is not a DXT1 texture!\n", image->name);
-            return;
-        }
-
-        const std::string replacement_base_dir = "game:\\raw\\images";
-        const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
-
-        if (!FileExists(replacement_path.c_str()))
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "File does not exist: %s\n", replacement_path.c_str());
-            return;
-        }
-
-        DDSImage ddsImage = ReadDDSFile(replacement_path.c_str());
-        if (ddsImage.data.empty())
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Failed to load DDS file: %s\n", replacement_path.c_str());
-            return;
-        }
-
-        if (image->width != ddsImage.header.width || image->height != ddsImage.header.height)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' dimensions do not match DDS file: %s\n", image->name, replacement_path.c_str());
-            return;
-        }
-
-        UINT MaxMipLevel = image->texture.basemap->GetLevelCount();
-
-        if (MaxMipLevel != ddsImage.header.mipMapCount)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' mip levels do not match DDS file: %s\n", image->name, replacement_path.c_str());
-            return;
-        }
+        XGTEXTURE_DESC SourceDesc;
+        XGGetTextureDesc(image->texture.basemap, 0, &SourceDesc);
+        // UINT MaxMipLevel = image->texture.basemap->GetLevelCount();
+        BOOL IsBorderTexture = XGIsBorderTexture(image->texture.basemap);
+        UINT MipTailBaseLevel = XGGetMipTailBaseLevel(SourceDesc.Width, SourceDesc.Height, IsBorderTexture);
 
         UINT offset = 0; // Track position in DDS data
 
-        for (UINT i = 0; i < MaxMipLevel; i++)
+        for (UINT i = 0; i < MipTailBaseLevel; i++)
         {
             // TODO: Ensure we're not reading out of bounds
             // TODO: Don't assume DXT1 format blocks
@@ -1255,6 +1225,90 @@ namespace mp
         }
     }
 
+    void Image_Replace_Cube(GfxImage *image, const DDSImage &ddsImage)
+    {
+        if (image->mapType != MAPTYPE_CUBE)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is not a cube map!\n", image->name);
+            return;
+        }
+
+        const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
+
+        // Check can we get the base size here and /6 for face size
+
+        unsigned int face_size = 0;
+        switch (format)
+        {
+        case GPUTEXTUREFORMAT_DXT1:
+            face_size = (image->width / 4) * (image->height / 4) * 8;
+            break;
+        case GPUTEXTUREFORMAT_8_8_8_8:
+            face_size = image->width * image->height * 4;
+            break;
+        default:
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' has unsupported format %d!\n", image->name, format);
+            return;
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            const unsigned char *face_pixels = ddsImage.data.data() + (i * face_size);
+
+            // Convert the DDS image to tiled texture format
+            std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
+                std::vector<uint8_t>(face_pixels, face_pixels + face_size),
+                image->width, image->height, format);
+
+            for (size_t j = 0; j < tiledData.size(); j += 2)
+            {
+                std::swap(tiledData[j], tiledData[j + 1]);
+            }
+
+            // Copy the data to the image
+            memcpy(image->pixels + (i * face_size), tiledData.data(), face_size);
+        }
+    }
+
+    void Image_Replace2(GfxImage *image)
+    {
+        const std::string replacement_base_dir = "game:\\raw\\images";
+        const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
+
+        if (!FileExists(replacement_path.c_str()))
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "File does not exist: %s\n", replacement_path.c_str());
+            return;
+        }
+
+        DDSImage ddsImage = ReadDDSFile(replacement_path.c_str());
+        if (ddsImage.data.empty())
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Failed to load DDS file: %s\n", replacement_path.c_str());
+            return;
+        }
+
+        if (image->width != ddsImage.header.width || image->height != ddsImage.header.height)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' dimensions do not match DDS file: %s\n", image->name, replacement_path.c_str());
+            return;
+        }
+
+        if (image->mapType == MAPTYPE_2D)
+        {
+            Image_Replace_2D(image, ddsImage);
+        }
+        else if (image->mapType == MAPTYPE_CUBE)
+        {
+            Image_Replace_Cube(image, ddsImage);
+        }
+        else
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is not a 2D or cube map!\n", image->name);
+            return;
+        }
+    }
+
     void Cmd_imageload2_f()
     {
         const UINT MAX_IMAGES = 2048;
@@ -1264,7 +1318,7 @@ namespace mp
         for (UINT i = 0; i < count; i++)
         {
             GfxImage *image = assets[i].image;
-            DbgPrint("Cmd_imageload2_f: Image '%s' loaded\n", image->name);
+            // debug image metadata print out all
             Image_Replace2(image);
         }
     }
