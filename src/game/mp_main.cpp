@@ -654,7 +654,7 @@ namespace mp
 
         UINT MipLevelCount = image->texture.basemap->GetLevelCount();
 
-        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_DbgPrint: Dumping image Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, MipTailBaseLevel=%d, Format=%s, BitsPerPixel=%d, BytesPerBlock=%d\n",
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_DbgPrint: Dumping image Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, MipTailBaseLevel=%d, Format=%s, BitsPerPixel=%d, BytesPerBlock=%d, Endian=%d\n",
                    image->name,
                    image->mapType,
                    image->width,
@@ -663,7 +663,8 @@ namespace mp
                    MipTailBaseLevel,
                    format_str,
                    SourceDesc.BitsPerPixel,
-                   SourceDesc.BytesPerBlock);
+                   SourceDesc.BytesPerBlock,
+                   image->texture.basemap->Format.Endian);
     }
 
     void Image_Dump(const GfxImage *image)
@@ -826,10 +827,22 @@ namespace mp
         {
             // TODO: write mip levels
             file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
+
             std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
-            for (size_t i = 0; i < pixelData.size(); i += 2)
+
+            switch (image->texture.basemap->Format.Endian)
             {
-                std::swap(pixelData[i], pixelData[i + 1]); // Swap adjacent bytes
+            case GPUENDIAN_8IN16:
+                XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_8IN16, 2, pixelData.size() / 2);
+                break;
+            case GPUENDIAN_8IN32:
+                XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_8IN32, 4, pixelData.size() / 4);
+                break;
+            case GPUENDIAN_16IN32:
+                XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_16IN32, 4, pixelData.size() / 4);
+                break;
+            default:
+                break;
             }
             auto linearData = Xbox360ConvertToLinearTexture(pixelData, image->width, image->height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
             file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
@@ -927,9 +940,19 @@ namespace mp
                 width, height,
                 static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
 
-            for (size_t j = 0; j < tiledData.size(); j += 2)
+            switch (image->texture.basemap->Format.Endian)
             {
-                std::swap(tiledData[j], tiledData[j + 1]);
+            case GPUENDIAN_8IN16:
+                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN16, 2, tiledData.size() / 2);
+                break;
+            case GPUENDIAN_8IN32:
+                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN32, 4, tiledData.size() / 4);
+                break;
+            case GPUENDIAN_16IN32:
+                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_16IN32, 4, tiledData.size() / 4);
+                break;
+            default:
+                break;
             }
 
             memcpy(image->pixels + offset, tiledData.data(), tiledData.size());
@@ -973,9 +996,19 @@ namespace mp
                 std::vector<uint8_t>(face_pixels, face_pixels + face_size),
                 image->width, image->height, format);
 
-            for (size_t j = 0; j < tiledData.size(); j += 2)
+            switch (image->texture.basemap->Format.Endian)
             {
-                std::swap(tiledData[j], tiledData[j + 1]);
+            case GPUENDIAN_8IN16:
+                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN16, 2, tiledData.size() / 2);
+                break;
+            case GPUENDIAN_8IN32:
+                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN32, 4, tiledData.size() / 4);
+                break;
+            case GPUENDIAN_16IN32:
+                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_16IN32, 4, tiledData.size() / 4);
+                break;
+            default:
+                break;
             }
 
             // Copy the data to the image
