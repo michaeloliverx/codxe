@@ -909,24 +909,38 @@ namespace mp
 
         XGTEXTURE_DESC SourceDesc;
         XGGetTextureDesc(image->texture.basemap, 0, &SourceDesc);
-        // UINT MaxMipLevel = image->texture.basemap->GetLevelCount();
         BOOL IsBorderTexture = XGIsBorderTexture(image->texture.basemap);
         UINT MipTailBaseLevel = XGGetMipTailBaseLevel(SourceDesc.Width, SourceDesc.Height, IsBorderTexture);
 
         UINT offset = 0; // Track position in DDS data
 
+        // Determine block size based on format
+        UINT blockSize = 0;
+        switch (image->texture.basemap->Format.DataFormat)
+        {
+        case GPUTEXTUREFORMAT_DXT1: // DXT1
+            blockSize = 8;
+            break;
+        case GPUTEXTUREFORMAT_DXT4_5: // DXT5
+            blockSize = 16;
+            break;
+        default:
+            Com_PrintError(CON_CHANNEL_ERROR, "Unsupported texture format for image '%s'!\n", image->name);
+            return;
+        }
+
         for (UINT i = 0; i < MipTailBaseLevel; i++)
         {
-            // TODO: Ensure we're not reading out of bounds
-            // TODO: Don't assume DXT1 format blocks
             // Compute width/height for this mip level
             UINT width = max(1U, ddsImage.header.width >> i);
             UINT height = max(1U, ddsImage.header.height >> i);
 
-            // Ensure width/height are at least 4x4 for DXT1 blocks
+            // Ensure width/height are at least 4x4 for block compression
             UINT blockWidth = (width + 3) / 4;
             UINT blockHeight = (height + 3) / 4;
-            UINT CurrentLevelSize = blockWidth * blockHeight * 8; // 8 bytes per 4x4 block
+            UINT CurrentLevelSize = blockWidth * blockHeight * blockSize; // Corrected block size for DXT1/DXT5
+
+            DbgPrint("  Mip Level %u: %ux%u, Size=%u\n", i, width, height, CurrentLevelSize);
 
             // Ensure we're not reading out of bounds
             if (offset + CurrentLevelSize > ddsImage.data.size())
