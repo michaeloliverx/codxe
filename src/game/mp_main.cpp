@@ -637,9 +637,6 @@ namespace mp
             format_str = "8_8_8_8";
             break;
         default:
-            // std::string foo = "";
-            // foo += format;
-            // foo += " (UNKNOWN)";
             format_str = "UNKNOWN";
             break;
         }
@@ -654,7 +651,10 @@ namespace mp
 
         UINT MipLevelCount = image->texture.basemap->GetLevelCount();
 
-        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_DbgPrint: Dumping image Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, MipTailBaseLevel=%d, Format=%s, BitsPerPixel=%d, BytesPerBlock=%d, Endian=%d\n",
+        UINT BaseSize;
+        XGGetTextureLayout(image->texture.basemap, 0, &BaseSize, 0, 0, 0, 0, 0, 0, 0, 0);
+
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_DbgPrint: Dumping image Name='%s', Type=%d, Dimensions=%dx%d, MipLevels=%d, MipTailBaseLevel=%d, Format=%s, BitsPerPixel=%d, BytesPerBlock=%d, Endian=%d, BaseSize=%d\n",
                    image->name,
                    image->mapType,
                    image->width,
@@ -664,7 +664,8 @@ namespace mp
                    format_str,
                    SourceDesc.BitsPerPixel,
                    SourceDesc.BytesPerBlock,
-                   image->texture.basemap->Format.Endian);
+                   image->texture.basemap->Format.Endian,
+                   BaseSize);
     }
 
     void Image_Dump(const GfxImage *image)
@@ -691,6 +692,9 @@ namespace mp
             return;
         }
 
+        UINT BaseSize;
+        XGGetTextureLayout(image->texture.basemap, 0, &BaseSize, 0, 0, 0, 0, 0, 0, 0, 0);
+
         DDSHeader header;
         memset(&header, 0, sizeof(DDSHeader));
 
@@ -707,19 +711,19 @@ namespace mp
         {
         case GPUTEXTUREFORMAT_DXT1:
             header.pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
-            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 8);
+            header.pitchOrLinearSize = BaseSize;
             break;
         case GPUTEXTUREFORMAT_DXT2_3:
             header.pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
-            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16);
+            header.pitchOrLinearSize = BaseSize;
             break;
         case GPUTEXTUREFORMAT_DXT4_5:
             header.pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
-            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16);
+            header.pitchOrLinearSize = BaseSize;
             break;
         case GPUTEXTUREFORMAT_DXN:
             header.pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
-            header.pitchOrLinearSize = _byteswap_ulong((header.width / 4) * (header.height / 4) * 16);
+            header.pitchOrLinearSize = BaseSize;
             break;
         case GPUTEXTUREFORMAT_8:
             header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE);
@@ -728,7 +732,7 @@ namespace mp
             header.pixelFormat.gBitMask = 0;
             header.pixelFormat.bBitMask = 0;
             header.pixelFormat.aBitMask = 0;
-            header.pitchOrLinearSize = _byteswap_ulong(header.width * header.height * 1);
+            header.pitchOrLinearSize = BaseSize;
             break;
         case GPUTEXTUREFORMAT_8_8:
             header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
@@ -737,7 +741,7 @@ namespace mp
             header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
             header.pixelFormat.bBitMask = 0;
             header.pixelFormat.aBitMask = 0;
-            header.pitchOrLinearSize = _byteswap_ulong(header.width * header.height * 2);
+            header.pitchOrLinearSize = BaseSize;
             break;
         case GPUTEXTUREFORMAT_8_8_8_8:
             header.pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
@@ -746,7 +750,7 @@ namespace mp
             header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
             header.pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
             header.pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
-            header.pitchOrLinearSize = _byteswap_ulong(header.width * header.height * 4);
+            header.pitchOrLinearSize = BaseSize;
             break;
         default:
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
