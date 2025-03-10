@@ -1058,6 +1058,34 @@ namespace mp
             return;
         }
 
+        GPUTEXTUREFORMAT ddsFormat;
+        switch (ddsImage.header.pixelFormat.fourCC)
+        {
+        case DXT1_FOURCC:
+            ddsFormat = GPUTEXTUREFORMAT_DXT1;
+            break;
+        case DXT3_FOURCC:
+            ddsFormat = GPUTEXTUREFORMAT_DXT2_3;
+            break;
+        case DXT5_FOURCC:
+            ddsFormat = GPUTEXTUREFORMAT_DXT4_5;
+            break;
+        case DXN_FOURCC:
+            ddsFormat = GPUTEXTUREFORMAT_DXN;
+            break;
+        default:
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' has an unsupported DDS format: 0x%X\n", image->name, ddsImage.header.pixelFormat.fourCC);
+            return;
+        }
+
+        if (static_cast<uint32_t>(image->texture.basemap->Format.DataFormat) != static_cast<uint32_t>(ddsFormat))
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' format does not match DDS file: Expected %d, Got %d\n",
+                           image->name, static_cast<uint32_t>(image->texture.basemap->Format.DataFormat),
+                           static_cast<uint32_t>(ddsFormat));
+            return;
+        }
+
         if (image->mapType == MAPTYPE_2D)
         {
             Image_Replace_2D(image, ddsImage);
