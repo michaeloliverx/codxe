@@ -922,10 +922,11 @@ namespace mp
         UINT blockSize = 0;
         switch (image->texture.basemap->Format.DataFormat)
         {
-        case GPUTEXTUREFORMAT_DXT1: // DXT1
+        case GPUTEXTUREFORMAT_DXT1:
             blockSize = 8;
             break;
-        case GPUTEXTUREFORMAT_DXT4_5: // DXT5
+        case GPUTEXTUREFORMAT_DXT2_3:
+        case GPUTEXTUREFORMAT_DXT4_5:
             blockSize = 16;
             break;
         default:
