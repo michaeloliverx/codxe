@@ -104,6 +104,7 @@ std::vector<uint8_t> Xbox360ConvertToLinearTexture(const std::vector<uint8_t> &d
     return destData;
 }
 
+// TODO: MAKEFOURCC('D', 'X', 'T', '1');
 // DDS Constants
 const uint32_t DDS_MAGIC = 0x20534444; // 'DDS ' in hex (must be little-endian)
 const uint32_t DDS_HEADER_SIZE = 124;
@@ -911,72 +912,78 @@ namespace mp
             return;
         }
 
-        XGTEXTURE_DESC SourceDesc;
-        XGGetTextureDesc(image->texture.basemap, 0, &SourceDesc);
-        BOOL IsBorderTexture = XGIsBorderTexture(image->texture.basemap);
-        UINT MipTailBaseLevel = XGGetMipTailBaseLevel(SourceDesc.Width, SourceDesc.Height, IsBorderTexture);
+        // Get base texture layout
+        UINT baseAddress, baseSize, mipAddress, mipSize;
 
-        UINT offset = 0; // Track position in DDS data
+        XGGetTextureLayout(image->texture.basemap,
+                           &baseAddress, &baseSize, 0, 0, 0,
+                           &mipAddress, &mipSize, 0, 0, 0);
 
-        // Determine block size based on format
-        UINT blockSize = 0;
-        switch (image->texture.basemap->Format.DataFormat)
+        XGTEXTURE_DESC TextureDesc;
+        XGGetTextureDesc(image->texture.basemap, 0, &TextureDesc);
+
+        UINT mipTailBaseLevel = XGGetMipTailBaseLevel(TextureDesc.Width, TextureDesc.Height, XGIsBorderTexture(image->texture.basemap));
+
+        UINT ddsOffset = 0;
+
+        for (UINT mipLevel = 0; mipLevel < mipTailBaseLevel; mipLevel++)
         {
-        case GPUTEXTUREFORMAT_DXT1:
-            blockSize = 8;
-            break;
-        case GPUTEXTUREFORMAT_DXT2_3:
-        case GPUTEXTUREFORMAT_DXT4_5:
-            blockSize = 16;
-            break;
-        default:
-            Com_PrintError(CON_CHANNEL_ERROR, "Unsupported texture format for image '%s'!\n", image->name);
-            return;
-        }
+            UINT widthInBlocks = max(1, TextureDesc.WidthInBlocks >> mipLevel);
+            UINT heightInBlocks = max(1, TextureDesc.HeightInBlocks >> mipLevel);
 
-        for (UINT i = 0; i < MipTailBaseLevel; i++)
-        {
-            // Compute width/height for this mip level
-            UINT width = max(1U, ddsImage.header.width >> i);
-            UINT height = max(1U, ddsImage.header.height >> i);
-
-            // Ensure width/height are at least 4x4 for block compression
-            UINT blockWidth = (width + 3) / 4;
-            UINT blockHeight = (height + 3) / 4;
-            UINT CurrentLevelSize = blockWidth * blockHeight * blockSize; // Corrected block size for DXT1/DXT5
-
-            DbgPrint("  Mip Level %u: %ux%u, Size=%u\n", i, width, height, CurrentLevelSize);
+            UINT rowPitch = widthInBlocks * TextureDesc.BytesPerBlock;
+            UINT levelSize = rowPitch * heightInBlocks;
 
             // Ensure we're not reading out of bounds
-            if (offset + CurrentLevelSize > ddsImage.data.size())
+            if (ddsOffset + levelSize > ddsImage.data.size())
             {
-                DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", i);
+                DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
                 break;
             }
 
-            std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
-                std::vector<uint8_t>(ddsImage.data.begin() + offset, ddsImage.data.begin() + offset + CurrentLevelSize),
-                width, height,
-                static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+            std::vector<uint8_t> levelData(ddsImage.data.begin() + ddsOffset, ddsImage.data.begin() + ddsOffset + levelSize);
 
             switch (image->texture.basemap->Format.Endian)
             {
             case GPUENDIAN_8IN16:
-                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN16, 2, tiledData.size() / 2);
+                XGEndianSwapMemory(levelData.data(), levelData.data(), XGENDIAN_8IN16, 2, levelData.size() / 2);
                 break;
             case GPUENDIAN_8IN32:
-                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN32, 4, tiledData.size() / 4);
+                XGEndianSwapMemory(levelData.data(), levelData.data(), XGENDIAN_8IN32, 4, levelData.size() / 4);
                 break;
             case GPUENDIAN_16IN32:
-                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_16IN32, 4, tiledData.size() / 4);
+                XGEndianSwapMemory(levelData.data(), levelData.data(), XGENDIAN_16IN32, 4, levelData.size() / 4);
                 break;
             default:
                 break;
             }
 
-            memcpy(image->pixels + offset, tiledData.data(), tiledData.size());
+            DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
 
-            offset += CurrentLevelSize;
+            UINT address = baseAddress;
+            if (mipLevel > 0)
+            {
+                UINT mipLevelOffset = XGGetMipLevelOffset(image->texture.basemap, 0, mipLevel);
+                address = mipAddress + mipLevelOffset;
+            }
+
+            DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, levelSize);
+
+            // // Write the base level
+            XGTileTextureLevel(
+                TextureDesc.Width,
+                TextureDesc.Height,
+                mipLevel,
+                image->texture.basemap->Format.DataFormat,
+                XGTILE_NONPACKED,                  // Use non-packed mode (likely required for this texture)
+                reinterpret_cast<void *>(address), // Destination (tiled GPU memory for Base)
+                nullptr,                           // No offset (tile the whole image)
+                levelData.data(),                  // Source mip level data
+                rowPitch,                          // Row pitch of source image (should match DDS format)
+                nullptr                            // No subrectangle (tile the full image)
+            );
+
+            ddsOffset += levelSize;
         }
     }
 
