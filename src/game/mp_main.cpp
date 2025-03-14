@@ -388,6 +388,7 @@ namespace mp
     Com_PrintWarning_t Com_PrintWarning = reinterpret_cast<Com_PrintWarning_t>(0x822356B8);
 
     DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x8229ED48);
+    DB_FindXAssetEntry_t DB_FindXAssetEntry = reinterpret_cast<DB_FindXAssetEntry_t>(0x8229EB98);
     DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x822A0298);
     DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile = reinterpret_cast<DB_GetAllXAssetOfType_FastFile_t>(0x8229E8E0);
 
@@ -503,20 +504,102 @@ namespace mp
         }
     }
 
+    std::string extractFilename(const char *filename)
+    {
+        std::string path(filename);
+
+        // Find last backslash '\' or forward slash '/'
+        size_t lastSlash = path.find_last_of("\\/");
+        size_t start = (lastSlash == std::string::npos) ? 0 : lastSlash + 1;
+
+        // Find last dot '.' (extension separator)
+        size_t lastDot = path.find_last_of('.');
+        size_t end = (lastDot == std::string::npos || lastDot < start) ? path.length() : lastDot;
+
+        return path.substr(start, end - start);
+    }
+
+    bool R_StreamLoadHighMipReplacement(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
+    {
+        std::string asset_name = extractFilename(filename);
+        auto asset = DB_FindXAssetEntry(ASSET_TYPE_IMAGE, asset_name.c_str());
+
+        if (!asset)
+        {
+            return false;
+        }
+
+        auto image = asset->entry.asset.header.image;
+
+        std::string replacement_path = "game:\\raw\\highmip\\" + asset_name + ".dds";
+        std::ifstream file(replacement_path, std::ios::binary | std::ios::ate);
+        if (!file)
+        {
+            return false;
+        }
+
+        std::streamsize file_size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        if (file_size - 0x80 != bytesToRead) // 0x80 is the size of the DDS header
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "R_StreamLoadHighMipReplacement: File size mismatch: %s\n", replacement_path);
+            return false;
+        }
+
+        std::vector<unsigned char> ddsHeader(0x80);
+        file.read(reinterpret_cast<char *>(ddsHeader.data()), 0x80);
+
+        // TODO: check if file is DDS and has correct format and dimensions
+
+        std::vector<unsigned char> buffer;
+        buffer.resize(static_cast<size_t>(bytesToRead));
+        file.read(reinterpret_cast<char *>(buffer.data()), bytesToRead);
+
+        switch (image->texture.basemap->Format.Endian)
+        {
+        case GPUENDIAN_8IN16:
+            XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN16, 2, buffer.size() / 2);
+            break;
+        case GPUENDIAN_8IN32:
+            XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN32, 4, buffer.size() / 4);
+            break;
+        case GPUENDIAN_16IN32:
+            XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_16IN32, 4, buffer.size() / 4);
+            break;
+        }
+
+        XGTEXTURE_DESC textureDesc;
+        XGGetTextureDesc(image->texture.basemap, 0, &textureDesc);
+
+        // High mip are 2x the size of the original image
+        auto width = image->width * 2;
+        auto height = image->height * 2;
+        auto rowPitch = textureDesc.RowPitch * 2;
+
+        XGTileTextureLevel(
+            width,
+            height,
+            0,
+            image->texture.basemap->Format.DataFormat,
+            XGTILE_NONPACKED, // Use non-packed mode (likely required for this texture)
+            outData,          // Destination (tiled GPU memory for Base)
+            nullptr,          // No offset (tile the whole image)
+            buffer.data(),    // Source mip level data
+            rowPitch,         // Row pitch of source image (should match DDS format)
+            nullptr           // No subrectangle (tile the full image)
+        );
+
+        return true;
+    }
+
     Detour R_StreamLoadFileSynchronously_Detour;
 
     int R_StreamLoadFileSynchronously_Hook(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
     {
-        if (strncmp(filename, "D:\\", 3) == 0) // Check if path starts with "D:\"
+        if (R_StreamLoadHighMipReplacement(filename, bytesToRead, outData))
         {
-            char newPath[MAX_PATH];
-            _snprintf(newPath, sizeof(newPath), "game:\\raw\\%s", filename + 3); // Change "D:\" to "game:\raw\"
-
-            // Try loading from the modified path first
-            if (R_StreamLoadFileSynchronously_Detour.GetOriginal<decltype(R_StreamLoadFileSynchronously)>()(newPath, bytesToRead, outData))
-            {
-                return 1; // Success with the new path
-            }
+            return 1;
         }
 
         // Fallback to original path if modified path failed
@@ -877,6 +960,7 @@ namespace mp
 
         CreateDirectoryA("game:\\dump", 0);
         CreateDirectoryA("game:\\dump\\images", 0);
+        CreateDirectoryA("game:\\dump\\highmip", 0);
 
         for (unsigned int i = 0; i < imageList.count; i++)
         {
@@ -901,6 +985,151 @@ namespace mp
             Image_DbgPrint(image);
 
             Image_Dump(image);
+        }
+
+        auto highmips = ListFilesInDirectory("D:\\highmip");
+        for (size_t i = 0; i < highmips.size(); ++i)
+        {
+            const std::string &filepath = "D:\\highmip\\" + highmips[i];
+            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping highmip file: %s\n", filepath.c_str());
+            std::string assetName = extractFilename(filepath.c_str());
+            auto asset = DB_FindXAssetEntry(ASSET_TYPE_IMAGE, assetName.c_str());
+            if (!asset)
+            {
+                Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' not found in asset list!\n", assetName.c_str());
+                continue;
+            }
+
+            auto image = asset->entry.asset.header.image;
+
+            std::ifstream input_file(filepath, std::ios::binary | std::ios::ate); // Open file in binary mode and seek to end
+            if (!input_file)
+            {
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", filepath.c_str());
+                continue;
+            }
+
+            std::streamsize size = input_file.tellg();
+            if (size < 0)
+            {
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to determine file size: %s\n", filepath.c_str());
+                continue;
+            }
+
+            input_file.seekg(0, std::ios::beg);
+            std::vector<char> buffer(static_cast<size_t>(size));
+
+            if (input_file.read(buffer.data(), size))
+            {
+                Com_Printf(CON_CHANNEL_CONSOLEONLY, "Read %d bytes from file.\n", size);
+            }
+            else
+            {
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Error reading file: %s\n", filepath.c_str());
+                continue;
+            }
+
+            auto width = image->width * 2;
+            auto height = image->height * 2;
+            auto baseSize = width * height * 4;
+
+            DDSHeader header;
+            memset(&header, 0, sizeof(DDSHeader));
+
+            header.magic = _byteswap_ulong(DDS_MAGIC);
+            header.size = _byteswap_ulong(DDS_HEADER_SIZE);
+            header.flags = _byteswap_ulong(DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE);
+            header.width = _byteswap_ulong(width);
+            header.height = _byteswap_ulong(height);
+            header.depth = _byteswap_ulong(image->depth);
+            header.mipMapCount = _byteswap_ulong(1);
+            header.caps = _byteswap_ulong(DDSCAPS_TEXTURE);
+            header.pitchOrLinearSize = baseSize;
+
+            auto format = image->texture.basemap->Format.DataFormat;
+            switch (format)
+            {
+            case GPUTEXTUREFORMAT_DXT1:
+                header.pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
+
+                break;
+            case GPUTEXTUREFORMAT_DXT2_3:
+                header.pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
+
+                break;
+            case GPUTEXTUREFORMAT_DXT4_5:
+                header.pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
+
+                break;
+            case GPUTEXTUREFORMAT_DXN:
+                header.pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
+
+                break;
+            case GPUTEXTUREFORMAT_8:
+                header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE);
+                header.pixelFormat.rgbBitCount = _byteswap_ulong(8);
+                header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
+                header.pixelFormat.gBitMask = 0;
+                header.pixelFormat.bBitMask = 0;
+                header.pixelFormat.aBitMask = 0;
+
+                break;
+            case GPUTEXTUREFORMAT_8_8:
+                header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
+                header.pixelFormat.rgbBitCount = _byteswap_ulong(16);
+                header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
+                header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
+                header.pixelFormat.bBitMask = 0;
+                header.pixelFormat.aBitMask = 0;
+
+                break;
+            case GPUTEXTUREFORMAT_8_8_8_8:
+                header.pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
+                header.pixelFormat.rgbBitCount = _byteswap_ulong(32);
+                header.pixelFormat.rBitMask = _byteswap_ulong(0x00FF0000);
+                header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
+                header.pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
+                header.pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
+
+                break;
+            default:
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
+                return;
+            }
+
+            // TODO: add sanity checks for format, size, etc.
+            // TODO: handle filenames with unsupported characters for Windows
+
+            auto output_filepath = "game:\\dump\\highmip\\" + assetName + ".dds";
+
+            std::ofstream output_file(output_filepath, std::ios::binary);
+            if (!output_file)
+            {
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", output_filepath.c_str());
+                return;
+            }
+
+            output_file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
+
+            switch (image->texture.basemap->Format.Endian)
+            {
+            case GPUENDIAN_8IN16:
+                XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN16, 2, buffer.size() / 2);
+                break;
+            case GPUENDIAN_8IN32:
+                XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN32, 4, buffer.size() / 4);
+                break;
+            case GPUENDIAN_16IN32:
+                XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_16IN32, 4, buffer.size() / 4);
+                break;
+            }
+
+            std::vector<uint8_t> bufferAsUint8(buffer.begin(), buffer.end());
+            auto linearData = Xbox360ConvertToLinearTexture(bufferAsUint8, width, height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+            output_file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
+            output_file.close();
+
+            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumped highmip file: %s\n", output_filepath.c_str());
         }
     }
 

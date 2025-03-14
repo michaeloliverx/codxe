@@ -333,6 +333,28 @@ namespace mp
         GfxImage *image[2048];
     };
 
+    struct XAsset
+    {
+        XAssetType type;
+        XAssetHeader header;
+    };
+
+    struct XAssetEntry
+    {
+        XAsset asset;
+        unsigned __int8 zoneIndex;
+        bool inuse;
+        unsigned __int16 nextHash;
+        unsigned __int16 nextOverride;
+        unsigned __int16 usageFrame;
+    };
+
+    union XAssetEntryPoolEntry
+    {
+        XAssetEntry entry;
+        XAssetEntryPoolEntry *next;
+    };
+
     typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 
     typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags);
@@ -346,6 +368,7 @@ namespace mp
     typedef void (*Com_PrintWarning_t)(conChannel_t channel, const char *fmt, ...);
 
     typedef void (*DB_EnumXAssets_FastFile_t)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride);
+    typedef XAssetEntryPoolEntry *(*DB_FindXAssetEntry_t)(XAssetType type, const char *name);
     typedef XAssetHeader *(*DB_FindXAssetHeader_t)(const XAssetType type, const char *name);
     typedef int (*DB_GetAllXAssetOfType_FastFile_t)(XAssetType type, XAssetHeader *assets, int maxCount);
 
