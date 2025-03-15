@@ -45,6 +45,22 @@ namespace
     }
 }
 
+void GPUEndianSwapTexture(std::vector<uint8_t> &pixelData, GPUENDIAN endianType)
+{
+    switch (endianType)
+    {
+    case GPUENDIAN_8IN16:
+        XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_8IN16, 2, pixelData.size() / 2);
+        break;
+    case GPUENDIAN_8IN32:
+        XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_8IN32, 4, pixelData.size() / 4);
+        break;
+    case GPUENDIAN_16IN32:
+        XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_16IN32, 4, pixelData.size() / 4);
+        break;
+    }
+}
+
 std::vector<uint8_t> Xbox360ConvertToLinearTexture(const std::vector<uint8_t> &data, int pixelWidth, int pixelHeight, GPUTEXTUREFORMAT textureFormat)
 {
     std::vector<uint8_t> destData(data.size());
@@ -558,18 +574,7 @@ namespace mp
         buffer.resize(static_cast<size_t>(bytesToRead));
         file.read(reinterpret_cast<char *>(buffer.data()), bytesToRead);
 
-        switch (image->texture.basemap->Format.Endian)
-        {
-        case GPUENDIAN_8IN16:
-            XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN16, 2, buffer.size() / 2);
-            break;
-        case GPUENDIAN_8IN32:
-            XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN32, 4, buffer.size() / 4);
-            break;
-        case GPUENDIAN_16IN32:
-            XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_16IN32, 4, buffer.size() / 4);
-            break;
-        }
+        GPUEndianSwapTexture(buffer, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
         XGTEXTURE_DESC textureDesc;
         XGGetTextureDesc(image->texture.basemap, 0, &textureDesc);
@@ -896,13 +901,8 @@ namespace mp
             {
                 unsigned char *face_pixels = image->pixels + (i * face_size); // Offset for each face
 
-                // Swap bytes before unswizzling
-                std::vector<uint8_t> swappedFace(face_size);
-                for (size_t j = 0; j < face_size; j += 2)
-                {
-                    swappedFace[j] = face_pixels[j + 1];
-                    swappedFace[j + 1] = face_pixels[j];
-                }
+                std::vector<uint8_t> swappedFace(face_pixels, face_pixels + face_size);
+                GPUEndianSwapTexture(swappedFace, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
                 // Convert swizzled texture to linear layout
                 std::vector<uint8_t> linearFace = Xbox360ConvertToLinearTexture(
@@ -920,20 +920,7 @@ namespace mp
 
             std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
 
-            switch (image->texture.basemap->Format.Endian)
-            {
-            case GPUENDIAN_8IN16:
-                XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_8IN16, 2, pixelData.size() / 2);
-                break;
-            case GPUENDIAN_8IN32:
-                XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_8IN32, 4, pixelData.size() / 4);
-                break;
-            case GPUENDIAN_16IN32:
-                XGEndianSwapMemory(pixelData.data(), pixelData.data(), XGENDIAN_16IN32, 4, pixelData.size() / 4);
-                break;
-            default:
-                break;
-            }
+            GPUEndianSwapTexture(pixelData, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
             // Create a linear data buffer to hold the untiled texture
             std::vector<uint8_t> linearData(image->baseSize);
@@ -1065,9 +1052,9 @@ namespace mp
             }
 
             input_file.seekg(0, std::ios::beg);
-            std::vector<char> buffer(static_cast<size_t>(size));
+            std::vector<uint8_t> buffer(static_cast<size_t>(size));
 
-            if (input_file.read(buffer.data(), size))
+            if (input_file.read(reinterpret_cast<char *>(buffer.data()), size))
             {
                 Com_Printf(CON_CHANNEL_CONSOLEONLY, "Read %d bytes from file.\n", size);
             }
@@ -1159,18 +1146,7 @@ namespace mp
 
             output_file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
 
-            switch (image->texture.basemap->Format.Endian)
-            {
-            case GPUENDIAN_8IN16:
-                XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN16, 2, buffer.size() / 2);
-                break;
-            case GPUENDIAN_8IN32:
-                XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_8IN32, 4, buffer.size() / 4);
-                break;
-            case GPUENDIAN_16IN32:
-                XGEndianSwapMemory(buffer.data(), buffer.data(), XGENDIAN_16IN32, 4, buffer.size() / 4);
-                break;
-            }
+            GPUEndianSwapTexture(buffer, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
             std::vector<uint8_t> bufferAsUint8(buffer.begin(), buffer.end());
             auto linearData = Xbox360ConvertToLinearTexture(bufferAsUint8, width, height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
@@ -1263,20 +1239,7 @@ namespace mp
 
             std::vector<uint8_t> levelData(ddsImage.data.begin() + ddsOffset, ddsImage.data.begin() + ddsOffset + ddsMipLevelSize);
 
-            switch (image->texture.basemap->Format.Endian)
-            {
-            case GPUENDIAN_8IN16:
-                XGEndianSwapMemory(levelData.data(), levelData.data(), XGENDIAN_8IN16, 2, levelData.size() / 2);
-                break;
-            case GPUENDIAN_8IN32:
-                XGEndianSwapMemory(levelData.data(), levelData.data(), XGENDIAN_8IN32, 4, levelData.size() / 4);
-                break;
-            case GPUENDIAN_16IN32:
-                XGEndianSwapMemory(levelData.data(), levelData.data(), XGENDIAN_16IN32, 4, levelData.size() / 4);
-                break;
-            default:
-                break;
-            }
+            GPUEndianSwapTexture(levelData, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
             DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
 
@@ -1342,20 +1305,7 @@ namespace mp
                 std::vector<uint8_t>(face_pixels, face_pixels + face_size),
                 image->width, image->height, format);
 
-            switch (image->texture.basemap->Format.Endian)
-            {
-            case GPUENDIAN_8IN16:
-                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN16, 2, tiledData.size() / 2);
-                break;
-            case GPUENDIAN_8IN32:
-                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_8IN32, 4, tiledData.size() / 4);
-                break;
-            case GPUENDIAN_16IN32:
-                XGEndianSwapMemory(tiledData.data(), tiledData.data(), XGENDIAN_16IN32, 4, tiledData.size() / 4);
-                break;
-            default:
-                break;
-            }
+            GPUEndianSwapTexture(tiledData, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
             // Copy the data to the image
             memcpy(image->pixels + (i * face_size), tiledData.data(), face_size);
