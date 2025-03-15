@@ -61,65 +61,6 @@ void GPUEndianSwapTexture(std::vector<uint8_t> &pixelData, GPUENDIAN endianType)
     }
 }
 
-std::vector<uint8_t> Xbox360ConvertToLinearTexture(const std::vector<uint8_t> &data, int pixelWidth, int pixelHeight, GPUTEXTUREFORMAT textureFormat)
-{
-    std::vector<uint8_t> destData(data.size());
-    uint32_t blockPixelSize;
-    uint32_t texelBytePitch;
-
-    switch (textureFormat)
-    {
-    case GPUTEXTUREFORMAT_8: // LinearPaletteIndex8bpp:
-        blockPixelSize = 1;
-        texelBytePitch = 1;
-        break;
-    case GPUTEXTUREFORMAT_8_8:
-        blockPixelSize = 1;
-        texelBytePitch = 2;
-        break;
-    case GPUTEXTUREFORMAT_8_8_8_8: // {b8,g8,r8,ap8}
-        blockPixelSize = 1;
-        texelBytePitch = 4;
-        break;
-    case GPUTEXTUREFORMAT_DXT1: // Bc1Dxt1
-        blockPixelSize = 4;
-        texelBytePitch = 8;
-        break;
-    case GPUTEXTUREFORMAT_DXT2_3: // Bc2Dxt2 & Bc2Dxt3
-    case GPUTEXTUREFORMAT_DXT4_5: // Bc3Dxt4 & Bc3Dxt5
-    case GPUTEXTUREFORMAT_DXN:
-        blockPixelSize = 4;
-        texelBytePitch = 16;
-        break;
-    default:
-        throw std::invalid_argument("Bad texture type!");
-    }
-
-    // Width and height in number of blocks.
-    // So a 256x128 DXT1 image would be 64x32 in 4x4 blocks.
-    uint32_t widthInBlocks = pixelWidth / blockPixelSize;
-    uint32_t heightInBlocks = pixelHeight / blockPixelSize;
-
-    // This loops in terms of the swizzled source.
-    for (uint32_t j = 0; j < heightInBlocks; j++)
-    {
-        for (uint32_t i = 0; i < widthInBlocks; i++)
-        {
-            uint32_t blockOffset = j * widthInBlocks + i;
-            uint32_t x = XGAddress2DTiledX(blockOffset, widthInBlocks, texelBytePitch);
-            uint32_t y = XGAddress2DTiledY(blockOffset, widthInBlocks, texelBytePitch);
-            uint32_t srcByteOffset = j * widthInBlocks * texelBytePitch + i * texelBytePitch;
-            uint32_t destByteOffset = y * widthInBlocks * texelBytePitch + x * texelBytePitch;
-
-            if (destByteOffset + texelBytePitch > destData.size())
-                continue;
-            memcpy(&destData[destByteOffset], &data[srcByteOffset], texelBytePitch);
-        }
-    }
-
-    return destData;
-}
-
 // TODO: MAKEFOURCC('D', 'X', 'T', '1');
 // DDS Constants
 const uint32_t DDS_MAGIC = 0x20534444; // 'DDS ' in hex (must be little-endian)
@@ -820,17 +761,21 @@ namespace mp
             file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
 
             unsigned int face_size = 0;
+            unsigned int rowPitch = 0;
+            const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
 
-            switch (image->texture.basemap->Format.DataFormat)
+            switch (format)
             {
             case GPUTEXTUREFORMAT_DXT1:
                 face_size = (image->width / 4) * (image->height / 4) * 8;
+                rowPitch = (image->width / 4) * 8; // 8 bytes per 4x4 block
                 break;
             case GPUTEXTUREFORMAT_8_8_8_8:
                 face_size = image->width * image->height * 4;
+                rowPitch = image->width * 4; // 4 bytes per pixel
                 break;
             default:
-                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported cube map format %d!\n", image->texture.basemap->Format.DataFormat);
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported cube map format %d!\n", format);
                 return;
             }
 
@@ -842,9 +787,22 @@ namespace mp
                 std::vector<uint8_t> swappedFace(face_pixels, face_pixels + face_size);
                 GPUEndianSwapTexture(swappedFace, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
-                // Convert swizzled texture to linear layout
-                std::vector<uint8_t> linearFace = Xbox360ConvertToLinearTexture(
-                    swappedFace, image->width, image->height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+                // Create buffer for linear texture data
+                std::vector<uint8_t> linearFace(face_size);
+
+                // Convert tiled texture to linear layout using XGUntileTextureLevel
+                XGUntileTextureLevel(
+                    image->width,               // Width
+                    image->height,              // Height
+                    0,                          // Level (base level)
+                    static_cast<DWORD>(format), // GpuFormat
+                    0,                          // Flags (no special flags)
+                    linearFace.data(),          // pDestination (linear output)
+                    rowPitch,                   // RowPitch
+                    nullptr,                    // pPoint (no offset)
+                    swappedFace.data(),         // pSource (tiled input)
+                    nullptr                     // pRect (entire texture)
+                );
 
                 file.write(reinterpret_cast<const char *>(linearFace.data()), linearFace.size());
             }
@@ -1086,8 +1044,51 @@ namespace mp
 
             GPUEndianSwapTexture(buffer, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
+            // Calculate row pitch based on format
+            UINT rowPitch;
+
+            switch (format)
+            {
+            case GPUTEXTUREFORMAT_DXT1:
+                rowPitch = (width / 4) * 8; // 8 bytes per 4x4 block
+                break;
+            case GPUTEXTUREFORMAT_DXT2_3:
+            case GPUTEXTUREFORMAT_DXT4_5:
+            case GPUTEXTUREFORMAT_DXN:
+                rowPitch = (width / 4) * 16; // 16 bytes per 4x4 block
+                break;
+            case GPUTEXTUREFORMAT_8:
+                rowPitch = width; // 1 byte per pixel
+                break;
+            case GPUTEXTUREFORMAT_8_8:
+                rowPitch = width * 2; // 2 bytes per pixel
+                break;
+            case GPUTEXTUREFORMAT_8_8_8_8:
+                rowPitch = width * 4; // 4 bytes per pixel
+                break;
+            default:
+                rowPitch = width * 4; // Default to 4 bytes per pixel
+                break;
+            }
+
+            // Create a buffer for linear texture data
+            std::vector<uint8_t> linearData(buffer.size());
             std::vector<uint8_t> bufferAsUint8(buffer.begin(), buffer.end());
-            auto linearData = Xbox360ConvertToLinearTexture(bufferAsUint8, width, height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+
+            // Convert tiled texture to linear layout
+            XGUntileTextureLevel(
+                width,                      // Width
+                height,                     // Height
+                0,                          // Level (base level)
+                static_cast<DWORD>(format), // GpuFormat
+                0,                          // Flags (no special flags)
+                linearData.data(),          // pDestination (linear output)
+                rowPitch,                   // RowPitch
+                nullptr,                    // pPoint (no offset)
+                bufferAsUint8.data(),       // pSource (tiled input)
+                nullptr                     // pRect (entire texture)
+            );
+
             output_file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
             output_file.close();
 
