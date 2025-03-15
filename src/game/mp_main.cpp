@@ -281,68 +281,6 @@ DDSImage ReadDDSFile(const std::string &filepath)
     return ddsImage;
 }
 
-std::vector<uint8_t> Xbox360ConvertToTiledTexture(const std::vector<uint8_t> &linearData, int pixelWidth, int pixelHeight, GPUTEXTUREFORMAT textureFormat)
-{
-    std::vector<uint8_t> tiledData(linearData.size());
-    uint32_t blockPixelSize;
-    uint32_t texelBytePitch;
-
-    switch (textureFormat)
-    {
-    case GPUTEXTUREFORMAT_8: // LinearPaletteIndex8bpp:
-        blockPixelSize = 1;
-        texelBytePitch = 1;
-        break;
-    case GPUTEXTUREFORMAT_8_8:
-        blockPixelSize = 1;
-        texelBytePitch = 2;
-        break;
-    case GPUTEXTUREFORMAT_8_8_8_8: // {b8,g8,r8,ap8}
-        blockPixelSize = 1;
-        texelBytePitch = 4;
-        break;
-    case GPUTEXTUREFORMAT_DXT1: // Bc1Dxt1
-        blockPixelSize = 4;
-        texelBytePitch = 8;
-        break;
-    case GPUTEXTUREFORMAT_DXT2_3: // Bc2Dxt2 & Bc2Dxt3
-    case GPUTEXTUREFORMAT_DXT4_5: // Bc3Dxt4 & Bc3Dxt5
-    case GPUTEXTUREFORMAT_DXN:
-        blockPixelSize = 4;
-        texelBytePitch = 16;
-        break;
-    default:
-        throw std::invalid_argument("Bad texture type!");
-    }
-
-    uint32_t widthInBlocks = pixelWidth / blockPixelSize;
-    uint32_t heightInBlocks = pixelHeight / blockPixelSize;
-
-    // The function should operate in reverse of `Xbox360ConvertToLinearTexture`
-    for (uint32_t y = 0; y < heightInBlocks; y++)
-    {
-        for (uint32_t x = 0; x < widthInBlocks; x++)
-        {
-            uint32_t blockOffset = y * widthInBlocks + x;
-
-            // Get the *tiled* coordinates from a linear block offset
-            uint32_t tiledX = XGAddress2DTiledX(blockOffset, widthInBlocks, texelBytePitch);
-            uint32_t tiledY = XGAddress2DTiledY(blockOffset, widthInBlocks, texelBytePitch);
-
-            // Compute the correct offsets (swap src and dest logic)
-            uint32_t srcByteOffset = tiledY * widthInBlocks * texelBytePitch + tiledX * texelBytePitch;
-            uint32_t destByteOffset = y * widthInBlocks * texelBytePitch + x * texelBytePitch;
-
-            if (srcByteOffset + texelBytePitch > linearData.size() || destByteOffset + texelBytePitch > tiledData.size())
-                continue;
-
-            memcpy(&tiledData[destByteOffset], &linearData[srcByteOffset], texelBytePitch);
-        }
-    }
-
-    return tiledData;
-}
-
 #define INVALID_FILE_ATTRIBUTES -1
 
 bool FileExists(const char *filepath)
@@ -1281,15 +1219,18 @@ namespace mp
         const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
 
         // Check can we get the base size here and /6 for face size
-
         unsigned int face_size = 0;
+        unsigned int rowPitch = 0;
+
         switch (format)
         {
         case GPUTEXTUREFORMAT_DXT1:
             face_size = (image->width / 4) * (image->height / 4) * 8;
+            rowPitch = (image->width / 4) * 8; // 8 bytes per 4x4 block
             break;
         case GPUTEXTUREFORMAT_8_8_8_8:
             face_size = image->width * image->height * 4;
+            rowPitch = image->width * 4; // 4 bytes per pixel
             break;
         default:
             Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' has unsupported format %d!\n", image->name, format);
@@ -1300,10 +1241,22 @@ namespace mp
         {
             const unsigned char *face_pixels = ddsImage.data.data() + (i * face_size);
 
-            // Convert the DDS image to tiled texture format
-            std::vector<uint8_t> tiledData = Xbox360ConvertToTiledTexture(
-                std::vector<uint8_t>(face_pixels, face_pixels + face_size),
-                image->width, image->height, format);
+            // Create a buffer for the tiled texture data
+            std::vector<uint8_t> tiledData(face_size);
+
+            // Convert the linear texture to tiled format using XGTileTextureLevel
+            XGTileTextureLevel(
+                image->width,               // Width
+                image->height,              // Height
+                0,                          // Level (base level)
+                static_cast<DWORD>(format), // GpuFormat
+                0,                          // Flags (no special flags)
+                tiledData.data(),           // pDestination (tiled output)
+                nullptr,                    // pPoint (no offset)
+                face_pixels,                // pSource (linear input)
+                rowPitch,                   // RowPitch
+                nullptr                     // pRect (entire texture)
+            );
 
             GPUEndianSwapTexture(tiledData, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
