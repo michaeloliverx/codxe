@@ -934,7 +934,53 @@ namespace mp
             default:
                 break;
             }
-            auto linearData = Xbox360ConvertToLinearTexture(pixelData, image->width, image->height, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
+
+            // Create a linear data buffer to hold the untiled texture
+            std::vector<uint8_t> linearData(image->baseSize);
+
+            // Calculate row pitch based on format
+            UINT rowPitch;
+            auto format = image->texture.basemap->Format.DataFormat;
+
+            switch (format)
+            {
+            case GPUTEXTUREFORMAT_DXT1:
+            case GPUTEXTUREFORMAT_DXT2_3:
+            case GPUTEXTUREFORMAT_DXT4_5:
+            case GPUTEXTUREFORMAT_DXN:
+                // Block compressed formats use 4x4 blocks
+                rowPitch = ((image->width + 3) / 4) * (format == GPUTEXTUREFORMAT_DXT1 ? 8 : 16);
+                break;
+            case GPUTEXTUREFORMAT_8:
+                rowPitch = image->width;
+                break;
+            case GPUTEXTUREFORMAT_8_8:
+                rowPitch = image->width * 2;
+                break;
+            case GPUTEXTUREFORMAT_8_8_8_8:
+                rowPitch = image->width * 4;
+                break;
+            default:
+                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
+                return;
+            }
+
+            DbgPrint("Image_Dump: rowPitch=%d\n", rowPitch);
+
+            // Call XGUntileTextureLevel to convert the tiled texture to linear format
+            XGUntileTextureLevel(
+                image->width,               // Width
+                image->height,              // Height
+                0,                          // Level (base level 0)
+                static_cast<DWORD>(format), // GpuFormat
+                XGTILE_NONPACKED,           // Flags (no special flags)
+                linearData.data(),          // pDestination
+                rowPitch,                   // RowPitch (calculated based on format)
+                nullptr,                    // pPoint (no offset)
+                pixelData.data(),           // pSource
+                nullptr                     // pRect (entire texture)
+            );
+
             file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
 
             file.close();
