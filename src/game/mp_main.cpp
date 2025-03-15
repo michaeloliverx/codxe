@@ -1133,45 +1133,6 @@ namespace mp
         }
     }
 
-    UINT CalculateMipLevelSize(UINT width, UINT height, UINT mipLevel, GPUTEXTUREFORMAT format)
-    {
-        // Calculate dimensions for the requested mip level
-        UINT mipWidth = max(1, width >> mipLevel);
-        UINT mipHeight = max(1, height >> mipLevel);
-
-        // Calculate size based on format
-        UINT blockSize;
-        switch (format)
-        {
-        case GPUTEXTUREFORMAT_DXT1:
-            blockSize = 8; // 8 bytes per 4x4 block
-            break;
-        case GPUTEXTUREFORMAT_DXT2_3:
-            blockSize = 16; // 16 bytes per 4x4 block
-            break;
-        case GPUTEXTUREFORMAT_DXT4_5:
-            blockSize = 16; // 16 bytes per 4x4 block
-            break;
-        case GPUTEXTUREFORMAT_DXN:
-            blockSize = 16; // 16 bytes per 4x4 block (two 8-byte channels)
-            break;
-        default:
-            DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
-            // Handle unsupported formats or add more cases as needed
-            return 0;
-        }
-
-        // For block-compressed formats, calculate number of blocks
-        // Each block is 4x4 pixels, so we need to round up to nearest block
-        UINT blocksWide = (mipWidth + 3) / 4;
-        UINT blocksHigh = (mipHeight + 3) / 4;
-
-        // Calculate total size in bytes
-        UINT sizeInBytes = blocksWide * blocksHigh * blockSize;
-
-        return sizeInBytes;
-    }
-
     void Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
     {
         if (image->mapType != MAPTYPE_2D)
@@ -1190,27 +1151,26 @@ namespace mp
         XGTEXTURE_DESC TextureDesc;
         XGGetTextureDesc(image->texture.basemap, 0, &TextureDesc);
 
-        UINT mipTailBaseLevel = XGGetMipTailBaseLevel(image->width, image->height, XGIsBorderTexture(image->texture.basemap));
+        UINT mipTailBaseLevel = XGGetMipTailBaseLevel(TextureDesc.Width, TextureDesc.Height, XGIsBorderTexture(image->texture.basemap));
 
         UINT ddsOffset = 0;
 
         for (UINT mipLevel = 0; mipLevel < mipTailBaseLevel; mipLevel++)
         {
-            // (for GPU tiled layout)
-            UINT gpuWidthInBlocks = max(1, TextureDesc.WidthInBlocks >> mipLevel);
-            UINT gpuRowPitch = gpuWidthInBlocks * TextureDesc.BytesPerBlock;
+            UINT widthInBlocks = max(1, TextureDesc.WidthInBlocks >> mipLevel);
+            UINT heightInBlocks = max(1, TextureDesc.HeightInBlocks >> mipLevel);
 
-            UINT ddsMipLevelSize = CalculateMipLevelSize(image->width, image->height, mipLevel, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
-            DbgPrint("  [INFO] Format %u - Mip Level %u - DDS Level Size=%u\n", image->texture.basemap->Format.DataFormat, mipLevel, ddsMipLevelSize);
+            UINT rowPitch = widthInBlocks * TextureDesc.BytesPerBlock;
+            UINT levelSize = rowPitch * heightInBlocks;
 
             // Ensure we're not reading out of bounds
-            if (ddsOffset + ddsMipLevelSize > ddsImage.data.size())
+            if (ddsOffset + levelSize > ddsImage.data.size())
             {
                 DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
                 break;
             }
 
-            std::vector<uint8_t> levelData(ddsImage.data.begin() + ddsOffset, ddsImage.data.begin() + ddsOffset + ddsMipLevelSize);
+            std::vector<uint8_t> levelData(ddsImage.data.begin() + ddsOffset, ddsImage.data.begin() + ddsOffset + levelSize);
 
             switch (image->texture.basemap->Format.Endian)
             {
@@ -1227,6 +1187,8 @@ namespace mp
                 break;
             }
 
+            DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
+
             UINT address = baseAddress;
             if (mipLevel > 0)
             {
@@ -1234,7 +1196,7 @@ namespace mp
                 address = mipAddress + mipLevelOffset;
             }
 
-            DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, ddsMipLevelSize);
+            DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, levelSize);
 
             // // Write the base level
             XGTileTextureLevel(
@@ -1246,11 +1208,11 @@ namespace mp
                 reinterpret_cast<void *>(address), // Destination (tiled GPU memory for Base)
                 nullptr,                           // No offset (tile the whole image)
                 levelData.data(),                  // Source mip level data
-                gpuRowPitch,                       // Row pitch of source image (should match DDS format)
+                rowPitch,                          // Row pitch of source image (should match DDS format)
                 nullptr                            // No subrectangle (tile the full image)
             );
 
-            ddsOffset += ddsMipLevelSize;
+            ddsOffset += levelSize;
         }
     }
 
