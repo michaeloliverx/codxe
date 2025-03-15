@@ -357,6 +357,8 @@ namespace mp
 
     typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 
+    typedef void (*CG_RegisterGraphics_t)(int localClientNum, const char *mapname);
+
     typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags);
     typedef void (*CL_GamepadButtonEvent_t)(int localClientNum, int controllerIndex, int key, int down, unsigned int time);
 

@@ -378,6 +378,8 @@ namespace mp
     // Functions
     Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x82239FD0);
 
+    CG_RegisterGraphics_t CG_RegisterGraphics = reinterpret_cast<CG_RegisterGraphics_t>(0x8230D858);
+
     CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x822E4D18);
     CL_GamepadButtonEvent_t CL_GamepadButtonEvent = reinterpret_cast<CL_GamepadButtonEvent_t>(0x822DD1E8);
 
@@ -1157,7 +1159,7 @@ namespace mp
             break;
         default:
             DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
-            return -1;
+            return 0;
         }
 
         // For block-compressed formats, calculate number of blocks
@@ -1200,7 +1202,7 @@ namespace mp
             // UINT levelSize = rowPitch * heightInBlocks;
             UINT ddsMipLevelSize = CalculateMipLevelSize(image->width, image->height, mipLevel, static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat));
 
-            if(ddsMipLevelSize == -1)
+            if (ddsMipLevelSize == 0)
             {
                 DbgPrint("  [ERROR] Unsupported format %d for mip level %u! Skipping...\n", image->texture.basemap->Format.DataFormat, mipLevel);
                 break;
@@ -1381,7 +1383,7 @@ namespace mp
         }
     }
 
-    void Cmd_imageload_f()
+    void Load_images()
     {
         const UINT MAX_IMAGES = 2048;
         XAssetHeader assets[MAX_IMAGES];
@@ -1393,6 +1395,15 @@ namespace mp
             // debug image metadata print out all
             Image_Replace(image);
         }
+    }
+
+    Detour CG_RegisterGraphics_Detour;
+
+    void CG_RegisterGraphics_Hook(int localClientNum, const char *mapname)
+    {
+        CG_RegisterGraphics_Detour.GetOriginal<decltype(CG_RegisterGraphics)>()(localClientNum, mapname);
+        xbox::DbgPrint("CG_RegisterGraphics mapname=%s \n", mapname);
+        Load_images();
     }
 
     void init()
@@ -1420,7 +1431,7 @@ namespace mp
         cmd_function_s *imagedump_VAR = new cmd_function_s;
         Cmd_AddCommandInternal("imagedump", Cmd_imagedump, imagedump_VAR);
 
-        cmd_function_s *imageload_f_VAR = new cmd_function_s;
-        Cmd_AddCommandInternal("imageload", Cmd_imageload_f, imageload_f_VAR);
+        CG_RegisterGraphics_Detour = Detour(CG_RegisterGraphics, CG_RegisterGraphics_Hook);
+        CG_RegisterGraphics_Detour.Install();
     }
 }
