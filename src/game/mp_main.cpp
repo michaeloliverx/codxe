@@ -222,52 +222,6 @@ DDSImage ReadDDSFile(const std::string &filepath)
     return ddsImage;
 }
 
-#define INVALID_FILE_ATTRIBUTES -1
-
-bool FileExists(const char *filepath)
-{
-    DWORD attributes = GetFileAttributesA(filepath);
-
-    if (attributes == INVALID_FILE_ATTRIBUTES)
-    {
-        return false;
-    }
-
-    if (attributes & FILE_ATTRIBUTE_DIRECTORY)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-std::vector<std::string> ListFilesInDirectory(const std::string &directory)
-{
-    std::vector<std::string> filenames;
-    WIN32_FIND_DATAA findFileData;
-    HANDLE hFind = FindFirstFileA((directory + "\\*").c_str(), &findFileData);
-
-    if (hFind == INVALID_HANDLE_VALUE)
-    {
-        DbgPrint("ERROR: Directory '%s' does not exist or cannot be accessed.\n", directory.c_str());
-        return filenames; // Return empty vector
-    }
-
-    do
-    {
-        // Ignore "." and ".." and only include regular files (not directories)
-        if (!(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-        {
-            std::string filename(findFileData.cFileName);
-            filenames.push_back(filename);
-        }
-    } while (FindNextFileA(hFind, &findFileData) != 0);
-
-    FindClose(hFind);
-
-    return filenames;
-}
-
 namespace mp
 {
     // Functions
@@ -918,7 +872,7 @@ namespace mp
             Image_Dump(image);
         }
 
-        auto highmips = ListFilesInDirectory("D:\\highmip");
+        auto highmips = filesystem::list_files_in_directory("D:\\highmip");
         for (size_t i = 0; i < highmips.size(); ++i)
         {
             const std::string &filepath = "D:\\highmip\\" + highmips[i];
@@ -1271,7 +1225,7 @@ namespace mp
         const std::string replacement_base_dir = "game:\\raw\\images";
         const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
 
-        if (!FileExists(replacement_path.c_str()))
+        if (!filesystem::file_exists(replacement_path))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "File does not exist: %s\n", replacement_path.c_str());
             return;
