@@ -9,7 +9,7 @@ author = "mo"
 name = "iw3-xenon"
 file = "iw3-xenon.xex"
 hash = "B4B0A3571D5160E2" # default.xex
-is_enabled = false
+is_enabled = true
 
 [[plugin]]
 author = "mo"

@@ -11,12 +11,12 @@ namespace game
 
     void init()
     {
-        if (strcmp((char *)0x82032AC4, "multiplayer") == 0)
+        if (strncmp((char *)0x82032AC4, "multiplayer", 11) == 0)
         {
             xbox::show_notification(L"iw3 xenon mp");
             mp::init();
         }
-        else if (strcmp((char *)0x82065E48, "startSingleplayer") == 0)
+        else if (strncmp((char *)0x82065E48, "startSingleplayer", 17) == 0)
         {
             xbox::show_notification(L"iw3 xenon sp");
             sp::init();
