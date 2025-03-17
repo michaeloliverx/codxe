@@ -63,7 +63,7 @@ void GPUEndianSwapTexture(std::vector<uint8_t> &pixelData, GPUENDIAN endianType)
 
 // TODO: MAKEFOURCC('D', 'X', 'T', '1');
 // DDS Constants
-const uint32_t DDS_MAGIC = 0x20534444; // 'DDS ' in hex (must be little-endian)
+const uint32_t DDS_MAGIC = MAKEFOURCC('D', 'D', 'S', ' ');
 const uint32_t DDS_HEADER_SIZE = 124;
 const uint32_t DDS_PIXEL_FORMAT_SIZE = 32;
 const uint32_t DDSD_CAPS = 0x1;
@@ -79,10 +79,10 @@ const uint32_t DDSCAPS_MIPMAP = 0x400000;
 const uint32_t DDPF_LUMINANCE = 0x20000;
 
 // DDS Pixel Formats (FourCC Codes)
-const uint32_t DXT1_FOURCC = 0x31545844; // 'DXT1'
-const uint32_t DXT3_FOURCC = 0x33545844; // 'DXT3'
-const uint32_t DXT5_FOURCC = 0x35545844; // 'DXT5'
-const uint32_t DXN_FOURCC = 0x32495441;  // 'ATI2' (DXN / BC5)
+const uint32_t DXT1_FOURCC = MAKEFOURCC('D', 'X', 'T', '1');
+const uint32_t DXT3_FOURCC = MAKEFOURCC('D', 'X', 'T', '3');
+const uint32_t DXT5_FOURCC = MAKEFOURCC('D', 'X', 'T', '5');
+const uint32_t DXN_FOURCC = MAKEFOURCC('A', 'T', 'I', '2'); // (DXN / BC5)
 
 // Additional DDS Cubemap Flags
 const uint32_t DDSCAPS2_CUBEMAP = 0x200;
