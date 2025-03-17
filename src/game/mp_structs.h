@@ -376,7 +376,6 @@ namespace mp
 
     typedef void (*Load_MapEntsPtr_t)();
 
-    typedef void (*R_DownsampleMipMapBilinear_t)(const unsigned __int8 *src, int srcWidth, int srcHeight, int texelPitch, unsigned __int8 *dst);
     typedef void (*R_GetImageList_t)(ImageList *imageList);
     typedef int (*R_StreamLoadFileSynchronously_t)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData);
 

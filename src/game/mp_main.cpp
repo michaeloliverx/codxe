@@ -14,11 +14,6 @@
 #include "../filesystem.h"
 #include "../xboxkrnl.h"
 
-extern "C"
-{
-    void DbgPrint(const char *format, ...);
-}
-
 namespace
 {
     uint32_t ShowKeyboard(const wchar_t *title, const wchar_t *description, const wchar_t *defaultText, std::string &result, size_t maxLength, uint32_t keyboardType)
@@ -169,7 +164,7 @@ DDSImage ReadDDSFile(const std::string &filepath)
 
     if (!file.is_open())
     {
-        DbgPrint("ERROR: Unable to open file: %s\n", filepath.c_str());
+        xbox::DbgPrint("ERROR: Unable to open file: %s\n", filepath.c_str());
         return ddsImage; // Return empty DDSImage
     }
 
@@ -181,7 +176,7 @@ DDSImage ReadDDSFile(const std::string &filepath)
 
     if (magicSwapped != 0x20534444) // 'DDS ' in big-endian
     {
-        DbgPrint("ERROR: Invalid DDS file: %s\n", filepath.c_str());
+        xbox::DbgPrint("ERROR: Invalid DDS file: %s\n", filepath.c_str());
         file.close();
         return ddsImage;
     }
@@ -196,7 +191,7 @@ DDSImage ReadDDSFile(const std::string &filepath)
     // Ensure fileSize is valid before proceeding
     if (fileSize == std::streampos(-1))
     {
-        DbgPrint("ERROR: Failed to determine file size.\n");
+        xbox::DbgPrint("ERROR: Failed to determine file size.\n");
         file.close();
         return ddsImage;
     }
@@ -214,10 +209,10 @@ DDSImage ReadDDSFile(const std::string &filepath)
     file.close();
 
     // Debug output
-    DbgPrint("INFO: DDS file '%s' loaded successfully.\n", filepath.c_str());
-    DbgPrint("      Resolution: %ux%u\n", ddsImage.header.width, ddsImage.header.height);
-    DbgPrint("      MipMaps: %u\n", ddsImage.header.mipMapCount);
-    DbgPrint("      Data Size: %u bytes\n", static_cast<unsigned int>(dataSize));
+    xbox::DbgPrint("INFO: DDS file '%s' loaded successfully.\n", filepath.c_str());
+    xbox::DbgPrint("      Resolution: %ux%u\n", ddsImage.header.width, ddsImage.header.height);
+    xbox::DbgPrint("      MipMaps: %u\n", ddsImage.header.mipMapCount);
+    xbox::DbgPrint("      Data Size: %u bytes\n", static_cast<unsigned int>(dataSize));
 
     return ddsImage;
 }
@@ -245,7 +240,6 @@ namespace mp
 
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
 
-    R_DownsampleMipMapBilinear_t R_DownsampleMipMapBilinear = reinterpret_cast<R_DownsampleMipMapBilinear_t>(0x82133800);
     R_GetImageList_t R_GetImageList = reinterpret_cast<R_GetImageList_t>(0x82152A58);
     R_StreamLoadFileSynchronously_t R_StreamLoadFileSynchronously = reinterpret_cast<R_StreamLoadFileSynchronously_t>(0x82151510);
 
@@ -802,7 +796,7 @@ namespace mp
                 return;
             }
 
-            DbgPrint("Image_Dump: rowPitch=%d\n", rowPitch);
+            xbox::DbgPrint("Image_Dump: rowPitch=%d\n", rowPitch);
 
             // Call XGUntileTextureLevel to convert the tiled texture to linear format
             XGUntileTextureLevel(
@@ -1073,7 +1067,7 @@ namespace mp
             blockSize = 16; // 16 bytes per 4x4 block (two 8-byte channels)
             break;
         default:
-            DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
+            xbox::DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
             return 0;
         }
 
@@ -1119,14 +1113,14 @@ namespace mp
 
             if (ddsMipLevelSize == 0)
             {
-                DbgPrint("  [ERROR] Unsupported format %d for mip level %u! Skipping...\n", image->texture.basemap->Format.DataFormat, mipLevel);
+                xbox::DbgPrint("  [ERROR] Unsupported format %d for mip level %u! Skipping...\n", image->texture.basemap->Format.DataFormat, mipLevel);
                 break;
             }
 
             // Ensure we're not reading out of bounds
             if (ddsOffset + ddsMipLevelSize > ddsImage.data.size())
             {
-                DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
+                xbox::DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
                 break;
             }
 
@@ -1134,7 +1128,7 @@ namespace mp
 
             GPUEndianSwapTexture(levelData, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
-            DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
+            xbox::DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
 
             UINT address = baseAddress;
             if (mipLevel > 0)
@@ -1143,7 +1137,7 @@ namespace mp
                 address = mipAddress + mipLevelOffset;
             }
 
-            DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, ddsMipLevelSize);
+            xbox::DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, ddsMipLevelSize);
 
             // // Write the base level
             XGTileTextureLevel(
@@ -1292,7 +1286,7 @@ namespace mp
         const UINT MAX_IMAGES = 2048;
         XAssetHeader assets[MAX_IMAGES];
         UINT count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
-        DbgPrint("Cmd_imageload2_f: Found %d images\n", count);
+        xbox::DbgPrint("Cmd_imageload2_f: Found %d images\n", count);
         for (UINT i = 0; i < count; i++)
         {
             GfxImage *image = assets[i].image;
