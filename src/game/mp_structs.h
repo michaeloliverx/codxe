@@ -363,6 +363,8 @@ namespace mp
     typedef void (*CL_GamepadButtonEvent_t)(int localClientNum, int controllerIndex, int key, int down, unsigned int time);
 
     typedef void (*Cmd_AddCommandInternal_t)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd);
+    typedef bool (*Cmd_ExecFromFastFile_t)(int localClientNum, int controllerIndex, const char *filename);
+    typedef void (*Cbuf_ExecuteBuffer_t)(int localClientNum, int controllerIndex, const char *buffer);
 
     typedef void (*Com_PrintError_t)(conChannel_t channel, const char *fmt, ...);
     typedef void (*Com_PrintMessage_t)(conChannel_t channel, const char *msg, int error);
