@@ -228,6 +228,8 @@ namespace mp
     CL_GamepadButtonEvent_t CL_GamepadButtonEvent = reinterpret_cast<CL_GamepadButtonEvent_t>(0x822DD1E8);
 
     Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x8223ADE0);
+    Cmd_ExecFromFastFile_t Cmd_ExecFromFastFile = reinterpret_cast<Cmd_ExecFromFastFile_t>(0x8223AF40);
+    Cbuf_ExecuteBuffer_t Cbuf_ExecuteBuffer = reinterpret_cast<Cbuf_ExecuteBuffer_t>(0x8223AAE8);
 
     Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x82237000);
     Com_PrintError_t Com_PrintError = reinterpret_cast<Com_PrintError_t>(0x82235C50);
@@ -1304,6 +1306,27 @@ namespace mp
         Load_images();
     }
 
+    Detour Cmd_ExecFromFastFile_Detour;
+
+    bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const char *filename)
+    {
+        std::string file_path = "game:\\raw\\";
+        file_path += filename;
+
+        if (filesystem::file_exists(file_path))
+        {
+            std::string contents = filesystem::read_file_to_string(file_path);
+            if (!contents.empty())
+            {
+                Com_Printf(CON_CHANNEL_SYSTEM, "execing %s from raw:\\\n", filename);
+                Cbuf_ExecuteBuffer(localClientNum, controllerIndex, contents.c_str());
+                return true;
+            }
+        }
+
+        return Cmd_ExecFromFastFile_Detour.GetOriginal<decltype(Cmd_ExecFromFastFile)>()(localClientNum, controllerIndex, filename);
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -1331,5 +1354,8 @@ namespace mp
 
         CG_RegisterGraphics_Detour = Detour(CG_RegisterGraphics, CG_RegisterGraphics_Hook);
         CG_RegisterGraphics_Detour.Install();
+
+        Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
+        Cmd_ExecFromFastFile_Detour.Install();
     }
 }
