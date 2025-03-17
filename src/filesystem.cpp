@@ -3,8 +3,10 @@
 #include <string>
 #include <direct.h>
 #include <fstream>
+#include <vector>
 
 #include "xboxkrnl.h"
+#include "filesystem.h"
 
 namespace filesystem
 {
@@ -98,5 +100,32 @@ namespace filesystem
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         file.close();
         return content;
+    }
+
+    std::vector<std::string> list_files_in_directory(const std::string &directory)
+    {
+        std::vector<std::string> filenames;
+        WIN32_FIND_DATAA findFileData;
+        HANDLE hFind = FindFirstFileA((directory + "\\*").c_str(), &findFileData);
+
+        if (hFind == INVALID_HANDLE_VALUE)
+        {
+            xbox::DbgPrint("ERROR: Directory '%s' does not exist or cannot be accessed.\n", directory.c_str());
+            return filenames; // Return empty vector
+        }
+
+        do
+        {
+            // Ignore "." and ".." and only include regular files (not directories)
+            if (!(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            {
+                std::string filename(findFileData.cFileName);
+                filenames.push_back(filename);
+            }
+        } while (FindNextFileA(hFind, &findFileData) != 0);
+
+        FindClose(hFind);
+
+        return filenames;
     }
 }
