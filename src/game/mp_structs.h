@@ -683,14 +683,127 @@ namespace mp
     static_assert(sizeof(entityState_s) == 0xf4, "");
     static_assert(offsetof(entityState_s, index) == 0x88, "");
 
+    struct turretInfo_s;
+    struct scr_vehicle_s;
+
+    struct item_ent_t
+    {
+        int ammoCount;
+        int clipAmmoCount;
+        int index;
+    };
+
+    struct __declspec(align(4)) trigger_ent_t
+    {
+        int threshold;
+        int accumulate;
+        int timestamp;
+        int singleUserEntIndex;
+        bool requireLookAt;
+    };
+
+    struct mover_ent_t
+    {
+        float decelTime;
+        float aDecelTime;
+        float speed;
+        float aSpeed;
+        float midTime;
+        float aMidTime;
+        float pos1[3];
+        float pos2[3];
+        float pos3[3];
+        float apos1[3];
+        float apos2[3];
+        float apos3[3];
+    };
+
+    struct corpse_ent_t
+    {
+        int deathAnimStartTime;
+    };
+
+    enum MissileStage : __int32
+    {
+        MISSILESTAGE_SOFTLAUNCH = 0x0,
+        MISSILESTAGE_ASCENT = 0x1,
+        MISSILESTAGE_DESCENT = 0x2,
+    };
+
+    enum MissileFlightMode : __int32
+    {
+        MISSILEFLIGHTMODE_TOP = 0x0,
+        MISSILEFLIGHTMODE_DIRECT = 0x1,
+    };
+
+    struct missile_ent_t
+    {
+        float time;
+        int timeOfBirth;
+        float travelDist;
+        float surfaceNormal[3];
+        team_t team;
+        float curvature[3];
+        float targetOffset[3];
+        MissileStage stage;
+        MissileFlightMode flightMode;
+    };
+
+    union $71462809E721C4770F13398DD6519E31
+    {
+        item_ent_t item[2];
+        trigger_ent_t trigger;
+        mover_ent_t mover;
+        corpse_ent_t corpse;
+        missile_ent_t missile;
+    };
+
+    struct tagInfo_s;
+
     struct gentity_s
     {
-        entityState_s s;   // 0x0000, 0x00F4
-        entityShared_t r;  // 0x00F4, 0x0068
-        gclient_s *client; // 0x015c, 0x0004
+        entityState_s s;
+        entityShared_t r;
+        gclient_s *client;
+        turretInfo_s *pTurretInfo;
+        scr_vehicle_s *scr_vehicle;
+        unsigned __int16 model;
+        unsigned __int8 physicsObject;
+        unsigned __int8 takedamage;
+        unsigned __int8 active;
+        unsigned __int8 nopickup;
+        unsigned __int8 handler;
+        unsigned __int8 team;
+        unsigned __int16 classname;
+        unsigned __int16 target;
+        unsigned __int16 targetname;
+        unsigned int attachIgnoreCollision;
+        int spawnflags;
+        int flags;
+        int eventTime;
+        int freeAfterEvent;
+        int unlinkAfterEvent;
+        int clipmask;
+        int processedFrame;
+        EntHandle parent;
+        int nextthink;
+        int health;
+        int maxHealth;
+        int damage;
+        int count;
+        gentity_s *chain;
+        $71462809E721C4770F13398DD6519E31 ___u30;
+        EntHandle missileTargetEnt;
+        tagInfo_s *tagInfo;
+        gentity_s *tagChildren;
+        unsigned __int16 attachModelNames[19];
+        unsigned __int16 attachTagNames[19];
+        int useCount;
+        gentity_s *nextFree;
     };
 
     static_assert(offsetof(gentity_s, client) == 0x0015C, "");
+    static_assert(sizeof(gentity_s) == 0x274, ""); // retail TU4 size is 0x278 bytes. TODO: check padding
 
     struct cmd_function_s
     {

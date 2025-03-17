@@ -340,6 +340,28 @@ namespace mp
             SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
     }
 
+    void Cmd_God_f(gentity_s *ent)
+    {
+        if (!CheatsOk(ent))
+            return;
+
+        // Toggle god mode flag (bit 0)
+        ent->flags ^= 1;
+
+        bool godModeEnabled = (ent->flags & 1) != 0;
+        const char *message = godModeEnabled ? "GAME_GODMODE_ON" : "GAME_GODMODE_OFF";
+
+        // Format command string (101 is ASCII for 'e')
+        const char *commandString = va("%c \"%s\"", 101, message);
+
+        int entityIndex = ent - g_entities;
+
+        if (entityIndex == -1)
+            SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "%s", commandString);
+        else
+            SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
+    }
+
     Detour ClientCommand_Detour;
 
     void ClientCommand_Hook(int clientNum)
@@ -353,6 +375,8 @@ namespace mp
             Cmd_Noclip_f(ent);
         else if (I_strnicmp(cmd, "ufo", 3) == 0)
             Cmd_UFO_f(ent);
+        else if (I_strnicmp(cmd, "god", 3) == 0)
+            Cmd_God_f(ent);
         else
             ClientCommand_Detour.GetOriginal<decltype(ClientCommand)>()(clientNum);
     }
