@@ -227,9 +227,13 @@ namespace mp
     CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x822E4D18);
     CL_GamepadButtonEvent_t CL_GamepadButtonEvent = reinterpret_cast<CL_GamepadButtonEvent_t>(0x822DD1E8);
 
+    ClientCommand_t ClientCommand = reinterpret_cast<ClientCommand_t>(0x8227DCF0);
+
     Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x8223ADE0);
     Cmd_ExecFromFastFile_t Cmd_ExecFromFastFile = reinterpret_cast<Cmd_ExecFromFastFile_t>(0x8223AF40);
     Cbuf_ExecuteBuffer_t Cbuf_ExecuteBuffer = reinterpret_cast<Cbuf_ExecuteBuffer_t>(0x8223AAE8);
+
+    CheatsOk_t CheatsOk = reinterpret_cast<CheatsOk_t>(0x8227BF40);
 
     Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x82237000);
     Com_PrintError_t Com_PrintError = reinterpret_cast<Com_PrintError_t>(0x82235C50);
@@ -240,6 +244,8 @@ namespace mp
     DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x822A0298);
     DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile = reinterpret_cast<DB_GetAllXAssetOfType_FastFile_t>(0x8229E8E0);
 
+    I_strnicmp_t I_strnicmp = reinterpret_cast<I_strnicmp_t>(0x821CDA98);
+
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
 
     R_GetImageList_t R_GetImageList = reinterpret_cast<R_GetImageList_t>(0x82152A58);
@@ -247,8 +253,15 @@ namespace mp
 
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
 
+    SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = reinterpret_cast<SV_Cmd_ArgvBuffer_t>(0x82239F48);
+    SV_GameSendServerCommand_t SV_GameSendServerCommand = reinterpret_cast<SV_GameSendServerCommand_t>(0x82204BB8);
+    SV_SendServerCommand_t SV_SendServerCommand = reinterpret_cast<SV_SendServerCommand_t>(0x821FFE30);
+
+    va_t va = reinterpret_cast<va_t>(0x821CD858);
+
     // Variables
     auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
+    auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
 
     Detour CL_ConsolePrint_Detour;
 
@@ -279,6 +292,69 @@ namespace mp
                 xbox::DbgPrint("ShowKeyboard cancelled.\n");
             }
         }
+    }
+
+    void Cmd_UFO_f(gentity_s *ent)
+    {
+        if (!CheatsOk(ent))
+            return;
+
+        gclient_s *client = ent->client;
+
+        bool enableUFO = !client->ufo;
+        client->ufo = enableUFO;
+
+        const char *message = enableUFO ? "GAME_UFOON" : "GAME_UFOOFF";
+
+        // Format the command string (note: 101 is ASCII for 'e')
+        const char *commandString = va("%c \"%s\"", 101, message);
+
+        int entityIndex = ent - g_entities;
+
+        if (entityIndex == -1)
+            SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "%s", commandString);
+        else
+            SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
+    }
+
+    void Cmd_Noclip_f(gentity_s *ent)
+    {
+        if (!CheatsOk(ent))
+            return;
+
+        gclient_s *client = ent->client;
+
+        bool enableNoclip = !client->noclip;
+        client->noclip = enableNoclip;
+
+        const char *message = enableNoclip ? "GAME_NOCLIPON" : "GAME_NOCLIPOFF";
+
+        // Format the command string (note: 101 is ASCII for 'e')
+        const char *commandString = va("%c \"%s\"", 101, message);
+
+        int entityIndex = ent - g_entities;
+
+        if (entityIndex == -1)
+            SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "%s", commandString);
+        else
+            SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
+    }
+
+    Detour ClientCommand_Detour;
+
+    void ClientCommand_Hook(int clientNum)
+    {
+        gentity_s *ent = &g_entities[clientNum];
+
+        char cmd[1032];
+        SV_Cmd_ArgvBuffer(0, cmd, 1024);
+
+        if (I_strnicmp(cmd, "noclip", 6) == 0)
+            Cmd_Noclip_f(ent);
+        else if (I_strnicmp(cmd, "ufo", 3) == 0)
+            Cmd_UFO_f(ent);
+        else
+            ClientCommand_Detour.GetOriginal<decltype(ClientCommand)>()(clientNum);
     }
 
     Detour Load_MapEntsPtr_Detour;
@@ -1330,6 +1406,9 @@ namespace mp
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
+
+        ClientCommand_Detour = Detour(ClientCommand, ClientCommand_Hook);
+        ClientCommand_Detour.Install();
 
         CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
         CL_ConsolePrint_Detour.Install();
