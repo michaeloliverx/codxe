@@ -6,14 +6,14 @@ title_id = "415607E6"
 
 [[plugin]]
 author = "mo"
-name = "iw3-xenon"
-file = "iw3-xenon.xex"
+name = "iw3xe"
+file = "iw3xe.xex"
 hash = "B4B0A3571D5160E2" # default.xex
 is_enabled = true
 
 [[plugin]]
 author = "mo"
-name = "iw3-xenon"
-file = "iw3-xenon.xex"
+name = "iw3xe"
+file = "iw3xe.xex"
 hash = "F5F903E4F326EB10" # default_mp.xex
 is_enabled = true
