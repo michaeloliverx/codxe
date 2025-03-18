@@ -1164,6 +1164,60 @@ namespace mp
 
     struct client_t;
 
+    union DvarValue
+    {
+        bool enabled;
+        int integer;
+        unsigned int unsignedInt;
+        float value;
+        float vector[4];
+        const char *string;
+        unsigned __int8 color[4];
+    };
+
+    union DvarLimits
+    {
+        struct
+        {
+            int stringCount;
+            const char **strings;
+        } enumeration;
+
+        struct
+        {
+            int min;
+            int max;
+        } integer;
+
+        struct
+        {
+            float min;
+            float max;
+        } value;
+
+        struct
+        {
+            float min;
+            float max;
+        } vector;
+    };
+
+    struct dvar_s
+    {
+        const char *name;
+        const char *description;
+        unsigned __int16 flags;
+        unsigned __int8 type;
+        bool modified;
+        DvarValue current;
+        DvarValue latched;
+        DvarValue reset;
+        DvarLimits domain;
+        dvar_s *hashNext;
+    };
+
+    struct GfxViewInfo;
+
     typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 
     typedef void (*CG_RegisterGraphics_t)(int localClientNum, const char *mapname);
@@ -1189,10 +1243,14 @@ namespace mp
     typedef XAssetHeader *(*DB_FindXAssetHeader_t)(const XAssetType type, const char *name);
     typedef int (*DB_GetAllXAssetOfType_FastFile_t)(XAssetType type, XAssetHeader *assets, int maxCount);
 
+    typedef bool (*Dvar_GetBool_t)(const char *dvarName);
+    typedef dvar_s *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags, const char *description);
+
     typedef int (*I_strnicmp_t)(const char *s0, const char *s1, int n);
 
     typedef void (*Load_MapEntsPtr_t)();
 
+    typedef void (*R_DrawAllDynEnt_t)(const GfxViewInfo *viewInfo);
     typedef void (*R_GetImageList_t)(ImageList *imageList);
     typedef int (*R_StreamLoadFileSynchronously_t)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData);
 
