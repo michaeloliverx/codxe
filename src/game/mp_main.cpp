@@ -244,10 +244,14 @@ namespace mp
     DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x822A0298);
     DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile = reinterpret_cast<DB_GetAllXAssetOfType_FastFile_t>(0x8229E8E0);
 
+    Dvar_GetBool_t Dvar_GetBool = reinterpret_cast<Dvar_GetBool_t>(0x821D15D8);
+    Dvar_RegisterBool_t Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x821D5180);
+
     I_strnicmp_t I_strnicmp = reinterpret_cast<I_strnicmp_t>(0x821CDA98);
 
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
 
+    R_DrawAllDynEnt_t R_DrawAllDynEnt = reinterpret_cast<R_DrawAllDynEnt_t>(0x8215FF98);
     R_GetImageList_t R_GetImageList = reinterpret_cast<R_GetImageList_t>(0x82152A58);
     R_StreamLoadFileSynchronously_t R_StreamLoadFileSynchronously = reinterpret_cast<R_StreamLoadFileSynchronously_t>(0x82151510);
 
@@ -1427,6 +1431,16 @@ namespace mp
         return Cmd_ExecFromFastFile_Detour.GetOriginal<decltype(Cmd_ExecFromFastFile)>()(localClientNum, controllerIndex, filename);
     }
 
+    Detour R_DrawAllDynEnt_Detour;
+
+    void R_DrawAllDynEnt_Hook(const GfxViewInfo *viewInfo)
+    {
+        if (Dvar_GetBool("r_drawDynEnts"))
+        {
+            R_DrawAllDynEnt_Detour.GetOriginal<decltype(R_DrawAllDynEnt)>()(viewInfo);
+        }
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -1460,5 +1474,10 @@ namespace mp
 
         Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
         Cmd_ExecFromFastFile_Detour.Install();
+
+        R_DrawAllDynEnt_Detour = Detour(R_DrawAllDynEnt, R_DrawAllDynEnt_Hook);
+        R_DrawAllDynEnt_Detour.Install();
+
+        Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
     }
 }
