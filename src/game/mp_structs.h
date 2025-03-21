@@ -1265,10 +1265,41 @@ namespace mp
 
     struct weaponState_t;
 
+    enum connstate_t
+    {
+        CA_DISCONNECTED = 0x0,
+        CA_CINEMATIC = 0x1,
+        CA_LOGO = 0x2,
+        CA_CONNECTING = 0x3,
+        CA_CHALLENGING = 0x4,
+        CA_CONNECTED = 0x5,
+        CA_SENDINGSTATS = 0x6,
+        CA_LOADING = 0x7,
+        CA_PRIMED = 0x8,
+        CA_ACTIVE = 0x9,
+    };
+
+    struct clientUIActive_t
+    {
+        bool active;
+        bool isRunning;
+        bool cgameInitialized;
+        bool cgameInitCalled;
+        bool mapPreloaded;
+        int keyCatchers;
+        bool displayHUDWithKeycatchUI;
+        connstate_t connectionState;
+        int nextScrollTime;
+        bool invited;
+        int numVoicePacketsSent;
+        int numVoicePacketsSentStart;
+    };
+
     typedef void (*BG_CalculateView_IdleAngles_t)(viewState_t *vs, float *angles);
     typedef void (*BG_CalculateWeaponPosition_IdleAngles_t)(weaponState_t *ws, float *angles);
 
     typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
+    typedef void (*Cbuf_ExecuteBuffer_t)(int localClientNum, int controllerIndex, const char *buffer);
 
     typedef void (*CG_DrawActive_t)(int localClientNum);
     typedef void (*CG_GameMessage_t)(int localClientNum, const char *msg);
@@ -1282,7 +1313,7 @@ namespace mp
 
     typedef void (*Cmd_AddCommandInternal_t)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd);
     typedef bool (*Cmd_ExecFromFastFile_t)(int localClientNum, int controllerIndex, const char *filename);
-    typedef void (*Cbuf_ExecuteBuffer_t)(int localClientNum, int controllerIndex, const char *buffer);
+    typedef void (*Cmd_ExecuteSingleCommand_t)(int localClientNum, int controllerIndex, const char *text);
 
     typedef int (*CheatsOk_t)(gentity_s *ent);
 
@@ -1326,6 +1357,7 @@ namespace mp
 
     typedef void (*UI_DrawBuildNumber_t)(const int localClientNum);
     typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style);
+    typedef void (*UI_Refresh_t)(int localClientNum);
 
     typedef char *(*va_t)(char *format, ...);
 

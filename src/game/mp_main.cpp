@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <functional>
 
 #include <xtl.h>
 #include <xbox.h>
@@ -14,30 +15,134 @@
 #include "../filesystem.h"
 #include "../xboxkrnl.h"
 
-namespace
+// Structure to hold data for the active keyboard request
+struct KeyboardRequest
 {
-    uint32_t ShowKeyboard(const wchar_t *title, const wchar_t *description, const wchar_t *defaultText, std::string &result, size_t maxLength, uint32_t keyboardType)
+    wchar_t *resultText;
+    XOVERLAPPED overlapped;
+    std::function<void(bool, const wchar_t *)> callback;
+    DWORD maxLength;
+    bool isActive;
+
+    KeyboardRequest() : resultText(nullptr), callback(nullptr), maxLength(0), isActive(false)
     {
-        size_t realMaxLength = maxLength + 1;
-        XOVERLAPPED overlapped = {};
+        ZeroMemory(&overlapped, sizeof(XOVERLAPPED));
+    }
 
-        std::vector<wchar_t> wideBuffer(realMaxLength);
-        std::vector<char> buffer(realMaxLength);
-
-        XShowKeyboardUI(0, keyboardType, defaultText, title, description, wideBuffer.data(), realMaxLength, &overlapped);
-
-        while (!XHasOverlappedIoCompleted(&overlapped))
-            Sleep(100);
-
-        if (XGetOverlappedResult(&overlapped, nullptr, TRUE) == ERROR_SUCCESS)
+    ~KeyboardRequest()
+    {
+        if (resultText)
         {
-            wcstombs_s(nullptr, buffer.data(), realMaxLength, wideBuffer.data(), realMaxLength * sizeof(wchar_t));
-            result = buffer.data();
-            return ERROR_SUCCESS;
+            delete[] resultText;
+            resultText = nullptr;
+        }
+    }
+};
+
+// Global singleton for the keyboard request
+static KeyboardRequest g_keyboardRequest;
+
+// Function to show keyboard UI without blocking
+bool ShowKeyboardAsync(
+    DWORD dwUserIndex,
+    const wchar_t *defaultText,
+    const wchar_t *titleText,
+    const wchar_t *descriptionText,
+    DWORD maxTextLength,
+    DWORD keyboardType,
+    std::function<void(bool, const wchar_t *)> callback)
+{
+    // If there's already an active keyboard request, don't allow another one
+    if (g_keyboardRequest.isActive)
+    {
+        xbox::DbgPrint("Keyboard UI is already active, ignoring request\n");
+        return false;
+    }
+
+    // Clean up any previous request
+    if (g_keyboardRequest.resultText)
+    {
+        delete[] g_keyboardRequest.resultText;
+        g_keyboardRequest.resultText = nullptr;
+    }
+
+    // Allocate new result text buffer (add 1 for null terminator)
+    DWORD bufferSize = maxTextLength + 1;
+    g_keyboardRequest.resultText = new wchar_t[bufferSize];
+    ZeroMemory(g_keyboardRequest.resultText, bufferSize * sizeof(wchar_t));
+    g_keyboardRequest.maxLength = bufferSize;
+    g_keyboardRequest.callback = callback;
+
+    // Zero out the overlapped structure
+    ZeroMemory(&g_keyboardRequest.overlapped, sizeof(XOVERLAPPED));
+
+    // Set up the keyboard UI with overlapped to make it non-blocking
+    HRESULT hr = XShowKeyboardUI(
+        dwUserIndex,
+        keyboardType,
+        defaultText,
+        titleText,
+        descriptionText,
+        g_keyboardRequest.resultText,
+        bufferSize,
+        &g_keyboardRequest.overlapped);
+
+    if (FAILED(hr))
+    {
+        // Handle error
+        xbox::DbgPrint("Failed to show keyboard UI: 0x%08X\n", hr);
+        delete[] g_keyboardRequest.resultText;
+        g_keyboardRequest.resultText = nullptr;
+        return false;
+    }
+
+    // Mark as active
+    g_keyboardRequest.isActive = true;
+    xbox::DbgPrint("Keyboard UI requested, continuing with game loop...\n");
+    return true;
+}
+
+// Function to call in your game loop to check for keyboard completion
+void CheckKeyboardCompletion()
+{
+    // If no active keyboard request, nothing to do
+    if (!g_keyboardRequest.isActive)
+    {
+        return;
+    }
+
+    // Check if the operation has completed
+    if (XHasOverlappedIoCompleted(&g_keyboardRequest.overlapped))
+    {
+        DWORD result;
+        XGetOverlappedResult(&g_keyboardRequest.overlapped, &result, TRUE);
+
+        xbox::DbgPrint("Keyboard operation completed with result: 0x%08X\n", result);
+
+        // Operation completed
+        bool success = (result == ERROR_SUCCESS);
+
+        // Call the user callback with the result
+        if (g_keyboardRequest.callback)
+        {
+            if (success)
+            {
+                xbox::DbgPrint("Keyboard text entry successful\n");
+                g_keyboardRequest.callback(true, g_keyboardRequest.resultText);
+            }
+            else
+            {
+                xbox::DbgPrint("Keyboard operation failed or canceled\n");
+                g_keyboardRequest.callback(false, nullptr);
+            }
         }
 
-        return ERROR_CANCELLED;
+        // Clean up
+        delete[] g_keyboardRequest.resultText;
+        g_keyboardRequest.resultText = nullptr;
+        g_keyboardRequest.isActive = false;
     }
+    // If not completed, we'll check again next frame
 }
 
 void GPUEndianSwapTexture(std::vector<uint8_t> &pixelData, GPUENDIAN endianType)
@@ -221,6 +326,7 @@ namespace mp
 {
     // Functions
     Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x82239FD0);
+    Cbuf_ExecuteBuffer_t Cbuf_ExecuteBuffer = reinterpret_cast<Cbuf_ExecuteBuffer_t>(0x8223AAE8);
 
     CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x8231E6E0);
     CG_GameMessage_t CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x8230AAF0);
@@ -234,7 +340,7 @@ namespace mp
 
     Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x8223ADE0);
     Cmd_ExecFromFastFile_t Cmd_ExecFromFastFile = reinterpret_cast<Cmd_ExecFromFastFile_t>(0x8223AF40);
-    Cbuf_ExecuteBuffer_t Cbuf_ExecuteBuffer = reinterpret_cast<Cbuf_ExecuteBuffer_t>(0x8223AAE8);
+    Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand = reinterpret_cast<Cmd_ExecuteSingleCommand_t>(0x8223A7A0);
 
     CheatsOk_t CheatsOk = reinterpret_cast<CheatsOk_t>(0x8227BF40);
 
@@ -277,10 +383,12 @@ namespace mp
 
     UI_DrawBuildNumber_t UI_DrawBuildNumber = reinterpret_cast<UI_DrawBuildNumber_t>(0x821EBB30);
     UI_DrawText_t UI_DrawText = reinterpret_cast<UI_DrawText_t>(0x821EB858);
+    UI_Refresh_t UI_Refresh = reinterpret_cast<UI_Refresh_t>(0x821F2F28);
 
     va_t va = reinterpret_cast<va_t>(0x821CD858);
 
     // Variables
+    auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
     auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
     auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
 
@@ -294,25 +402,56 @@ namespace mp
         xbox::DbgPrint("CL_ConsolePrint txt=%s \n", txt);
     }
 
+    void Cmd_cmdinput_f()
+    {
+        bool success = ShowKeyboardAsync(
+            0,                         // First controller
+            L"",                       // Default text
+            L"Enter Text",             // Title
+            L"Please enter some text", // Description
+            256,                       // Max length
+            VKBD_DEFAULT,              // Keyboard type
+            [](bool success, const wchar_t *text)
+            {
+                if (success && text)
+                {
+                    // Get the required buffer size
+                    size_t wideLength = wcslen(text);
+                    size_t mbBufferSize = wideLength * 4 + 1; // 4 bytes per character worst case
+
+                    // Create buffer and convert
+                    std::vector<char> mbBuffer(mbBufferSize);
+                    wcstombs_s(nullptr, mbBuffer.data(), mbBufferSize, text, wideLength);
+
+                    // Create string from the buffer
+                    std::string result = mbBuffer.data();
+
+                    Cbuf_AddText(0, result.c_str());
+                }
+                else
+                {
+                    xbox::DbgPrint("Keyboard operation failed or was canceled\n");
+                }
+            });
+
+        if (!success)
+        {
+            xbox::DbgPrint("Failed to open keyboard UI\n");
+        }
+    }
+
     Detour CL_GamepadButtonEvent_Detour;
 
     void CL_GamepadButtonEvent_Hook(int localClientNum, int controllerIndex, int key, int down, unsigned int time)
     {
-        // xbox::DbgPrint("CL_GamepadButtonEvent localClientNum=%d controllerIndex=%d key=%d down=%d time=%d\n", localClientNum, controllerIndex, key, down, time);
         CL_GamepadButtonEvent_Detour.GetOriginal<decltype(CL_GamepadButtonEvent)>()(localClientNum, controllerIndex, key, down, time);
 
-        if (key == K_BUTTON_RSTICK && down)
+        // Check if the client is disconnected (main menu)
+        if (clientUIActives[localClientNum].connectionState == CA_DISCONNECTED)
         {
-            std::string value;
-            auto result = ShowKeyboard(L"Enter command", L"Description", L"", value, 100, 0);
-            if (result == ERROR_SUCCESS)
+            if (key == K_BUTTON_RSTICK && down)
             {
-                xbox::DbgPrint("ShowKeyboard result: %s\n", value.c_str());
-                Cbuf_AddText(0, value.c_str());
-            }
-            else
-            {
-                xbox::DbgPrint("ShowKeyboard cancelled.\n");
+                Cmd_cmdinput_f();
             }
         }
     }
@@ -1491,6 +1630,8 @@ namespace mp
 
     void CG_DrawActive_Hook(int localClientNum)
     {
+        CheckKeyboardCompletion();
+
         if (pm_cj_hud_enable->current.enabled)
         {
             DrawHudCJ();
@@ -1565,6 +1706,7 @@ namespace mp
     void UI_DrawBuildNumber_Hook(const int localClientNum)
     {
         DrawBranding();
+        CheckKeyboardCompletion();
     }
 
     void init()
@@ -1630,5 +1772,8 @@ namespace mp
 
         BG_CalculateView_IdleAngles_Detour = Detour(BG_CalculateView_IdleAngles, BG_CalculateView_IdleAngles_Hook);
         BG_CalculateView_IdleAngles_Detour.Install();
+
+        cmd_function_s *cmdinput_VAR = new cmd_function_s;
+        Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
     }
 }
