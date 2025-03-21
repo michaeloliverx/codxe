@@ -1261,6 +1261,13 @@ namespace mp
 
     struct pmove_t;
 
+    struct viewState_t;
+
+    struct weaponState_t;
+
+    typedef void (*BG_CalculateView_IdleAngles_t)(viewState_t *vs, float *angles);
+    typedef void (*BG_CalculateWeaponPosition_IdleAngles_t)(weaponState_t *ws, float *angles);
+
     typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 
     typedef void (*CG_DrawActive_t)(int localClientNum);

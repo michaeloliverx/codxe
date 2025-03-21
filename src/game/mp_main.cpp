@@ -1517,6 +1517,34 @@ namespace mp
         }
     }
 
+    dvar_s *bg_bobIdle = nullptr;
+
+    BG_CalculateWeaponPosition_IdleAngles_t BG_CalculateWeaponPosition_IdleAngles = reinterpret_cast<BG_CalculateWeaponPosition_IdleAngles_t>(0x8232CA78);
+
+    Detour BG_CalculateWeaponPosition_IdleAngles_Detour;
+
+    void BG_CalculateWeaponPosition_IdleAngles_Hook(weaponState_t *ws, float *angles)
+    {
+        if (!bg_bobIdle->current.enabled)
+        {
+            return;
+        }
+        BG_CalculateWeaponPosition_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateWeaponPosition_IdleAngles)>()(ws, angles);
+    }
+
+    BG_CalculateView_IdleAngles_t BG_CalculateView_IdleAngles = reinterpret_cast<BG_CalculateView_IdleAngles_t>(0x8232C840);
+
+    Detour BG_CalculateView_IdleAngles_Detour;
+
+    void BG_CalculateView_IdleAngles_Hook(viewState_t *vs, float *angles)
+    {
+        if (!bg_bobIdle->current.enabled)
+        {
+            return;
+        }
+        BG_CalculateView_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateView_IdleAngles)>()(vs, angles);
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -1569,5 +1597,13 @@ namespace mp
 
         Sys_SnapVector_Detour = Detour(Sys_SnapVector, Sys_SnapVector_Hook);
         Sys_SnapVector_Detour.Install();
+
+        bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, 0, "Idle gun sway");
+
+        BG_CalculateWeaponPosition_IdleAngles_Detour = Detour(BG_CalculateWeaponPosition_IdleAngles, BG_CalculateWeaponPosition_IdleAngles_Hook);
+        BG_CalculateWeaponPosition_IdleAngles_Detour.Install();
+
+        BG_CalculateView_IdleAngles_Detour = Detour(BG_CalculateView_IdleAngles, BG_CalculateView_IdleAngles_Hook);
+        BG_CalculateView_IdleAngles_Detour.Install();
     }
 }
