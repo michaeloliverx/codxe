@@ -250,6 +250,7 @@ namespace mp
     Dvar_GetBool_t Dvar_GetBool = reinterpret_cast<Dvar_GetBool_t>(0x821D15D8);
     Dvar_RegisterBool_t Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x821D5180);
     Dvar_RegisterColor_t Dvar_RegisterColor = reinterpret_cast<Dvar_RegisterColor_t>(0x821D4D98);
+    Dvar_RegisterEnum_t Dvar_RegisterEnum = reinterpret_cast<Dvar_RegisterEnum_t>(0x821D4F88);
     Dvar_RegisterInt_t Dvar_RegisterInt = reinterpret_cast<Dvar_RegisterInt_t>(0x821D5138);
 
     I_strnicmp_t I_strnicmp = reinterpret_cast<I_strnicmp_t>(0x821CDA98);
@@ -1497,6 +1498,25 @@ namespace mp
         CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
     }
 
+    dvar_s *pm_fps_mode = nullptr;
+
+    Detour Sys_SnapVector_Detour;
+
+    void Sys_SnapVector_Hook(float *v)
+    {
+        if (pm_fps_mode->current.integer == PM_FPS_MODE_PC)
+        {
+            // Use __frnd for round-to-nearest-even behavior
+            v[0] = (float)__frnd((double)v[0]);
+            v[1] = (float)__frnd((double)v[1]);
+            v[2] = (float)__frnd((double)v[2]);
+        }
+        else
+        {
+            Sys_SnapVector_Detour.GetOriginal<decltype(Sys_SnapVector)>()(v);
+        }
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -1543,5 +1563,11 @@ namespace mp
         pm_cj_hud_color = Dvar_RegisterColor("pm_cj_hud_color", 1.0, 1.0, 1.0, 0.4, 0, "Draw player speed and z origin color");
         pm_cj_hud_x = Dvar_RegisterInt("pm_cj_hud_x", 0, 0, 640, 0, "Virtual screen x coordinate of the player speed and z origin");
         pm_cj_hud_y = Dvar_RegisterInt("pm_cj_hud_y", 470, 0, 480, 0, "Virtual screen y coordinate of the player speed and z origin");
+
+        const char *fps_mode_values[] = {"console", "pc", nullptr};
+        pm_fps_mode = Dvar_RegisterEnum("pm_fps_mode", fps_mode_values, PM_FPS_MODE_CONSOLE, 0, "FPS mode");
+
+        Sys_SnapVector_Detour = Detour(Sys_SnapVector, Sys_SnapVector_Hook);
+        Sys_SnapVector_Detour.Install();
     }
 }

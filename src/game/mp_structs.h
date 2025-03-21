@@ -1292,6 +1292,7 @@ namespace mp
     typedef bool (*Dvar_GetBool_t)(const char *dvarName);
     typedef dvar_s *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags, const char *description);
     typedef dvar_s *(*Dvar_RegisterColor_t)(const char *dvarName, double r, double g, double b, double a, unsigned __int16 flags, const char *description);
+    typedef dvar_s *(*Dvar_RegisterEnum_t)(const char *dvarName, const char **valueList, unsigned __int16 defaultIndex, unsigned __int16 flags, const char *description);
     typedef dvar_s *(*Dvar_RegisterInt_t)(const char *dvarName, int value, int min, int max, unsigned __int16 flags, const char *description);
 
     typedef int (*I_strnicmp_t)(const char *s0, const char *s1, int n);
@@ -1319,6 +1320,13 @@ namespace mp
     typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style);
 
     typedef char *(*va_t)(char *format, ...);
+
+    // Custom additions
+    enum pm_fps_mode_t
+    {
+        PM_FPS_MODE_CONSOLE,
+        PM_FPS_MODE_PC
+    };
 }
 
 #pragma warning(default : 4480)
