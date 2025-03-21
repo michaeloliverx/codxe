@@ -1,6 +1,6 @@
 title_name = "Call of Duty 4: Modern Warfare"
 title_id = "415607E6"                         # AV-2022
-hash = "B4B0A3571D5160E2"                     # default_mp.xex
+hash = "B4B0A3571D5160E2"                     # default.xex
 #media_id = "15E8CF88" # Disc (USA, Europe): http://redump.org/disc/12660
 
 [[patch]]
