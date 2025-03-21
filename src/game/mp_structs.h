@@ -1324,6 +1324,7 @@ namespace mp
 
     typedef void (*Sys_SnapVector_t)(float *result);
 
+    typedef void (*UI_DrawBuildNumber_t)(const int localClientNum);
     typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style);
 
     typedef char *(*va_t)(char *format, ...);
