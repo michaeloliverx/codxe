@@ -1458,9 +1458,51 @@ namespace mp
         }
     }
 
+    dvar_s *pm_cj_hud_enable = nullptr;
+    dvar_s *pm_cj_hud_color = nullptr;
+    dvar_s *pm_cj_hud_x = nullptr;
+    dvar_s *pm_cj_hud_y = nullptr;
+
+    void DrawHudCJ()
+    {
+        auto ps = CG_GetPredictedPlayerState(0);
+        float velocity_2d = sqrtf(ps->velocity[0] * ps->velocity[0] + ps->velocity[1] * ps->velocity[1]);
+
+        char buff[128];
+        sprintf_s(buff,
+                  "s: %.2f\n"
+                  "z: %.3f\n",
+                  velocity_2d, ps->origin[2]);
+
+        static Font_s *font = (Font_s *)R_RegisterFont("fonts/consoleFont");
+        float color[4] = {
+            pm_cj_hud_color->current.color[0],
+            pm_cj_hud_color->current.color[1],
+            pm_cj_hud_color->current.color[2],
+            pm_cj_hud_color->current.color[3]};
+        float x = pm_cj_hud_x->current.integer * scrPlaceFullUnsafe.scaleVirtualToFull[0];
+        float y = pm_cj_hud_y->current.integer * scrPlaceFullUnsafe.scaleVirtualToFull[1];
+        R_AddCmdDrawText(buff, 256, font, x, y, 1.0, 1.0, 0.0, color, 0);
+    }
+
+    Detour CG_DrawActive_Detour;
+
+    void CG_DrawActive_Hook(int localClientNum)
+    {
+        if (pm_cj_hud_enable->current.enabled)
+        {
+            DrawHudCJ();
+        }
+
+        CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
+
+        CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
+        CG_DrawActive_Detour.Install();
 
         ClientCommand_Detour = Detour(ClientCommand, ClientCommand_Hook);
         ClientCommand_Detour.Install();
@@ -1496,5 +1538,10 @@ namespace mp
         R_DrawAllDynEnt_Detour.Install();
 
         Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
+
+        pm_cj_hud_enable = Dvar_RegisterBool("pm_cj_hud_enable", false, 0, "Draw player speed and z origin");
+        pm_cj_hud_color = Dvar_RegisterColor("pm_cj_hud_color", 1.0, 1.0, 1.0, 0.4, 0, "Draw player speed and z origin color");
+        pm_cj_hud_x = Dvar_RegisterInt("pm_cj_hud_x", 0, 0, 640, 0, "Virtual screen x coordinate of the player speed and z origin");
+        pm_cj_hud_y = Dvar_RegisterInt("pm_cj_hud_y", 470, 0, 480, 0, "Virtual screen y coordinate of the player speed and z origin");
     }
 }
