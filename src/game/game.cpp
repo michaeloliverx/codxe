@@ -13,17 +13,17 @@ namespace game
     {
         if (strncmp((char *)0x82032AC4, "multiplayer", 11) == 0)
         {
-            xbox::show_notification(L"iw3xe mp");
+            xbox::show_notification(L"IW3xe mp");
             mp::init();
         }
         else if (strncmp((char *)0x82065E48, "startSingleplayer", 17) == 0)
         {
-            xbox::show_notification(L"iw3xe sp");
+            xbox::show_notification(L"IW3xe sp");
             sp::init();
         }
         else
         {
-            xbox::show_notification(L"iw3xe unsupported executable");
+            xbox::show_notification(L"IW3xe unsupported executable");
         }
     }
 }

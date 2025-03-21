@@ -275,6 +275,7 @@ namespace mp
 
     Sys_SnapVector_t Sys_SnapVector = reinterpret_cast<Sys_SnapVector_t>(0x821A3BD0);
 
+    UI_DrawBuildNumber_t UI_DrawBuildNumber = reinterpret_cast<UI_DrawBuildNumber_t>(0x821EBB30);
     UI_DrawText_t UI_DrawText = reinterpret_cast<UI_DrawText_t>(0x821EB858);
 
     va_t va = reinterpret_cast<va_t>(0x821CD858);
@@ -1545,9 +1546,33 @@ namespace mp
         BG_CalculateView_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateView_IdleAngles)>()(vs, angles);
     }
 
+    void DrawBranding()
+    {
+        const char *branding = "IW3xe";
+        const char *version = "0.1.0";
+        const char *build = __DATE__ " " __TIME__;
+
+        static Font_s *font = (Font_s *)R_RegisterFont("fonts/consoleFont");
+        float color[4] = {1.0, 1.0, 1.0, 0.4};
+
+        R_AddCmdDrawText(branding, 256, font, 10, 20, 1.0, 1.0, 0.0, color, 0);
+        R_AddCmdDrawText(version, 256, font, 10, 30, 1.0, 1.0, 0.0, color, 0);
+        R_AddCmdDrawText(build, 256, font, 10, 40, 1.0, 1.0, 0.0, color, 0);
+    }
+
+    Detour UI_DrawBuildNumber_Detour;
+
+    void UI_DrawBuildNumber_Hook(const int localClientNum)
+    {
+        DrawBranding();
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
+
+        UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
+        UI_DrawBuildNumber_Detour.Install();
 
         CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
         CG_DrawActive_Detour.Install();
