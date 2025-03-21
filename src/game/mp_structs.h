@@ -1064,13 +1064,41 @@ namespace mp
         const char *buffer;
     };
 
+    struct Material;
+
+    struct Glyph
+    {
+        unsigned __int16 letter;
+        char x0;
+        char y0;
+        unsigned __int8 dx;
+        unsigned __int8 pixelWidth;
+        unsigned __int8 pixelHeight;
+        float s0;
+        float t0;
+        float s1;
+        float t1;
+    };
+    static_assert(sizeof(Glyph) == 0x18, "");
+
+    struct Font_s
+    {
+        const char *fontName;
+        int pixelHeight;
+        int glyphCount;
+        Material *material;
+        Material *glowMaterial;
+        Glyph *glyphs;
+    };
+    static_assert(sizeof(Font_s) == 0x18, "");
+
     union XAssetHeader
     {
         // XModelPieces *xmodelPieces;
         // PhysPreset *physPreset;
         // XAnimParts *parts;
         // XModel *model;
-        // Material *material;
+        Material *material;
         // MaterialPixelShader *pixelShader;
         // MaterialVertexShader *vertexShader;
         // MaterialTechniqueSet *techniqueSet;
@@ -1085,7 +1113,7 @@ namespace mp
         // MapEnts *mapEnts;
         // GfxWorld *gfxWorld;
         // GfxLightDef *lightDef;
-        // Font_s *font;
+        Font_s *font;
         // MenuList *menuList;
         // menuDef_t *menu;
         // LocalizeEntry *localize;
@@ -1216,10 +1244,28 @@ namespace mp
         dvar_s *hashNext;
     };
 
+    struct ScreenPlacement
+    {
+        float scaleVirtualToReal[2];
+        float scaleVirtualToFull[2];
+        float scaleRealToVirtual[2];
+        float virtualViewableMin[2];
+        float virtualViewableMax[2];
+        float realViewportSize[2];
+        float realViewableMin[2];
+        float realViewableMax[2];
+        float subScreenLeft;
+    };
+
     struct GfxViewInfo;
+
+    struct pmove_t;
 
     typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 
+    typedef void (*CG_DrawActive_t)(int localClientNum);
+    typedef void (*CG_GameMessage_t)(int localClientNum, const char *msg);
+    typedef const playerState_s *(*CG_GetPredictedPlayerState_t)(int localClientNum);
     typedef void (*CG_RegisterGraphics_t)(int localClientNum, const char *mapname);
 
     typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags);
@@ -1245,20 +1291,32 @@ namespace mp
 
     typedef bool (*Dvar_GetBool_t)(const char *dvarName);
     typedef dvar_s *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags, const char *description);
+    typedef dvar_s *(*Dvar_RegisterColor_t)(const char *dvarName, double r, double g, double b, double a, unsigned __int16 flags, const char *description);
+    typedef dvar_s *(*Dvar_RegisterInt_t)(const char *dvarName, int value, int min, int max, unsigned __int16 flags, const char *description);
 
     typedef int (*I_strnicmp_t)(const char *s0, const char *s1, int n);
 
     typedef void (*Load_MapEntsPtr_t)();
 
+    typedef void (*PM_FoliageSounds_t)(pmove_t *pm);
+
+    typedef void (*R_AddCmdDrawText_t)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale, double yScale, double rotation, const float *color, int style);
     typedef void (*R_DrawAllDynEnt_t)(const GfxViewInfo *viewInfo);
     typedef void (*R_GetImageList_t)(ImageList *imageList);
+    typedef int (*R_RegisterFont_t)(const char *name);
     typedef int (*R_StreamLoadFileSynchronously_t)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData);
+
+    typedef void (*SCR_DrawSmallStringExt_t)(unsigned int x, unsigned int y, const char *string, const float *setColor);
 
     typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
 
     typedef void (*SV_Cmd_ArgvBuffer_t)(int arg, char *buffer, int bufferLength);
     typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char *text);
     typedef void (*SV_SendServerCommand_t)(client_t *cl, svscmd_type type, const char *fmt, ...);
+
+    typedef void (*Sys_SnapVector_t)(float *result);
+
+    typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style);
 
     typedef char *(*va_t)(char *format, ...);
 }

@@ -222,6 +222,9 @@ namespace mp
     // Functions
     Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x82239FD0);
 
+    CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x8231E6E0);
+    CG_GameMessage_t CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x8230AAF0);
+    CG_GetPredictedPlayerState_t CG_GetPredictedPlayerState = reinterpret_cast<CG_GetPredictedPlayerState_t>(0x82309120);
     CG_RegisterGraphics_t CG_RegisterGraphics = reinterpret_cast<CG_RegisterGraphics_t>(0x8230D858);
 
     CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x822E4D18);
@@ -246,14 +249,22 @@ namespace mp
 
     Dvar_GetBool_t Dvar_GetBool = reinterpret_cast<Dvar_GetBool_t>(0x821D15D8);
     Dvar_RegisterBool_t Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x821D5180);
+    Dvar_RegisterColor_t Dvar_RegisterColor = reinterpret_cast<Dvar_RegisterColor_t>(0x821D4D98);
+    Dvar_RegisterInt_t Dvar_RegisterInt = reinterpret_cast<Dvar_RegisterInt_t>(0x821D5138);
 
     I_strnicmp_t I_strnicmp = reinterpret_cast<I_strnicmp_t>(0x821CDA98);
 
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
 
+    PM_FoliageSounds_t PM_FoliageSounds = reinterpret_cast<PM_FoliageSounds_t>(0x82335E90);
+
+    R_AddCmdDrawText_t R_AddCmdDrawText = (R_AddCmdDrawText_t)0x8216C0B8;
     R_DrawAllDynEnt_t R_DrawAllDynEnt = reinterpret_cast<R_DrawAllDynEnt_t>(0x8215FF98);
     R_GetImageList_t R_GetImageList = reinterpret_cast<R_GetImageList_t>(0x82152A58);
+    R_RegisterFont_t R_RegisterFont = reinterpret_cast<R_RegisterFont_t>(0x8216EC00);
     R_StreamLoadFileSynchronously_t R_StreamLoadFileSynchronously = reinterpret_cast<R_StreamLoadFileSynchronously_t>(0x82151510);
+
+    SCR_DrawSmallStringExt_t SCR_DrawSmallStringExt = reinterpret_cast<SCR_DrawSmallStringExt_t>(0x822C9B88);
 
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
 
@@ -261,11 +272,17 @@ namespace mp
     SV_GameSendServerCommand_t SV_GameSendServerCommand = reinterpret_cast<SV_GameSendServerCommand_t>(0x82204BB8);
     SV_SendServerCommand_t SV_SendServerCommand = reinterpret_cast<SV_SendServerCommand_t>(0x821FFE30);
 
+    Sys_SnapVector_t Sys_SnapVector = reinterpret_cast<Sys_SnapVector_t>(0x821A3BD0);
+
+    UI_DrawText_t UI_DrawText = reinterpret_cast<UI_DrawText_t>(0x821EB858);
+
     va_t va = reinterpret_cast<va_t>(0x821CD858);
 
     // Variables
     auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
     auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
+
+    ScreenPlacement &scrPlaceFullUnsafe = *reinterpret_cast<ScreenPlacement *>(0x8246F468);
 
     Detour CL_ConsolePrint_Detour;
 
