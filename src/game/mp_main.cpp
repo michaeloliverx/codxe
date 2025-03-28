@@ -531,40 +531,47 @@ namespace mp
             SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
     }
 
+    const int MAX_CLIENTS = 18;
+
     struct SavedPos
     {
         float origin[3];
         float viewangles[3];
     };
 
-    SavedPos savedPos = {0, 0, 0, 0, 0, 0};
+    SavedPos g_saved_positions[MAX_CLIENTS] = {}; // Global array for saved positions per client
 
     void Cmd_savepos_f(gentity_s *ent)
     {
-
-        if (!CheatsOk(ent))
-            return;
-
-        // int entityIndex = ent - g_entities;
-
-        savedPos.origin[0] = ent->r.currentOrigin[0];
-        savedPos.origin[1] = ent->r.currentOrigin[1];
-        savedPos.origin[2] = ent->r.currentOrigin[2];
-
-        savedPos.viewangles[0] = ent->client->ps.viewangles[0];
-        savedPos.viewangles[1] = ent->client->ps.viewangles[1];
-        savedPos.viewangles[2] = ent->client->ps.viewangles[2];
-    }
-
-    void Cmd_loadpos_f(gentity_s *ent)
-    {
-
         if (!CheatsOk(ent))
             return;
 
         int entityIndex = ent - g_entities;
+        if (entityIndex < 0 || entityIndex >= MAX_CLIENTS)
+            return;
 
-        if (savedPos.origin[0] == 0 && savedPos.origin[1] == 0 && savedPos.origin[2] == 0)
+        // Save position
+        g_saved_positions[entityIndex].origin[0] = ent->r.currentOrigin[0];
+        g_saved_positions[entityIndex].origin[1] = ent->r.currentOrigin[1];
+        g_saved_positions[entityIndex].origin[2] = ent->r.currentOrigin[2];
+
+        g_saved_positions[entityIndex].viewangles[0] = ent->client->ps.viewangles[0];
+        g_saved_positions[entityIndex].viewangles[1] = ent->client->ps.viewangles[1];
+        g_saved_positions[entityIndex].viewangles[2] = ent->client->ps.viewangles[2];
+    }
+
+    void Cmd_loadpos_f(gentity_s *ent)
+    {
+        if (!CheatsOk(ent))
+            return;
+
+        int entityIndex = ent - g_entities;
+        if (entityIndex < 0 || entityIndex >= MAX_CLIENTS)
+            return;
+
+        SavedPos &pos = g_saved_positions[entityIndex];
+
+        if (pos.origin[0] == 0 && pos.origin[1] == 0 && pos.origin[2] == 0)
         {
             const char *commandString = va("e \"%s\"", "No saved position");
             SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
@@ -576,7 +583,7 @@ namespace mp
         ent->client->ps.velocity[1] = 0;
         ent->client->ps.velocity[2] = 0;
 
-        TeleportPlayer(ent, savedPos.origin, savedPos.viewangles);
+        TeleportPlayer(ent, pos.origin, pos.viewangles);
     }
 
     Detour ClientCommand_Detour;

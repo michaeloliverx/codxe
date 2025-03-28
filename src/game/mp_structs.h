@@ -811,10 +811,11 @@ namespace mp
         unsigned __int16 attachTagNames[19];
         int useCount;
         gentity_s *nextFree;
+        char _pad[4]; // TODO: find correct padding position
     };
 
     static_assert(offsetof(gentity_s, client) == 0x0015C, "");
-    static_assert(sizeof(gentity_s) == 0x274, ""); // retail TU4 size is 0x278 bytes. TODO: check padding
+    static_assert(sizeof(gentity_s) == 0x278, "");
 
     struct cmd_function_s
     {
