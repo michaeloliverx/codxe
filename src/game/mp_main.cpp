@@ -1779,9 +1779,6 @@ namespace mp
     {
         xbox::DbgPrint("Initializing MP\n");
 
-        auto ps_size = sizeof(playerState_s);
-        xbox::DbgPrint("playerState_s size: %d\n", ps_size);
-
         UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
         UI_DrawBuildNumber_Detour.Install();
 
