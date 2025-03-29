@@ -1271,7 +1271,10 @@ namespace mp
 
     struct GfxViewInfo;
 
-    struct pmove_t;
+    struct pmove_t
+    {
+        playerState_s *ps;
+    };
 
     struct viewState_t;
 

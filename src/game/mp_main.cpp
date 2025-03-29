@@ -1725,6 +1725,27 @@ namespace mp
         }
     }
 
+    dvar_s *pm_multi_bounce = nullptr;
+
+    Detour PM_FoliageSounds_Detour;
+
+    void PM_FoliageSounds_Hook(pmove_t *pm)
+    {
+        PM_FoliageSounds_Detour.GetOriginal<decltype(PM_FoliageSounds)>()(pm);
+
+        // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L106-L124
+        if (pm_multi_bounce->current.enabled)
+        {
+            static float previousZ = pm->ps->jumpOriginZ;
+
+            if (pm->ps->jumpOriginZ != NULL)
+                previousZ = pm->ps->jumpOriginZ;
+
+            pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFFE7F | 0x4000;
+            pm->ps->jumpOriginZ = previousZ;
+        }
+    }
+
     dvar_s *bg_bobIdle = nullptr;
 
     BG_CalculateWeaponPosition_IdleAngles_t BG_CalculateWeaponPosition_IdleAngles = reinterpret_cast<BG_CalculateWeaponPosition_IdleAngles_t>(0x8232CA78);
@@ -1830,6 +1851,10 @@ namespace mp
 
         Sys_SnapVector_Detour = Detour(Sys_SnapVector, Sys_SnapVector_Hook);
         Sys_SnapVector_Detour.Install();
+
+        pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", true, 0, "Enable multi-bounces");
+        PM_FoliageSounds_Detour = Detour(PM_FoliageSounds, PM_FoliageSounds_Hook);
+        PM_FoliageSounds_Detour.Install();
 
         bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, 0, "Idle gun sway");
 
