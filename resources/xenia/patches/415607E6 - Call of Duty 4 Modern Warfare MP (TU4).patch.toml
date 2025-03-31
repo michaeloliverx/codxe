@@ -34,3 +34,18 @@ value = 0x1E00       # Change 0x1970 → 0x1E00 (main allocation call)
 [[patch.be16]]
 address = 0x821CFD2A
 value = 0x1E00       # Change 0x1970 → 0x1E00 (secondary reference)
+
+# https://github.com/AdrianCassar/Xenia-WebServices/blob/f0f74f24d47ed7f8370a940bf1c5b2f1617fb8af/patches/415607E6%20-%20Call%20of%20Duty%204%20Modern%20Warfare%20(TU%204).patch.toml
+[[patch]]
+    name = "Enable COD4 Systemlink"
+    desc = "Host must enable this"
+    author = "Adrian"
+    is_enabled = true
+
+    [[patch.be32]]
+        address = 0x82200834
+        value = 0x60000000
+
+    [[patch.be32]]
+        address = 0x82200840
+        value = 0x60000000
