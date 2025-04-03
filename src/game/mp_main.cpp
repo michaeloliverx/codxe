@@ -10,6 +10,7 @@
 
 #include "mp_main.h"
 #include "mp_structs.h"
+#include "mp_gscr_fields.h"
 
 #include "../detour.h"
 #include "../filesystem.h"
@@ -1872,5 +1873,7 @@ namespace mp
 
         cmd_function_s *loadpos_VAR = new cmd_function_s;
         Cmd_AddCommandInternal("loadpos", nullptr, loadpos_VAR);
+
+        init_gscr_fields();
     }
 }
