@@ -1,3 +1,7 @@
+#pragma once
+
+#include "mp_structs.h"
+
 namespace mp
 {
 

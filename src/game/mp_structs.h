@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include "xtl.h"
 
 #pragma warning(disable : 4480)

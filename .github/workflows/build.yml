@@ -1,0 +1,67 @@
+name: Build
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    branches:
+      - main
+
+jobs:
+  install:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install gdown
+        run: pip install gdown
+
+      - name: Download Visual Studio 2010 Ultimate
+        env:
+          FILE_ID: ${{ secrets.GDRIVE_VS2010_ULTIMATE_ISO_FILE_ID }}
+        run: |
+          gdown "https://drive.google.com/uc?id=$env:FILE_ID" --output vs2010_ultimate.iso
+        shell: pwsh
+
+      - name: Mount ISO and Install Visual Studio 2010 Ultimate
+        run: |
+          # Mount the ISO
+          $mountResult = Mount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vs2010_ultimate.iso" -PassThru
+          $driveLetter = ($mountResult | Get-Volume).DriveLetter
+
+          # Install VCExpress
+          Write-Host "Installing VCExpress from ${driveLetter}:\Setup\setup.exe"
+          $process = Start-Process -FilePath "${driveLetter}:\Setup\setup.exe" -ArgumentList "/q /norestart" -Wait -PassThru
+
+          # Check installation result
+          if ($process.ExitCode -eq 3010) {
+            Write-Host "Installation completed but requires a reboot. Continuing without reboot."
+          } elseif ($process.ExitCode -ne 0) {
+            Write-Host "Installation failed with exit code: $($process.ExitCode)"
+            exit $process.ExitCode
+          }
+
+          # Unmount the ISO
+          Dismount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vs2010_ultimate.iso"
+        shell: pwsh
+
+      - name: Download Xbox 360 SDK
+        env:
+          FILE_ID: ${{ secrets.GDRIVE_XBOX360_SDK_FILE_ID }}
+        run: |
+          gdown "https://drive.google.com/uc?id=$env:FILE_ID" --output xbox360_sdk.exe
+        shell: pwsh
+
+      - name: Install Xbox 360 SDK
+        run: |
+          Start-Process -FilePath "xbox360_sdk.exe" -ArgumentList "/U", "/T full" -Wait
+
+      - name: Build Plugin
+        run: |
+          C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe "iw3xe.sln"
