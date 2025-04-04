@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  install:
+    runs-on: windows-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install gdown
+        run: |
+          python -m pip install --upgrade pip
+          pip install gdown
+
+      - name: Download from Google Drive with gdown
+        env:
+          FILE_ID: ${{ secrets.XBOX_360_SDK_GDRIVE_FILE_ID }}
+        run: |
+          gdown "https://drive.google.com/uc?id=$env:FILE_ID" -O xbox360setup.exe
+
+      - name: Install Xbox 360 SDK
+        run: |
+          Start-Process -FilePath "xbox360setup.exe" -ArgumentList "/U", "/T min" -Wait
