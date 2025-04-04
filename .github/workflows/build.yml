@@ -69,5 +69,5 @@ jobs:
 
       - name: Build Plugin
         run: |
-          C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe "iw3xe.sln"
+          C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe "iw3xe.sln" /verbosity:detailed
           # msbuild iw3xe.sln
