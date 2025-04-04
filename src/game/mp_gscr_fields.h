@@ -1,3 +1,5 @@
+#include "mp_structs.h"
+
 namespace mp
 {
 
