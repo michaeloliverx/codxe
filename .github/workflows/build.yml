@@ -29,6 +29,34 @@ jobs:
           python -m pip install --upgrade pip
           pip install gdown
 
+      - name: Download VS 2010 Express ISO from Google Drive
+        env:
+          VS_EXPRESS_FILE_ID: ${{ secrets.VSEXPRESS2010_ISO_FILE_ID }}
+        run: |
+          gdown "https://drive.google.com/uc?id=$env:VS_EXPRESS_FILE_ID" -O vsexpress2010.iso
+
+      - name: Mount ISO and Install Visual C++ 2010 Express
+        run: |
+          # Mount the ISO
+          $mountResult = Mount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vsexpress2010.iso" -PassThru
+          $driveLetter = ($mountResult | Get-Volume).DriveLetter
+
+          # Install VCExpress
+          Write-Host "Installing VCExpress from ${driveLetter}:\VCExpress\setup.exe"
+          $process = Start-Process -FilePath "${driveLetter}:\VCExpress\setup.exe" -ArgumentList "/q /norestart" -Wait -PassThru
+
+          # Check installation result
+          if ($process.ExitCode -eq 3010) {
+            Write-Host "Installation completed but requires a reboot. Continuing without reboot."
+          } elseif ($process.ExitCode -ne 0) {
+            Write-Host "Installation failed with exit code: $($process.ExitCode)"
+            exit $process.ExitCode
+          }
+
+          # Unmount the ISO
+          Dismount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vsexpress2010.iso"
+        shell: pwsh
+
       - name: Download from Google Drive with gdown
         env:
           FILE_ID: ${{ secrets.XBOX_360_SDK_GDRIVE_FILE_ID }}
