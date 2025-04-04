@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "mp_main.h"
 #include "mp_structs.h"
 #include "../detour.h"
 #include "../xboxkrnl.h"
@@ -89,8 +90,6 @@ namespace mp
     {
         xbox::DbgPrint("Scr_SetEntityField entnum=%d offset=%d\n", entnum, offset);
 
-        auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
-
         auto entity = &g_entities[entnum];
 
         // Client field case
@@ -134,7 +133,6 @@ namespace mp
 
     void Scr_GetEntityField_Hook(int entnum, int offset)
     {
-        auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
         auto entity = &g_entities[entnum];
 
         if ((offset & CLIENT_FIELD_MASK) == CLIENT_FIELD_MASK)
