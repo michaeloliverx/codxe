@@ -72,6 +72,7 @@
       <ClCompile Include="src\filesystem.cpp" />
       <ClCompile Include="src\xboxkrnl.cpp" />
       <ClCompile Include="src\game\game.cpp" />
+      <ClCompile Include="src\game\mp_gscr_fields.cpp" />
       <ClCompile Include="src\game\mp_main.cpp" />
       <ClCompile Include="src\game\sp_main.cpp" />
   </ItemGroup>
@@ -80,6 +81,7 @@
       <ClInclude Include="src\filesystem.h" />
       <ClInclude Include="src\xboxkrnl.h" />
       <ClInclude Include="src\game\game.h" />
+      <ClCompile Include="src\game\mp_gscr_fields.h" />
       <ClInclude Include="src\game\mp_main.h" />
       <ClInclude Include="src\game\mp_structs.h" />
       <ClInclude Include="src\game\sp_main.h" />

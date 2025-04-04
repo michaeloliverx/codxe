@@ -10,6 +10,7 @@
 
 #include "mp_main.h"
 #include "mp_structs.h"
+#include "mp_gscr_fields.h"
 
 #include "../detour.h"
 #include "../filesystem.h"
@@ -397,7 +398,7 @@ namespace mp
     // Variables
     auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
     auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
-    auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
+    gentity_s* g_entities = reinterpret_cast<gentity_s*>(0x8287CD08);
 
     ScreenPlacement &scrPlaceFullUnsafe = *reinterpret_cast<ScreenPlacement *>(0x8246F468);
 
@@ -1852,6 +1853,7 @@ namespace mp
         Sys_SnapVector_Detour = Detour(Sys_SnapVector, Sys_SnapVector_Hook);
         Sys_SnapVector_Detour.Install();
 
+        // Requires jump_slowdownEnable to be set to 0
         pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", true, 0, "Enable multi-bounces");
         PM_FoliageSounds_Detour = Detour(PM_FoliageSounds, PM_FoliageSounds_Hook);
         PM_FoliageSounds_Detour.Install();
@@ -1872,5 +1874,7 @@ namespace mp
 
         cmd_function_s *loadpos_VAR = new cmd_function_s;
         Cmd_AddCommandInternal("loadpos", nullptr, loadpos_VAR);
+
+        init_gscr_fields();
     }
 }
