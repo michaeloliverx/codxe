@@ -42,8 +42,8 @@ jobs:
           $driveLetter = ($mountResult | Get-Volume).DriveLetter
 
           # Install VCExpress
-          Write-Host "Installing VCExpress from ${driveLetter}:\VCExpress\setup.exe"
-          $process = Start-Process -FilePath "${driveLetter}:\VCExpress\setup.exe" -ArgumentList "/q /norestart" -Wait -PassThru
+          Write-Host "Installing VCExpress from ${driveLetter}:\Setup\setup.exe"
+          $process = Start-Process -FilePath "${driveLetter}:\Setup\setup.exe" -ArgumentList "/q /norestart" -Wait -PassThru
 
           # Check installation result
           if ($process.ExitCode -eq 3010) {
