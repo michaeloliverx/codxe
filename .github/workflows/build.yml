@@ -16,6 +16,8 @@ jobs:
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: "x64"
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -35,7 +37,7 @@ jobs:
 
       - name: Install Xbox 360 SDK
         run: |
-          Start-Process -FilePath "xbox360setup.exe" -ArgumentList "/U", "/T min" -Wait
+          Start-Process -FilePath "xbox360setup.exe" -ArgumentList "/U", "/T full" -Wait
 
       - name: Build Plugin
         run: |
