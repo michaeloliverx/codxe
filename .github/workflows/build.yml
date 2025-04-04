@@ -11,13 +11,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Check out repository code
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      # - name: Add msbuild to PATH
-      #   uses: microsoft/setup-msbuild@v2
-      #   with:
-      #     msbuild-architecture: "x64"
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,20 +20,19 @@ jobs:
           python-version: "3.x"
 
       - name: Install gdown
-        run: |
-          python -m pip install --upgrade pip
-          pip install gdown
+        run: pip install gdown
 
-      - name: Download VS 2010 Express ISO from Google Drive
+      - name: Download Visual Studio 2010 Ultimate
         env:
-          VS_EXPRESS_FILE_ID: ${{ secrets.VSEXPRESS2010_ISO_FILE_ID }}
+          FILE_ID: ${{ secrets.GDRIVE_VS2010_ULTIMATE_ISO_FILE_ID }}
         run: |
-          gdown "https://drive.google.com/uc?id=$env:VS_EXPRESS_FILE_ID" -O vsexpress2010.iso
+          gdown "https://drive.google.com/uc?id=$env:FILE_ID" --output vs2010_ultimate.iso
+        shell: pwsh
 
-      - name: Mount ISO and Install Visual C++ 2010 Express
+      - name: Mount ISO and Install Visual Studio 2010 Ultimate
         run: |
           # Mount the ISO
-          $mountResult = Mount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vsexpress2010.iso" -PassThru
+          $mountResult = Mount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vs2010_ultimate.iso" -PassThru
           $driveLetter = ($mountResult | Get-Volume).DriveLetter
 
           # Install VCExpress
@@ -54,20 +48,20 @@ jobs:
           }
 
           # Unmount the ISO
-          Dismount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vsexpress2010.iso"
+          Dismount-DiskImage -ImagePath "$env:GITHUB_WORKSPACE\vs2010_ultimate.iso"
         shell: pwsh
 
-      - name: Download from Google Drive with gdown
+      - name: Download Xbox 360 SDK
         env:
-          FILE_ID: ${{ secrets.XBOX_360_SDK_GDRIVE_FILE_ID }}
+          FILE_ID: ${{ secrets.GDRIVE_XBOX360_SDK_FILE_ID }}
         run: |
-          gdown "https://drive.google.com/uc?id=$env:FILE_ID" -O xbox360setup.exe
+          gdown "https://drive.google.com/uc?id=$env:FILE_ID" --output xbox360_sdk.exe
+        shell: pwsh
 
       - name: Install Xbox 360 SDK
         run: |
-          Start-Process -FilePath "xbox360setup.exe" -ArgumentList "/U", "/T full" -Wait
+          Start-Process -FilePath "xbox360_sdk.exe" -ArgumentList "/U", "/T full" -Wait
 
       - name: Build Plugin
         run: |
-          C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe "iw3xe.sln" /verbosity:detailed
-          # msbuild iw3xe.sln
+          C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe "iw3xe.sln"
