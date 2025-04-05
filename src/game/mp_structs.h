@@ -1622,6 +1622,390 @@ namespace mp
         int type;
     };
 
+    enum DemoType : __int32
+    {
+        DEMO_TYPE_NONE = 0x0,
+        DEMO_TYPE_CLIENT = 0x1,
+        DEMO_TYPE_SERVER = 0x2,
+    };
+
+    enum CubemapShot : __int32
+    {
+        CUBEMAPSHOT_NONE = 0x0,
+        CUBEMAPSHOT_RIGHT = 0x1,
+        CUBEMAPSHOT_LEFT = 0x2,
+        CUBEMAPSHOT_BACK = 0x3,
+        CUBEMAPSHOT_FRONT = 0x4,
+        CUBEMAPSHOT_UP = 0x5,
+        CUBEMAPSHOT_DOWN = 0x6,
+        CUBEMAPSHOT_COUNT = 0x7,
+    };
+
+    struct snapshot_s
+    {
+        int snapFlags;
+        int ping;
+        int serverTime;
+        playerState_s ps;
+        int numEntities;
+        int numClients;
+        entityState_s entities[512];
+        clientState_s clients[24];
+        int serverCommandSequence;
+    };
+
+    struct clientControllers_t
+    {
+        float angles[6][3];
+        float tag_origin_angles[3];
+        float tag_origin_offset[3];
+    };
+
+    struct __declspec(align(4)) CEntPlayerInfo
+    {
+        clientControllers_t *control;
+        unsigned __int8 tag[6];
+    };
+
+    struct CEntTurretAngles
+    {
+        float pitch;
+        float yaw;
+    };
+
+    union $EA216469116406E3318F58110C4A4856
+    {
+        CEntTurretAngles angles;
+        const float *viewAngles;
+    };
+
+    struct CEntTurretInfo
+    {
+        $EA216469116406E3318F58110C4A4856 ___u0;
+        float barrelPitch;
+        bool playerUsing;
+        unsigned __int8 tag_aim;
+        unsigned __int8 tag_aim_animated;
+        unsigned __int8 tag_flash;
+    };
+
+    struct __declspec(align(2)) CEntVehicleInfo
+    {
+        __int16 pitch;
+        __int16 yaw;
+        __int16 roll;
+        __int16 barrelPitch;
+        float barrelRoll;
+        __int16 steerYaw;
+        float time;
+        unsigned __int16 wheelFraction[4];
+        unsigned __int8 wheelBoneIndex[4];
+        unsigned __int8 tag_body;
+        unsigned __int8 tag_turret;
+        unsigned __int8 tag_barrel;
+    };
+
+    struct FxEffect;
+
+    struct CEntFx
+    {
+        int triggerTime;
+        FxEffect *effect;
+    };
+
+    union $5269F2DE9B9B17DB5A39751B474B0C4C
+    {
+        CEntPlayerInfo player;
+        CEntTurretInfo turret;
+        CEntVehicleInfo vehicle;
+        CEntFx fx;
+    };
+
+    struct cpose_t
+    {
+        unsigned __int16 lightingHandle;
+        unsigned __int8 eType;
+        unsigned __int8 eTypeUnion;
+        unsigned __int8 localClientNum;
+        int cullIn;
+        unsigned __int8 isRagdoll;
+        int ragdollHandle;
+        int killcamRagdollHandle;
+        int physObjId;
+        float origin[3];
+        float angles[3];
+        $5269F2DE9B9B17DB5A39751B474B0C4C ___u11;
+    };
+
+    struct XAnimTree_s;
+
+    struct centity_s
+    {
+        cpose_t pose;
+        LerpEntityState currentState;
+        entityState_s nextState;
+        bool nextValid;
+        bool bMuzzleFlash;
+        bool bTrailMade;
+        int previousEventSequence;
+        int miscTime;
+        float lightingOrigin[3];
+        XAnimTree_s *tree;
+    };
+
+    struct playerEntity_t
+    {
+        float fLastWeaponPosFrac;
+        int bPositionToADS;
+        float vPositionLastOrg[3];
+        float fLastIdleFactor;
+        float vLastMoveOrg[3];
+        float vLastMoveAng[3];
+    };
+
+    struct GfxDepthOfField
+    {
+        float viewModelStart;
+        float viewModelEnd;
+        float nearStart;
+        float nearEnd;
+        float farStart;
+        float farEnd;
+        float nearBlur;
+        float farBlur;
+    };
+
+    struct GfxFilm
+    {
+        bool enabled;
+        float brightness;
+        float contrast;
+        float desaturation;
+        bool invert;
+        float tintDark[3];
+        float tintLight[3];
+    };
+
+    struct GfxGlow
+    {
+        bool enabled;
+        float bloomCutoff;
+        float bloomDesaturation;
+        float bloomIntensity;
+        float radius;
+    };
+
+    struct GfxLightDef;
+
+    struct GfxLight
+    {
+        unsigned __int8 type;
+        unsigned __int8 canUseShadowMap;
+        unsigned __int8 unused[2];
+        float color[3];
+        float dir[3];
+        float origin[3];
+        float radius;
+        float cosHalfFovOuter;
+        float cosHalfFovInner;
+        int exponent;
+        unsigned int spotShadowIndex;
+        GfxLightDef *def;
+    };
+
+    struct GfxViewport
+    {
+        int x;
+        int y;
+        int width;
+        int height;
+    };
+
+    struct refdef_s
+    {
+        unsigned int x;
+        unsigned int y;
+        unsigned int width;
+        unsigned int height;
+        float tanHalfFovX;
+        float tanHalfFovY;
+        float vieworg[3];
+        float viewaxis[3][3];
+        float viewOffset[3];
+        int time;
+        float zNear;
+        float blurRadius;
+        GfxDepthOfField dof;
+        GfxFilm film;
+        GfxGlow glow;
+        GfxLight primaryLights[255];
+        GfxViewport scissorViewport;
+        bool useScissorViewport;
+        int localClientNum;
+    };
+
+#pragma warning(disable : 4324)
+    struct __declspec(align(8)) cg_s
+    {
+        int clientNum;
+        int localClientNum;
+        DemoType demoType;
+        CubemapShot cubemapShot;
+        int cubemapSize;
+        int renderScreen;
+        int latestSnapshotNum;
+        int latestSnapshotTime;
+        snapshot_s *snap;
+        snapshot_s *nextSnap;
+        snapshot_s activeSnapshots[2];
+        float frameInterpolation;
+        int frametime;
+        int time;
+        int oldTime;
+        int physicsTime;
+        int mapRestart;
+        int renderingThirdPerson;
+        playerState_s predictedPlayerState;
+        centity_s predictedPlayerEntity;
+        playerEntity_t playerEntity;
+        int predictedErrorTime;
+        float predictedError[3];
+        float landChange;
+        int landTime;
+        float heightToCeiling;
+        refdef_s refdef;
+        float refdefViewAngles[3]; // 309600
+        float lastVieworg[3];
+        // float swayViewAngles[3];
+        // float swayAngles[3];
+        // float swayOffset[3];
+        // int iEntityLastType[1024];
+        // XModel *pEntityLastXModel[1024];
+        // float zoomSensitivity;
+        // bool isLoading;
+        // char objectiveText[1024];
+        // char scriptMainMenu[256];
+        // int scoresRequestTime;
+        // int numScores;
+        // int teamScores[4];
+        // int teamPings[4];
+        // int teamPlayers[4];
+        // score_t scores[24];
+        // int scoreLimit;
+        // int scoreFadeTime;
+        // int scoresTop;
+        // int scoresOffBottom;
+        // int scoresBottom;
+        // int selectedGamerIndex;
+        // int bannerLines[4];
+        // unsigned __int64 selectedGamerXuid;
+        // int drawHud;
+        // int crosshairClientNum;
+        // int crosshairClientLastTime;
+        // int crosshairClientStartTime;
+        // int identifyClientNum;
+        // int cursorHintIcon;
+        // int cursorHintTime;
+        // int cursorHintFade;
+        // int cursorHintString;
+        // int lastClipFlashTime;
+        // InvalidCmdHintType invalidCmdHintType;
+        // int invalidCmdHintTime;
+        // int lastHealthPulseTime;
+        // int lastHealthLerpDelay;
+        // int lastHealthClient;
+        // float lastHealth;
+        // float healthOverlayFromAlpha;
+        // float healthOverlayToAlpha;
+        // int healthOverlayPulseTime;
+        // int healthOverlayPulseDuration;
+        // int healthOverlayPulsePhase;
+        // bool healthOverlayHurt;
+        // int healthOverlayLastHitTime;
+        // float healthOverlayOldHealth;
+        // int healthOverlayPulseIndex;
+        // int proneBlockedEndTime;
+        // int lastStance;
+        // int lastStanceChangeTime;
+        // int lastStanceFlashTime;
+        // int voiceTime;
+        // unsigned int weaponSelect;
+        // int weaponSelectTime;
+        // unsigned int weaponLatestPrimaryIdx;
+        // int prevViewmodelWeapon;
+        // int equippedOffHand;
+        // viewDamage_t viewDamage[8];
+        // int damageTime;
+        // float damageX;
+        // float damageY;
+        // float damageValue;
+        // float viewFade;
+        // int weapIdleTime;
+        // int nomarks;
+        // int v_dmg_time;
+        // float v_dmg_pitch;
+        // float v_dmg_roll;
+        // float fBobCycle;
+        // float xyspeed;
+        // float kickAVel[3];
+        // float kickAngles[3];
+        // float offsetAngles[3];
+        // float gunPitch;
+        // float gunYaw;
+        // float gunXOfs;
+        // float gunYOfs;
+        // float gunZOfs;
+        // float vGunOffset[3];
+        // float vGunSpeed[3];
+        // float viewModelAxis[4][3];
+        // float rumbleScale;
+        // float compassNorthYaw;
+        // float compassNorth[2];
+        // Material *compassMapMaterial;
+        // float compassMapUpperLeft[2];
+        // float compassMapWorldSize[2];
+        // int compassFadeTime;
+        // int healthFadeTime;
+        // int ammoFadeTime;
+        // int stanceFadeTime;
+        // int sprintFadeTime;
+        // int offhandFadeTime;
+        // int offhandFlashTime;
+        // shellshock_t shellshock;
+        // cg_s::<unnamed_tag>testShock;
+        // int holdBreathTime;
+        // int holdBreathInTime;
+        // int holdBreathDelay;
+        // float holdBreathFrac;
+        // float radarProgress;
+        // float selectedLocation[2];
+        // SprintState sprintStates;
+        // int adsViewErrorDone;
+        // int inKillCam;
+        // bgs_t bgs;
+        // cpose_t viewModelPose;
+        // visionSetVars_t visionSetPreLoaded[4];
+        // char visionSetPreLoadedName[4][64];
+        // visionSetVars_t visionSetFrom[2];
+        // visionSetVars_t visionSetTo[2];
+        // visionSetVars_t visionSetCurrent[2];
+        // visionSetLerpData_t visionSetLerpData[2];
+        // char visionNameNaked[64];
+        // char visionNameNight[64];
+        // int extraButtons;
+        // int lastActionSlotTime;
+        // bool playerTeleported;
+        // int stepViewStart;
+        // float stepViewChange;
+        // _BYTE lastFrame[4];
+        // hudElemSoundInfo_t hudElemSound[32];
+        // int vehicleFrame;
+    };
+#pragma warning(default : 4324)
+
+    static_assert(offsetof(cg_s, predictedPlayerState) == 280388, "");
+    static_assert(offsetof(cg_s, refdefViewAngles) == 309600, "");
+
     typedef void (*BuiltinFunction)();
     typedef void (*BuiltinMethod)(scr_entref_t);
 
