@@ -1205,7 +1205,170 @@ namespace mp
         SV_CMD_RELIABLE = 0x1,
     };
 
-    struct client_t;
+    /* 671 */
+    enum netsrc_t : __int32
+    {
+        NS_CLIENT1 = 0x0,
+        NS_CLIENT2 = 0x1,
+        NS_CLIENT3 = 0x2,
+        NS_CLIENT4 = 0x3,
+        NS_SERVER = 0x4,
+        NS_MAXCLIENTS = 0x4,
+        NS_PACKET = 0x5,
+    };
+
+    /* 659 */
+    enum netadrtype_t : __int32
+    {
+        NA_BOT = 0x0,
+        NA_BAD = 0x1,
+        NA_LOOPBACK = 0x2,
+        NA_BROADCAST = 0x3,
+        NA_IP = 0x4,
+    };
+
+    /* 8757 */
+    struct __declspec(align(4)) netadr_t
+    {
+        netadrtype_t type;
+        unsigned __int8 ip[4];
+        unsigned __int16 port;
+    };
+
+    /* 8723 */
+    struct netProfilePacket_t
+    {
+        int iTime;
+        int iSize;
+        int bFragment;
+    };
+
+    /* 8724 */
+    struct netProfileStream_t
+    {
+        netProfilePacket_t packets[60];
+        int iCurrPacket;
+        int iBytesPerSecond;
+        int iLastBPSCalcTime;
+        int iCountedPackets;
+        int iCountedFragments;
+        int iFragmentPercentage;
+        int iLargestPacket;
+        int iSmallestPacket;
+    };
+
+    /* 8755 */
+    struct netProfileInfo_t
+    {
+        netProfileStream_t send;
+        netProfileStream_t recieve;
+    };
+
+    /* 8758 */
+    struct netchan_t
+    {
+        int outgoingSequence;
+        netsrc_t sock;
+        int dropped;
+        int incomingSequence;
+        netadr_t remoteAddress;
+        int fragmentSequence;
+        int fragmentLength;
+        unsigned __int8 *fragmentBuffer;
+        int fragmentBufferSize;
+        int unsentFragments;
+        int unsentFragmentStart;
+        int unsentLength;
+        unsigned __int8 *unsentBuffer;
+        int unsentBufferSize;
+        netProfileInfo_t prof;
+    };
+
+    /* 9758 */
+    const struct clientHeader_t
+    {
+        int state;
+        int sendAsActive;
+        int deltaMessage;
+        int rateDelayed;
+        netchan_t netchan;
+        float predictedOrigin[3];
+        int predictedOriginServerTime;
+    };
+
+    static_assert(offsetof(clientHeader_t, deltaMessage) == 0x8, "");
+
+    /* 9760 */
+    struct svscmd_info_t
+    {
+        char cmd[1024];
+        int time;
+        int type;
+    };
+
+    struct __declspec(align(4)) client_t
+    {
+        clientHeader_t header;
+        const char *dropReason;
+        char userinfo[1024];
+        svscmd_info_t reliableCommandInfo[128];
+        int reliableSequence;
+        int reliableAcknowledge;
+        int reliableSent;
+        int messageAcknowledge;
+        int gamestateMessageNum;
+        int challenge;
+        usercmd_s lastUsercmd;              // 0x20E5C, 0x0020
+        int lastClientCommand;              // 0x20E7C, 0x0004
+        char lastClientCommandString[1024]; // 0x20E80, 0x0004
+        gentity_s *gentity;                 // 0x21280, 0x0004
+        char name[32];                      // 0x21284, 0x0020
+        char _padding[0x819e4];             // Padding to reach 666760 bytes
+    };
+
+    static_assert(sizeof(client_t) == 666760, "");
+    static_assert(offsetof(client_t, gentity) == 0x21280, "");
+
+    struct clientState_s;
+    struct svEntity_s;
+    struct archivedEntity_s;
+    struct cachedClient_s;
+    struct cachedSnapshot_t;
+
+    /* 9766 */
+    struct serverStaticHeader_t
+    {
+        client_t *clients;
+        int time;
+        int snapFlagServerBit;
+        int numSnapshotEntities;
+        int numSnapshotClients;
+        int nextSnapshotEntities;
+        entityState_s *snapshotEntities;
+        clientState_s *snapshotClients;
+        svEntity_s *svEntities;
+        float mapCenter[3];
+        archivedEntity_s *cachedSnapshotEntities;
+        cachedClient_s *cachedSnapshotClients;
+        unsigned __int8 *archivedSnapshotBuffer;
+        cachedSnapshot_t *cachedSnapshotFrames;
+        int nextCachedSnapshotFrames;
+        int nextArchivedSnapshotFrames;
+        int nextCachedSnapshotEntities;
+        int nextCachedSnapshotClients;
+        int num_entities;
+        int maxclients;
+        int fps;
+        int clientArchive;
+        gentity_s *gentities;
+        int gentitySize;
+        clientState_s *firstClientState;
+        playerState_s *firstPlayerState;
+        int clientSize;
+        unsigned int pad[3];
+    };
+
+    static_assert(sizeof(serverStaticHeader_t) == 0x0080, "");
 
     union DvarValue
     {
@@ -1313,6 +1476,155 @@ namespace mp
         int numVoicePacketsSentStart;
     };
 
+    /* 8951 */
+    struct __declspec(align(4)) cLeaf_t
+    {
+        unsigned __int16 firstCollAabbIndex;
+        unsigned __int16 collAabbCount;
+        int brushContents;
+        int terrainContents;
+        float mins[3];
+        float maxs[3];
+        int leafBrushNode;
+        __int16 cluster;
+    };
+
+    /* 8960 */
+    struct cmodel_t
+    {
+        float mins[3];
+        float maxs[3];
+        float radius;
+        cLeaf_t leaf;
+    };
+
+    static_assert(sizeof(cmodel_t) == 72, "");
+
+    /* 8761 */
+    struct cplane_s
+    {
+        float normal[3];
+        float dist;
+        unsigned __int8 type;
+        unsigned __int8 signbits;
+        unsigned __int8 pad[2];
+    };
+
+    /* 8798 */
+    struct __declspec(align(2)) cbrushside_t
+    {
+        cplane_s *plane;
+        unsigned int materialNum;
+        __int16 firstAdjacentSideOffset;
+        unsigned __int8 edgeCount;
+    };
+
+#pragma warning(disable : 4324)
+
+    /* 8961 */
+    struct __declspec(align(16)) cbrush_t
+    {
+        float mins[3];
+        int contents;
+        float maxs[3];
+        unsigned int numsides;
+        cbrushside_t *sides;
+        __int16 axialMaterialNum[2][3];
+        unsigned __int8 *baseAdjacentSide;
+        __int16 firstAdjacentSideOffsets[2][3];
+        unsigned __int8 edgeCount[2][3];
+    };
+
+#pragma warning(default : 4324)
+
+    static_assert(sizeof(cbrush_t) == 80, "");
+
+    // stubs
+    struct cStaticModel_s;
+    struct dmaterial_t;
+    struct cNode_t;
+    struct cLeaf_t;
+    struct cLeafBrushNode_s;
+    struct CollisionBorder;
+    struct CollisionPartition;
+    struct CollisionAabbTree;
+    struct DynEntityDef;
+    struct DynEntityPose;
+    struct DynEntityClient;
+    struct DynEntityColl;
+
+    /* 9079 */
+    struct clipMap_t
+    {
+        const char *name;
+        int isInUse; // 82A23244
+        int planeCount;
+        cplane_s *planes;
+        unsigned int numStaticModels;
+        cStaticModel_s *staticModelList;
+        unsigned int numMaterials;
+        dmaterial_t *materials;
+        unsigned int numBrushSides;
+        cbrushside_t *brushsides;
+        unsigned int numBrushEdges;
+        unsigned __int8 *brushEdges;
+        unsigned int numNodes;
+        cNode_t *nodes;
+        unsigned int numLeafs;
+        cLeaf_t *leafs;
+        unsigned int leafbrushNodesCount;
+        cLeafBrushNode_s *leafbrushNodes;
+        unsigned int numLeafBrushes;
+        unsigned __int16 *leafbrushes;
+        unsigned int numLeafSurfaces;
+        unsigned int *leafsurfaces;
+        unsigned int vertCount;
+        float (*verts)[3];
+        int triCount;
+        unsigned __int16 *triIndices;
+        unsigned __int8 *triEdgeIsWalkable;
+        int borderCount;
+        CollisionBorder *borders;
+        int partitionCount;
+        CollisionPartition *partitions;
+        int aabbTreeCount;
+        CollisionAabbTree *aabbTrees;
+        unsigned int numSubModels;
+        cmodel_t *cmodels;
+        unsigned __int16 numBrushes;
+        cbrush_t *brushes;
+        int numClusters;
+        int clusterBytes;
+        unsigned __int8 *visibility;
+        int vised;
+        MapEnts *mapEnts;
+        cbrush_t *box_brush;
+        cmodel_t box_model;
+        unsigned __int16 dynEntCount[2];
+        DynEntityDef *dynEntDefList[2];
+        DynEntityPose *dynEntPoseList[2];
+        DynEntityClient *dynEntClientList[2];
+        DynEntityColl *dynEntCollList[2];
+        unsigned int checksum;
+    };
+
+    struct scr_entref_t
+    {
+        unsigned __int16 entnum;
+        unsigned __int16 classnum;
+    };
+
+    /* 9735 */
+    struct BuiltinFunctionDef
+    {
+        const char *actionString;
+        void (*actionFunc)();
+        int type;
+    };
+
+    typedef void (*BuiltinFunction)();
+    typedef void (*BuiltinMethod)(scr_entref_t);
+
     typedef void (*BG_CalculateView_IdleAngles_t)(viewState_t *vs, float *angles);
     typedef void (*BG_CalculateWeaponPosition_IdleAngles_t)(weaponState_t *ws, float *angles);
 
@@ -1328,6 +1640,7 @@ namespace mp
     typedef void (*CL_GamepadButtonEvent_t)(int localClientNum, int controllerIndex, int key, int down, unsigned int time);
 
     typedef void (*ClientCommand_t)(int clientNum);
+    typedef void (*ClientThink_t)(int clientNum);
 
     typedef void (*Cmd_AddCommandInternal_t)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd);
     typedef bool (*Cmd_ExecFromFastFile_t)(int localClientNum, int controllerIndex, const char *filename);
@@ -1345,13 +1658,17 @@ namespace mp
     typedef XAssetHeader *(*DB_FindXAssetHeader_t)(const XAssetType type, const char *name);
     typedef int (*DB_GetAllXAssetOfType_FastFile_t)(XAssetType type, XAssetHeader *assets, int maxCount);
 
+    typedef dvar_s *(*Dvar_FindMalleableVar_t)(const char *dvarName);
     typedef bool (*Dvar_GetBool_t)(const char *dvarName);
     typedef dvar_s *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags, const char *description);
     typedef dvar_s *(*Dvar_RegisterColor_t)(const char *dvarName, double r, double g, double b, double a, unsigned __int16 flags, const char *description);
     typedef dvar_s *(*Dvar_RegisterEnum_t)(const char *dvarName, const char **valueList, unsigned __int16 defaultIndex, unsigned __int16 flags, const char *description);
     typedef dvar_s *(*Dvar_RegisterInt_t)(const char *dvarName, int value, int min, int max, unsigned __int16 flags, const char *description);
 
+    typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
+
     typedef void (*G_SetAngle_t)(gentity_s *ent, float *origin);
+    typedef void (*G_SetLastServerTime_t)(int clientNum, int lastServerTime);
     typedef void (*G_SetOrigin_t)(gentity_s *ent, float *origin);
 
     typedef int (*I_strnicmp_t)(const char *s0, const char *s1, int n);
@@ -1370,11 +1687,22 @@ namespace mp
 
     typedef void (*SCR_DrawSmallStringExt_t)(unsigned int x, unsigned int y, const char *string, const float *setColor);
 
+    typedef void (*Scr_AddInt_t)(int value);
+    typedef void (*Scr_Error_t)(const char *error);
+    typedef gentity_s *(*Scr_GetEntity_t)(scr_entref_t *entref);
+    typedef BuiltinFunction (*Scr_GetFunction_t)(const char **pName, int *type);
+    typedef int (*Scr_GetInt_t)(unsigned int index);
+    typedef BuiltinMethod (*Scr_GetMethod_t)(const char **pName, int *type);
+    typedef void (*Scr_GetVector_t)(unsigned int index, float *vectorValue);
     typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
 
+    typedef void (*SV_ClientThink_t)(int clientNum, usercmd_s *cmd);
     typedef void (*SV_Cmd_ArgvBuffer_t)(int arg, char *buffer, int bufferLength);
     typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char *text);
+    typedef void (*SV_LinkEntity_t)(gentity_s *ent);
     typedef void (*SV_SendServerCommand_t)(client_t *cl, svscmd_type type, const char *fmt, ...);
+    typedef int (*SV_SetBrushModel_t)(gentity_s *ent);
+    typedef void (*SV_UnlinkEntity_t)(gentity_s *ent);
 
     typedef void (*Sys_SnapVector_t)(float *result);
 

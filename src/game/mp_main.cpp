@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <functional>
-
+#include <map>
 #include <xtl.h>
 #include <xbox.h>
 #include <xgraphics.h>
@@ -338,6 +338,7 @@ namespace mp
     CL_GamepadButtonEvent_t CL_GamepadButtonEvent = reinterpret_cast<CL_GamepadButtonEvent_t>(0x822DD1E8);
 
     ClientCommand_t ClientCommand = reinterpret_cast<ClientCommand_t>(0x8227DCF0);
+    ClientThink_t ClientThink = reinterpret_cast<ClientThink_t>(0x822886E8);
 
     Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x8223ADE0);
     Cmd_ExecFromFastFile_t Cmd_ExecFromFastFile = reinterpret_cast<Cmd_ExecFromFastFile_t>(0x8223AF40);
@@ -354,13 +355,17 @@ namespace mp
     DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x822A0298);
     DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile = reinterpret_cast<DB_GetAllXAssetOfType_FastFile_t>(0x8229E8E0);
 
+    Dvar_FindMalleableVar_t Dvar_FindMalleableVar = reinterpret_cast<Dvar_FindMalleableVar_t>(0x821D4C10);
     Dvar_GetBool_t Dvar_GetBool = reinterpret_cast<Dvar_GetBool_t>(0x821D15D8);
     Dvar_RegisterBool_t Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x821D5180);
     Dvar_RegisterColor_t Dvar_RegisterColor = reinterpret_cast<Dvar_RegisterColor_t>(0x821D4D98);
     Dvar_RegisterEnum_t Dvar_RegisterEnum = reinterpret_cast<Dvar_RegisterEnum_t>(0x821D4F88);
     Dvar_RegisterInt_t Dvar_RegisterInt = reinterpret_cast<Dvar_RegisterInt_t>(0x821D5138);
 
+    GetEntity_t GetEntity = reinterpret_cast<GetEntity_t>(0x82257F30);
+
     G_SetAngle_t G_SetAngle = reinterpret_cast<G_SetAngle_t>(0x8224AA98);
+    G_SetLastServerTime_t G_SetLastServerTime = reinterpret_cast<G_SetLastServerTime_t>(0x82285D08);
     G_SetOrigin_t G_SetOrigin = reinterpret_cast<G_SetOrigin_t>(0x8224AAF0);
 
     I_strnicmp_t I_strnicmp = reinterpret_cast<I_strnicmp_t>(0x821CDA98);
@@ -379,11 +384,22 @@ namespace mp
 
     SCR_DrawSmallStringExt_t SCR_DrawSmallStringExt = reinterpret_cast<SCR_DrawSmallStringExt_t>(0x822C9B88);
 
+    Scr_AddInt_t Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x822111C0);
+    Scr_Error_t Scr_Error = reinterpret_cast<Scr_Error_t>(0x8220F6F0);
+    Scr_GetEntity_t Scr_GetEntity = reinterpret_cast<Scr_GetEntity_t>(0x8224EE68);
+    Scr_GetFunction_t Scr_GetFunction = reinterpret_cast<Scr_GetFunction_t>(0x82256ED0);
+    Scr_GetInt_t Scr_GetInt = reinterpret_cast<Scr_GetInt_t>(0x8220FD10);
+    Scr_GetMethod_t Scr_GetMethod = reinterpret_cast<Scr_GetMethod_t>(0x822570E0);
+    Scr_GetVector_t Scr_GetVector = reinterpret_cast<Scr_GetVector_t>(0x8220FA88);
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
 
+    SV_ClientThink_t SV_ClientThink = reinterpret_cast<SV_ClientThink_t>(0x82208448);
     SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = reinterpret_cast<SV_Cmd_ArgvBuffer_t>(0x82239F48);
     SV_GameSendServerCommand_t SV_GameSendServerCommand = reinterpret_cast<SV_GameSendServerCommand_t>(0x82204BB8);
+    SV_LinkEntity_t SV_LinkEntity = reinterpret_cast<SV_LinkEntity_t>(0x82355A00);
     SV_SendServerCommand_t SV_SendServerCommand = reinterpret_cast<SV_SendServerCommand_t>(0x821FFE30);
+    SV_SetBrushModel_t SV_SetBrushModel = reinterpret_cast<SV_SetBrushModel_t>(0x82205050);
+    SV_UnlinkEntity_t SV_UnlinkEntity = reinterpret_cast<SV_UnlinkEntity_t>(0x82355F08);
 
     Sys_SnapVector_t Sys_SnapVector = reinterpret_cast<Sys_SnapVector_t>(0x821A3BD0);
 
@@ -397,10 +413,11 @@ namespace mp
 
     // Variables
     auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
+    auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);
     auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
-    gentity_s* g_entities = reinterpret_cast<gentity_s*>(0x8287CD08);
-
+    gentity_s *g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
     ScreenPlacement &scrPlaceFullUnsafe = *reinterpret_cast<ScreenPlacement *>(0x8246F468);
+    auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x849F1580);
 
     Detour CL_ConsolePrint_Detour;
 
@@ -1797,6 +1814,277 @@ namespace mp
         CheckKeyboardCompletion();
     }
 
+    std::vector<int> originalBrushContents;
+    std::string lastMapName;
+
+    /**
+     * Save the original contents of the brushes in the map.
+     */
+    void SaveOriginalBrushContents()
+    {
+        dvar_s *mapname = Dvar_FindMalleableVar("mapname");
+        if (lastMapName != mapname->current.string)
+        {
+            originalBrushContents.clear();
+            originalBrushContents.resize(cm->numBrushes);
+            for (int i = 0; i < cm->numBrushes; i++)
+                originalBrushContents[i] = cm->brushes[i].contents;
+
+            lastMapName = mapname->current.string;
+        }
+    }
+
+    void RemoveBrushCollisions(int heightLimit)
+    {
+        SaveOriginalBrushContents();
+
+        for (int i = 0; i < cm->numBrushes; i++)
+        {
+            cbrush_t &brush = cm->brushes[i];
+            float height = brush.maxs[2] - brush.mins[2];
+            if (height > heightLimit)
+                brush.contents &= ~0x10000;
+        }
+    }
+
+    void RestoreBrushCollisions()
+    {
+        SaveOriginalBrushContents();
+
+        for (int i = 0; i < cm->numBrushes; i++)
+            cm->brushes[i].contents = originalBrushContents[i];
+    }
+
+    void GScr_RemoveBrushCollisionsOverHeight(scr_entref_t entref)
+    {
+        int heightLimit = Scr_GetInt(0);
+        RemoveBrushCollisions(heightLimit);
+    }
+
+    bool IsPointInsideBounds(const float point[3], const float mins[3], const float maxs[3])
+    {
+        return (point[0] >= mins[0] && point[0] <= maxs[0] &&
+                point[1] >= mins[1] && point[1] <= maxs[1] &&
+                point[2] >= mins[2] && point[2] <= maxs[2]);
+    }
+
+    void GScr_EnableCollisionForBrushContainingOrigin()
+    {
+        SaveOriginalBrushContents();
+
+        float point[3] = {0.0f, 0.0f, 0.0f};
+        Scr_GetVector(0, point);
+
+        int matchBrushIndex = -1;
+
+        for (int i = 0; i < cm->numBrushes; i++)
+        {
+            cbrush_t &brush = cm->brushes[i];
+            if (IsPointInsideBounds(point, brush.mins, brush.maxs) && !(brush.contents & 0x10000))
+            {
+                matchBrushIndex = i;
+                break;
+            }
+        }
+
+        if (matchBrushIndex == -1)
+        {
+            CG_GameMessage(0, "No brush found");
+            xbox::DbgPrint("No brush found\n");
+            return;
+        }
+
+        cbrush_t &brush = cm->brushes[matchBrushIndex];
+        // Enable the collision flag
+        brush.contents |= 0x10000;
+
+        // log and print the brush index
+        xbox::DbgPrint("Brush collision enabled %d\n", matchBrushIndex);
+
+        const char *state = (brush.contents & 0x10000) ? "^2enabled" : "^1disabled";
+        CG_GameMessage(0, va("brush %d collision %s", matchBrushIndex, state));
+    }
+
+    void GScr_DisableCollisionForBrushContainingOrigin()
+    {
+        SaveOriginalBrushContents();
+
+        float point[3] = {0.0f, 0.0f, 0.0f};
+        Scr_GetVector(0, point);
+
+        int matchBrushIndex = -1;
+
+        for (int i = 0; i < cm->numBrushes; i++)
+        {
+            cbrush_t &brush = cm->brushes[i];
+            if (IsPointInsideBounds(point, brush.mins, brush.maxs) && (brush.contents & 0x10000))
+            {
+                matchBrushIndex = i;
+                break;
+            }
+        }
+
+        if (matchBrushIndex == -1)
+        {
+            CG_GameMessage(0, "No brush found with collision enabled");
+            xbox::DbgPrint("No brush found with collision enabled\n");
+            return;
+        }
+
+        cbrush_t &brush = cm->brushes[matchBrushIndex];
+        // Disable the collision flag
+        brush.contents &= ~0x10000;
+
+        // Log and print the brush index
+        xbox::DbgPrint("Brush collision disabled %d\n", matchBrushIndex);
+
+        const char *state = (brush.contents & 0x10000) ? "^2enabled" : "^1disabled";
+        CG_GameMessage(0, va("brush %d collision %s", matchBrushIndex, state));
+    }
+
+    Detour Scr_GetFunction_Detour;
+
+    BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
+    {
+        if (std::strcmp(*pName, "removebrushcollisionsoverheight") == 0)
+            return reinterpret_cast<BuiltinFunction>(&GScr_RemoveBrushCollisionsOverHeight);
+
+        if (std::strcmp(*pName, "restorebrushcollisions") == 0)
+            return reinterpret_cast<BuiltinFunction>(&RestoreBrushCollisions);
+
+        if (std::strcmp(*pName, "enablecollisionforbrushcontainingorigin") == 0)
+            return reinterpret_cast<BuiltinFunction>(&GScr_EnableCollisionForBrushContainingOrigin);
+
+        if (std::strcmp(*pName, "disablecollisionforbrushcontainingorigin") == 0)
+            return reinterpret_cast<BuiltinFunction>(&GScr_DisableCollisionForBrushContainingOrigin);
+
+        return Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
+    }
+
+    void GScr_CloneBrushModelToScriptModel(scr_entref_t scriptModelEntRef)
+    {
+        gentity_s *scriptEnt = GetEntity(scriptModelEntRef);
+        gentity_s *brushEnt = Scr_GetEntity(0);
+
+        SV_UnlinkEntity(scriptEnt);
+        scriptEnt->s.index = brushEnt->s.index;
+        int contents = scriptEnt->r.contents;
+        SV_SetBrushModel(scriptEnt);
+        scriptEnt->r.contents |= contents;
+        SV_LinkEntity(scriptEnt);
+    }
+
+    struct BotAction
+    {
+        bool jump;
+    };
+
+    // map of client index to bot action
+    std::map<int, BotAction> botActions;
+
+    void GScr_BotJump(scr_entref_t entref)
+    {
+        client_t *cl = &svsHeader->clients[entref.entnum];
+
+        if (cl->header.state && cl->header.netchan.remoteAddress.type == NA_BOT)
+        {
+            botActions[entref.entnum].jump = true;
+        }
+    }
+
+    Detour SV_ClientThinkDetour;
+
+    // TODO: maybe recreate the original and call it in the hook
+    void SV_ClientThinkHook(client_t *cl, usercmd_s *cmd)
+    {
+        // Check if the client is a bot
+        if (cl->header.state && cl->header.netchan.remoteAddress.type == NA_BOT)
+        {
+            // Reset bot's movement and actions set in SV_BotUserMove
+            cmd->forwardmove = 0;
+            cmd->rightmove = 0;
+            cmd->buttons = 0;
+
+            int clientIndex = cl - svsHeader->clients;
+            if (botActions.find(clientIndex) != botActions.end())
+            {
+                if (botActions[clientIndex].jump)
+                {
+                    cmd->buttons = 1024; // BUTTON_JUMP
+                    botActions[clientIndex].jump = false;
+                }
+            }
+        }
+
+        // Now do the original function logic
+        if (cmd->serverTime - svsHeader->time <= 20000)
+        {
+            memcpy(&cl->lastUsercmd, cmd, sizeof(usercmd_s));
+
+            if (cl->header.state == 4)
+            {
+                int clientIndex = cl - svsHeader->clients;
+                G_SetLastServerTime(clientIndex, cmd->serverTime);
+                ClientThink(clientIndex);
+            }
+        }
+        else
+        {
+            char *msg = va("Invalid command time %i from client %s, current server time is %i", cmd->serverTime, cl->name, svsHeader->time);
+            Com_PrintError(CON_CHANNEL_SERVER, msg);
+        }
+    }
+
+    void PlayerCmd_HoldBreathButtonPressed(scr_entref_t entref)
+    {
+        gentity_s *ent = GetEntity(entref);
+        Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 8192) != 0);
+    }
+
+    void PlayerCmd_JumpButtonPressed(scr_entref_t entref)
+    {
+        gentity_s *ent = GetEntity(entref);
+        Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 1024) != 0);
+    }
+
+    void PlayerCmd_GetForwardMove(scr_entref_t entref)
+    {
+        client_t *cl = &svsHeader->clients[entref.entnum];
+        Scr_AddInt(cl->lastUsercmd.forwardmove);
+    }
+
+    void PlayerCmd_GetRightMove(scr_entref_t entref)
+    {
+        client_t *cl = &svsHeader->clients[entref.entnum];
+        Scr_AddInt(cl->lastUsercmd.rightmove);
+    }
+
+    Detour Scr_GetMethod_Detour;
+
+    BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
+    {
+
+        if (std::strcmp(*pName, "botjump") == 0)
+            return reinterpret_cast<BuiltinMethod>(&GScr_BotJump);
+
+        if (std::strcmp(*pName, "clonebrushmodeltoscriptmodel") == 0)
+            return reinterpret_cast<BuiltinMethod>(&GScr_CloneBrushModelToScriptModel);
+
+        if (std::strcmp(*pName, "holdbreathbuttonpressed") == 0)
+            return reinterpret_cast<BuiltinMethod>(&PlayerCmd_HoldBreathButtonPressed);
+
+        if (std::strcmp(*pName, "jumpbuttonpressed") == 0)
+            return reinterpret_cast<BuiltinMethod>(&PlayerCmd_JumpButtonPressed);
+
+        if (std::strcmp(*pName, "getforwardmove") == 0)
+            return reinterpret_cast<BuiltinMethod>(&PlayerCmd_GetForwardMove);
+
+        if (std::strcmp(*pName, "getrightmove") == 0)
+            return reinterpret_cast<BuiltinMethod>(&PlayerCmd_GetRightMove);
+
+        return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -1874,6 +2162,15 @@ namespace mp
 
         cmd_function_s *loadpos_VAR = new cmd_function_s;
         Cmd_AddCommandInternal("loadpos", nullptr, loadpos_VAR);
+
+        Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
+        Scr_GetFunction_Detour.Install();
+
+        Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
+        Scr_GetMethod_Detour.Install();
+
+        SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
+        SV_ClientThinkDetour.Install();
 
         init_gscr_fields();
     }
