@@ -412,6 +412,7 @@ namespace mp
     va_t va = reinterpret_cast<va_t>(0x821CD858);
 
     // Variables
+    auto cgArray = reinterpret_cast<cg_s *>(0x823F28A0);
     auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
     auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);
     auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
@@ -2083,6 +2084,18 @@ namespace mp
         return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
     }
 
+    void PatchViewpos()
+    {
+        // viewpos patches
+        // Force the viewpos output to be printed to the obituary channel
+        *(volatile uint32_t *)0x82320D2C = 0x38600005;
+
+        // Update viewpos output format to display float values with 6 decimal places
+        // Original format: "(%.0f %.0f %.0f) : %.0f %.0f\n"
+        const char *newFormat = "%.6f, %.6f, %.6f ,%.6f, %.6f\n";
+        memcpy((void *)0x8204F7DC, newFormat, strlen(newFormat) + 1); // Include null terminator
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -2171,5 +2184,7 @@ namespace mp
         SV_ClientThinkDetour.Install();
 
         init_gscr_fields();
+
+        PatchViewpos();
     }
 }
