@@ -546,8 +546,6 @@ forgestart()
 
 			if (self.spectator_mode == "forge") // Forge specific actions
 			{
-
-#if defined(SYSTEM_XENON)
 				// CLONE OBJECT
 				if (self holdbreathbuttonpressed())
 				{
@@ -574,7 +572,6 @@ forgestart()
 						}
 					}
 				}
-#endif
 				// pick up or drop ent
 				if (!isdefined(self.pickedUpEnt) && isdefined(self.focusedEnt) && self attackButtonPressed())
 				{
@@ -700,8 +697,6 @@ forgestart()
 // Add a x,y movement mode
 // add better datastructure for forge models, cloned objects don't inherit classname and targetnames etc
 
-#if defined(SYSTEM_XENON)
-
 cloneObject(ent)
 {
 	if (!isdefined(ent))
@@ -785,8 +780,6 @@ cloneObject(ent)
 		return script_brushmodel;
 	}
 }
-
-#endif
 
 ufoend()
 {

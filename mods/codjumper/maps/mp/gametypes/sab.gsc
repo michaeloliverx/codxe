@@ -327,8 +327,6 @@ getentbyorigin(origin, matchNumber)
 	}
 }
 
-#if defined(SYSTEM_XENON)
-
 removeBarriersOverHeight(height)
 {
 	restorebrushcollisions();
@@ -354,5 +352,3 @@ disablecollisionforbrushcontainingorigin_wrapper()
 {
 	disablecollisionforbrushcontainingorigin(self.origin);
 }
-
-#endif

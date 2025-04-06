@@ -651,11 +651,6 @@ generateMenuOptions()
 	self addMenuOption("player_settings", "Revert Vision", ::RevertVision);
 	self addMenuOption("player_settings", "Look Straight Down", ::toggle_look_straight_down);
 
-#if defined(SYSTEM_XENON)
-	self addMenuOption("player_settings", "Toggle No Clip", ::toggle_noclip);
-	self addMenuOption("player_settings", "Toggle UFO", ::toggle_ufo);
-#endif
-
 	// Bot submenu
 	self addMenuOption("main", "Bot Menu", ::menuAction, "CHANGE_MENU", "bot_menu");
 	self addMenu("bot_menu", "main");
@@ -687,7 +682,6 @@ generateMenuOptions()
 	self addMenuOption("clone_menu", "Spawn Clone", ::addClone);
 	self addMenuOption("clone_menu", "Remove Clones", ::deleteClones);
 
-#if defined(SYSTEM_XENON)
 	// Enhanced submenu
 	if (is_host)
 	{
@@ -714,7 +708,6 @@ generateMenuOptions()
 		self addMenuOption("bot_action_menu", "Trigger Distance UP", ::modifyTriggerDistance, 10);
 		self addMenuOption("bot_action_menu", "Trigger Distance DOWN", ::modifyTriggerDistance, -10);
 	}
-#endif
 
 	// Player model menu
 	addMenuOption("main", "Player Model Menu", ::menuAction, "CHANGE_MENU", "player_model_menu");
@@ -889,12 +882,8 @@ initBot()
 
 	wait .1;
 
-// plugin handles bot controls
-#if defined(SYSTEM_XENON)
+	// plugin handles bot controls
 	bot freezeControls(false);
-#else
-	bot freezeControls(true);
-#endif
 
 	return bot;
 }
@@ -994,8 +983,6 @@ spawnFloatingBot()
 	bot linkto(self.floating_bot);
 }
 
-#if defined(SYSTEM_XENON)
-
 toggleAutoMantle()
 {
 	if (!isdefined(self.cj["settings"]["automantle"]) || self.cj["settings"]["automantle"] == false)
@@ -1067,5 +1054,3 @@ stopAutoMantle()
 	self notify("stop_automantle");
 	self iprintln("Stopped automantle");
 }
-
-#endif
