@@ -619,7 +619,15 @@ forgestart()
 			if (!isdefined(self.pickedUpEnt))
 			{
 				forward = anglestoforward(self getplayerangles());
-				eye = self.origin + (0, 0, 10);
+
+				stance = self getStance();
+				if (stance == "prone")
+					eye = self.origin + (0, 0, 11);
+				else if (stance == "crouch")
+					eye = self.origin + (0, 0, 40);
+				else
+					eye = self.origin + (0, 0, 60);
+
 				start = eye;
 				end = vectorscale(forward, 9999);
 				trace = bullettrace(start, start + end, true, self);
@@ -811,16 +819,14 @@ ufocontrolsON()
 	self setClientDvar("player_view_pitch_up", 89.9);	// allow looking straight up
 	self setClientDvar("player_view_pitch_down", 89.9); // allow looking straight down
 
-	self allowSpectateTeam("freelook", true);
-	self.sessionstate = "spectator";
+	self.ufo = true;
 }
 
 ufocontrolsOFF()
 {
 	self setClientDvar("player_view_pitch_down", 70);
 
-	self allowSpectateTeam("freelook", false);
-	self.sessionstate = "playing";
+	self.ufo = false;
 
 	self freezeControls(false);
 }
