@@ -777,16 +777,16 @@ watch_buttons()
 				self savePos(self.cj["savenum"]);
 				wait .2;
 			}
-			else if (self.sessionstate == "playing" && self button_pressed("smoke"))
+			else if (!self.ufo && self button_pressed("smoke"))
 			{
 				self loadPos(self.cj["savenum"]);
 				wait .2;
 			}
 			else if (self button_pressed("frag"))
 			{
-				if (self.sessionstate == "playing")
+				if (!self.ufo)
 					self thread forgestart();
-				else if (self.sessionstate == "spectator")
+				else
 					self ufoend();
 
 				wait .2;

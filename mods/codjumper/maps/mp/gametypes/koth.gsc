@@ -351,7 +351,6 @@ getForgeInstructionsText(state)
 	if (!isdefined(state))
 	{
 		instructions[instructions.size] = "[{+activate}] Hold for more options";
-		instructions[instructions.size] = "[{+smoke}] Change speed";
 		instructions[instructions.size] = "[{+frag}] Exit";
 	}
 	else if (state == "FOCUSED")
@@ -497,12 +496,6 @@ forgestart()
 			continue;
 		}
 
-		if (!isdefined(self.focusedEnt) && !isdefined(self.pickedUpEnt) && self secondaryoffhandbuttonpressed())
-		{
-			self cycle_spectator_speed();
-			wait 0.1;
-		}
-
 		// don't unfreeze controls if in menu otherwise the menu controls will break
 		if (!self.cj["menu_open"])
 			self freezecontrols(false);
@@ -619,7 +612,15 @@ forgestart()
 			if (!isdefined(self.pickedUpEnt))
 			{
 				forward = anglestoforward(self getplayerangles());
-				eye = self.origin + (0, 0, 10);
+
+				stance = self getStance();
+				if (stance == "prone")
+					eye = self.origin + (0, 0, 11);
+				else if (stance == "crouch")
+					eye = self.origin + (0, 0, 40);
+				else
+					eye = self.origin + (0, 0, 60);
+
 				start = eye;
 				end = vectorscale(forward, 9999);
 				trace = bullettrace(start, start + end, true, self);
@@ -811,16 +812,14 @@ ufocontrolsON()
 	self setClientDvar("player_view_pitch_up", 89.9);	// allow looking straight up
 	self setClientDvar("player_view_pitch_down", 89.9); // allow looking straight down
 
-	self allowSpectateTeam("freelook", true);
-	self.sessionstate = "spectator";
+	self.ufo = true;
 }
 
 ufocontrolsOFF()
 {
 	self setClientDvar("player_view_pitch_down", 70);
 
-	self allowSpectateTeam("freelook", false);
-	self.sessionstate = "playing";
+	self.ufo = false;
 
 	self freezeControls(false);
 }
@@ -841,30 +840,6 @@ setSaveIndex()
 	self.cj["savenum"] = (i + 1) % 10;
 
 	self iPrintln("Position " + (self.cj["savenum"] + 1) + " set");
-}
-
-cycle_spectator_speed()
-{
-	speeds[0] = 0.05;
-	speeds[1] = 0.1;
-	speeds[2] = 0.2;
-	speeds[3] = 0.4;
-	speeds[4] = 0.8;
-	speeds[5] = 1;
-	speeds[6] = 1.5;
-	speeds[7] = 3;
-
-	self.cj["spectator_speed_index"] += 1;
-	if (self.cj["spectator_speed_index"] >= speeds.size)
-		self.cj["spectator_speed_index"] = 0;
-
-	speed = speeds[self.cj["spectator_speed_index"]];
-	self setClientDvar("player_spectateSpeedScale", speed);
-	msg = "player_spectateSpeedScale " + speed;
-	if (speed == 1)
-		msg += " (default)";
-
-	self iprintln(msg);
 }
 
 forge_get_mode()
