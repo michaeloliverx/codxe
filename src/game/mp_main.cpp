@@ -384,13 +384,16 @@ namespace mp
 
     SCR_DrawSmallStringExt_t SCR_DrawSmallStringExt = reinterpret_cast<SCR_DrawSmallStringExt_t>(0x822C9B88);
 
+    Scr_AddArray_t Scr_AddArray = reinterpret_cast<Scr_AddArray_t>(0x82210538);
     Scr_AddInt_t Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x822111C0);
+    Scr_AddString_t Scr_AddString = reinterpret_cast<Scr_AddString_t>(0x82210F28);
     Scr_Error_t Scr_Error = reinterpret_cast<Scr_Error_t>(0x8220F6F0);
     Scr_GetEntity_t Scr_GetEntity = reinterpret_cast<Scr_GetEntity_t>(0x8224EE68);
     Scr_GetFunction_t Scr_GetFunction = reinterpret_cast<Scr_GetFunction_t>(0x82256ED0);
     Scr_GetInt_t Scr_GetInt = reinterpret_cast<Scr_GetInt_t>(0x8220FD10);
     Scr_GetMethod_t Scr_GetMethod = reinterpret_cast<Scr_GetMethod_t>(0x822570E0);
     Scr_GetVector_t Scr_GetVector = reinterpret_cast<Scr_GetVector_t>(0x8220FA88);
+    Scr_MakeArray_t Scr_MakeArray = reinterpret_cast<Scr_MakeArray_t>(0x82210CA0);
     Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
 
     SV_ClientThink_t SV_ClientThink = reinterpret_cast<SV_ClientThink_t>(0x82208448);

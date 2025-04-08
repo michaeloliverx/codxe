@@ -1107,12 +1107,17 @@ namespace mp
     };
     static_assert(sizeof(Font_s) == 0x18, "");
 
+    struct XModel
+    {
+        const char *name;
+    };
+
     union XAssetHeader
     {
         // XModelPieces *xmodelPieces;
         // PhysPreset *physPreset;
         // XAnimParts *parts;
-        // XModel *model;
+        XModel *model;
         Material *material;
         // MaterialPixelShader *pixelShader;
         // MaterialVertexShader *vertexShader;
@@ -1540,7 +1545,21 @@ namespace mp
     static_assert(sizeof(cbrush_t) == 80, "");
 
     // stubs
-    struct cStaticModel_s;
+    struct cStaticModelWritable
+    {
+        unsigned __int16 nextModelInWorldSector;
+    };
+
+    struct cStaticModel_s
+    {
+        cStaticModelWritable writable;
+        XModel *xmodel;
+        float origin[3];
+        float invScaledAxis[3][3];
+        float absmin[3];
+        float absmax[3];
+    };
+
     struct dmaterial_t;
     struct cNode_t;
     struct cLeaf_t;
@@ -2071,13 +2090,16 @@ namespace mp
 
     typedef void (*SCR_DrawSmallStringExt_t)(unsigned int x, unsigned int y, const char *string, const float *setColor);
 
+    typedef void (*Scr_AddArray_t)();
     typedef void (*Scr_AddInt_t)(int value);
+    typedef void (*Scr_AddString_t)(const char *value);
     typedef void (*Scr_Error_t)(const char *error);
     typedef gentity_s *(*Scr_GetEntity_t)(scr_entref_t *entref);
     typedef BuiltinFunction (*Scr_GetFunction_t)(const char **pName, int *type);
     typedef int (*Scr_GetInt_t)(unsigned int index);
     typedef BuiltinMethod (*Scr_GetMethod_t)(const char **pName, int *type);
     typedef void (*Scr_GetVector_t)(unsigned int index, float *vectorValue);
+    typedef void (*Scr_MakeArray_t)();
     typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
 
     typedef void (*SV_ClientThink_t)(int clientNum, usercmd_s *cmd);
