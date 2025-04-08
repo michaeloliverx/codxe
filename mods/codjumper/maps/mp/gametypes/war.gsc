@@ -72,7 +72,7 @@ onStartGameType()
 		level.onEndGame = ::onEndGame;
 	}
 
-	thread maps\mp\gametypes\dom::init();
+	thread maps\mp\gametypes\cj::init();
 }
 
 onSpawnPlayer()
