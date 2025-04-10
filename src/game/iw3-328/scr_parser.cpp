@@ -16,7 +16,7 @@ namespace iw3_328
     {
         xbox::DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
 
-        std::string raw_file_path = "game:\\iw3xe\\raw\\";
+        std::string raw_file_path = "game:\\_iw3xe\\raw\\";
         raw_file_path += extFilename;
         std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
         if (filesystem::file_exists(raw_file_path))
