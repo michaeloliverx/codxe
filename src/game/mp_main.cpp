@@ -15,6 +15,7 @@
 #include "../detour.h"
 #include "../filesystem.h"
 #include "../xboxkrnl.h"
+#include "../version.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest
@@ -1800,11 +1801,15 @@ namespace mp
     {
         const char *branding = "IW3xe";
         const char *build = __DATE__ " " __TIME__;
+        char brandingWithBuild[256];
+
+        // Combine branding and build number
+        _snprintf(brandingWithBuild, sizeof(brandingWithBuild), "%s (Build %d)", branding, BUILD_NUMBER);
 
         static Font_s *font = (Font_s *)R_RegisterFont("fonts/consoleFont");
         float color[4] = {1.0, 1.0, 1.0, 0.4};
 
-        R_AddCmdDrawText(branding, 256, font, 10, 20, 1.0, 1.0, 0.0, color, 0);
+        R_AddCmdDrawText(brandingWithBuild, 256, font, 10, 20, 1.0, 1.0, 0.0, color, 0);
         R_AddCmdDrawText(build, 256, font, 10, 40, 1.0, 1.0, 0.0, color, 0);
     }
 
