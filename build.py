@@ -3,17 +3,32 @@ import subprocess
 import shutil
 
 # Configuration
-# PROJECT_PATH = "."  # Current directory (adjust if needed)
 SOLUTION_FILE = "iw3xe.sln"
 MSBUILD_PATH = r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
-# BUILD_CONFIG = "Release"
 BINARY_PATH = r"build\Release\bin\iw3xe.xex"
 STAGING_DIR = r"build\staging"
-# RELEASE_DIR = "release"
-# PROJECT_NAME = "iw3xe"
-# VERSION = "1.0.0"
 RESOURCES_PATH = r"resources\xenia"
 GAME_TITLE_ID = "415607E6"
+
+
+def count_commits():
+    try:
+        result = subprocess.run(
+            ["git", "rev-list", "--count", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        # Get the commit count from the command output
+        commit_count = result.stdout.strip()
+
+        print(f"Total number of commits in the current branch: {commit_count}")
+        return commit_count
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        exit(1)
+
 
 # Ensure MSBuild exists
 if not os.path.exists(MSBUILD_PATH):
@@ -21,7 +36,7 @@ if not os.path.exists(MSBUILD_PATH):
     exit(1)
 
 VERSION_HEADER_PATH = r"src\version.h"
-BUILD_NUMBER = 123
+BUILD_NUMBER = count_commits()
 
 print("Generating version.h with build metadata...")
 with open(VERSION_HEADER_PATH, "w") as version_file:
