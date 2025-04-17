@@ -82,3 +82,14 @@ if os.path.exists(MODS_PATH):
 else:
     print(f"Mods directory not found at {MODS_PATH}")
     exit(1)
+
+
+PROJECT_NAME = "iw3xe"
+ZIP_FILE_NAME = f"{PROJECT_NAME}-{BUILD_NUMBER}.zip"
+STAGING_ZIP_PATH = os.path.join("build", ZIP_FILE_NAME)
+
+print("Zipping the staging folder...")
+shutil.make_archive(
+    base_name=STAGING_ZIP_PATH.replace(".zip", ""), format="zip", root_dir=STAGING_DIR
+)
+print(f"Staging folder zipped successfully to {STAGING_ZIP_PATH}")

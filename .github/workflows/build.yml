@@ -1,10 +1,17 @@
-name: Build
+name: Build and Release
 
 on:
   pull_request:
     types: [opened, reopened, synchronize, closed]
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   install:
@@ -13,6 +20,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper commit counting
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -63,5 +72,29 @@ jobs:
           Start-Process -FilePath "xbox360_sdk.exe" -ArgumentList "/U", "/T full" -Wait
 
       - name: Build Plugin
+        id: build
         run: |
-          C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe "iw3xe.sln"
+          # Get commit count
+          $commitCount = git rev-list --count HEAD
+          echo "BUILD_NUMBER=$commitCount" >> $env:GITHUB_OUTPUT
+          
+          # Build using build.py which will use the same commit count
+          python build.py
+          
+          echo "ZIP_FILE=iw3xe-${commitCount}.zip" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+      
+      - name: Create Release
+        if: github.event_name == 'workflow_dispatch'
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.build.outputs.BUILD_NUMBER }}
+          name: Release v${{ steps.build.outputs.BUILD_NUMBER }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+          generate_release_notes: true
+          files: |
+            build/${{ steps.build.outputs.ZIP_FILE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
