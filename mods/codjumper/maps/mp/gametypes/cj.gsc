@@ -2400,6 +2400,8 @@ generateMenuOptions()
 				self addMenuOption("host_menu_maps", label, ::changeMap, mapname);
 			}
 		}
+
+		self addMenuOption("host_menu", "Toggle Multi Bouncing", ::toggleMultiBouncing);
 	}
 
 	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
@@ -2929,4 +2931,19 @@ stopAutoMantle()
 {
 	self notify("stop_automantle");
 	self iprintln("Stopped automantle");
+}
+
+toggleMultiBouncing()
+{
+	value = getDvarInt("pm_multi_bounce");
+	if (value == 0)
+	{
+		setDvar("pm_multi_bounce", 1);
+		self iprintln("Multi Bouncing [^2ON^7]");
+	}
+	else
+	{
+		setDvar("pm_multi_bounce", 0);
+		self iprintln("Multi Bouncing [^1OFF^7]");
+	}
 }

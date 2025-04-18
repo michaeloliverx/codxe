@@ -2232,7 +2232,7 @@ namespace mp
         Sys_SnapVector_Detour.Install();
 
         // Requires jump_slowdownEnable to be set to 0
-        pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", true, 0, "Enable multi-bounces");
+        pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", false, 0, "Enable multi-bounces");
         PM_FoliageSounds_Detour = Detour(PM_FoliageSounds, PM_FoliageSounds_Hook);
         PM_FoliageSounds_Detour.Install();
 
