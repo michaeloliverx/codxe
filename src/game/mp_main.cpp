@@ -374,6 +374,8 @@ namespace mp
     Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
 
     PM_FoliageSounds_t PM_FoliageSounds = reinterpret_cast<PM_FoliageSounds_t>(0x82335E90);
+    Pmove_t Pmove = reinterpret_cast<Pmove_t>(0x8233B470);
+    PmoveSingle_t PmoveSingle = reinterpret_cast<PmoveSingle_t>(0x8233A938);
 
     R_AddCmdDrawText_t R_AddCmdDrawText = (R_AddCmdDrawText_t)0x8216C0B8;
     R_DrawAllDynEnt_t R_DrawAllDynEnt = reinterpret_cast<R_DrawAllDynEnt_t>(0x8215FF98);
@@ -1715,15 +1717,40 @@ namespace mp
         R_AddCmdDrawText(buff, 256, font, x, y, 1.0, 1.0, 0.0, color, 0);
     }
 
+    void DrawFixedFPS()
+    {
+        static dvar_s *pm_fixed_fps = Dvar_FindMalleableVar("pm_fixed_fps");
+
+        char buff[16];
+        sprintf_s(buff, "%d", pm_fixed_fps->current.integer);
+
+        static Font_s *font = (Font_s *)R_RegisterFont("fonts/bigDevFont");
+        float color[4] = {
+            pm_cj_hud_color->current.color[0],
+            pm_cj_hud_color->current.color[1],
+            pm_cj_hud_color->current.color[2],
+            pm_cj_hud_color->current.color[3]};
+        float x = 620 * scrPlaceFullUnsafe.scaleVirtualToFull[0];
+        float y = 15 * scrPlaceFullUnsafe.scaleVirtualToFull[1];
+        R_AddCmdDrawText(buff, 16, font, x, y, 1.0, 1.0, 0.0, color, 0);
+    }
+
     Detour CG_DrawActive_Detour;
 
     void CG_DrawActive_Hook(int localClientNum)
     {
+        static dvar_s *pm_fixed_fps_enable = Dvar_FindMalleableVar("pm_fixed_fps_enable");
+
         CheckKeyboardCompletion();
 
         if (pm_cj_hud_enable->current.enabled)
         {
             DrawHudCJ();
+        }
+
+        if (pm_fixed_fps_enable->current.enabled)
+        {
+            DrawFixedFPS();
         }
 
         CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
@@ -2104,6 +2131,46 @@ namespace mp
         memcpy((void *)0x8204F7DC, newFormat, strlen(newFormat) + 1); // Include null terminator
     }
 
+    Detour Pmove_Detour;
+
+    // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L11
+    void Pmove_Hook(pmove_t *pm)
+    {
+        static dvar_s *pm_fixed_fps_enable = Dvar_FindMalleableVar("pm_fixed_fps_enable");
+        static dvar_s *pm_fixed_fps = Dvar_FindMalleableVar("pm_fixed_fps");
+
+        if (!pm_fixed_fps_enable->current.enabled)
+            return Pmove_Detour.GetOriginal<decltype(Pmove)>()(pm);
+
+        int msec = 0;
+        int cur_msec = 1000 / pm_fixed_fps->current.integer;
+
+        pm->cmd.serverTime = ((pm->cmd.serverTime + (cur_msec < 2 ? 2 : cur_msec) - 1) / cur_msec) * cur_msec;
+
+        int finalTime = pm->cmd.serverTime;
+
+        if (finalTime < pm->ps->commandTime)
+        {
+            return; // should not happen
+        }
+
+        if (finalTime > pm->ps->commandTime + 1000)
+            pm->ps->commandTime = finalTime - 1000;
+        pm->numtouch = 0;
+
+        while (pm->ps->commandTime != finalTime)
+        {
+            msec = finalTime - pm->ps->commandTime;
+
+            if (msec > cur_msec)
+                msec = cur_msec;
+
+            pm->cmd.serverTime = msec + pm->ps->commandTime;
+            PmoveSingle(pm);
+            memcpy(&pm->oldcmd, &pm->cmd, sizeof(pm->oldcmd));
+        }
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -2194,5 +2261,10 @@ namespace mp
         init_gscr_fields();
 
         PatchViewpos();
+
+        Dvar_RegisterBool("pm_fixed_fps_enable", false, 0, "Enable fixed FPS mode");
+        Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
+        Pmove_Detour = Detour(Pmove, Pmove_Hook);
+        Pmove_Detour.Install();
     }
 }
