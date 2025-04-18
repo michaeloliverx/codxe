@@ -2137,13 +2137,6 @@ namespace mp
     typedef void (*UI_Refresh_t)(int localClientNum);
 
     typedef char *(*va_t)(char *format, ...);
-
-    // Custom additions
-    enum pm_fps_mode_t
-    {
-        PM_FPS_MODE_CONSOLE,
-        PM_FPS_MODE_PC
-    };
 }
 
 #pragma warning(default : 4480)
