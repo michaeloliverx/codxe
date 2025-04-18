@@ -1756,13 +1756,13 @@ namespace mp
         CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
     }
 
-    dvar_s *pm_fps_mode = nullptr;
-
     Detour Sys_SnapVector_Detour;
+
+    static dvar_s *pm_pc_mp_velocity_snap = nullptr;
 
     void Sys_SnapVector_Hook(float *v)
     {
-        if (pm_fps_mode->current.integer == PM_FPS_MODE_PC)
+        if (pm_pc_mp_velocity_snap->current.enabled)
         {
             // Use __frnd for round-to-nearest-even behavior
             v[0] = (float)__frnd((double)v[0]);
@@ -2221,8 +2221,12 @@ namespace mp
         pm_cj_hud_x = Dvar_RegisterInt("pm_cj_hud_x", 0, 0, 640, 0, "Virtual screen x coordinate of the player speed and z origin");
         pm_cj_hud_y = Dvar_RegisterInt("pm_cj_hud_y", 470, 0, 480, 0, "Virtual screen y coordinate of the player speed and z origin");
 
-        const char *fps_mode_values[] = {"console", "pc", nullptr};
-        pm_fps_mode = Dvar_RegisterEnum("pm_fps_mode", fps_mode_values, PM_FPS_MODE_CONSOLE, 0, "FPS mode");
+        // This allows FPS-dependent physics
+        pm_pc_mp_velocity_snap = Dvar_RegisterBool(
+            "pm_pc_mp_velocity_snap",
+            false,
+            0,
+            "Enable PC Multiplayer style velocity snapping (round to nearest). ");
 
         Sys_SnapVector_Detour = Detour(Sys_SnapVector, Sys_SnapVector_Hook);
         Sys_SnapVector_Detour.Install();
