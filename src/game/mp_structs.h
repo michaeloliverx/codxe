@@ -1442,9 +1442,25 @@ namespace mp
 
     struct GfxViewInfo;
 
-    struct pmove_t
+    struct __declspec(align(4)) pmove_t
     {
         playerState_s *ps;
+        usercmd_s cmd;
+        usercmd_s oldcmd;
+        int tracemask;
+        int numtouch;
+        int touchents[32];
+        float mins[3];
+        float maxs[3];
+        float xyspeed;
+        int proneChange;
+        float maxSprintTimeMultiplier;
+        bool mantleStarted;
+        float mantleEndPos[3];
+        int mantleDuration;
+        int viewChangeTime;
+        float viewChange;
+        unsigned __int8 handler;
     };
 
     struct viewState_t;
@@ -2079,6 +2095,8 @@ namespace mp
     typedef void (*Load_MapEntsPtr_t)();
 
     typedef void (*PM_FoliageSounds_t)(pmove_t *pm);
+    typedef void (*Pmove_t)(pmove_t *pm);
+    typedef void (*PmoveSingle_t)(pmove_t *pm);
 
     typedef void (*R_AddCmdDrawText_t)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale, double yScale, double rotation, const float *color, int style);
     typedef void (*R_DrawAllDynEnt_t)(const GfxViewInfo *viewInfo);
