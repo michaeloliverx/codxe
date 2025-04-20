@@ -17,3 +17,11 @@ name = "iw3xe"
 file = "iw3xe.xex"
 hash = "F5F903E4F326EB10" # default_mp.xex
 is_enabled = true
+
+# Pre Alpha 253 MP
+[[plugin]]
+author = "mo"
+name = "iw3xe"
+file = "iw3xe.xex"
+hash = "60FD640B7A28C69D" # default_mp.xex
+is_enabled = true

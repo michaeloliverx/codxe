@@ -4,6 +4,7 @@
 #include "game.h"
 #include "mp_main.h"
 #include "sp_main.h"
+#include "iw3-253/main.h"
 
 namespace game
 {
@@ -20,6 +21,11 @@ namespace game
         {
             xbox::show_notification(L"IW3xe sp");
             sp::init();
+        }
+        else if (strncmp((char *)0x8203A0A0, "multiplayer", 11) == 0)
+        {
+            xbox::show_notification(L"IW3xe 253 MP");
+            iw3_253::init();
         }
         else
         {
