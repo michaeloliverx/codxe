@@ -44,7 +44,7 @@ with open(VERSION_HEADER_PATH, "w") as version_file:
     version_file.write("#pragma once\n\n")
     version_file.write(f"#define BUILD_NUMBER {BUILD_NUMBER}\n")
 
-result = subprocess.run([MSBUILD_PATH, SOLUTION_FILE], stdout=subprocess.DEVNULL)
+result = subprocess.run([MSBUILD_PATH, SOLUTION_FILE])
 if result.returncode != 0:
     print("ERROR: Build failed.")
     exit(result.returncode)
