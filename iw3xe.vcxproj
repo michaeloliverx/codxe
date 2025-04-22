@@ -88,9 +88,9 @@
       <ClInclude Include="src\game\mp_main.h" />
       <ClInclude Include="src\game\mp_structs.h" />
       <ClInclude Include="src\game\sp_main.h" />
-      <ClCompile Include="src\game\iw3-253\cg_consolecmds.h" />
-      <ClCompile Include="src\game\iw3-253\main.h" />
-      <ClCompile Include="src\game\iw3-253\scr_parser.h" />
-      <ClCompile Include="src\game\iw3-253\structs.h" />
+      <ClInclude Include="src\game\iw3-253\cg_consolecmds.h" />
+      <ClInclude Include="src\game\iw3-253\main.h" />
+      <ClInclude Include="src\game\iw3-253\scr_parser.h" />
+      <ClInclude Include="src\game\iw3-253\structs.h" />
   </ItemGroup>
 </Project>
