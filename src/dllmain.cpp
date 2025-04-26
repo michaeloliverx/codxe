@@ -9,6 +9,13 @@ void monitor_title_id()
 	while (xbox::XamGetCurrentTitleId() != game::XBOX_360_TITLE_ID)
 		Sleep(100);
 
+	// If not running in an emulator, sleep for 500ms before initialization
+	// to allow the game to load properly.
+	if (!xbox::InXenia())
+	{
+		Sleep(500);
+	}
+
 	game::init();
 }
 

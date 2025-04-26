@@ -4,6 +4,9 @@
 
 namespace xbox
 {
+    // Function to check if running in Xenia emulator
+    bool InXenia();
+    
     extern "C"
     {
         void DbgPrint(const char *format, ...);
@@ -25,4 +28,7 @@ namespace xbox
 
     // Function to display Xbox notifications
     void show_notification(const wchar_t *message);
+    
+    // Function to resolve Xbox functions by ordinal
+    void *ResolveFunction(const std::string &moduleName, uint32_t ordinal);
 }
