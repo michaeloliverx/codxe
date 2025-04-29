@@ -75,9 +75,9 @@
       <ClCompile Include="src\game\mp_gscr_fields.cpp" />
       <ClCompile Include="src\game\mp_main.cpp" />
       <ClCompile Include="src\game\sp_main.cpp" />
-      <ClCompile Include="src\game\iw3-253\cg_consolecmds.cpp" />
-      <ClCompile Include="src\game\iw3-253\main.cpp" />
-      <ClCompile Include="src\game\iw3-253\scr_parser.cpp" />
+      <ClCompile Include="src\game\iw3_253\cg_consolecmds.cpp" />
+      <ClCompile Include="src\game\iw3_253\main.cpp" />
+      <ClCompile Include="src\game\iw3_253\scr_parser.cpp" />
   </ItemGroup>
   <ItemGroup>
       <ClInclude Include="src\detour.h" />
@@ -88,9 +88,9 @@
       <ClInclude Include="src\game\mp_main.h" />
       <ClInclude Include="src\game\mp_structs.h" />
       <ClInclude Include="src\game\sp_main.h" />
-      <ClInclude Include="src\game\iw3-253\cg_consolecmds.h" />
-      <ClInclude Include="src\game\iw3-253\main.h" />
-      <ClInclude Include="src\game\iw3-253\scr_parser.h" />
-      <ClInclude Include="src\game\iw3-253\structs.h" />
+      <ClInclude Include="src\game\iw3_253\cg_consolecmds.h" />
+      <ClInclude Include="src\game\iw3_253\main.h" />
+      <ClInclude Include="src\game\iw3_253\scr_parser.h" />
+      <ClInclude Include="src\game\iw3_253\structs.h" />
   </ItemGroup>
 </Project>

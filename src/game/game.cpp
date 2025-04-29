@@ -4,7 +4,7 @@
 #include "game.h"
 #include "mp_main.h"
 #include "sp_main.h"
-#include "iw3-253/main.h"
+#include "iw3_253/main.h"
 
 namespace game
 {
