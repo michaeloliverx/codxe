@@ -2,8 +2,7 @@ title_name = "Call of Duty 4: Modern Warfare"
 title_id = "415607E6"
 #media_id = "2C8C0267" # Disc (USA, Europe): http://redump.org/disc/37074
 
-# TU4
-
+# Retail TU4 SP
 [[plugin]]
 author = "mo"
 name = "iw3xe"
@@ -11,9 +10,18 @@ file = "iw3xe.xex"
 hash = "B4B0A3571D5160E2" # default.xex
 is_enabled = true
 
+# Retail TU4 MP
 [[plugin]]
 author = "mo"
 name = "iw3xe"
 file = "iw3xe.xex"
 hash = "F5F903E4F326EB10" # default_mp.xex
+is_enabled = true
+
+# Pre Alpha 328 MP
+[[plugin]]
+author = "mo"
+name = "iw3xe"
+file = "iw3xe.xex"
+hash = "C0F9D9F3B048B4C4" # default_mp.xex
 is_enabled = true
