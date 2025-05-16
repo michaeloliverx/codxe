@@ -1,22 +1,45 @@
 #include <xtl.h>
 #include <cstdint>
-#include <string>
 #include "xboxkrnl.h"
+
 #include "game/game.h"
+#include "game/t4/main.h"
+
+enum GameTitleId
+{
+	GAME_TITLE_ID_IW3 = 0x415607E6, // Call of Duty 4: Modern Warfare
+	GAME_TITLE_ID_T4 = 0x4156081C	// Call of Duty: World at War
+};
+
+struct TitleInitEntry
+{
+	uint32_t title_id;
+	void (*init)();
+};
+
+static const TitleInitEntry title_init_table[] = {
+	{GAME_TITLE_ID_IW3, game::init},
+	{GAME_TITLE_ID_T4, t4::init},
+};
 
 void monitor_title_id()
 {
-	while (xbox::XamGetCurrentTitleId() != game::XBOX_360_TITLE_ID)
-		Sleep(100);
-
-	// If not running in an emulator, sleep for 500ms before initialization
-	// to allow the game to load properly.
-	if (!xbox::InXenia())
+	for (;;)
 	{
-		Sleep(500);
-	}
+		uint32_t current_title_id = xbox::XamGetCurrentTitleId();
 
-	game::init();
+		for (size_t i = 0; i < sizeof(title_init_table) / sizeof(title_init_table[0]); ++i)
+		{
+			const TitleInitEntry &entry = title_init_table[i];
+			if (entry.title_id == current_title_id)
+			{
+				entry.init();
+				return;
+			}
+		}
+
+		Sleep(50);
+	}
 }
 
 int DllMain(HANDLE hModule, DWORD reason, void *pReserved)

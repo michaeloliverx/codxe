@@ -67,6 +67,7 @@
     </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
+      <ClCompile Include="src\game\t4\main.cpp" />
       <ClCompile Include="src\dllmain.cpp" />
       <ClCompile Include="src\detour.cpp" />
       <ClCompile Include="src\filesystem.cpp" />
@@ -77,6 +78,7 @@
       <ClCompile Include="src\game\sp_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <ClInclude Include="src\game\t4\main.h" />
       <ClInclude Include="src\detour.h" />
       <ClInclude Include="src\filesystem.h" />
       <ClInclude Include="src\xboxkrnl.h" />
