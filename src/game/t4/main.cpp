@@ -1,5 +1,4 @@
-#include <string.h>
-#include "../../xboxkrnl.h"
+#include "../../common.h"
 
 namespace t4
 {

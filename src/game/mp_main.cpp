@@ -1,21 +1,4 @@
-#include <algorithm>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <functional>
-#include <map>
-#include <xtl.h>
-#include <xbox.h>
-#include <xgraphics.h>
-
-#include "mp_main.h"
-#include "mp_structs.h"
-#include "mp_gscr_fields.h"
-
-#include "../detour.h"
-#include "../filesystem.h"
-#include "../xboxkrnl.h"
-#include "../version.h"
+#include "../common.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mp_structs.h"
+#include "../common.h"
 
 namespace mp
 {

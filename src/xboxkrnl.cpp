@@ -1,5 +1,4 @@
-#include <xtl.h>
-#include "xboxkrnl.h"
+#include "common.h"
 
 namespace xbox
 {

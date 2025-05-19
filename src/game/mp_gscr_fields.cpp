@@ -1,10 +1,4 @@
-#include <vector>
-
-#include "mp_main.h"
-#include "mp_structs.h"
-#include "../detour.h"
-#include "../xboxkrnl.h"
-
+#include "../common.h"
 #include "mp_gscr_fields.h"
 
 const unsigned int CLIENT_FIELD_MASK = 0xC000;

@@ -1,3 +1,4 @@
+#pragma once
 #pragma warning(disable : 4480)
 
 namespace sp

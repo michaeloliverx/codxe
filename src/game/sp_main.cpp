@@ -1,12 +1,4 @@
-#include <algorithm>
-#include <vector>
-
-#include "sp_main.h"
-#include "sp_structs.h"
-
-#include "../detour.h"
-#include "../filesystem.h"
-#include "../xboxkrnl.h"
+#include "../common.h"
 
 namespace
 {
