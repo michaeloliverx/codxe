@@ -1,4 +1,4 @@
-#include "../common.h"
+#include "common.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest

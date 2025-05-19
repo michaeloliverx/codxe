@@ -2,7 +2,10 @@
   "configurations": [
     {
       "name": "Release",
-      "includePath": ["${env:XEDK}/include/xbox"],
+      "includePath": [
+        "${env:XEDK}/include/xbox",
+        "${workspaceFolder}/src"
+      ],
       "defines": ["NDEBUG", "_XBOX", "_MBCS"],
       "intelliSenseMode": "windows-msvc-x86"
     }
