@@ -1,9 +1,4 @@
-#include <xtl.h>
-#include <cstdint>
-#include "xboxkrnl.h"
-
-#include "game/game.h"
-#include "game/t4/main.h"
+#include "common.h"
 
 enum GameTitleId
 {

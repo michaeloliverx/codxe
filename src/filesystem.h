@@ -1,6 +1,6 @@
-#include <cstdint>
-#include <string>
-#include <vector>
+#pragma once
+
+#include "common.h"
 
 namespace filesystem
 {

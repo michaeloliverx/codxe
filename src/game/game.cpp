@@ -1,9 +1,4 @@
-#include <xtl.h>
-
-#include "../xboxkrnl.h"
-#include "game.h"
-#include "mp_main.h"
-#include "sp_main.h"
+#include "../common.h"
 
 namespace game
 {

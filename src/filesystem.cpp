@@ -1,12 +1,4 @@
-#include <xtl.h>
-#include <cstdint>
-#include <string>
-#include <direct.h>
-#include <fstream>
-#include <vector>
-
-#include "xboxkrnl.h"
-#include "filesystem.h"
+#include "common.h"
 
 namespace filesystem
 {
