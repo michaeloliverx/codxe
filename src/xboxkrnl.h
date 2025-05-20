@@ -1,5 +1,7 @@
 #pragma once
 
+extern "C" void DbgPrint(const char *format, ...);
+
 namespace xbox
 {
     // Function to check if running in Xenia emulator
