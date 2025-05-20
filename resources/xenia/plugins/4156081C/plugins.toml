@@ -2,15 +2,14 @@ title_name = "Call of Duty - World at War"
 title_id = "4156081C"
 #media_id = "17723718" # Disc (USA, Europe): http://redump.org/disc/11816/
 
-# TU0
+# TU7
 [[plugin]]
 author = "mo"
 name = "iw3xe"
 file = "iw3xe.xex"
-hash = "D6558E4102CC32D6" # default_mp.xex
+hash = "A9B2C3C903AF90EE" # default.xex
 is_enabled = true
 
-# TU7
 [[plugin]]
 author = "mo"
 name = "iw3xe"

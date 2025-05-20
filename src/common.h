@@ -24,16 +24,16 @@
 
 // IW3-specific includes
 #include "game/mp_structs.h"
-#include "game/game.h"
 #include "game/mp_gscr_fields.h"
 #include "game/mp_main.h"
 #include "game/sp_main.h"
 #include "game/sp_structs.h"
 
 // T4-specific includes
-#include "game/t4/main.h"
+#include "game/t4/mp/main.h"
 #include "game/t4/mp/structs.h"
 #include "game/t4/mp/symbols.h"
+#include "game/t4/sp/main.h"
 
 /*
  * Usage:

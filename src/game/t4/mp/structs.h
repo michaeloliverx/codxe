@@ -1,0 +1,143 @@
+#pragma once
+
+namespace t4
+{
+    namespace mp
+    {
+        struct cplane_s
+        {
+            float normal[3];
+            float dist;
+            unsigned __int8 type;
+            unsigned __int8 signbits;
+            unsigned __int8 pad[2];
+        };
+
+        struct __declspec(align(2)) cbrushside_t
+        {
+            cplane_s *plane;
+            unsigned int materialNum;
+            __int16 firstAdjacentSideOffset;
+            unsigned __int8 edgeCount;
+        };
+
+#pragma warning(disable : 4324)
+        struct __declspec(align(16)) cbrush_t
+        {
+            float mins[3];
+            int contents;
+            float maxs[3];
+            unsigned int numsides;
+            cbrushside_t *sides;
+            __int16 axialMaterialNum[2][3];
+            unsigned __int8 *baseAdjacentSide;
+            __int16 firstAdjacentSideOffsets[2][3];
+            unsigned __int8 edgeCount[2][3];
+        };
+#pragma warning(default : 4324)
+
+        struct clipMap_t
+        {
+            const char *name;
+            int isInUse;
+            char _pad[0x94];
+            unsigned __int16 numBrushes;
+            cbrush_t *brushes;
+        };
+        static_assert(offsetof(clipMap_t, numBrushes) == 156, "");
+
+        struct gclient_s
+        {
+            char pad_0000[44];         // Padding to reach offset 44
+            float velocity[3];         // Offset 44
+            char pad_0056[15076];      // Padding to reach offset 15132
+            int noclip;                // Offset 15132
+            int ufo;                   // Offset 15136
+            int bFrozen;               //
+            int lastCmdTime;           //
+            int buttons;               // Offset 15148
+            int oldbuttons;            //
+            int latched_buttons;       //
+            int buttonsSinceLastFrame; // Offset 15160
+        };
+        static_assert(offsetof(gclient_s, noclip) == 15132, "");
+        static_assert(offsetof(gclient_s, ufo) == 15136, "");
+        static_assert(offsetof(gclient_s, buttons) == 15148, "");
+        static_assert(offsetof(gclient_s, buttonsSinceLastFrame) == 15160, "");
+
+        struct gentity_s
+        {
+            char pad_0000[388];
+            gclient_s *client; // Offset 388
+            char pad_0188[44]; //
+            int flags;         // Offset 436
+            char pad_01BC[816 - 440];
+        };
+        static_assert(sizeof(gentity_s) == 816, "");
+
+        enum fieldtype_t
+        {
+            F_INT = 0x0,
+            F_FLOAT = 0x1,
+            F_LSTRING = 0x2,
+            F_STRING = 0x3,
+            F_VECTOR = 0x4,
+            F_ENTITY = 0x5,
+            F_ENTHANDLE = 0x6,
+            F_VECTORHACK = 0x7,
+            F_OBJECT = 0x8,
+            F_MODEL = 0x9,
+        };
+
+        struct client_fields_s
+        {
+            const char *name;
+            int ofs;
+            fieldtype_t type;
+            void (*setter)(gclient_s *, const client_fields_s *, __int64 a3, __int64 a4, __int64 a5);
+            void (*getter)(gclient_s *, const client_fields_s *);
+            char pad[4];
+        };
+        static_assert(sizeof(client_fields_s) == 24, "");
+
+        struct scr_entref_t
+        {
+            unsigned __int16 entnum;
+            unsigned __int16 classnum;
+        };
+
+        enum button_mask
+        {
+            KEY_FIRE = 0x1,
+            KEY_SPRINT = 0x2,
+            KEY_MELEE = 0x4,
+            KEY_USE = 0x8,
+            KEY_RELOAD = 0x10,
+            KEY_USERELOAD = 0x20,
+            KEY_LEANLEFT = 0x40,
+            KEY_LEANRIGHT = 0x80,
+            KEY_PRONE = 0x100,
+            KEY_CROUCH = 0x200,
+            KEY_GOSTAND = 0x400,
+            KEY_ADSMODE = 0x800,
+            KEY_TEMP = 0x1000,
+            KEY_HOLDBREATH = 0x2000,
+            KEY_FRAG = 0x4000,
+            KEY_SMOKE = 0x8000,
+            KEY_SELECTING_LOCATION = 0x10000,
+            KEY_CANCEL_LOCATION = 0x20000,
+            KEY_NIGHTVISION = 0x40000,
+            KEY_ADS = 0x80000,
+            KEY_REVERSE = 0x100000,
+            KEY_HANDBRAKE = 0x200000,
+            KEY_THROW = 0x400000,
+            KEY_INMENU = 0x800000,
+        };
+
+        enum svscmd_type
+        {
+            SV_CMD_CAN_IGNORE = 0x0,
+            SV_CMD_RELIABLE = 0x1,
+        };
+    }
+}
