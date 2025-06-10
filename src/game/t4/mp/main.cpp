@@ -1,6 +1,6 @@
 #include "common.h"
 #include "main.h"
-#include "module_registry.h"
+#include "modules.h"
 
 namespace t4
 {
@@ -8,19 +8,23 @@ namespace t4
     {
         void init()
         {
-            // Initialize the game
-            xbox::show_notification(L"T4 mp initialized");
+            DbgPrint("T4 MP: Initializing modules\n");
 
-            registerModules();
+            register_modules();
 
             // Log modules initialization
-            const auto &modules = common::ModuleRegistry::getInstance().getModules();
-            DbgPrint("T4 MP: Initialized %d modules\n", modules.size());
+            DbgPrint("T4 MP: Initialized %d modules\n", g_modules.size());
 
-            for (auto it = modules.begin(); it != modules.end(); ++it)
+            for (size_t i = 0; i < g_modules.size(); ++i)
             {
-                DbgPrint("  - Module: %s\n", (*it)->get_name());
+                DbgPrint("  - Module: %s\n", g_modules[i]->get_name());
             }
+        }
+
+        void shutdown()
+        {
+            DbgPrint("T4 MP: Shutting down modules\n");
+            cleanup_modules();
         }
     }
 }

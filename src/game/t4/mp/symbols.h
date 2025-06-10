@@ -54,5 +54,18 @@ namespace t4
 
         // typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char *text);
         // SV_GameSendServerCommand_t SV_GameSendServerCommand = reinterpret_cast<SV_GameSendServerCommand_t>(0x82285FA8);
+
+        typedef XAssetHeader *(*DB_FindXAssetHeader_t)(const XAssetType type, const char *name, bool errorIfMissing, int waitTime);
+        extern DB_FindXAssetHeader_t DB_FindXAssetHeader;
+
+        typedef int (*DB_GetAllXAssetOfType_FastFile_t)(XAssetType type, XAssetHeader *assets, int maxCount);
+        extern DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile;
+
+        typedef void (*R_AddCmdDrawText_t)(char const *, int, Font_s *, float, float, float, float, float, float const *const, int);
+        extern R_AddCmdDrawText_t R_AddCmdDrawText;
+
+        typedef void (*UI_DrawBuildNumber_t)(const int localClientNum);
+        extern UI_DrawBuildNumber_t UI_DrawBuildNumber;
+
     }
 }

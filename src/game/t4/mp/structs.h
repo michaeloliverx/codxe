@@ -1,9 +1,138 @@
 #pragma once
 
+#pragma warning(disable : 4480) // nonstandard extension used: specifying underlying type for enum
+
 namespace t4
 {
     namespace mp
     {
+        enum XAssetType : __int32
+        {
+            ASSET_TYPE_IMAGE = 0x9,
+            ASSET_TYPE_FONT = 0x15,
+        };
+
+        enum MapType : __int32
+        {
+            MAPTYPE_NONE = 0x0,
+            MAPTYPE_INVALID1 = 0x1,
+            MAPTYPE_INVALID2 = 0x2,
+            MAPTYPE_2D = 0x3,
+            MAPTYPE_3D = 0x4,
+            MAPTYPE_CUBE = 0x5,
+            MAPTYPE_COUNT = 0x6,
+        };
+
+        union GfxTexture
+        {
+            D3DBaseTexture *basemap;
+            D3DTexture *map;
+            D3DVolumeTexture *volmap;
+            D3DCubeTexture *cubemap;
+            struct GfxImageLoadDef *loadDef; // forward declaration
+        };
+
+        struct GfxImageLoadDef
+        {
+            unsigned __int8 levelCount;
+            unsigned __int8 flags;
+            __int16 dimensions[3];
+            int format;
+            GfxTexture texture;
+        };
+
+        struct CardMemory
+        {
+            int platform[1];
+        };
+
+        struct GfxImage
+        {
+            MapType mapType;
+            GfxTexture texture;
+            unsigned __int8 semantic;
+            CardMemory cardMemory;
+            unsigned __int16 width;
+            unsigned __int16 height;
+            unsigned __int16 depth;
+            unsigned __int8 category;
+            bool delayLoadPixels;
+            unsigned __int8 *pixels;
+            unsigned int baseSize;
+            unsigned __int16 streamSlot;
+            bool streaming;
+            const char *name;
+        };
+
+        struct RawFile
+        {
+            const char *name;
+            int len;
+            const char *buffer;
+        };
+
+        struct Material;
+
+        struct Glyph
+        {
+            unsigned __int16 letter;
+            char x0;
+            char y0;
+            unsigned __int8 dx;
+            unsigned __int8 pixelWidth;
+            unsigned __int8 pixelHeight;
+            float s0;
+            float t0;
+            float s1;
+            float t1;
+        };
+        static_assert(sizeof(Glyph) == 0x18, "");
+
+        struct Font_s
+        {
+            const char *fontName;
+            int pixelHeight;
+            int glyphCount;
+            Material *material;
+            Material *glowMaterial;
+            Glyph *glyphs;
+        };
+        static_assert(sizeof(Font_s) == 0x18, "");
+
+        union XAssetHeader
+        {
+            // XModelPieces *xmodelPieces;
+            // PhysPreset *physPreset;
+            // XAnimParts *parts;
+            // XModel *model;
+            // Material *material;
+            // MaterialPixelShader *pixelShader;
+            // MaterialVertexShader *vertexShader;
+            // MaterialTechniqueSet *techniqueSet;
+            GfxImage *image;
+            // snd_alias_list_t *sound;
+            // SndCurve *sndCurve;
+            // LoadedSound *loadSnd;
+            // clipMap_t *clipMap;
+            // ComWorld *comWorld;
+            // GameWorldSp *gameWorldSp;
+            // GameWorldMp *gameWorldMp;
+            // MapEnts *mapEnts;
+            // GfxWorld *gfxWorld;
+            // GfxLightDef *lightDef;
+            Font_s *font;
+            // MenuList *menuList;
+            // menuDef_t *menu;
+            // LocalizeEntry *localize;
+            // WeaponDef *weapon;
+            // SndDriverGlobals *sndDriverGlobals;
+            // const FxEffectDef *fx;
+            // FxImpactTable *impactFx;
+            RawFile *rawfile;
+            // StringTable *stringTable;
+            void *data;
+        };
+
         struct cplane_s
         {
             float normal[3];
