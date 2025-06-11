@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "../modules.h"
 
 // DDS Constants
 const uint32_t DDS_MAGIC = MAKEFOURCC('D', 'D', 'S', ' ');
