@@ -8,15 +8,21 @@ namespace t4
 {
     namespace mp
     {
-
         std::vector<Module *> g_modules;
+
+        void RegisterModule(Module *module)
+        {
+            DbgPrint("T4 MP: Module registered: %s\n", module->get_name());
+            g_modules.push_back(module);
+        }
 
         void register_modules()
         {
-            g_modules.push_back(new Branding());
-            g_modules.push_back(new GSCLoader());
-            g_modules.push_back(new ImageLoader());
-            g_modules.push_back(new TestModule());
+            DbgPrint("T4 MP: Registering modules\n");
+            RegisterModule(new Branding());
+            RegisterModule(new GSCLoader());
+            // RegisterModule(new ImageLoader());
+            RegisterModule(new TestModule());
         }
 
         void cleanup_modules()

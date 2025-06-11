@@ -530,7 +530,6 @@ namespace t4
 
         ImageLoader::ImageLoader()
         {
-            DbgPrint("ImageLoader initialized\n");
             Sleep(10000); // Simulate some initialization delay
 
             // Create directories for dumping images
