@@ -12,9 +12,8 @@ namespace t4
         extern client_fields_s *client_fields;
         extern gentity_s *g_entities;
 
-        // // Functions
-        // typedef void (*CG_GameMessage_t)(int localClientNum, const char *msg);
-        // CG_GameMessage_t CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x8216EC68);
+        // Functions
+        static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC68);
 
         // typedef void (*CG_BoldGameMessage_t)(int localClientNum, const char *msg);
         // CG_BoldGameMessage_t CG_BoldGameMessage = reinterpret_cast<CG_BoldGameMessage_t>(0x8216EC88);
@@ -37,11 +36,8 @@ namespace t4
         typedef void (*GScr_AddFieldsForClient_t)();
         extern GScr_AddFieldsForClient_t GScr_AddFieldsForClient;
 
-        // typedef void (*BuiltinFunction)();
-        // typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
-
-        // typedef BuiltinFunction (*Scr_GetFunction_t)(const char **pName, int *type);
-        // Scr_GetFunction_t Scr_GetFunction = reinterpret_cast<Scr_GetFunction_t>(0x822416B0);
+        typedef BuiltinFunction (*Scr_GetFunction_t)(const char **pName, int *type);
+        extern Scr_GetFunction_t Scr_GetFunction;
 
         // typedef BuiltinPlayerMethod (*Player_GetMethod_t)(const char **pName);
         // Player_GetMethod_t Player_GetMethod = reinterpret_cast<Player_GetMethod_t>(0x82211398);

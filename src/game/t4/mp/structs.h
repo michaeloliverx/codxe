@@ -289,5 +289,8 @@ namespace t4
             SCRIPTINSTANCE_CLIENT = 0x1,
             SCRIPT_INSTANCE_MAX = 0x2,
         };
+
+        typedef void (*BuiltinFunction)();
+        typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
     }
 }

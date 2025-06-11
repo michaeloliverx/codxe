@@ -72,10 +72,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
       <ClCompile Include="src\game\t4\mp\main.cpp" />
-      <ClCompile Include="src\game\t4\mp\modules.cpp" />
       <ClCompile Include="src\game\t4\mp\symbols.cpp" />
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_client_fields.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\gsc_functions.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_loader.cpp" />
       <ClCompile Include="src\game\t4\mp\components\image_loader.cpp" />
       <ClCompile Include="src\game\t4\mp\components\test_module.cpp" />
@@ -90,11 +90,11 @@
   </ItemGroup>
   <ItemGroup>
       <ClInclude Include="src\game\t4\mp\main.h" />
-      <ClInclude Include="src\game\t4\mp\modules.h" />
       <ClInclude Include="src\game\t4\mp\symbols.h" />
       <ClInclude Include="src\game\t4\mp\structs.h" />
       <ClInclude Include="src\game\t4\mp\components\branding.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_client_fields.h" />
+      <ClInclude Include="src\game\t4\mp\components\gsc_functions.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_loader.h" />
       <ClInclude Include="src\game\t4\mp\components\image_loader.h" />
       <ClInclude Include="src\game\t4\mp\components\test_module.h" />
