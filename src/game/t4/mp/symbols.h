@@ -31,9 +31,6 @@ namespace t4
         // typedef void (*GScr_AddFieldsForClient_t)();
         // GScr_AddFieldsForClient_t GScr_AddFieldsForClient = reinterpret_cast<GScr_AddFieldsForClient_t>(0x8220A270);
 
-        // typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
-        // Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82339EF8);
-
         // typedef void (*BuiltinFunction)();
         // typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
 
@@ -61,11 +58,16 @@ namespace t4
         typedef int (*DB_GetAllXAssetOfType_FastFile_t)(XAssetType type, XAssetHeader *assets, int maxCount);
         extern DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile;
 
+        typedef void *(*Hunk_AllocateTempMemoryHighInternal_t)(int size);
+        extern Hunk_AllocateTempMemoryHighInternal_t Hunk_AllocateTempMemoryHighInternal;
+
         typedef void (*R_AddCmdDrawText_t)(char const *, int, Font_s *, float, float, float, float, float, float const *const, int);
         extern R_AddCmdDrawText_t R_AddCmdDrawText;
 
+        typedef char *(*Scr_AddSourceBuffer_t)(scriptInstance_t a1, const char *filename, const char *extFilename, const char *codePos, bool archive);
+        extern Scr_AddSourceBuffer_t Scr_AddSourceBuffer;
+
         typedef void (*UI_DrawBuildNumber_t)(const int localClientNum);
         extern UI_DrawBuildNumber_t UI_DrawBuildNumber;
-
     }
 }
