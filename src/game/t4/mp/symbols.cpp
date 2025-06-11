@@ -16,6 +16,15 @@ namespace t4
 
         R_AddCmdDrawText_t R_AddCmdDrawText = reinterpret_cast<R_AddCmdDrawText_t>(0x82401C30);
 
+        GScr_AddFieldsForClient_t GScr_AddFieldsForClient = reinterpret_cast<GScr_AddFieldsForClient_t>(0x8220A270);
+        Scr_AddClassField_t Scr_AddClassField = reinterpret_cast<Scr_AddClassField_t>(0x823414F0);
+
+        Scr_GetObjectField_t Scr_GetObjectField = reinterpret_cast<Scr_GetObjectField_t>(0x822556B0);
+        Scr_SetClientField_t Scr_SetClientField = reinterpret_cast<Scr_SetClientField_t>(0x8220A2D0);
+
+        Scr_GetGenericField_t Scr_GetGenericField = reinterpret_cast<Scr_GetGenericField_t>(0x82255100);
+        Scr_SetGenericField_t Scr_SetGenericField = reinterpret_cast<Scr_SetGenericField_t>(0x82254E90);
+
         Scr_AddSourceBuffer_t Scr_AddSourceBuffer = reinterpret_cast<Scr_AddSourceBuffer_t>(0x82339EF8);
 
         UI_DrawBuildNumber_t UI_DrawBuildNumber = reinterpret_cast<UI_DrawBuildNumber_t>(0x8229BCF8);

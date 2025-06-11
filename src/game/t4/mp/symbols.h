@@ -19,17 +19,23 @@ namespace t4
         // typedef void (*CG_BoldGameMessage_t)(int localClientNum, const char *msg);
         // CG_BoldGameMessage_t CG_BoldGameMessage = reinterpret_cast<CG_BoldGameMessage_t>(0x8216EC88);
 
-        // typedef void (*Scr_AddClassField_t)(unsigned int classnum, const char *name, unsigned __int16 offset, int a4);
-        // Scr_AddClassField_t Scr_AddClassField = reinterpret_cast<Scr_AddClassField_t>(0x823414F0);
+        typedef void (*Scr_AddClassField_t)(unsigned int classnum, const char *name, unsigned __int16 offset, scriptInstance_t inst);
+        extern Scr_AddClassField_t Scr_AddClassField;
 
-        // typedef void (*Scr_SetClientField_t)(gclient_s *client, int offset, int a3);
-        // Scr_SetClientField_t Scr_SetClientField = reinterpret_cast<Scr_SetClientField_t>(0x8220A2D0);
+        typedef void (*Scr_SetClientField_t)(gclient_s *client, int offset, scriptInstance_t inst);
+        extern Scr_SetClientField_t Scr_SetClientField;
 
-        // typedef void (*Scr_GetObjectField_t)(unsigned int classnum, int entnum, int offset, int a4);
-        // Scr_GetObjectField_t Scr_GetObjectField = reinterpret_cast<Scr_GetObjectField_t>(0x822556B0);
+        typedef void (*Scr_SetGenericField_t)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst);
+        extern Scr_SetGenericField_t Scr_SetGenericField;
 
-        // typedef void (*GScr_AddFieldsForClient_t)();
-        // GScr_AddFieldsForClient_t GScr_AddFieldsForClient = reinterpret_cast<GScr_AddFieldsForClient_t>(0x8220A270);
+        typedef void (*Scr_GetObjectField_t)(unsigned int classnum, int entnum, int offset, scriptInstance_t inst);
+        extern Scr_GetObjectField_t Scr_GetObjectField;
+
+        typedef void (*Scr_GetGenericField_t)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst, unsigned int whichbits);
+        extern Scr_GetGenericField_t Scr_GetGenericField;
+
+        typedef void (*GScr_AddFieldsForClient_t)();
+        extern GScr_AddFieldsForClient_t GScr_AddFieldsForClient;
 
         // typedef void (*BuiltinFunction)();
         // typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
