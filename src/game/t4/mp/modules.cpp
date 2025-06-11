@@ -1,5 +1,6 @@
 #include "modules.h"
 #include "components/branding.h"
+#include "components/gsc_client_fields.h"
 #include "components/gsc_loader.h"
 #include "components/image_loader.h"
 #include "components/test_module.h"
@@ -20,6 +21,7 @@ namespace t4
         {
             DbgPrint("T4 MP: Registering modules\n");
             RegisterModule(new Branding());
+            RegisterModule(new GSCClientFields());
             RegisterModule(new GSCLoader());
             // RegisterModule(new ImageLoader());
             RegisterModule(new TestModule());

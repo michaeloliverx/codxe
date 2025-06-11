@@ -204,28 +204,42 @@ namespace t4
         };
         static_assert(sizeof(gentity_s) == 816, "");
 
-        enum fieldtype_t
+        enum fieldtype_t : __int32
         {
             F_INT = 0x0,
-            F_FLOAT = 0x1,
-            F_LSTRING = 0x2,
-            F_STRING = 0x3,
-            F_VECTOR = 0x4,
-            F_ENTITY = 0x5,
-            F_ENTHANDLE = 0x6,
-            F_VECTORHACK = 0x7,
-            F_OBJECT = 0x8,
-            F_MODEL = 0x9,
+            F_SHORT = 0x1,
+            F_BYTE = 0x2,
+            F_FLOAT = 0x3,
+            F_LSTRING = 0x4,
+            F_STRING = 0x5,
+            F_VECTOR = 0x6,
+            F_ENTITY = 0x7,
+            F_ENTHANDLE = 0x8,
+            F_ACTOR = 0x9,
+            F_SENTIENT = 0xA,
+            F_SENTIENTHANDLE = 0xB,
+            F_CLIENT = 0xC,
+            F_PATHNODE = 0xD,
+            F_VECTORHACK = 0xE,
+            F_MODEL = 0xF,
+            F_OBJECT = 0x10,
+            F_ACTORGROUP = 0x11,
+            F_BITFLAG = 0x12,
         };
+
+        struct client_fields_s;
+
+        typedef void (*ClientFieldSetter)(gclient_s *pSelf, client_fields_s *pField);
+        typedef void (*ClientFieldGetter)(gclient_s *pSelf, client_fields_s *pField);
 
         struct client_fields_s
         {
-            const char *name;
+            char *name;
             int ofs;
             fieldtype_t type;
-            void (*setter)(gclient_s *, const client_fields_s *, __int64 a3, __int64 a4, __int64 a5);
-            void (*getter)(gclient_s *, const client_fields_s *);
-            char pad[4];
+            unsigned int whichbits;
+            ClientFieldSetter setter;
+            ClientFieldGetter getter;
         };
         static_assert(sizeof(client_fields_s) == 24, "");
 
