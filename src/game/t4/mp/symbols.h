@@ -13,7 +13,16 @@ namespace t4
         extern gentity_s *g_entities;
 
         // Functions
+
+        static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82159560);
         static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC68);
+
+        static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0);
+
+        static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_s *dvar)>(0x8240D860);
+        static auto Dvar_FindMalleableVar = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x822BDFE8);
+        static auto Dvar_GetString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x822BE230);
+        static auto Dvar_RegisterString = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, unsigned __int16 flags, const char *description)>(0x822BF370);
 
         // typedef void (*CG_BoldGameMessage_t)(int localClientNum, const char *msg);
         // CG_BoldGameMessage_t CG_BoldGameMessage = reinterpret_cast<CG_BoldGameMessage_t>(0x8216EC88);
@@ -42,14 +51,15 @@ namespace t4
         // typedef BuiltinPlayerMethod (*Player_GetMethod_t)(const char **pName);
         // Player_GetMethod_t Player_GetMethod = reinterpret_cast<Player_GetMethod_t>(0x82211398);
 
-        // typedef void (*Scr_GetVector_t)(unsigned int result, float *a2, __int64 a3, __int64 a4);
-        // Scr_GetVector_t Scr_GetVector = reinterpret_cast<Scr_GetVector_t>(0x8234B790);
+        static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue, scriptInstance_t inst, __int64 a4)>(0x8234B790);
 
         // typedef int (*Scr_GetInt_t)(unsigned int a1, int a2, __int64 a3, __int64 a4);
         // Scr_GetInt_t Scr_GetInt = reinterpret_cast<Scr_GetInt_t>(0x8234AFD0);
 
-        // typedef void (*Scr_AddInt_t)(int value, int a2);
-        // Scr_AddInt_t Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x82345668);
+        static auto Scr_AddInt = reinterpret_cast<void (*)(int value, scriptInstance_t inst)>(0x82345668);
+
+        static auto Scr_MakeArray = reinterpret_cast<void (*)(scriptInstance_t inst)>(0x82345BF8);
+        static auto Scr_AddArray = reinterpret_cast<void (*)(scriptInstance_t inst)>(0x82345C80);
 
         // typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char *text);
         // SV_GameSendServerCommand_t SV_GameSendServerCommand = reinterpret_cast<SV_GameSendServerCommand_t>(0x82285FA8);
@@ -71,5 +81,7 @@ namespace t4
 
         typedef void (*UI_DrawBuildNumber_t)(const int localClientNum);
         extern UI_DrawBuildNumber_t UI_DrawBuildNumber;
+
+        static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x822C38D8);
     }
 }

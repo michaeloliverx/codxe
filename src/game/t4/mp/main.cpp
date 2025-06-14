@@ -1,6 +1,7 @@
 #include "common.h"
 #include "main.h"
 #include "components/branding.h"
+#include "components/brush_collision.h"
 #include "components/gsc_client_fields.h"
 #include "components/gsc_functions.h"
 #include "components/gsc_loader.h"
@@ -23,6 +24,7 @@ namespace t4
         {
             DbgPrint("T4 MP: Registering modules\n");
             RegisterComponent(new Branding());
+            RegisterComponent(new BrushCollision());
             RegisterComponent(new GSCClientFields());
             RegisterComponent(new GSCFunctions());
             RegisterComponent(new GSCLoader());

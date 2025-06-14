@@ -292,5 +292,75 @@ namespace t4
 
         typedef void (*BuiltinFunction)();
         typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
+
+        // enum DvarFlag : __int16
+        // {
+        //     none = 0x0,
+        //     saved = 0x1,
+        //     user_info = 0x2,   // sent to server on connect or change
+        //     server_info = 0x4, // sent in response to front end requests
+        //     replicated = 0x8,
+        //     write_protected = 0x10,
+        //     latched = 0x20,
+        //     read_only = 0x40,
+        //     cheat_protected = 0x80,
+        //     temp = 0x100,
+        //     no_restart = 0x400,    // do not clear when a cvar_restart is issued
+        //     user_created = 0x4000, // created by a set command
+        // };
+
+        union DvarValue
+        {
+            bool enabled;
+            int integer;
+            unsigned int unsignedInt;
+            float value;
+            float vector[4];
+            const char *string;
+            unsigned __int8 color[4];
+        };
+
+        union DvarLimits
+        {
+            struct
+            {
+                int stringCount;
+                const char **strings;
+            } enumeration;
+
+            struct
+            {
+                int min;
+                int max;
+            } integer;
+
+            struct
+            {
+                float min;
+                float max;
+            } value;
+
+            struct
+            {
+                float min;
+                float max;
+            } vector;
+        };
+
+        struct dvar_s
+        {
+            const char *name;
+            const char *description;
+            unsigned __int16 flags;
+            unsigned __int8 type;
+            bool modified;
+            DvarValue current;
+            DvarValue latched;
+            DvarValue reset;
+            DvarLimits domain;
+            dvar_s *hashNext;
+        };
+        static_assert(sizeof(dvar_s) == 0x48, "");
+
     }
 }
