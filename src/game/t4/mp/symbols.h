@@ -12,6 +12,9 @@ namespace t4
         extern client_fields_s *client_fields;
         extern gentity_s *g_entities;
 
+        static const int BUILTIN_FUNCTION_COUNT = 266;
+        static auto builtinFunctions = reinterpret_cast<BuiltinFunctionDef *>(0x82485C60);
+
         // Functions
 
         static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82159560);

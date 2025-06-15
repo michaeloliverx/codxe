@@ -291,6 +291,14 @@ namespace t4
         };
 
         typedef void (*BuiltinFunction)();
+
+        struct BuiltinFunctionDef
+        {
+            const char *actionString;
+            BuiltinFunction actionFunc;
+            int type;
+        };
+
         typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
 
         enum DvarFlag : __int16
