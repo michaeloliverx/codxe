@@ -72,7 +72,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
       <ClCompile Include="src\game\t4\mp\main.cpp" />
-      <ClCompile Include="src\game\t4\mp\symbols.cpp" />
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_client_fields.cpp" />
