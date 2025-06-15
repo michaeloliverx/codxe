@@ -12,6 +12,7 @@
 #include <cstring>
 #include <direct.h>
 #include <fstream>
+#include <sstream>
 #include <xtl.h>
 #include <xbox.h>
 #include <xgraphics.h>

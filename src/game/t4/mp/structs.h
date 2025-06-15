@@ -289,5 +289,76 @@ namespace t4
             SCRIPTINSTANCE_CLIENT = 0x1,
             SCRIPT_INSTANCE_MAX = 0x2,
         };
+
+        typedef void (*BuiltinFunction)();
+
+        struct BuiltinFunctionDef
+        {
+            const char *actionString;
+            BuiltinFunction actionFunc;
+            int type;
+        };
+
+        typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
+
+        enum DvarFlag : __int16
+        {
+            DVAR_FLAG_NONE = 0,
+            DVAR_CODINFO = 1 << 8, // On change, this is sent to all clients (if you are host)
+        };
+
+        union DvarValue
+        {
+            bool enabled;
+            int integer;
+            unsigned int unsignedInt;
+            float value;
+            float vector[4];
+            const char *string;
+            unsigned __int8 color[4];
+        };
+
+        union DvarLimits
+        {
+            struct
+            {
+                int stringCount;
+                const char **strings;
+            } enumeration;
+
+            struct
+            {
+                int min;
+                int max;
+            } integer;
+
+            struct
+            {
+                float min;
+                float max;
+            } value;
+
+            struct
+            {
+                float min;
+                float max;
+            } vector;
+        };
+
+        struct dvar_s
+        {
+            const char *name;
+            const char *description;
+            unsigned __int16 flags;
+            unsigned __int8 type;
+            bool modified;
+            DvarValue current;
+            DvarValue latched;
+            DvarValue reset;
+            DvarLimits domain;
+            dvar_s *hashNext;
+        };
+        static_assert(sizeof(dvar_s) == 0x48, "");
+
     }
 }
