@@ -86,6 +86,7 @@ namespace t4
             static auto noclip_brushes = Dvar_FindMalleableVar("noclip_brushes");
             if (R_CheckDvarModified(noclip_brushes))
             {
+                CG_GameMessage(0, "noclip_brushes changed");
                 // TODO: find out why noclip_brushes->current.string isn't working
                 auto value = Dvar_GetString("noclip_brushes");
 
@@ -114,7 +115,7 @@ namespace t4
                             continue;
                         }
                         cm->brushes[idx].contents &= ~0x10000; // Disable collision
-                        CG_GameMessage(0, va("Disabled brush collision for brush %d", idx));
+                        // CG_GameMessage(0, va("Disabled brush collision for brush %d", idx));
                     }
                 }
             }
@@ -133,7 +134,7 @@ namespace t4
             DbgPrint("BrushCollision initialized\n");
             Sleep(1000); // Wait for the game to initialize
 
-            Dvar_RegisterString("noclip_brushes", "", 0x1 | 0x80 | 0x1000, "Space separated list of brushes to disable collision on.");
+            Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO, "Space separated list of brushes to disable collision on.");
 
             CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
             CG_DrawActive_Detour.Install();

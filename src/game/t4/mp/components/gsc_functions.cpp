@@ -42,7 +42,7 @@ namespace t4
             const char *name;
             BuiltinFunction handler;
         } gsc_functions[] = {
-            {"getplayerclipbrushescontainingpoint", GSCrgetplayerclipbrushescontainingpoint},
+            {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint},
             {nullptr, nullptr} // Terminator
         };
 
