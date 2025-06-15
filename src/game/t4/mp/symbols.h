@@ -12,6 +12,7 @@ namespace t4
         static auto client_fields = reinterpret_cast<client_fields_s *>(0x82026B80);
         static auto cm = reinterpret_cast<clipMap_t *>(0x82DD4F80);
         static auto g_entities = reinterpret_cast<gentity_s *>(0x82BAD1B0);
+        static auto level = reinterpret_cast<level_locals_t *>(0x82D6A440);
 
         // Functions
         static auto CG_BoldGameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC88);
@@ -40,10 +41,14 @@ namespace t4
         static auto Scr_AddClassField = reinterpret_cast<void (*)(unsigned int classnum, const char *name, unsigned __int16 offset, scriptInstance_t inst)>(0x823414F0);
         static auto Scr_AddInt = reinterpret_cast<void (*)(int value, scriptInstance_t inst)>(0x82345668);
         static auto Scr_AddSourceBuffer = reinterpret_cast<char *(*)(scriptInstance_t inst, const char *filename, const char *extFilename, const char *codePos, bool archive)>(0x82339EF8);
+        static auto Scr_Error = reinterpret_cast<void (*)(const char *error, scriptInstance_t inst)>(0x8234BE08);
+        static auto Scr_GetFloat = reinterpret_cast<float (*)(unsigned int index, scriptInstance_t inst)>(0x8234B250);
         static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x822416B0);
         static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst, unsigned int whichbits)>(0x82255100);
         static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index, scriptInstance_t inst, __int64 a3, __int64 a4)>(0x8234AFD0);
+        static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)(scriptInstance_t inst)>(0x82345650);
         static auto Scr_GetObjectField = reinterpret_cast<void (*)(unsigned int classnum, int entnum, int offset, scriptInstance_t inst)>(0x822556B0);
+        static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index, scriptInstance_t inst)>(0x8234B550);
         static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue, scriptInstance_t inst, __int64 a4)>(0x8234B790);
         static auto Scr_MakeArray = reinterpret_cast<void (*)(scriptInstance_t inst)>(0x82345BF8);
         static auto Scr_SetClientField = reinterpret_cast<void (*)(gclient_s *client, int offset, scriptInstance_t inst)>(0x8220A2D0);

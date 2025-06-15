@@ -7,6 +7,36 @@ namespace t4
 {
     namespace mp
     {
+        void ClientScr_SetGod(gclient_s *pSelf, const client_fields_s *field)
+        {
+            auto ent = &g_entities[pSelf - level->clients];
+
+            auto value = Scr_GetInt(0, SCRIPTINSTANCE_SERVER, 0, -1);
+            if (value)
+            {
+                ent->flags |= FL_GODMODE; // Set bit 0
+            }
+            else
+            {
+                ent->flags &= ~FL_GODMODE; // Clear bit 0
+            }
+        }
+
+        void ClientScr_GetGod(gclient_s *client, const client_fields_s *field)
+        {
+            auto ent = &g_entities[client - level->clients];
+
+            // Check if the god mode bit is set
+            if (ent->flags & FL_GODMODE)
+            {
+                Scr_AddInt(1, SCRIPTINSTANCE_SERVER); // God mode is enabled
+            }
+            else
+            {
+                Scr_AddInt(0, SCRIPTINSTANCE_SERVER); // God mode is disabled
+            }
+        }
+
         client_fields_s client_fields_extended[] = {
             // Original fields
             {"name", 0, F_LSTRING, 0x00000000, reinterpret_cast<ClientFieldSetter>(0x82209910), reinterpret_cast<ClientFieldGetter>(0x82209A48)},
@@ -34,6 +64,7 @@ namespace t4
             // Custom fields
             {"noclip", offsetof(gclient_s, noclip), F_INT, 0x00000000, nullptr, nullptr},
             {"ufo", offsetof(gclient_s, ufo), F_INT, 0x00000000, nullptr, nullptr},
+            {"god", 0, F_INT, 0x00000000, ClientScr_SetGod, ClientScr_GetGod},
 
             // Terminator
             {nullptr, 0, F_INT, 0x00000000, nullptr, nullptr}};
