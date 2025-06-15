@@ -175,11 +175,21 @@ namespace t4
         };
         static_assert(offsetof(clipMap_t, numBrushes) == 156, "");
 
+        struct playerState_s
+        {
+            char pad[44];
+            float velocity[3];
+            char pad_0056[192];
+            int clientNum;
+            char pad_end[14880];
+        };
+
+        static_assert(offsetof(playerState_s, velocity) == 44, "");
+        static_assert(offsetof(playerState_s, clientNum) == 248, "");
+
         struct gclient_s
         {
-            char pad_0000[44];         // Padding to reach offset 44
-            float velocity[3];         // Offset 44
-            char pad_0056[15076];      // Padding to reach offset 15132
+            playerState_s ps;
             int noclip;                // Offset 15132
             int ufo;                   // Offset 15136
             int bFrozen;               //
@@ -188,21 +198,36 @@ namespace t4
             int oldbuttons;            //
             int latched_buttons;       //
             int buttonsSinceLastFrame; // Offset 15160
+            char pad[15468 - 15164];   // Padding to reach end of struct
         };
         static_assert(offsetof(gclient_s, noclip) == 15132, "");
         static_assert(offsetof(gclient_s, ufo) == 15136, "");
         static_assert(offsetof(gclient_s, buttons) == 15148, "");
         static_assert(offsetof(gclient_s, buttonsSinceLastFrame) == 15160, "");
+        static_assert(sizeof(gclient_s) == 15468, "");
+
+        enum gentity_flags_t : __int32
+        {
+            FL_GODMODE = 1 << 0,
+            FL_DEMI_GODMODE = 1 << 1,
+        };
 
         struct gentity_s
         {
             char pad_0000[388];
-            gclient_s *client; // Offset 388
-            char pad_0188[44]; //
-            int flags;         // Offset 436
+            gclient_s *client;
+            char pad_0188[44];
+            int flags;
             char pad_01BC[816 - 440];
         };
+        static_assert(offsetof(gentity_s, client) == 388, "");
+        static_assert(offsetof(gentity_s, flags) == 436, "");
         static_assert(sizeof(gentity_s) == 816, "");
+
+        struct level_locals_t
+        {
+            gclient_s *clients;
+        };
 
         enum fieldtype_t : __int32
         {
@@ -229,8 +254,8 @@ namespace t4
 
         struct client_fields_s;
 
-        typedef void (*ClientFieldSetter)(gclient_s *pSelf, client_fields_s *pField);
-        typedef void (*ClientFieldGetter)(gclient_s *pSelf, client_fields_s *pField);
+        typedef void (*ClientFieldSetter)(gclient_s *pSelf, const client_fields_s *pField);
+        typedef void (*ClientFieldGetter)(gclient_s *pSelf, const client_fields_s *pField);
 
         struct client_fields_s
         {
