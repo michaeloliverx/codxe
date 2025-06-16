@@ -25,8 +25,10 @@ namespace t4
         static auto DB_GetAllXAssetOfType_FastFile = reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x821E7428);
 
         static auto Dvar_FindMalleableVar = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x822BDFE8);
+        static auto Dvar_GetBool = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x822BE0E8);
         static auto Dvar_GetString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x822BE230);
-        static auto Dvar_RegisterString = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, unsigned __int16 flags, const char *description)>(0x822BF370);
+        static auto Dvar_RegisterBool = reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x822BF198);
+        static auto Dvar_RegisterString = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(0x822BF370);
 
         static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8220A270);
 

@@ -326,64 +326,101 @@ namespace t4
 
         typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
 
-        enum DvarFlag : __int16
+        enum DvarFlags : unsigned __int16
         {
-            DVAR_FLAG_NONE = 0,
-            DVAR_CODINFO = 1 << 8, // On change, this is sent to all clients (if you are host)
+            DVAR_FLAG_NONE = 0x0,
+            DVAR_CODINFO = 0x100, // On change, this is sent to all clients (if you are host)
+        };
+
+        enum dvarType_t : __int8
+        {
+            DVAR_TYPE_BOOL = 0x0,
+            DVAR_TYPE_FLOAT = 0x1,
+            DVAR_TYPE_FLOAT_2 = 0x2,
+            DVAR_TYPE_FLOAT_3 = 0x3,
+            DVAR_TYPE_FLOAT_4 = 0x4,
+            DVAR_TYPE_INT = 0x5,
+            DVAR_TYPE_ENUM = 0x6,
+            DVAR_TYPE_STRING = 0x7,
+            DVAR_TYPE_COLOR = 0x8,
+            DVAR_TYPE_COUNT = 0x9,
         };
 
         union DvarValue
         {
-            bool enabled;
-            int integer;
-            unsigned int unsignedInt;
-            float value;
-            float vector[4];
-            const char *string;
-            unsigned __int8 color[4];
+            bool enabled;             // OFS: 0x0 SIZE: 0x1
+            int integer;              // OFS: 0x1 SIZE: 0x4
+            unsigned int unsignedInt; // OFS: 0x2 SIZE: 0x4
+            float value;              // OFS: 0x3 SIZE: 0x4
+            float vector[4];          // OFS: 0x4 SIZE: 0x10
+            const char *string;       // OFS: 0x5 SIZE: 0x4
+            char color[4];            // OFS: 0x6 SIZE: 0x4
         };
+        static_assert(sizeof(DvarValue) == 0x10, "");
+
+        struct DvarLimits_enum
+        {
+            int stringCount;      // OFS: 0x0 SIZE: 0x4
+            const char **strings; // OFS: 0x4 SIZE: 0x4
+        };
+        static_assert(sizeof(DvarLimits_enum) == 0x8, "");
+        static_assert(offsetof(DvarLimits_enum, stringCount) == 0x0, "");
+        static_assert(offsetof(DvarLimits_enum, strings) == 0x4, "");
+
+        struct DvarLimits_minmax
+        {
+            int min; // OFS: 0x0 SIZE: 0x4
+            int max; // OFS: 0x4 SIZE: 0x4
+        };
+        static_assert(sizeof(DvarLimits_minmax) == 0x8, "");
+        static_assert(offsetof(DvarLimits_minmax, min) == 0x0, "");
+        static_assert(offsetof(DvarLimits_minmax, max) == 0x4, "");
+
+        struct DvarLimits_float_minmax
+        {
+            float min; // OFS: 0x0 SIZE: 0x4
+            float max; // OFS: 0x4 SIZE: 0x4
+        };
+        static_assert(sizeof(DvarLimits_float_minmax) == 0x8, "");
+        static_assert(offsetof(DvarLimits_float_minmax, min) == 0x0, "");
+        static_assert(offsetof(DvarLimits_float_minmax, max) == 0x4, "");
 
         union DvarLimits
         {
-            struct
-            {
-                int stringCount;
-                const char **strings;
-            } enumeration;
-
-            struct
-            {
-                int min;
-                int max;
-            } integer;
-
-            struct
-            {
-                float min;
-                float max;
-            } value;
-
-            struct
-            {
-                float min;
-                float max;
-            } vector;
+            DvarLimits_enum enumeration;    // OFS: 0x0 SIZE: 0x8
+            DvarLimits_minmax integer;      // OFS: 0x1 SIZE: 0x8
+            DvarLimits_float_minmax value;  // OFS: 0x2 SIZE: 0x8
+            DvarLimits_float_minmax vector; // OFS: 0x3 SIZE: 0x8
         };
+        static_assert(sizeof(DvarLimits) == 0x8, "");
 
         struct dvar_s
         {
-            const char *name;
-            const char *description;
-            unsigned __int16 flags;
-            unsigned __int8 type;
-            bool modified;
-            DvarValue current;
-            DvarValue latched;
-            DvarValue reset;
-            DvarLimits domain;
-            dvar_s *hashNext;
+            const char *name;        // OFS: 0x0 SIZE: 0x4
+            const char *description; // OFS: 0x4 SIZE: 0x4
+            DvarFlags flags;         // OFS: 0x8 SIZE: 0x2
+            dvarType_t type;         // OFS: 0xA SIZE: 0x1
+            char modified;           // OFS: 0xB SIZE: 0x1
+            char saveRestorable;     // OFS: 0xC SIZE: 0x1
+            DvarValue current;       // OFS: 0x10 SIZE: 0x10
+            DvarValue latched;       // OFS: 0x20 SIZE: 0x10
+            DvarValue reset;         // OFS: 0x30 SIZE: 0x10
+            DvarValue saved;         // OFS: 0x40 SIZE: 0x10
+            DvarLimits domain;       // OFS: 0x50 SIZE: 0x8
+            dvar_s *hashNext;        // OFS: 0x58 SIZE: 0x4
         };
-        static_assert(sizeof(dvar_s) == 0x48, "");
-
+        static_assert(offsetof(dvar_s, name) == 0x0, "");
+        static_assert(offsetof(dvar_s, description) == 0x4, "");
+        static_assert(offsetof(dvar_s, flags) == 0x8, "");
+        static_assert(offsetof(dvar_s, type) == 0xA, "");
+        static_assert(offsetof(dvar_s, modified) == 0xB, "");
+        static_assert(offsetof(dvar_s, saveRestorable) == 0xC, "");
+        static_assert(offsetof(dvar_s, current) == 0x10, "");
+        static_assert(offsetof(dvar_s, latched) == 0x20, "");
+        static_assert(offsetof(dvar_s, reset) == 0x30, "");
+        static_assert(offsetof(dvar_s, saved) == 0x40, "");
+        static_assert(offsetof(dvar_s, domain) == 0x50, "");
+        static_assert(offsetof(dvar_s, hashNext) == 0x58, "");
+        static_assert(sizeof(dvar_s) == 0x5C, "");
     }
 }
