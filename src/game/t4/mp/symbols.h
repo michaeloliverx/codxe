@@ -9,6 +9,8 @@ namespace t4
         // Variables
         static const int BUILTIN_FUNCTION_COUNT = 266;
         static auto builtinFunctions = reinterpret_cast<BuiltinFunctionDef *>(0x82485C60);
+        static const int BUILTIN_PLAYER_METHOD_COUNT = 92;
+        static auto builtin_player_methods = reinterpret_cast<BuiltinFunctionDef *>(0x820275A0);
         static auto client_fields = reinterpret_cast<client_fields_s *>(0x82026B80);
         static auto cm = reinterpret_cast<clipMap_t *>(0x82DD4F80);
         static auto g_entities = reinterpret_cast<gentity_s *>(0x82BAD1B0);
@@ -56,6 +58,7 @@ namespace t4
         static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index, scriptInstance_t inst)>(0x8234B550);
         static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue, scriptInstance_t inst, __int64 a4)>(0x8234B790);
         static auto Scr_MakeArray = reinterpret_cast<void (*)(scriptInstance_t inst)>(0x82345BF8);
+        static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error, scriptInstance_t inst)>(0x82345EF0);
         static auto Scr_SetClientField = reinterpret_cast<void (*)(gclient_s *client, int offset, scriptInstance_t inst)>(0x8220A2D0);
         static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst)>(0x82254E90);
 
