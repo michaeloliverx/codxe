@@ -15,6 +15,7 @@ namespace t4
         static auto cm = reinterpret_cast<clipMap_t *>(0x82DD4F80);
         static auto g_entities = reinterpret_cast<gentity_s *>(0x82BAD1B0);
         static auto level = reinterpret_cast<level_locals_t *>(0x82D6A440);
+        static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x84f85100);
 
         // Functions
         static auto BG_CalculateView_IdleAngles = reinterpret_cast<void (*)(viewState_t *vs, float *angles)>(0x82147018);
@@ -25,6 +26,8 @@ namespace t4
         static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC68);
 
         static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0);
+
+        static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
 
         static auto DB_FindXAssetHeader = reinterpret_cast<XAssetHeader *(*)(const XAssetType type, const char *name, bool errorIfMissing, int waitTime)>(0x821EA5D8);
         static auto DB_GetAllXAssetOfType_FastFile = reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x821E7428);
@@ -38,6 +41,9 @@ namespace t4
         static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8220A270);
 
         static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822B9CC0);
+
+        static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213FAE8);
+        static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213ECE8);
 
         static auto Player_GetMethod = reinterpret_cast<BuiltinPlayerMethod (*)(const char **pName)>(0x82211398);
 
@@ -62,6 +68,7 @@ namespace t4
         static auto Scr_SetClientField = reinterpret_cast<void (*)(gclient_s *client, int offset, scriptInstance_t inst)>(0x8220A2D0);
         static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst)>(0x82254E90);
 
+        static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82284D50);
         static auto SV_GameSendServerCommand = reinterpret_cast<void (*)(int clientNum, svscmd_type type, const char *text)>(0x82285FA8);
 
         static auto UI_DrawBuildNumber = reinterpret_cast<void (*)()>(0x8229BCF8);
