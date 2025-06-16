@@ -422,5 +422,8 @@ namespace t4
         static_assert(offsetof(dvar_s, domain) == 0x50, "");
         static_assert(offsetof(dvar_s, hashNext) == 0x58, "");
         static_assert(sizeof(dvar_s) == 0x5C, "");
+
+        struct viewState_t;
+        struct weaponState_t;
     }
 }
