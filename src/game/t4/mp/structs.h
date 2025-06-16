@@ -2,27 +2,6 @@
 
 #pragma warning(disable : 4480) // nonstandard extension used: specifying underlying type for enum
 
-// usercmd_t->button bits
-#define KEY_MASK_FIRE 1
-#define KEY_MASK_SPRINT 2
-#define KEY_MASK_MELEE 4
-#define KEY_MASK_RELOAD 16
-#define KEY_MASK_LEANLEFT 64
-#define KEY_MASK_LEANRIGHT 128
-#define KEY_MASK_PRONE 256
-#define KEY_MASK_CROUCH 512
-#define KEY_MASK_JUMP 1024
-#define KEY_MASK_ADS_MODE 2048
-#define KEY_MASK_TEMP_ACTION 4096
-#define KEY_MASK_HOLDBREATH 8192
-#define KEY_MASK_FRAG 16384
-#define KEY_MASK_SMOKE 32768
-#define KEY_MASK_NIGHTVISION 262144
-#define KEY_MASK_ADS 524288
-#define KEY_MASK_USE 8
-#define KEY_MASK_USERELOAD 0x20
-#define BUTTON_ATTACK KEY_MASK_FIRE
-
 namespace t4
 {
     namespace mp
@@ -248,7 +227,11 @@ namespace t4
         struct level_locals_t
         {
             gclient_s *clients;
+            char pad_0004[568];
+            int time;
         };
+        static_assert(offsetof(level_locals_t, clients) == 0x0000, "");
+        static_assert(offsetof(level_locals_t, time) == 572, "");
 
         enum fieldtype_t : __int32
         {
@@ -293,34 +276,6 @@ namespace t4
         {
             unsigned __int16 entnum;
             unsigned __int16 classnum;
-        };
-
-        enum button_mask
-        {
-            KEY_FIRE = 0x1,
-            KEY_SPRINT = 0x2,
-            KEY_MELEE = 0x4,
-            KEY_USE = 0x8,
-            KEY_RELOAD = 0x10,
-            KEY_USERELOAD = 0x20,
-            KEY_LEANLEFT = 0x40,
-            KEY_LEANRIGHT = 0x80,
-            KEY_PRONE = 0x100,
-            KEY_CROUCH = 0x200,
-            KEY_GOSTAND = 0x400,
-            KEY_ADSMODE = 0x800,
-            KEY_TEMP = 0x1000,
-            KEY_HOLDBREATH = 0x2000,
-            KEY_FRAG = 0x4000,
-            KEY_SMOKE = 0x8000,
-            KEY_SELECTING_LOCATION = 0x10000,
-            KEY_CANCEL_LOCATION = 0x20000,
-            KEY_NIGHTVISION = 0x40000,
-            KEY_ADS = 0x80000,
-            KEY_REVERSE = 0x100000,
-            KEY_HANDBRAKE = 0x200000,
-            KEY_THROW = 0x400000,
-            KEY_INMENU = 0x800000,
         };
 
         enum svscmd_type
@@ -459,7 +414,104 @@ namespace t4
         static_assert(offsetof(dvar_s, hashNext) == 0x58, "");
         static_assert(sizeof(dvar_s) == 0x5C, "");
 
+        // usercmd_t->button bits
+        enum button_mask
+        {
+            KEY_FIRE = 0x1,
+            KEY_SPRINT = 0x2,
+            KEY_MELEE = 0x4,
+            KEY_USE = 0x8,
+            KEY_RELOAD = 0x10,
+            KEY_USERELOAD = 0x20,
+            KEY_LEANLEFT = 0x40,
+            KEY_LEANRIGHT = 0x80,
+            KEY_PRONE = 0x100,
+            KEY_CROUCH = 0x200,
+            KEY_GOSTAND = 0x400,
+            KEY_ADSMODE = 0x800,
+            KEY_TEMP = 0x1000,
+            KEY_HOLDBREATH = 0x2000,
+            KEY_FRAG = 0x4000,
+            KEY_SMOKE = 0x8000,
+            KEY_SELECTING_LOCATION = 0x10000,
+            KEY_CANCEL_LOCATION = 0x20000,
+            KEY_NIGHTVISION = 0x40000,
+            KEY_ADS = 0x80000,
+            KEY_REVERSE = 0x100000,
+            KEY_HANDBRAKE = 0x200000,
+            KEY_THROW = 0x400000,
+            KEY_INMENU = 0x800000,
+        };
+
+        struct usercmd_s
+        {
+            int serverTime;                  // OFS: 0x00 SIZE: 0x4
+            button_mask buttons;             // OFS: 0x04 SIZE: 0x4
+            int angles[3];                   // OFS: 0x08 SIZE: 0xC
+            unsigned __int8 weapon;          // OFS: 0x14 SIZE: 0x1
+            unsigned __int8 offHandIndex;    // OFS: 0x15 SIZE: 0x1
+            char forwardmove;                // OFS: 0x16 SIZE: 0x1
+            char rightmove;                  // OFS: 0x17 SIZE: 0x1
+            char pad[4];                     //
+            float meleeChargeYaw;            // OFS: 0x1C SIZE: 0x4
+            unsigned __int8 meleeChargeDist; // OFS: 0x20 SIZE: 0x1
+            char pad2[7];                    //
+            char selectedLocation[2];        // OFS: 0x28 SIZE: 0x2
+        };
+        static_assert(sizeof(usercmd_s) == 44, "");
+        static_assert(offsetof(usercmd_s, serverTime) == 0x0, "");
+        static_assert(offsetof(usercmd_s, buttons) == 0x4, "");
+        static_assert(offsetof(usercmd_s, angles) == 0x8, "");
+        static_assert(offsetof(usercmd_s, weapon) == 0x14, "");
+        static_assert(offsetof(usercmd_s, offHandIndex) == 0x15, "");
+        static_assert(offsetof(usercmd_s, forwardmove) == 0x16, "");
+        static_assert(offsetof(usercmd_s, rightmove) == 0x17, "");
+        static_assert(offsetof(usercmd_s, meleeChargeYaw) == 0x1C, "");
+        static_assert(offsetof(usercmd_s, meleeChargeDist) == 0x20, "");
+        static_assert(offsetof(usercmd_s, selectedLocation) == 0x28, "");
+
+        struct clientHeader_t
+        {
+            int state;        // OFS: 0x0 SIZE: 0x4
+            int sendAsActive; // OFS: 0x4 SIZE: 0x4
+            int deltaMessage; // OFS: 0x8 SIZE: 0x4
+        };
+        static_assert(offsetof(clientHeader_t, state) == 0x0, "");
+        static_assert(offsetof(clientHeader_t, sendAsActive) == 0x4, "");
+        static_assert(offsetof(clientHeader_t, deltaMessage) == 0x8, "");
+
+        struct client_t
+        {
+            clientHeader_t header; // OFS: 0x0
+            char pad[134888];      //
+            usercmd_s lastUsercmd; // OFS: 0x20EF4 SIZE: 0x2C
+            char pad1[1032];       //
+            char name[32];         // OFS: 0x21328 SIZE: 0x20
+            char pad2[172];        //
+            gentity_s *gentity;    // OFS: 0x213F4 SIZE: 0x4
+            char pad3[12];         //
+            int nextSnapshotTime;  // OFS: 0x21404 SIZE: 0x4
+            char pad4[614948];     // padding to reach end of struct
+        };
+
+        static_assert(sizeof(client_t) == 751148, "");
+        static_assert(offsetof(client_t, header) == 0x0, "");
+        static_assert(offsetof(client_t, lastUsercmd) == 0x20EF4, "");
+        static_assert(offsetof(client_t, name) == 0x21328, "");
+        static_assert(offsetof(client_t, gentity) == 0x213F4, "");
+        static_assert(offsetof(client_t, nextSnapshotTime) == 0x21404, "");
+
+        struct serverStaticHeader_t
+        {
+            client_t *clients; // OFS: 0x0 SIZE: 0x4
+            int time;          // OFS: 0x4 SIZE: 0x4
+        };
+
+        static_assert(offsetof(serverStaticHeader_t, clients) == 0x0, "");
+        static_assert(offsetof(serverStaticHeader_t, time) == 0x4, "");
+
         struct viewState_t;
         struct weaponState_t;
+        struct pmove_t;
     }
 }

@@ -17,7 +17,7 @@ namespace t4
             if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
                 Scr_Error("Usage: <client> SprintButtonPressed()\n", SCRIPTINSTANCE_SERVER);
 
-            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_MASK_SPRINT) != 0, SCRIPTINSTANCE_SERVER);
+            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_FIRE) != 0, SCRIPTINSTANCE_SERVER);
         }
 
         void PlayerCmd_JumpButtonPressed(scr_entref_t entref)
@@ -32,7 +32,7 @@ namespace t4
             if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
                 Scr_Error("Usage: <client> JumpButtonPressed()\n", SCRIPTINSTANCE_SERVER);
 
-            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_MASK_JUMP) != 0, SCRIPTINSTANCE_SERVER);
+            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_SPRINT) != 0, SCRIPTINSTANCE_SERVER);
         }
 
         void PlayerCmd_SetVelocity(scr_entref_t entref)
@@ -56,6 +56,40 @@ namespace t4
             ent->client->ps.velocity[2] = velocity[2];
         }
 
+        void PlayerCmd_GetForwardMove(scr_entref_t arg)
+        {
+            if (arg.classnum != 0)
+                Scr_ObjectError("not an entity", SCRIPTINSTANCE_SERVER);
+
+            auto ent = &g_entities[arg.entnum];
+            if (!ent->client)
+                Scr_ObjectError(va("entity %i is not a player", arg.entnum), SCRIPTINSTANCE_SERVER);
+
+            if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 0)
+                Scr_Error("Usage: <client> GetForwardMove()\n", SCRIPTINSTANCE_SERVER);
+
+            auto cl = &svsHeader->clients[arg.entnum];
+
+            Scr_AddInt(cl->lastUsercmd.forwardmove, SCRIPTINSTANCE_SERVER);
+        }
+
+        void PlayerCmd_GetRightMove(scr_entref_t arg)
+        {
+            if (arg.classnum != 0)
+                Scr_ObjectError("not an entity", SCRIPTINSTANCE_SERVER);
+
+            auto ent = &g_entities[arg.entnum];
+            if (!ent->client)
+                Scr_ObjectError(va("entity %i is not a player", arg.entnum), SCRIPTINSTANCE_SERVER);
+
+            if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 0)
+                Scr_Error("Usage: <client> GetRightMove()\n", SCRIPTINSTANCE_SERVER);
+
+            auto *cl = &svsHeader->clients[arg.entnum];
+
+            Scr_AddInt(cl->lastUsercmd.rightmove, SCRIPTINSTANCE_SERVER);
+        }
+
         static struct
         {
             const char *name;
@@ -64,6 +98,8 @@ namespace t4
             {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed},
             {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed},
             {"setvelocity", PlayerCmd_SetVelocity},
+            {"getforwardmove", PlayerCmd_GetForwardMove},
+            {"getrightmove", PlayerCmd_GetRightMove},
             {nullptr, nullptr} // Terminator
         };
 
