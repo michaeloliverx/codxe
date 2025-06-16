@@ -4,6 +4,7 @@
 #include "components/brush_collision.h"
 #include "components/cg.h"
 #include "components/gsc_client_fields.h"
+#include "components/gsc_client_methods.h"
 #include "components/gsc_functions.h"
 #include "components/gsc_loader.h"
 #include "components/image_loader.h"
@@ -28,6 +29,7 @@ namespace t4
             RegisterComponent(new BrushCollision());
             RegisterComponent(new cg());
             RegisterComponent(new GSCClientFields());
+            RegisterComponent(new GSCClientMethods());
             RegisterComponent(new GSCFunctions());
             RegisterComponent(new GSCLoader());
             // RegisterComponent(new ImageLoader());

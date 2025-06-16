@@ -2,6 +2,27 @@
 
 #pragma warning(disable : 4480) // nonstandard extension used: specifying underlying type for enum
 
+// usercmd_t->button bits
+#define KEY_MASK_FIRE 1
+#define KEY_MASK_SPRINT 2
+#define KEY_MASK_MELEE 4
+#define KEY_MASK_RELOAD 16
+#define KEY_MASK_LEANLEFT 64
+#define KEY_MASK_LEANRIGHT 128
+#define KEY_MASK_PRONE 256
+#define KEY_MASK_CROUCH 512
+#define KEY_MASK_JUMP 1024
+#define KEY_MASK_ADS_MODE 2048
+#define KEY_MASK_TEMP_ACTION 4096
+#define KEY_MASK_HOLDBREATH 8192
+#define KEY_MASK_FRAG 16384
+#define KEY_MASK_SMOKE 32768
+#define KEY_MASK_NIGHTVISION 262144
+#define KEY_MASK_ADS 524288
+#define KEY_MASK_USE 8
+#define KEY_MASK_USERELOAD 0x20
+#define BUTTON_ATTACK KEY_MASK_FIRE
+
 namespace t4
 {
     namespace mp
@@ -319,12 +340,27 @@ namespace t4
 
         struct BuiltinFunctionDef
         {
-            const char *actionString;
-            BuiltinFunction actionFunc;
-            int type;
+            const char *actionString;   // OFS: 0x0 SIZE: 0x4
+            BuiltinFunction actionFunc; // OFS: 0x4 SIZE: 0x4
+            int type;                   // OFS: 0x8 SIZE: 0x4
         };
+        static_assert(sizeof(BuiltinFunctionDef) == 0xC, "");
+        static_assert(offsetof(BuiltinFunctionDef, actionString) == 0x0, "");
+        static_assert(offsetof(BuiltinFunctionDef, actionFunc) == 0x4, "");
+        static_assert(offsetof(BuiltinFunctionDef, type) == 0x8, "");
 
         typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
+
+        struct BuiltinMethodDef
+        {
+            const char *actionString;
+            BuiltinPlayerMethod actionFunc;
+            int type;
+        };
+        static_assert(sizeof(BuiltinMethodDef) == 0xC, "");
+        static_assert(offsetof(BuiltinMethodDef, actionString) == 0x0, "");
+        static_assert(offsetof(BuiltinMethodDef, actionFunc) == 0x4, "");
+        static_assert(offsetof(BuiltinMethodDef, type) == 0x8, "");
 
         enum DvarFlags : unsigned __int16
         {
