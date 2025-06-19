@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #pragma warning(disable : 4480) // nonstandard extension used: specifying underlying type for enum
 
 namespace t4
@@ -99,6 +101,17 @@ namespace t4
         };
         static_assert(sizeof(Font_s) == 0x18, "");
 
+        struct MapEnts
+        {
+            const char *name;   // OFS: 0x0 SIZE: 0x4
+            char *entityString; // OFS: 0x4 SIZE: 0x4
+            int numEntityChars; // OFS: 0x8 SIZE: 0x4
+        };
+        static_assert(sizeof(MapEnts) == 12, "");
+        static_assert(offsetof(MapEnts, name) == 0x0, "");
+        static_assert(offsetof(MapEnts, entityString) == 0x4, "");
+        static_assert(offsetof(MapEnts, numEntityChars) == 0x8, "");
+
         union XAssetHeader
         {
             // XModelPieces *xmodelPieces;
@@ -117,7 +130,7 @@ namespace t4
             // ComWorld *comWorld;
             // GameWorldSp *gameWorldSp;
             // GameWorldMp *gameWorldMp;
-            // MapEnts *mapEnts;
+            MapEnts *mapEnts;
             // GfxWorld *gfxWorld;
             // GfxLightDef *lightDef;
             Font_s *font;
@@ -132,6 +145,32 @@ namespace t4
             // StringTable *stringTable;
             void *data;
         };
+
+        struct __declspec(align(4)) cLeaf_t
+        {
+            unsigned __int16 firstCollAabbIndex;
+            unsigned __int16 collAabbCount;
+            int brushContents;
+            int terrainContents;
+            float mins[3];
+            float maxs[3];
+            int leafBrushNode;
+            __int16 cluster;
+        };
+        static_assert(sizeof(cLeaf_t) == 44, "");
+
+        struct cmodel_t
+        {
+            float mins[3];
+            float maxs[3];
+            float radius;
+            cLeaf_t leaf;
+        };
+        static_assert(sizeof(cmodel_t) == 72, "");
+        static_assert(offsetof(cmodel_t, mins) == 0x0, "");
+        static_assert(offsetof(cmodel_t, maxs) == 12, "");
+        static_assert(offsetof(cmodel_t, radius) == 24, "");
+        static_assert(offsetof(cmodel_t, leaf) == 28, "");
 
         struct cplane_s
         {
@@ -167,24 +206,42 @@ namespace t4
 
         struct clipMap_t
         {
-            const char *name;
-            int isInUse;
-            char _pad[0x94];
-            unsigned __int16 numBrushes;
-            cbrush_t *brushes;
+            const char *name;            // OFS: 0 SIZE: 0x4
+            int isInUse;                 // OFS: 4 SIZE: 0x4
+            char _pad[140];              //
+            unsigned int numSubModels;   // OFS: 148 SIZE: 0x4
+            cmodel_t *cmodels;           // OFS: 152 SIZE: 0x4
+            unsigned __int16 numBrushes; // OFS: 156 SIZE: 0x2
+            cbrush_t *brushes;           // OFS: 160 SIZE: 0x4
+            char _pad2[16];              //
+            MapEnts *mapEnts;            // OFS: 180 SIZE: 0xC
         };
+        static_assert(offsetof(clipMap_t, name) == 0, "");
+        static_assert(offsetof(clipMap_t, isInUse) == 4, "");
+        static_assert(offsetof(clipMap_t, numSubModels) == 148, "");
+        static_assert(offsetof(clipMap_t, cmodels) == 152, "");
         static_assert(offsetof(clipMap_t, numBrushes) == 156, "");
+        static_assert(offsetof(clipMap_t, brushes) == 160, "");
+        static_assert(offsetof(clipMap_t, mapEnts) == 180, "");
 
         struct playerState_s
         {
-            char pad[44];
-            float velocity[3];
-            char pad_0056[192];
-            int clientNum;
-            char pad_end[14880];
+            char pad0[12];        //
+            int pm_flags;         // OFS: 12 SIZE: 0x4
+            char pad[16];         //
+            float origin[3];      // OFS: 32 SIZE: 12
+            float velocity[3];    // OFS: 44 SIZE: 12
+            char pad_0056[148];   //
+            int eFlags;           // OFS: 204 SIZE: 0x4
+            char pad_end[40];     //
+            int clientNum;        // OFS: 248 SIZE:0x4
+            char pad_end2[14880]; //
         };
-
+        static_assert(sizeof(playerState_s) == 15132, "");
+        static_assert(offsetof(playerState_s, pm_flags) == 12, "");
+        static_assert(offsetof(playerState_s, origin) == 32, "");
         static_assert(offsetof(playerState_s, velocity) == 44, "");
+        static_assert(offsetof(playerState_s, eFlags) == 204, "");
         static_assert(offsetof(playerState_s, clientNum) == 248, "");
 
         struct gclient_s
@@ -212,22 +269,364 @@ namespace t4
             FL_DEMI_GODMODE = 1 << 1,
         };
 
+        enum trType_t : __int32
+        {
+            TR_STATIONARY = 0x0,
+            TR_INTERPOLATE = 0x1,
+            TR_LINEAR = 0x2,
+            TR_LINEAR_STOP = 0x3,
+            TR_SINE = 0x4,
+            TR_GRAVITY = 0x5,
+            TR_ACCELERATE = 0x6,
+            TR_DECELERATE = 0x7,
+            TR_PHYSICS = 0x8,
+            TR_XDOLL = 0x9,
+            TR_FIRST_RAGDOLL = 0xA,
+            TR_RAGDOLL = 0xA,
+            TR_RAGDOLL_GRAVITY = 0xB,
+            TR_RAGDOLL_INTERPOLATE = 0xC,
+            TR_LAST_RAGDOLL = 0xC,
+            TR_COUNT = 0xD,
+        };
+
+        struct trajectory_t
+        {
+            trType_t trType;
+            int trTime;
+            int trDuration;
+            float trBase[3];
+            float trDelta[3];
+        };
+
+        struct LerpEntityStateTurret
+        {
+            float gunAngles[3];
+            unsigned __int8 overheating;
+            float heatVal;
+        };
+        static_assert(sizeof(LerpEntityStateTurret) == 0x14, "");
+        static_assert(offsetof(LerpEntityStateTurret, gunAngles) == 0x0, "");
+        static_assert(offsetof(LerpEntityStateTurret, overheating) == 0xC, "");
+        static_assert(offsetof(LerpEntityStateTurret, heatVal) == 0x10, "");
+
+        struct LerpEntityStateLoopFx
+        {
+            float cullDist;
+            int period;
+        };
+        static_assert(sizeof(LerpEntityStateLoopFx) == 0x8, "");
+        static_assert(offsetof(LerpEntityStateLoopFx, cullDist) == 0x0, "");
+        static_assert(offsetof(LerpEntityStateLoopFx, period) == 0x4, "");
+
+        union LerpEntityStateActor_unnamed_type_index
+        {
+            int actorNum;
+            int corpseNum;
+        };
+
+        struct LerpEntityStateActor_unnamed_type_proneInfo
+        {
+            __int16 fBodyPitch;
+        };
+
+        struct __declspec(align(4)) LerpEntityStateActor
+        {
+            LerpEntityStateActor_unnamed_type_index index;
+            int species;
+            LerpEntityStateActor_unnamed_type_proneInfo proneInfo;
+        };
+
+        struct LerpEntityStatePrimaryLight
+        {
+            char colorAndExp[4];
+            float intensity;
+            float radius;
+            float cosHalfFovOuter;
+            float cosHalfFovInner;
+        };
+
+        struct __declspec(align(4)) LerpEntityStatePlayer
+        {
+            float leanf;
+            int movementDir;
+            char vehicleType;
+            char vehicleAnimBoneIndex;
+            char vehicleSeat;
+        };
+
+        struct LerpEntityStateVehicleGunnerAngles
+        {
+            __int16 pitch;
+            __int16 yaw;
+        };
+
+        union LerpEntityStateVehicleThrottle_u
+        {
+            __int16 throttle;
+            __int16 bodyPitch;
+        };
+
+        struct __declspec(align(2)) LerpEntityStateVehicle
+        {
+            float steerYaw;
+            float bodyRoll;
+            float bodyPitch;
+            LerpEntityStateVehicleGunnerAngles gunnerAngles[4];
+            LerpEntityStateVehicleThrottle_u ___u3;
+            __int16 gunPitch;
+            __int16 gunYaw;
+            char drawOnCompass;
+            int teamAndOwnerIndex;
+        };
+
+        struct LerpEntityStateMissile
+        {
+            int launchTime;
+            int parentClientNum;
+            int fuseTime;
+        };
+
+        struct LerpEntityStateScriptMover
+        {
+            char attachTagIndex[4];
+            int attachedTagIndex;
+            __int16 attachModelIndex[4];
+            __int16 animScriptedAnim;
+            int animScriptedAnimTime;
+            __int16 attachedEntNum;
+            __int16 exploderIndex;
+        };
+
+        struct LerpEntityStateSoundBlend
+        {
+            float lerp;
+            float volumeScale;
+        };
+
+        struct LerpEntityStateAnonymous
+        {
+            int data[15];
+        };
+
+        union LerpEntityStateTypeUnion
+        {
+            LerpEntityStateTurret turret;
+            LerpEntityStateLoopFx loopFx;
+            LerpEntityStateActor actor;
+            LerpEntityStatePrimaryLight primaryLight;
+            LerpEntityStatePlayer player;
+            LerpEntityStateVehicle vehicle;
+            LerpEntityStateMissile missile;
+            LerpEntityStateScriptMover scriptMover;
+            LerpEntityStateSoundBlend soundBlend;
+            LerpEntityStateAnonymous anonymous;
+        };
+
+        struct __declspec(align(4)) LerpEntityState
+        {
+            int eFlags;
+            trajectory_t pos;
+            trajectory_t apos;
+            LerpEntityStateTypeUnion u;
+            int usecount;
+        };
+        static_assert(sizeof(LerpEntityState) == 140, "");
+
+        enum entityType_t : __int32
+        {
+            ET_GENERAL = 0x0,
+            ET_PLAYER = 0x1,
+            ET_PLAYER_CORPSE = 0x2,
+            ET_ITEM = 0x3,
+            ET_MISSILE = 0x4,
+            ET_INVISIBLE = 0x5,
+            ET_SCRIPTMOVER = 0x6,
+            ET_SOUND_BLEND = 0x7,
+            ET_FX = 0x8,
+            ET_LOOP_FX = 0x9,
+            ET_PRIMARY_LIGHT = 0xA,
+            ET_MG42 = 0xB,
+            ET_PLANE = 0xC,
+            ET_VEHICLE = 0xD,
+            ET_VEHICLE_COLLMAP = 0xE,
+            ET_VEHICLE_CORPSE = 0xF,
+            ET_ACTOR = 0x10,
+            ET_ACTOR_SPAWNER = 0x11,
+            ET_ACTOR_CORPSE = 0x12,
+            ET_EVENTS = 0x13,
+        };
+
+        struct LoopSound
+        {
+            unsigned __int16 soundAlias;
+            __int16 fadeTime;
+        };
+
+        union entityState_index
+        {
+            int brushmodel;
+            int item;
+            int xmodel;
+            int primaryLight;
+        };
+
+        struct entityState_s
+        {
+            int number;               // OFS: 0x0 SIZE: 0x4
+            entityType_t eType;       // OFS: 4 SIZE: 0x4
+            LerpEntityState lerp;     // OFS: 8 SIZE: 140
+            int time2;                // OFS: 148 SIZE: 0x4
+            int otherEntityNum;       // OFS: 152 SIZE: 0x4
+            int attackerEntityNum;    // OFS: 156 SIZE: 0x4
+            int groundEntityNum;      // OFS: 160 SIZE: 0x4
+            LoopSound loopSound;      // OFS: 164 SIZE: 0x4
+            int surfType;             // OFS: 168 SIZE: 0x4
+            entityState_index index;  // OFS: 172 SIZE: 0x4
+            int clientNum;            // OFS: 176 SIZE: 0x4
+            int iHeadIcon;            // OFS: 180 SIZE: 0x4
+            int iHeadIconTeam;        // OFS: 184 SIZE: 0x4
+            int solid;                // OFS: 188 SIZE: 0x4
+            int eventParm;            // OFS: 192 SIZE: 0x4
+            int eventSequence;        // OFS: 196 SIZE: 0x4
+            int events[4];            // OFS: 200 SIZE: 0x10
+            int eventParms[4];        // OFS: 216 SIZE: 0x10
+            int weapon;               // OFS: 232 SIZE: 0x4
+            int weaponModel;          // OFS: 236 SIZE: 0x4
+            int targetName;           // OFS: 240 SIZE: 0x4
+            char pad00[24];           //
+            unsigned int partBits[4]; // OFS: 268 SIZE: 0x10
+        };
+        static_assert(sizeof(entityState_s) == 284, "");
+        static_assert(offsetof(entityState_s, number) == 0, "");
+        static_assert(offsetof(entityState_s, eType) == 4, "");
+        static_assert(offsetof(entityState_s, lerp) == 8, "");
+        static_assert(offsetof(entityState_s, time2) == 148, "");
+        static_assert(offsetof(entityState_s, otherEntityNum) == 152, "");
+        static_assert(offsetof(entityState_s, attackerEntityNum) == 156, "");
+        static_assert(offsetof(entityState_s, groundEntityNum) == 160, "");
+        static_assert(offsetof(entityState_s, loopSound) == 164, "");
+        static_assert(offsetof(entityState_s, surfType) == 168, "");
+        static_assert(offsetof(entityState_s, index) == 172, "");
+        static_assert(offsetof(entityState_s, clientNum) == 176, "");
+        static_assert(offsetof(entityState_s, iHeadIcon) == 180, "");
+        static_assert(offsetof(entityState_s, iHeadIconTeam) == 184, "");
+        static_assert(offsetof(entityState_s, solid) == 188, "");
+        static_assert(offsetof(entityState_s, eventParm) == 192, "");
+        static_assert(offsetof(entityState_s, eventSequence) == 196, "");
+        static_assert(offsetof(entityState_s, events) == 200, "");
+        static_assert(offsetof(entityState_s, eventParms) == 216, "");
+        static_assert(offsetof(entityState_s, weapon) == 232, "");
+        static_assert(offsetof(entityState_s, weaponModel) == 236, "");
+        static_assert(offsetof(entityState_s, targetName) == 240, "");
+        static_assert(offsetof(entityState_s, partBits) == 268, "");
+
+        struct entityShared_t
+        {
+            unsigned __int8 linked;   // OFS: 0 SIZE: 0x1
+            unsigned __int8 bmodel;   // OFS: 2 SIZE: 0x1
+            unsigned __int16 svFlags; // OFS: 3 SIZE: 0x1
+            int clientMask[2];        // OFS: 8 SIZE: 0x8
+            float absmin[3];          //
+            float absmax[3];          // OFS: 24 SIZE: 0xC
+            char pad0[8];             //
+            int contents;             // OFS: 44 SIZE: 0x4
+            char pad1[24];            //
+            float currentOrigin[3];   // OFS: 72 SIZE: 0xC
+            float currentAngles[3];   // OFS: 84 SIZE: 0xC
+            char pad2[8];             //
+        };
+        static_assert(sizeof(entityShared_t) == 104, "");
+        static_assert(offsetof(entityShared_t, linked) == 0, "");
+        static_assert(offsetof(entityShared_t, bmodel) == 1, "");
+        static_assert(offsetof(entityShared_t, svFlags) == 2, "");
+        static_assert(offsetof(entityShared_t, clientMask) == 4, "");
+        static_assert(offsetof(entityShared_t, absmin) == 12, "");
+        static_assert(offsetof(entityShared_t, absmax) == 24, "");
+        static_assert(offsetof(entityShared_t, contents) == 44, "");
+        static_assert(offsetof(entityShared_t, currentOrigin) == 72, "");
+        static_assert(offsetof(entityShared_t, currentAngles) == 84, "");
+
         struct gentity_s
         {
-            char pad_0000[388];
-            gclient_s *client;
-            char pad_0188[44];
-            int flags;
-            char pad_01BC[816 - 440];
+            entityState_s s;                    // OFS: 0 SIZE: 284
+            entityShared_t r;                   // OFS: 284 SIZE: 104
+            gclient_s *client;                  // OFS: 388 SIZE: 0x4
+            char pad0[20];                      //
+            unsigned __int16 model;             // OFS: 412 SIZE: 0x2
+            char pad1[6];                       //
+            unsigned __int16 classname;         // OFS: 420 SIZE: 0x2
+            unsigned __int16 target;            // OFS: 422 SIZE: 0x2
+            unsigned __int16 targetname;        // OFS: 424 SIZE: 0x2
+            unsigned __int16 script_noteworthy; // OFS: 426 SIZE: 0x2
+            char pad2[2];                       //
+            int spawnflags;                     // OFS: 432 SIZE: 0x4
+            int flags;                          // OFS: 436 SIZE: 0x4
+            char pad[28];                       //
+            int health;                         // OFS: 468 SIZE: 0x4
+            int maxHealth;                      // OFS: 472 SIZE: 0x4
+            int dmg;                            // OFS: 476 SIZE: 0x4
+            char pad3[332];                     //
+            int birthtime;                      // OFS: 812 SIZE: 0x4
         };
-        static_assert(offsetof(gentity_s, client) == 388, "");
-        static_assert(offsetof(gentity_s, flags) == 436, "");
         static_assert(sizeof(gentity_s) == 816, "");
+
+        static_assert(offsetof(gentity_s, s) == 0, "");
+        static_assert(offsetof(gentity_s, s.number) == 0, "");
+        static_assert(offsetof(gentity_s, s.eType) == 4, "");
+        static_assert(offsetof(gentity_s, s.lerp) == 8, "");
+        static_assert(offsetof(gentity_s, s.time2) == 148, "");
+        static_assert(offsetof(gentity_s, s.otherEntityNum) == 152, "");
+        static_assert(offsetof(gentity_s, s.attackerEntityNum) == 156, "");
+        static_assert(offsetof(gentity_s, s.groundEntityNum) == 160, "");
+        static_assert(offsetof(gentity_s, s.loopSound) == 164, "");
+        static_assert(offsetof(gentity_s, s.surfType) == 168, "");
+        static_assert(offsetof(gentity_s, s.index) == 172, "");
+        static_assert(offsetof(gentity_s, s.clientNum) == 176, "");
+        static_assert(offsetof(gentity_s, s.iHeadIcon) == 180, "");
+        static_assert(offsetof(gentity_s, s.iHeadIconTeam) == 184, "");
+        static_assert(offsetof(gentity_s, s.solid) == 188, "");
+        static_assert(offsetof(gentity_s, s.eventParm) == 192, "");
+        static_assert(offsetof(gentity_s, s.eventSequence) == 196, "");
+        static_assert(offsetof(gentity_s, s.events) == 200, "");
+        static_assert(offsetof(gentity_s, s.eventParms) == 216, "");
+        static_assert(offsetof(gentity_s, s.weapon) == 232, "");
+        static_assert(offsetof(gentity_s, s.weaponModel) == 236, "");
+        static_assert(offsetof(gentity_s, s.targetName) == 240, "");
+        static_assert(offsetof(gentity_s, s.partBits) == 268, "");
+
+        static_assert(offsetof(gentity_s, r) == 284, "");
+        static_assert(offsetof(gentity_s, r.linked) == 284, "");
+        static_assert(offsetof(gentity_s, r.bmodel) == 285, "");
+        static_assert(offsetof(gentity_s, r.svFlags) == 286, "");
+        static_assert(offsetof(gentity_s, r.clientMask) == 288, "");
+        static_assert(offsetof(gentity_s, r.absmin) == 296, "");
+        static_assert(offsetof(gentity_s, r.absmax) == 308, "");
+        static_assert(offsetof(gentity_s, r.contents) == 328, "");
+        static_assert(offsetof(gentity_s, r.currentOrigin) == 356, "");
+        static_assert(offsetof(gentity_s, r.currentAngles) == 368, "");
+
+        static_assert(offsetof(gentity_s, client) == 388, "");
+        static_assert(offsetof(gentity_s, model) == 412, "");
+        static_assert(offsetof(gentity_s, classname) == 420, "");
+        static_assert(offsetof(gentity_s, target) == 422, "");
+        static_assert(offsetof(gentity_s, targetname) == 424, "");
+        static_assert(offsetof(gentity_s, script_noteworthy) == 426, "");
+
+        static_assert(offsetof(gentity_s, spawnflags) == 432, "");
+        static_assert(offsetof(gentity_s, flags) == 436, "");
+
+        static_assert(offsetof(gentity_s, health) == 468, "");
+        static_assert(offsetof(gentity_s, maxHealth) == 472, "");
+        static_assert(offsetof(gentity_s, dmg) == 476, "");
+        static_assert(offsetof(gentity_s, birthtime) == 812, "");
 
         struct level_locals_t
         {
             gclient_s *clients;
-            char pad_0004[568];
+            gentity_s *gentities;
+            int gentitySize;
+            int num_entities;
+            char pad_0004[556];
             int time;
         };
         static_assert(offsetof(level_locals_t, clients) == 0x0000, "");
@@ -272,6 +671,14 @@ namespace t4
         };
         static_assert(sizeof(client_fields_s) == 24, "");
 
+        struct ent_field_t
+        {
+            const char *name;
+            int ofs;
+            fieldtype_t type;
+            void (*callback)(gentity_s *, int);
+        };
+
         struct scr_entref_t
         {
             unsigned __int16 entnum;
@@ -304,12 +711,12 @@ namespace t4
         static_assert(offsetof(BuiltinFunctionDef, actionFunc) == 0x4, "");
         static_assert(offsetof(BuiltinFunctionDef, type) == 0x8, "");
 
-        typedef void (*BuiltinPlayerMethod)(scr_entref_t entref);
+        typedef void (*BuiltinMethod)(scr_entref_t entref);
 
         struct BuiltinMethodDef
         {
             const char *actionString;
-            BuiltinPlayerMethod actionFunc;
+            BuiltinMethod actionFunc;
             int type;
         };
         static_assert(sizeof(BuiltinMethodDef) == 0xC, "");
@@ -513,5 +920,38 @@ namespace t4
         struct viewState_t;
         struct weaponState_t;
         struct pmove_t;
+
+        struct scrVarPub_t
+        {
+            const char *fieldBuffer;
+            unsigned __int16 canonicalStrCount;
+            bool developer;
+            bool developer_script;
+            bool evaluate;
+            const char *error_message; // OFS: 0xC SIZE: 0x4
+        };
+        static_assert(offsetof(scrVarPub_t, error_message) == 0xC, "");
+
+        struct __declspec(align(4)) NetField
+        {
+            char *name;                  // OFS: 0x0 SIZE: 0x4
+            int offset;                  // OFS: 0x4 SIZE: 0x4
+            int bits;                    // OFS: 0x8 SIZE: 0x4
+            unsigned __int8 changeHints; // OFS: 0xC SIZE: 0x1
+        };
+        static_assert(sizeof(NetField) == 0x10, "");
+        static_assert(offsetof(NetField, name) == 0x0, "");
+        static_assert(offsetof(NetField, offset) == 0x4, "");
+        static_assert(offsetof(NetField, bits) == 0x8, "");
+        static_assert(offsetof(NetField, changeHints) == 0xC, "");
+
+        struct SpawnFuncEntry
+        {
+            const char *classname;         // OFS: 0x0 SIZE: 0x4
+            void (*callback)(gentity_s *); // OFS: 0x4 SIZE: 0x4
+        };
+        static_assert(sizeof(SpawnFuncEntry) == 0x8, "");
+        static_assert(offsetof(SpawnFuncEntry, classname) == 0x0, "");
+        static_assert(offsetof(SpawnFuncEntry, callback) == 0x4, "");
     }
 }

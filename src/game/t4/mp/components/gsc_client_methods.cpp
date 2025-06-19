@@ -93,7 +93,7 @@ namespace t4
         static struct
         {
             const char *name;
-            BuiltinPlayerMethod handler;
+            BuiltinMethod handler;
         } gsc_player_methods[] = {
             {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed},
             {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed},
@@ -105,7 +105,7 @@ namespace t4
 
         Detour Player_GetMethod_Detour;
 
-        BuiltinPlayerMethod Player_GetMethod_Hook(const char **pName)
+        BuiltinMethod Player_GetMethod_Hook(const char **pName)
         {
             if (pName != nullptr)
             {
