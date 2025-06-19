@@ -1,9 +1,10 @@
-# pragma once
+#pragma once
 
 namespace t4
 {
     namespace sp
     {
         void init();
+        void shutdown();
     }
 }
