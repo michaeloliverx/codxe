@@ -8,6 +8,7 @@
 #include "components/gsc_functions.h"
 #include "components/gsc_loader.h"
 #include "components/image_loader.h"
+#include "components/map.h"
 #include "components/test_module.h"
 
 namespace t4
@@ -33,6 +34,7 @@ namespace t4
             RegisterComponent(new GSCFunctions());
             RegisterComponent(new GSCLoader());
             // RegisterComponent(new ImageLoader());
+            RegisterComponent(new Map());
             RegisterComponent(new TestModule());
         }
 
