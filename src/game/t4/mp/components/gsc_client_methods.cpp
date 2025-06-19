@@ -17,7 +17,7 @@ namespace t4
             if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
                 Scr_Error("Usage: <client> SprintButtonPressed()\n", SCRIPTINSTANCE_SERVER);
 
-            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_FIRE) != 0, SCRIPTINSTANCE_SERVER);
+            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_SPRINT) != 0, SCRIPTINSTANCE_SERVER);
         }
 
         void PlayerCmd_JumpButtonPressed(scr_entref_t entref)
@@ -32,7 +32,7 @@ namespace t4
             if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
                 Scr_Error("Usage: <client> JumpButtonPressed()\n", SCRIPTINSTANCE_SERVER);
 
-            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_SPRINT) != 0, SCRIPTINSTANCE_SERVER);
+            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_GOSTAND) != 0, SCRIPTINSTANCE_SERVER);
         }
 
         void PlayerCmd_SetVelocity(scr_entref_t entref)
