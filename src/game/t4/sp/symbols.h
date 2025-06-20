@@ -8,6 +8,8 @@ namespace t4
     {
         static auto g_entities = reinterpret_cast<gentity_s *>(0x8293A280);
 
+        static auto CL_CmdButtons = reinterpret_cast<void (*)(int a1, usercmd_s *a2)>(0x822E38F8);
+
         static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822862F8);
 
         static auto Scr_AddInt = reinterpret_cast<void (*)(int value, scriptInstance_t inst)>(0x82342000);
