@@ -36,7 +36,6 @@ namespace t4
         struct gclient_s
         {
             char pad[8780];
-
             int buttons; // Offset 8780
             int oldbuttons;
             int latched_buttons;       // Offset 8784
@@ -53,6 +52,30 @@ namespace t4
             char pad2[500];
         };
         static_assert(sizeof(gentity_s) == 888, "");
+
+        struct usercmd_s
+        {
+            int serverTime; // 0x00
+            int buttons; // 0x04
+            char pad[14];
+            char forwardmove;                // OFS: 0x16 SIZE: 0x1
+            char rightmove;                  // OFS: 0x17 SIZE: 0x1
+            char pad2[32]; // 0x08
+        };
+        static_assert(sizeof(usercmd_s) == 56, "");
+        static_assert(offsetof(usercmd_s, serverTime) == 0x00, "");
+        static_assert(offsetof(usercmd_s, buttons) == 4, "");
+        static_assert(offsetof(usercmd_s, forwardmove) == 0x16, "");
+        static_assert(offsetof(usercmd_s, rightmove) == 0x17, "");
+
+        struct __declspec(align(4)) client_t
+        {
+            char pad[69880];
+            usercmd_s lastUsercmd;
+            char pad2[283340];
+        };
+        static_assert(sizeof(client_t) == 353276, "");
+        static_assert(offsetof(client_t, lastUsercmd) == 69880, "");
 
         enum scriptInstance_t : __int32
         {

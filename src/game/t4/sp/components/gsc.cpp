@@ -51,6 +51,11 @@ namespace t4
             return buffer;
         }
 
+        client_t *VM_GetClientForEntRef(scr_entref_t entref)
+        {
+            return &(*reinterpret_cast<client_t **>(0x839EC08C))[entref.entnum];
+        }
+
         void PlayerCmd_JumpButtonPressed(scr_entref_t entref)
         {
             if (entref.classnum != 0)
@@ -62,11 +67,6 @@ namespace t4
 
             if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
                 Scr_Error("Usage: <client> JumpButtonPressed()\n", SCRIPTINSTANCE_SERVER);
-
-            if (ent->client->buttons)
-            {
-                DbgPrint("GSCLoader: JumpButtonPressed ent->client->buttons %i\n", ent->client->buttons);
-            }
 
             Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_GOSTAND) != 0, SCRIPTINSTANCE_SERVER);
         }
@@ -101,6 +101,58 @@ namespace t4
             Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & KEY_SPRINT) != 0, SCRIPTINSTANCE_SERVER);
         }
 
+        void PlayerCmd_MoveForwardButtonPressed(scr_entref_t object)
+        {
+            if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
+                Scr_Error("Usage: <client> MoveForwardButtonPressed()\n", SCRIPTINSTANCE_SERVER);
+
+            client_t *cl = VM_GetClientForEntRef(object);
+
+            if (!cl)
+                Scr_ObjectError("not a client\n", SCRIPTINSTANCE_SERVER);
+
+            Scr_AddInt(cl->lastUsercmd.forwardmove > 0, SCRIPTINSTANCE_SERVER);
+        }
+
+        void PlayerCmd_MoveBackButtonPressed(scr_entref_t object)
+        {
+            if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
+                Scr_Error("Usage: <client> MoveBackButtonPressed()\n", SCRIPTINSTANCE_SERVER);
+
+            client_t *cl = VM_GetClientForEntRef(object);
+
+            if (!cl)
+                Scr_ObjectError("not a client\n", SCRIPTINSTANCE_SERVER);
+
+            Scr_AddInt(cl->lastUsercmd.forwardmove < 0, SCRIPTINSTANCE_SERVER);
+        }
+
+        void PlayerCmd_MoveLeftButtonPressed(scr_entref_t object)
+        {
+            if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
+                Scr_Error("Usage: <client> MoveLeftButtonPressed()\n", SCRIPTINSTANCE_SERVER);
+
+            client_t *cl = VM_GetClientForEntRef(object);
+
+            if (!cl)
+                Scr_ObjectError("not a client\n", SCRIPTINSTANCE_SERVER);
+
+            Scr_AddInt(cl->lastUsercmd.rightmove < 0, SCRIPTINSTANCE_SERVER);
+        }
+
+        void PlayerCmd_MoveRightButtonPressed(scr_entref_t object)
+        {
+            if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER))
+                Scr_Error("Usage: <client> MoveRightButtonPressed()\n", SCRIPTINSTANCE_SERVER);
+
+            client_t *cl = VM_GetClientForEntRef(object);
+
+            if (!cl)
+                Scr_ObjectError("not a client\n", SCRIPTINSTANCE_SERVER);
+
+            Scr_AddInt(cl->lastUsercmd.rightmove > 0, SCRIPTINSTANCE_SERVER);
+        }
+
         Detour Scr_GetMethod_Detour;
 
         BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
@@ -113,6 +165,14 @@ namespace t4
                     return PlayerCmd_secondaryOffhandButtonPressed;
                 else if (_stricmp(*pName, "sprintbuttonpressed") == 0)
                     return PlayerCmd_SprintButtonPressed;
+                else if (_stricmp(*pName, "moveforwardbuttonpressed") == 0)
+                    return PlayerCmd_MoveForwardButtonPressed;
+                else if (_stricmp(*pName, "movebackbuttonpressed") == 0)
+                    return PlayerCmd_MoveBackButtonPressed;
+                else if (_stricmp(*pName, "moveleftbuttonpressed") == 0)
+                    return PlayerCmd_MoveLeftButtonPressed;
+                else if (_stricmp(*pName, "moverightbuttonpressed") == 0)
+                    return PlayerCmd_MoveRightButtonPressed;
             }
 
             // return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
