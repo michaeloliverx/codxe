@@ -153,9 +153,9 @@ namespace t4
             Scr_AddInt(cl->lastUsercmd.rightmove > 0, SCRIPTINSTANCE_SERVER);
         }
 
-        Detour Scr_GetMethod_Detour;
+        Detour Player_GetMethod_Detour;
 
-        BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
+        BuiltinMethod Player_GetMethod_Hook(const char **pName)
         {
             if (pName != nullptr)
             {
@@ -174,17 +174,7 @@ namespace t4
                 else if (_stricmp(*pName, "moverightbuttonpressed") == 0)
                     return PlayerCmd_MoveRightButtonPressed;
             }
-
-            // return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
-
-            // This hook is used to intercept calls to get methods from scripts.
-            // It can be used to add custom methods or modify existing ones.
-            auto method = Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
-            if (method)
-            {
-                DbgPrint("GSCLoader: Scr_GetMethod(%s, %d) -> %p\n", *pName, *type, method);
-            }
-            return method;
+            return Player_GetMethod_Detour.GetOriginal<decltype(Player_GetMethod)>()(pName);
         }
 
         GSC::GSC()
@@ -194,8 +184,8 @@ namespace t4
             Scr_AddSourceBuffer_Detour = Detour(Scr_AddSourceBuffer, Scr_AddSourceBuffer_Hook);
             Scr_AddSourceBuffer_Detour.Install();
 
-            Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
-            Scr_GetMethod_Detour.Install();
+            Player_GetMethod_Detour = Detour(Player_GetMethod, Player_GetMethod_Hook);
+            Player_GetMethod_Detour.Install();
         }
 
         GSC::~GSC()
