@@ -37,50 +37,12 @@ namespace t4
             }
         }
 
-        void GScr_CloneBrushModelToScriptModel()
-        {
-            static auto script_brushmodel = GScr_AllocString("script_brushmodel");
-            static auto script_model = GScr_AllocString("script_model");
-            static auto script_origin = GScr_AllocString("script_origin");
-            static auto light = GScr_AllocString("light");
-
-            // CoD4x
-            // Common checks.
-            if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 2)
-                Scr_Error("usage: CloneBrushModelToScriptModel(<brushModelEnt>, <scriptModelEnt>)", SCRIPTINSTANCE_SERVER);
-
-            // Object checks.
-            gentity_s *scriptEnt = Scr_GetEntity(1);
-            if (scriptEnt->classname != script_model)
-                Scr_ObjectError("passed entity is not a script_model entity", SCRIPTINSTANCE_SERVER);
-
-            if (scriptEnt->s.eType != 6)
-                Scr_ObjectError("passed entity type is not 6 (TODO: what is it?)", SCRIPTINSTANCE_SERVER);
-
-            // Arguments checks.
-            gentity_s *brushEnt = Scr_GetEntity(0);
-            if (brushEnt->classname != script_brushmodel && brushEnt->classname != script_model && brushEnt->classname != script_origin && brushEnt->classname != light)
-                Scr_ParamError(0, "brush model entity classname must be one of {script_brushmodel, script_model, script_origin, light}", SCRIPTINSTANCE_SERVER);
-
-            if (!brushEnt->s.index.brushmodel)
-                Scr_ParamError(0, "brush model entity has no collision model", SCRIPTINSTANCE_SERVER);
-
-            // Let's do this...
-            SV_UnlinkEntity(scriptEnt);
-            scriptEnt->s.index.brushmodel = brushEnt->s.index.brushmodel;
-            int contents = scriptEnt->r.contents;
-            SV_SetBrushModel(scriptEnt);
-            scriptEnt->r.contents |= contents;
-            SV_LinkEntity(scriptEnt);
-        }
-
         static struct
         {
             const char *name;
             BuiltinFunction handler;
         } gsc_functions[] = {
             {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint},
-            {"clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel},
             {nullptr, nullptr} // Terminator
         };
 

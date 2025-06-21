@@ -679,11 +679,18 @@ namespace t4
             void (*callback)(gentity_s *, int);
         };
 
-        struct scr_entref_t
+#pragma warning(disable : 4324)
+        struct __declspec(align(8)) scr_entref_t
         {
-            unsigned __int16 entnum;
-            unsigned __int16 classnum;
+            uint16_t entnum;
+            uint16_t classnum;
+            uint16_t localclientnum;
         };
+#pragma warning(default : 4324)
+        static_assert(sizeof(scr_entref_t) == 8, "");
+        static_assert(offsetof(scr_entref_t, entnum) == 0x0, "");
+        static_assert(offsetof(scr_entref_t, classnum) == 0x2, "");
+        static_assert(offsetof(scr_entref_t, localclientnum) == 0x4, "");
 
         enum svscmd_type
         {
