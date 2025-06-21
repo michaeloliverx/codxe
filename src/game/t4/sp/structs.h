@@ -89,8 +89,13 @@ namespace t4
         {
             uint16_t entnum;
             uint16_t classnum;
+            uint16_t localclientnum;
         };
 #pragma warning(default : 4324)
+        static_assert(sizeof(scr_entref_t) == 8, "");
+        static_assert(offsetof(scr_entref_t, entnum) == 0x0, "");
+        static_assert(offsetof(scr_entref_t, classnum) == 0x2, "");
+        static_assert(offsetof(scr_entref_t, localclientnum) == 0x4, "");
 
         typedef void (*BuiltinFunction)();
 
