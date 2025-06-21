@@ -55,12 +55,12 @@ namespace t4
 
         struct usercmd_s
         {
-            int serverTime; // 0x00
-            int buttons; // 0x04
-            char pad[14];
-            char forwardmove;                // OFS: 0x16 SIZE: 0x1
-            char rightmove;                  // OFS: 0x17 SIZE: 0x1
-            char pad2[32]; // 0x08
+            int serverTime;   // 0x00
+            int buttons;      // 0x04
+            char pad[14];     //
+            char forwardmove; // OFS: 0x16 SIZE: 0x1
+            char rightmove;   // OFS: 0x17 SIZE: 0x1
+            char pad2[32];    // 0x08
         };
         static_assert(sizeof(usercmd_s) == 56, "");
         static_assert(offsetof(usercmd_s, serverTime) == 0x00, "");
@@ -84,11 +84,13 @@ namespace t4
             SCRIPT_INSTANCE_MAX = 0x2,
         };
 
-        struct scr_entref_t
+#pragma warning(disable : 4324)
+        struct __declspec(align(8)) scr_entref_t
         {
-            unsigned __int16 entnum;
-            unsigned __int16 classnum;
+            uint16_t entnum;
+            uint16_t classnum;
         };
+#pragma warning(default : 4324)
 
         typedef void (*BuiltinFunction)();
 
