@@ -2154,6 +2154,35 @@ namespace mp
         }
     }
 
+    struct pml_t;
+
+    static int (*Jump_Check)(pmove_t *pm, pml_t *pml) = reinterpret_cast<int (*)(pmove_t *, pml_t *)>(0x82341480);
+
+    dvar_s *pm_bhop_auto = nullptr;
+
+    Detour Jump_Check_Detour;
+
+    int Jump_Check_Hook(pmove_t *pm, pml_t *pml)
+    {
+        // If auto bhop is enabled, pretend jump wasn't held
+        if (pm_bhop_auto->current.enabled)
+        {
+            // Temporarily clear old jump button state
+            const int old_buttons = pm->oldcmd.buttons;
+            pm->oldcmd.buttons &= ~0x400;
+
+            // Call original
+            int result = Jump_Check_Detour.GetOriginal<decltype(Jump_Check)>()(pm, pml);
+
+            // Restore old state
+            pm->oldcmd.buttons = old_buttons;
+            return result;
+        }
+
+        // Otherwise, default behavior
+        return Jump_Check_Detour.GetOriginal<decltype(Jump_Check)>()(pm, pml);
+    }
+
     void init()
     {
         xbox::DbgPrint("Initializing MP\n");
@@ -2253,5 +2282,10 @@ namespace mp
         Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
         Pmove_Detour = Detour(Pmove, Pmove_Hook);
         Pmove_Detour.Install();
+
+        // ADD CODINFO and make global
+        pm_bhop_auto = Dvar_RegisterBool("pm_bhop_auto", false, 0x80, "Enable auto-bunnyhop");
+        Jump_Check_Detour = Detour(Jump_Check, Jump_Check_Hook);
+        Jump_Check_Detour.Install();
     }
 }

@@ -2402,6 +2402,7 @@ generateMenuOptions()
 		}
 
 		self addMenuOption("host_menu", "Toggle Multi Bouncing", ::toggleMultiBouncing);
+		self addMenuOption("host_menu", "Toggle Auto Bhop", ::toggleBhopAuto);
 	}
 
 	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
@@ -2945,5 +2946,20 @@ toggleMultiBouncing()
 	{
 		setDvar("pm_multi_bounce", 0);
 		self iprintln("Multi Bouncing [^1OFF^7]");
+	}
+}
+
+toggleBhopAuto()
+{
+	value = getDvarInt("pm_bhop_auto");
+	if (value == 0)
+	{
+		setDvar("pm_bhop_auto", 1);
+		iprintln("Auto Bhop [^2ON^7]");
+	}
+	else
+	{
+		setDvar("pm_bhop_auto", 0);
+		iprintln("Auto Bhop [^1OFF^7]");
 	}
 }
