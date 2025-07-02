@@ -24,11 +24,13 @@
 #include "xboxkrnl.h"
 
 // IW3-specific includes
-#include "game/mp_structs.h"
-#include "game/mp_gscr_fields.h"
-#include "game/mp_main.h"
-#include "game/sp_main.h"
-#include "game/sp_structs.h"
+#include "game/iw3/mp/g_client_fields.h"
+#include "game/iw3/mp/main.h"
+#include "game/iw3/mp/structs.h"
+#include "game/iw3/mp/symbols.h"
+
+#include "game/iw3/sp/main.h"
+#include "game/iw3/sp/structs.h"
 
 // T4-specific includes
 #include "game/t4/mp/main.h"

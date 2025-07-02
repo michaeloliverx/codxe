@@ -1,4 +1,0 @@
-namespace sp
-{
-    void init();
-}
