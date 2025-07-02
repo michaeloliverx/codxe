@@ -34,15 +34,6 @@ namespace iw3
 
             {nullptr, 0, F_INT, nullptr, nullptr}};
 
-        GScr_AddFieldsForClient_t GScr_AddFieldsForClient = reinterpret_cast<GScr_AddFieldsForClient_t>(0x82366780);
-        Scr_AddClassField_t Scr_AddClassField = reinterpret_cast<Scr_AddClassField_t>(0x8221B2A0);
-
-        Scr_SetEntityField_t Scr_SetEntityField = reinterpret_cast<Scr_SetEntityField_t>(0x8224FA28);
-        Scr_GetEntityField_t Scr_GetEntityField = reinterpret_cast<Scr_GetEntityField_t>(0x8224F5C8);
-
-        Scr_SetGenericField_t Scr_SetGenericField = reinterpret_cast<Scr_SetGenericField_t>(0x8224F6B0);
-        Scr_GetGenericField_t Scr_GetGenericField = reinterpret_cast<Scr_GetGenericField_t>(0x8224F1A0);
-
         Detour GScr_AddFieldsForClient_Detour;
 
         void GScr_AddFieldsForClient_Hook()

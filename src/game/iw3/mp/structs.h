@@ -2078,15 +2078,6 @@ namespace iw3
             fieldtype_t type;
             void (*callback)(gentity_s *, int);
         };
-
-        typedef void (*GScr_AddFieldsForClient_t)();
-        typedef void (*Scr_AddClassField_t)(unsigned int classnum, const char *name, unsigned __int16 offset);
-
-        typedef int (*Scr_SetEntityField_t)(int entnum, int offset);
-        typedef void (*Scr_GetEntityField_t)(int entnum, int offset);
-
-        typedef void (*Scr_SetGenericField_t)(unsigned __int8 *b, fieldtype_t type, int ofs);
-        typedef void (*Scr_GetGenericField_t)(unsigned __int8 *b, fieldtype_t type, int ofs);
     }
 }
 

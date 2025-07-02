@@ -122,6 +122,15 @@ namespace iw3
         static auto BG_CalculateWeaponPosition_IdleAngles = reinterpret_cast<void (*)(weaponState_t *ws, float *angles)>(0x8232CA78);
         static auto BG_CalculateView_IdleAngles = reinterpret_cast<void (*)(viewState_t *vs, float *angles)>(0x8232C840);
 
+        static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x82366780);
+        static auto Scr_AddClassField = reinterpret_cast<void (*)(unsigned int classnum, const char *name, unsigned __int16 offset)>(0x8221B2A0);
+
+        static auto Scr_SetEntityField = reinterpret_cast<void (*)(int entnum, int offset, int value)>(0x8224FA28);
+        static auto Scr_GetEntityField = reinterpret_cast<void (*)(int entnum, int offset, int *value)>(0x8224F5C8);
+
+        static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs)>(0x8224F6B0);
+        static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs)>(0x8224F1A0);
+
         // Variables
         static auto cgArray = reinterpret_cast<cg_s *>(0x823F28A0);
         static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
