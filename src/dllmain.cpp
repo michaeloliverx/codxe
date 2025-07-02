@@ -21,7 +21,7 @@ void monitor_title_id()
 			else if (strncmp((char *)0x82065E48, "startSingleplayer", 17) == 0)
 			{
 				xbox::show_notification(L"CODxe - IW3 Singleplayer Detected");
-				sp::init();
+				iw3::sp::init();
 			}
 			else
 			{
