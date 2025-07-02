@@ -310,95 +310,99 @@ DDSImage ReadDDSFile(const std::string &filepath)
 namespace mp
 {
     // Functions
-    Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x82239FD0);
-    Cbuf_ExecuteBuffer_t Cbuf_ExecuteBuffer = reinterpret_cast<Cbuf_ExecuteBuffer_t>(0x8223AAE8);
+    static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82239FD0);
+    static auto Cbuf_ExecuteBuffer = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x8223AAE8);
 
-    CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x8231E6E0);
-    CG_GameMessage_t CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x8230AAF0);
-    CG_GetPredictedPlayerState_t CG_GetPredictedPlayerState = reinterpret_cast<CG_GetPredictedPlayerState_t>(0x82309120);
-    CG_RegisterGraphics_t CG_RegisterGraphics = reinterpret_cast<CG_RegisterGraphics_t>(0x8230D858);
+    static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x8231E6E0);
+    static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8230AAF0);
+    static auto CG_GetPredictedPlayerState = reinterpret_cast<const playerState_s *(*)(int localClientNum)>(0x82309120);
+    static auto CG_RegisterGraphics = reinterpret_cast<void (*)(int localClientNum, const char *mapname)>(0x8230D858);
 
-    CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x822E4D18);
-    CL_GamepadButtonEvent_t CL_GamepadButtonEvent = reinterpret_cast<CL_GamepadButtonEvent_t>(0x822DD1E8);
+    static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)>(0x822E4D18);
+    static auto CL_GamepadButtonEvent = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, int key, int down, unsigned int time)>(0x822DD1E8);
 
-    ClientCommand_t ClientCommand = reinterpret_cast<ClientCommand_t>(0x8227DCF0);
-    ClientThink_t ClientThink = reinterpret_cast<ClientThink_t>(0x822886E8);
+    static auto ClientCommand = reinterpret_cast<void (*)(int clientNum)>(0x8227DCF0);
+    static auto ClientThink = reinterpret_cast<void (*)(int clientNum)>(0x822886E8);
 
-    Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x8223ADE0);
-    Cmd_ExecFromFastFile_t Cmd_ExecFromFastFile = reinterpret_cast<Cmd_ExecFromFastFile_t>(0x8223AF40);
-    Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand = reinterpret_cast<Cmd_ExecuteSingleCommand_t>(0x8223A7A0);
+    static auto Cmd_AddCommandInternal = reinterpret_cast<void (*)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd)>(0x8223ADE0);
+    static auto Cmd_ExecFromFastFile = reinterpret_cast<bool (*)(int localClientNum, int controllerIndex, const char *filename)>(0x8223AF40);
+    static auto Cmd_ExecuteSingleCommand = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *text)>(0x8223A7A0);
 
-    CheatsOk_t CheatsOk = reinterpret_cast<CheatsOk_t>(0x8227BF40);
+    static auto CheatsOk = reinterpret_cast<int (*)(gentity_s *ent)>(0x8227BF40);
 
-    Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x82237000);
-    Com_PrintError_t Com_PrintError = reinterpret_cast<Com_PrintError_t>(0x82235C50);
-    Com_PrintWarning_t Com_PrintWarning = reinterpret_cast<Com_PrintWarning_t>(0x822356B8);
+    static auto Com_Printf = reinterpret_cast<void (*)(conChannel_t channel, const char *fmt, ...)>(0x82237000);
+    static auto Com_PrintError = reinterpret_cast<void (*)(conChannel_t channel, const char *fmt, ...)>(0x82235C50);
+    static auto Com_PrintWarning = reinterpret_cast<void (*)(conChannel_t channel, const char *fmt, ...)>(0x822356B8);
 
-    DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x8229ED48);
-    DB_FindXAssetEntry_t DB_FindXAssetEntry = reinterpret_cast<DB_FindXAssetEntry_t>(0x8229EB98);
-    DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x822A0298);
-    DB_GetAllXAssetOfType_FastFile_t DB_GetAllXAssetOfType_FastFile = reinterpret_cast<DB_GetAllXAssetOfType_FastFile_t>(0x8229E8E0);
+    static auto DB_EnumXAssets_FastFile = reinterpret_cast<void (*)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride)>(0x8229ED48);
+    static auto DB_FindXAssetEntry = reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, const char *name)>(0x8229EB98);
+    static auto DB_FindXAssetHeader = reinterpret_cast<XAssetHeader *(*)(const XAssetType type, const char *name)>(0x822A0298);
+    static auto DB_GetAllXAssetOfType_FastFile = reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x8229E8E0);
 
-    Dvar_FindMalleableVar_t Dvar_FindMalleableVar = reinterpret_cast<Dvar_FindMalleableVar_t>(0x821D4C10);
-    Dvar_GetBool_t Dvar_GetBool = reinterpret_cast<Dvar_GetBool_t>(0x821D15D8);
-    Dvar_RegisterBool_t Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x821D5180);
-    Dvar_RegisterColor_t Dvar_RegisterColor = reinterpret_cast<Dvar_RegisterColor_t>(0x821D4D98);
-    Dvar_RegisterEnum_t Dvar_RegisterEnum = reinterpret_cast<Dvar_RegisterEnum_t>(0x821D4F88);
-    Dvar_RegisterInt_t Dvar_RegisterInt = reinterpret_cast<Dvar_RegisterInt_t>(0x821D5138);
+    static auto Dvar_FindMalleableVar = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x821D4C10);
+    static auto Dvar_GetBool = reinterpret_cast<bool (*)(const char *dvarName)>(0x821D15D8);
+    static auto Dvar_RegisterBool = reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, unsigned __int16 flags, const char *description)>(0x821D5180);
+    static auto Dvar_RegisterColor = reinterpret_cast<dvar_s *(*)(const char *dvarName, double r, double g, double b, double a, unsigned __int16 flags, const char *description)>(0x821D4D98);
+    static auto Dvar_RegisterEnum = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char **valueList, unsigned __int16 defaultIndex, unsigned __int16 flags, const char *description)>(0x821D4F88);
+    static auto Dvar_RegisterInt = reinterpret_cast<dvar_s *(*)(const char *dvarName, int value, int min, int max, unsigned __int16 flags, const char *description)>(0x821D5138);
 
-    GetEntity_t GetEntity = reinterpret_cast<GetEntity_t>(0x82257F30);
+    static auto GetEntity = reinterpret_cast<gentity_s *(*)(scr_entref_t entref)>(0x82257F30);
 
-    G_SetAngle_t G_SetAngle = reinterpret_cast<G_SetAngle_t>(0x8224AA98);
-    G_SetLastServerTime_t G_SetLastServerTime = reinterpret_cast<G_SetLastServerTime_t>(0x82285D08);
-    G_SetOrigin_t G_SetOrigin = reinterpret_cast<G_SetOrigin_t>(0x8224AAF0);
+    static auto G_SetAngle = reinterpret_cast<void (*)(gentity_s *ent, float *origin)>(0x8224AA98);
+    static auto G_SetLastServerTime = reinterpret_cast<void (*)(int clientNum, int lastServerTime)>(0x82285D08);
+    static auto G_SetOrigin = reinterpret_cast<void (*)(gentity_s *ent, float *origin)>(0x8224AAF0);
 
-    I_strnicmp_t I_strnicmp = reinterpret_cast<I_strnicmp_t>(0x821CDA98);
+    static auto I_strnicmp = reinterpret_cast<int (*)(const char *s0, const char *s1, int n)>(0x821CDA98);
 
-    Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822A9648);
+    static auto Load_MapEntsPtr = reinterpret_cast<void (*)()>(0x822A9648);
 
-    PM_FoliageSounds_t PM_FoliageSounds = reinterpret_cast<PM_FoliageSounds_t>(0x82335E90);
-    Pmove_t Pmove = reinterpret_cast<Pmove_t>(0x8233B470);
-    PmoveSingle_t PmoveSingle = reinterpret_cast<PmoveSingle_t>(0x8233A938);
+    static auto PM_FoliageSounds = reinterpret_cast<void (*)(pmove_t *pm)>(0x82335E90);
+    static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233B470);
+    static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233A938);
 
-    R_AddCmdDrawText_t R_AddCmdDrawText = (R_AddCmdDrawText_t)0x8216C0B8;
-    R_DrawAllDynEnt_t R_DrawAllDynEnt = reinterpret_cast<R_DrawAllDynEnt_t>(0x8215FF98);
-    R_GetImageList_t R_GetImageList = reinterpret_cast<R_GetImageList_t>(0x82152A58);
-    R_RegisterFont_t R_RegisterFont = reinterpret_cast<R_RegisterFont_t>(0x8216EC00);
-    R_StreamLoadFileSynchronously_t R_StreamLoadFileSynchronously = reinterpret_cast<R_StreamLoadFileSynchronously_t>(0x82151510);
+    static auto R_AddCmdDrawText = reinterpret_cast<void (*)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale, double yScale, double rotation, const float *color, int style)>(0x8216C0B8);
+    static auto R_DrawAllDynEnt = reinterpret_cast<void (*)(const GfxViewInfo *viewInfo)>(0x8215FF98);
+    static auto R_GetImageList = reinterpret_cast<void (*)(ImageList *imageList)>(0x82152A58);
+    static auto R_RegisterFont = reinterpret_cast<int (*)(const char *name)>(0x8216EC00);
+    static auto R_StreamLoadFileSynchronously = reinterpret_cast<int (*)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)>(0x82151510);
 
-    SetClientViewAngle_t SetClientViewAngle = reinterpret_cast<SetClientViewAngle_t>(0x82284C60);
+    static auto SetClientViewAngle = reinterpret_cast<void (*)(gentity_s *ent, float *angle)>(0x82284C60);
 
-    SCR_DrawSmallStringExt_t SCR_DrawSmallStringExt = reinterpret_cast<SCR_DrawSmallStringExt_t>(0x822C9B88);
+    static auto SCR_DrawSmallStringExt = reinterpret_cast<void (*)(unsigned int x, unsigned int y, const char *string, const float *setColor)>(0x822C9B88);
 
-    Scr_AddArray_t Scr_AddArray = reinterpret_cast<Scr_AddArray_t>(0x82210538);
-    Scr_AddInt_t Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x822111C0);
-    Scr_AddString_t Scr_AddString = reinterpret_cast<Scr_AddString_t>(0x82210F28);
-    Scr_Error_t Scr_Error = reinterpret_cast<Scr_Error_t>(0x8220F6F0);
-    Scr_GetEntity_t Scr_GetEntity = reinterpret_cast<Scr_GetEntity_t>(0x8224EE68);
-    Scr_GetFunction_t Scr_GetFunction = reinterpret_cast<Scr_GetFunction_t>(0x82256ED0);
-    Scr_GetInt_t Scr_GetInt = reinterpret_cast<Scr_GetInt_t>(0x8220FD10);
-    Scr_GetMethod_t Scr_GetMethod = reinterpret_cast<Scr_GetMethod_t>(0x822570E0);
-    Scr_GetVector_t Scr_GetVector = reinterpret_cast<Scr_GetVector_t>(0x8220FA88);
-    Scr_MakeArray_t Scr_MakeArray = reinterpret_cast<Scr_MakeArray_t>(0x82210CA0);
-    Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x82221220);
+    static auto Scr_AddArray = reinterpret_cast<void (*)()>(0x82210538);
+    static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x822111C0);
+    static auto Scr_AddString = reinterpret_cast<void (*)(const char *value)>(0x82210F28);
+    static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x8220F6F0);
+    static auto Scr_GetEntity = reinterpret_cast<gentity_s *(*)(scr_entref_t * entref)>(0x8224EE68);
+    static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x82256ED0);
+    static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index)>(0x8220FD10);
+    static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x822570E0);
+    static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue)>(0x8220FA88);
+    static auto Scr_MakeArray = reinterpret_cast<void (*)()>(0x82210CA0);
+    static auto Scr_ReadFile_FastFile = reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(0x82221220);
 
-    SV_ClientThink_t SV_ClientThink = reinterpret_cast<SV_ClientThink_t>(0x82208448);
-    SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = reinterpret_cast<SV_Cmd_ArgvBuffer_t>(0x82239F48);
-    SV_GameSendServerCommand_t SV_GameSendServerCommand = reinterpret_cast<SV_GameSendServerCommand_t>(0x82204BB8);
-    SV_LinkEntity_t SV_LinkEntity = reinterpret_cast<SV_LinkEntity_t>(0x82355A00);
-    SV_SendServerCommand_t SV_SendServerCommand = reinterpret_cast<SV_SendServerCommand_t>(0x821FFE30);
-    SV_SetBrushModel_t SV_SetBrushModel = reinterpret_cast<SV_SetBrushModel_t>(0x82205050);
-    SV_UnlinkEntity_t SV_UnlinkEntity = reinterpret_cast<SV_UnlinkEntity_t>(0x82355F08);
+    static auto SV_ClientThink = reinterpret_cast<void (*)(int clientNum, usercmd_s *cmd)>(0x82208448);
+    static auto SV_Cmd_ArgvBuffer = reinterpret_cast<void (*)(int arg, char *buffer, int bufferLength)>(0x82239F48);
+    static auto SV_GameSendServerCommand = reinterpret_cast<void (*)(int clientNum, svscmd_type type, const char *text)>(0x82204BB8);
+    static auto SV_LinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82355A00);
+    static auto SV_SendServerCommand = reinterpret_cast<void (*)(client_t *cl, svscmd_type type, const char *fmt, ...)>(0x821FFE30);
+    static auto SV_SetBrushModel = reinterpret_cast<int (*)(gentity_s *ent)>(0x82205050);
+    static auto SV_UnlinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82355F08);
 
-    Sys_SnapVector_t Sys_SnapVector = reinterpret_cast<Sys_SnapVector_t>(0x821A3BD0);
+    static auto Sys_SnapVector = reinterpret_cast<void (*)(float *result)>(0x821A3BD0);
 
-    TeleportPlayer_t TeleportPlayer = reinterpret_cast<TeleportPlayer_t>(0x8226F408);
+    static auto TeleportPlayer = reinterpret_cast<void (*)(gentity_s *player, float *origin, float *angles)>(0x8226F408);
 
-    UI_DrawBuildNumber_t UI_DrawBuildNumber = reinterpret_cast<UI_DrawBuildNumber_t>(0x821EBB30);
-    UI_DrawText_t UI_DrawText = reinterpret_cast<UI_DrawText_t>(0x821EB858);
-    UI_Refresh_t UI_Refresh = reinterpret_cast<UI_Refresh_t>(0x821F2F28);
+    static auto UI_DrawBuildNumber = reinterpret_cast<void (*)(int localClientNum)>(0x821EBB30);
+    static auto UI_DrawTextExt = reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style)>(0x821EB858);
+    static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x821F2F28);
 
-    va_t va = reinterpret_cast<va_t>(0x821CD858);
+    static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x821CD858);
+
+    static auto Jump_Check = reinterpret_cast<int (*)(pmove_t *pm, pml_t *pml)>(0x82341480);
+    static auto BG_CalculateWeaponPosition_IdleAngles = reinterpret_cast<void (*)(weaponState_t *ws, float *angles)>(0x8232CA78);
+    static auto BG_CalculateView_IdleAngles = reinterpret_cast<void (*)(viewState_t *vs, float *angles)>(0x8232C840);
 
     // Variables
     auto cgArray = reinterpret_cast<cg_s *>(0x823F28A0);
@@ -1781,8 +1785,6 @@ namespace mp
 
     dvar_s *bg_bobIdle = nullptr;
 
-    BG_CalculateWeaponPosition_IdleAngles_t BG_CalculateWeaponPosition_IdleAngles = reinterpret_cast<BG_CalculateWeaponPosition_IdleAngles_t>(0x8232CA78);
-
     Detour BG_CalculateWeaponPosition_IdleAngles_Detour;
 
     void BG_CalculateWeaponPosition_IdleAngles_Hook(weaponState_t *ws, float *angles)
@@ -1793,8 +1795,6 @@ namespace mp
         }
         BG_CalculateWeaponPosition_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateWeaponPosition_IdleAngles)>()(ws, angles);
     }
-
-    BG_CalculateView_IdleAngles_t BG_CalculateView_IdleAngles = reinterpret_cast<BG_CalculateView_IdleAngles_t>(0x8232C840);
 
     Detour BG_CalculateView_IdleAngles_Detour;
 
@@ -2153,10 +2153,6 @@ namespace mp
             memcpy(&pm->oldcmd, &pm->cmd, sizeof(pm->oldcmd));
         }
     }
-
-    struct pml_t;
-
-    static int (*Jump_Check)(pmove_t *pm, pml_t *pml) = reinterpret_cast<int (*)(pmove_t *, pml_t *)>(0x82341480);
 
     dvar_s *pm_bhop_auto = nullptr;
 
