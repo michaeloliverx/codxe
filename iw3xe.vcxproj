@@ -94,6 +94,7 @@
       <ClCompile Include="src\game\sp_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <ClInclude Include="src\game\iw3\mp\structs.h" />
       <ClInclude Include="src\game\iw3\mp\symbols.h" />
       <ClInclude Include="src\game\t4\mp\main.h" />
       <ClInclude Include="src\game\t4\mp\symbols.h" />
@@ -118,7 +119,6 @@
       <ClInclude Include="src\xboxkrnl.h" />
       <ClInclude Include="src\game\mp_gscr_fields.h" />
       <ClInclude Include="src\game\mp_main.h" />
-      <ClInclude Include="src\game\mp_structs.h" />
       <ClInclude Include="src\game\sp_main.h" />
   </ItemGroup>
 </Project>

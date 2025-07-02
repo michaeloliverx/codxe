@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/mp_structs.h"
+#include "structs.h"
 
 namespace iw3
 {
