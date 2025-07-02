@@ -1,5 +1,5 @@
 #include "common.h"
-#include "mp_gscr_fields.h"
+#include "g_client_fields.h"
 
 const unsigned int CLIENT_FIELD_MASK = 0xC000;
 
