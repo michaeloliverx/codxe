@@ -94,6 +94,7 @@
       <ClCompile Include="src\game\sp_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <ClInclude Include="src\game\iw3\mp\symbols.h" />
       <ClInclude Include="src\game\t4\mp\main.h" />
       <ClInclude Include="src\game\t4\mp\symbols.h" />
       <ClInclude Include="src\game\t4\mp\structs.h" />

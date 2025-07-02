@@ -1,10 +1,12 @@
 #pragma once
 
 #include "common.h"
-
-namespace mp
+namespace iw3
 {
-    extern gentity_s *g_entities;
+    namespace mp
+    {
+        extern gentity_s *g_entities;
 
-    void init();
+        void init();
+    }
 }
