@@ -131,9 +131,17 @@ namespace iw3
         static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs)>(0x8224F6B0);
         static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs)>(0x8224F1A0);
 
+        static auto BG_FindWeaponIndexForName = reinterpret_cast<unsigned int (*)(const char *name)>(0x8232DC38);
+
+        static auto CL_CreateNewCommands = reinterpret_cast<void (*)(int localClientNum)>(0x822DCAE8);
+        static auto CL_GetPredictedOriginForServerTime = reinterpret_cast<int (*)(clientActive_t *cl, int serverTime, float *predictedOrigin, float *predictedVelocity, int *bobCycle, int *movementDir)>(0x822CAA38);
+
         // Variables
         static auto cgArray = reinterpret_cast<cg_s *>(0x823F28A0);
+        static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
+        static auto clients = reinterpret_cast<clientActive_t **>(0x82435AB8);
         static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
+        static auto cg_pmove = reinterpret_cast<pmove_t *>(0x823F6040);
         static auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);
         static auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
         static auto client_fields = reinterpret_cast<client_fields_s *>(0x82047A18);
