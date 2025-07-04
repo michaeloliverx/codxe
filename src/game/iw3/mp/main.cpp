@@ -1,4 +1,5 @@
 #include "main.h"
+#include "components/cg.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest
@@ -1682,30 +1683,6 @@ namespace iw3
             }
         }
 
-        dvar_s *bg_bobIdle = nullptr;
-
-        Detour BG_CalculateWeaponPosition_IdleAngles_Detour;
-
-        void BG_CalculateWeaponPosition_IdleAngles_Hook(weaponState_t *ws, float *angles)
-        {
-            if (!bg_bobIdle->current.enabled)
-            {
-                return;
-            }
-            BG_CalculateWeaponPosition_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateWeaponPosition_IdleAngles)>()(ws, angles);
-        }
-
-        Detour BG_CalculateView_IdleAngles_Detour;
-
-        void BG_CalculateView_IdleAngles_Hook(viewState_t *vs, float *angles)
-        {
-            if (!bg_bobIdle->current.enabled)
-            {
-                return;
-            }
-            BG_CalculateView_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateView_IdleAngles)>()(vs, angles);
-        }
-
         void DrawBranding()
         {
             const char *branding = "IW3xe";
@@ -2078,9 +2055,19 @@ namespace iw3
             return Jump_Check_Detour.GetOriginal<decltype(Jump_Check)>()(pm, pml);
         }
 
+        std::vector<Module *> components;
+
+        void RegisterComponent(Module *module)
+        {
+            DbgPrint("T4 MP: Component registered: %s\n", module->get_name());
+            components.push_back(module);
+        }
+
         void init()
         {
             xbox::DbgPrint("Initializing MP\n");
+
+            RegisterComponent(new cg());
 
             UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
             UI_DrawBuildNumber_Detour.Install();
@@ -2143,14 +2130,6 @@ namespace iw3
             PM_FoliageSounds_Detour = Detour(PM_FoliageSounds, PM_FoliageSounds_Hook);
             PM_FoliageSounds_Detour.Install();
 
-            bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, 0, "Idle gun sway");
-
-            BG_CalculateWeaponPosition_IdleAngles_Detour = Detour(BG_CalculateWeaponPosition_IdleAngles, BG_CalculateWeaponPosition_IdleAngles_Hook);
-            BG_CalculateWeaponPosition_IdleAngles_Detour.Install();
-
-            BG_CalculateView_IdleAngles_Detour = Detour(BG_CalculateView_IdleAngles, BG_CalculateView_IdleAngles_Hook);
-            BG_CalculateView_IdleAngles_Detour.Install();
-
             cmd_function_s *cmdinput_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
 
@@ -2183,5 +2162,33 @@ namespace iw3
             Jump_Check_Detour = Detour(Jump_Check, Jump_Check_Hook);
             Jump_Check_Detour.Install();
         }
+
+        void shutdown()
+        {
+            xbox::DbgPrint("Shutting down MP\n");
+
+            UI_DrawBuildNumber_Detour.Remove();
+            CG_DrawActive_Detour.Remove();
+            ClientCommand_Detour.Remove();
+            CL_ConsolePrint_Detour.Remove();
+            CL_GamepadButtonEvent_Detour.Remove();
+            Load_MapEntsPtr_Detour.Remove();
+            R_StreamLoadFileSynchronously_Detour.Remove();
+            Scr_ReadFile_FastFile_Detour.Remove();
+            Scr_GetFunction_Detour.Remove();
+            Scr_GetMethod_Detour.Remove();
+            SV_ClientThinkDetour.Remove();
+            Pmove_Detour.Remove();
+            Jump_Check_Detour.Remove();
+
+            // TODO: move module loader/unloader logic to a self contained class
+            // Clean up in reverse order
+            for (auto it = components.rbegin(); it != components.rend(); ++it)
+            {
+                delete *it;
+            }
+            components.clear();
+        }
+
     }
 }
