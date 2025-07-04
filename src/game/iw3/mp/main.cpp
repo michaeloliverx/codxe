@@ -1441,27 +1441,11 @@ namespace iw3
             CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
         }
 
-        void DrawBranding()
+        Detour UI_Refresh_Detour;
+
+        void UI_Refresh_Hook(int localClientNum)
         {
-            const char *branding = "IW3xe";
-            const char *build = __DATE__ " " __TIME__;
-            char brandingWithBuild[256];
-
-            // Combine branding and build number
-            _snprintf(brandingWithBuild, sizeof(brandingWithBuild), "%s (Build %d)", branding, BUILD_NUMBER);
-
-            static Font_s *font = (Font_s *)R_RegisterFont("fonts/consoleFont");
-            float color[4] = {1.0, 1.0, 1.0, 0.4};
-
-            R_AddCmdDrawText(brandingWithBuild, 256, font, 10, 20, 1.0, 1.0, 0.0, color, 0);
-            R_AddCmdDrawText(build, 256, font, 10, 40, 1.0, 1.0, 0.0, color, 0);
-        }
-
-        Detour UI_DrawBuildNumber_Detour;
-
-        void UI_DrawBuildNumber_Hook(const int localClientNum)
-        {
-            DrawBranding();
+            UI_Refresh_Detour.GetOriginal<decltype(UI_Refresh)>()(localClientNum);
             CheckKeyboardCompletion();
         }
 
@@ -1789,8 +1773,8 @@ namespace iw3
             RegisterComponent(new g_client_fields());
             RegisterComponent(new pm());
 
-            UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
-            UI_DrawBuildNumber_Detour.Install();
+            UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
+            UI_Refresh_Detour.Install();
 
             CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
             CG_DrawActive_Detour.Install();
@@ -1848,7 +1832,6 @@ namespace iw3
         {
             xbox::DbgPrint("Shutting down MP\n");
 
-            UI_DrawBuildNumber_Detour.Remove();
             CG_DrawActive_Detour.Remove();
             CL_ConsolePrint_Detour.Remove();
             CL_GamepadButtonEvent_Detour.Remove();
