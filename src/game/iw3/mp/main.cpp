@@ -1,5 +1,6 @@
 #include "main.h"
 #include "components/cg.h"
+#include "components/cmds.h"
 #include "components/g_client_fields.h"
 
 // Structure to hold data for the active keyboard request
@@ -376,93 +377,6 @@ namespace iw3
             }
         }
 
-        void Cmd_UFO_f(gentity_s *ent)
-        {
-            if (!CheatsOk(ent))
-                return;
-
-            gclient_s *client = ent->client;
-
-            bool enableUFO = !client->ufo;
-            client->ufo = enableUFO;
-
-            const char *message = enableUFO ? "GAME_UFOON" : "GAME_UFOOFF";
-
-            // Format the command string (note: 101 is ASCII for 'e')
-            const char *commandString = va("%c \"%s\"", 101, message);
-
-            int entityIndex = ent - g_entities;
-
-            if (entityIndex == -1)
-                SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "%s", commandString);
-            else
-                SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
-        }
-
-        void Cmd_Noclip_f(gentity_s *ent)
-        {
-            if (!CheatsOk(ent))
-                return;
-
-            gclient_s *client = ent->client;
-
-            bool enableNoclip = !client->noclip;
-            client->noclip = enableNoclip;
-
-            const char *message = enableNoclip ? "GAME_NOCLIPON" : "GAME_NOCLIPOFF";
-
-            // Format the command string (note: 101 is ASCII for 'e')
-            const char *commandString = va("%c \"%s\"", 101, message);
-
-            int entityIndex = ent - g_entities;
-
-            if (entityIndex == -1)
-                SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "%s", commandString);
-            else
-                SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
-        }
-
-        void Cmd_God_f(gentity_s *ent)
-        {
-            if (!CheatsOk(ent))
-                return;
-
-            // Toggle god mode flag (bit 0)
-            ent->flags ^= 1;
-
-            bool godModeEnabled = (ent->flags & 1) != 0;
-            const char *message = godModeEnabled ? "GAME_GODMODE_ON" : "GAME_GODMODE_OFF";
-
-            // Format command string (101 is ASCII for 'e')
-            const char *commandString = va("%c \"%s\"", 101, message);
-
-            int entityIndex = ent - g_entities;
-
-            if (entityIndex == -1)
-                SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, "%s", commandString);
-            else
-                SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
-        }
-
-        Detour ClientCommand_Detour;
-
-        void ClientCommand_Hook(int clientNum)
-        {
-            gentity_s *ent = &g_entities[clientNum];
-
-            char cmd[1032];
-            SV_Cmd_ArgvBuffer(0, cmd, 1024);
-
-            if (I_strnicmp(cmd, "noclip", 6) == 0)
-                Cmd_Noclip_f(ent);
-            else if (I_strnicmp(cmd, "ufo", 3) == 0)
-                Cmd_UFO_f(ent);
-            else if (I_strnicmp(cmd, "god", 3) == 0)
-                Cmd_God_f(ent);
-            else
-                ClientCommand_Detour.GetOriginal<decltype(ClientCommand)>()(clientNum);
-        }
-
         Detour Load_MapEntsPtr_Detour;
 
         void Load_MapEntsPtr_Hook()
@@ -660,55 +574,6 @@ namespace iw3
             }
 
             return Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos, archive);
-        }
-
-        const unsigned int MAX_RAWFILES = 2048;
-        struct RawFileList
-        {
-            unsigned int count;
-            RawFile *files[MAX_RAWFILES];
-        };
-
-        void R_AddRawFileToList(void *asset, void *inData)
-        {
-            RawFileList *rawFileList = reinterpret_cast<RawFileList *>(inData);
-            RawFile *rawFile = reinterpret_cast<RawFile *>(asset);
-
-            if (!rawFile)
-            {
-                Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: Null RawFile!\n");
-                return;
-            }
-
-            if (rawFileList->count >= MAX_RAWFILES)
-            {
-                Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: RawFileList is full!\n");
-                return;
-            }
-
-            rawFileList->files[rawFileList->count++] = rawFile;
-        }
-
-        void R_GetRawFileList(RawFileList *rawFileList)
-        {
-            rawFileList->count = 0;
-            DB_EnumXAssets_FastFile(ASSET_TYPE_RAWFILE, R_AddRawFileToList, rawFileList, true);
-        }
-
-        void Cmd_rawfilesdump()
-        {
-            RawFileList rawFileList;
-            R_GetRawFileList(&rawFileList);
-
-            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping %d raw files to `raw\\` %d\n", rawFileList.count);
-
-            for (unsigned int i = 0; i < rawFileList.count; i++)
-            {
-                auto rawfile = rawFileList.files[i];
-                std::string asset_name = rawfile->name;
-                std::replace(asset_name.begin(), asset_name.end(), '/', '\\'); // Replace forward slashes with backslashes
-                filesystem::write_file_to_disk(("game:\\dump\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
-            }
         }
 
         void Image_DbgPrint(const GfxImage *image)
@@ -1984,6 +1849,7 @@ namespace iw3
             xbox::DbgPrint("Initializing MP\n");
 
             RegisterComponent(new cg());
+            RegisterComponent(new cmds());
             RegisterComponent(new g_client_fields());
 
             UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
@@ -1991,9 +1857,6 @@ namespace iw3
 
             CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
             CG_DrawActive_Detour.Install();
-
-            ClientCommand_Detour = Detour(ClientCommand, ClientCommand_Hook);
-            ClientCommand_Detour.Install();
 
             CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
             CL_ConsolePrint_Detour.Install();
@@ -2009,9 +1872,6 @@ namespace iw3
 
             Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
             Scr_ReadFile_FastFile_Detour.Install();
-
-            cmd_function_s *rawfilesdump_VAR = new cmd_function_s;
-            Cmd_AddCommandInternal("rawfiledump", Cmd_rawfilesdump, rawfilesdump_VAR);
 
             cmd_function_s *imagedump_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("imagedump", Cmd_imagedump, imagedump_VAR);
@@ -2073,7 +1933,6 @@ namespace iw3
 
             UI_DrawBuildNumber_Detour.Remove();
             CG_DrawActive_Detour.Remove();
-            ClientCommand_Detour.Remove();
             CL_ConsolePrint_Detour.Remove();
             CL_GamepadButtonEvent_Detour.Remove();
             Load_MapEntsPtr_Detour.Remove();
