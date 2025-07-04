@@ -400,7 +400,7 @@ namespace iw3
             char selectedLocation[2];
         };
 
-        static_assert(sizeof(usercmd_s) == 0x0020, "");
+        static_assert(sizeof(usercmd_s) == 32, "");
 
         /* 9100 */
         struct clientSession_t
@@ -1463,6 +1463,7 @@ namespace iw3
             float viewChange;
             unsigned __int8 handler;
         };
+        static_assert(sizeof(pmove_t) == 272, "");
 
         struct viewState_t;
 
@@ -1497,6 +1498,7 @@ namespace iw3
             int numVoicePacketsSent;
             int numVoicePacketsSentStart;
         };
+        static_assert(sizeof(clientUIActive_t) == 36, "");
 
         /* 8951 */
         struct __declspec(align(4)) cLeaf_t
@@ -2078,6 +2080,151 @@ namespace iw3
             fieldtype_t type;
             void (*callback)(gentity_s *, int);
         };
+
+        struct ClientArchiveData
+        {
+            int serverTime;
+            float origin[3];
+            float velocity[3];
+            int bobCycle;
+            int movementDir;
+        };
+        static_assert(sizeof(ClientArchiveData) == 36, "");
+        static_assert(offsetof(ClientArchiveData, serverTime) == 0x0, "");
+        static_assert(offsetof(ClientArchiveData, origin) == 0x4, "");
+        static_assert(offsetof(ClientArchiveData, velocity) == 0x10, "");
+        static_assert(offsetof(ClientArchiveData, bobCycle) == 0x1C, "");
+        static_assert(offsetof(ClientArchiveData, movementDir) == 0x20, "");
+
+        struct clientActive_t
+        {
+            char pad[152880];
+            float viewangles[3];
+            char pad2[262164];
+            usercmd_s cmds[128];
+            int cmdNumber;
+            ClientArchiveData clientArchive[256];
+            int clientArchiveIndex;
+            char pad3[1402252];
+        };
+        static_assert(sizeof(clientActive_t) == 1830628, "");
+        static_assert(offsetof(clientActive_t, viewangles) == 152880, "");
+        static_assert(offsetof(clientActive_t, cmds) == 415056, "");
+        static_assert(offsetof(clientActive_t, cmdNumber) == 419152, "");
+        static_assert(offsetof(clientActive_t, clientArchiveIndex) == 428372, "");
+
+        struct FxEffectDef;
+
+        const struct __declspec(align(4)) shellshock_parms_t
+        {
+            char pad[0x268];
+        };
+        static_assert(sizeof(shellshock_parms_t) == 0x268, "");
+
+        struct __declspec(align(8)) animation_s
+        {
+            char name[64];
+            int initialLerp;
+            float moveSpeed;
+            int duration;
+            int nameHash;
+            int flags;
+            __int64 movetype;
+            int noteType;
+        };
+        static_assert(sizeof(animation_s) == 0x68, "");
+
+        struct lerpFrame_t
+        {
+            float yawAngle;
+            int yawing;
+            float pitchAngle;
+            int pitching;
+            int animationNumber;
+            animation_s *animation;
+            int animationTime;
+            float oldFramePos[3];
+            float animSpeedScale;
+            int oldFrameSnapshotTime;
+        };
+        static_assert(sizeof(lerpFrame_t) == 0x30, "");
+
+        struct __declspec(align(4)) clientInfo_t
+        {
+            int infoValid;
+            int nextValid;
+            int clientNum;
+            char name[32];
+            team_t team;
+            team_t oldteam;
+            int rank;
+            int prestige;
+            int perks;
+            char clanAbbrev[8];
+            int score;
+            int location;
+            int health;
+            char model[64];
+            char attachModelNames[6][64];
+            char attachTagNames[6][64];
+            lerpFrame_t legs;
+            lerpFrame_t torso;
+            float lerpMoveDir;
+            float lerpLean;
+            float playerAngles[3];
+            int leftHandGun;
+            int dobjDirty;
+            clientControllers_t control;
+            unsigned int clientConditions[10][2];
+            XAnimTree_s *pXAnimTree;
+            int iDObjWeapon;
+            unsigned __int8 weaponModel;
+            int stanceTransitionTime;
+            int turnAnimEndTime;
+            char turnAnimType;
+            int attachedVehEntNum;
+            int attachedVehSlotIndex;
+            bool hideWeapon;
+            bool usingKnife;
+        };
+        static_assert(sizeof(clientInfo_t) == 0x4E4, "");
+
+        struct cgs_t
+        {
+            int viewX;
+            int viewY;
+            int viewWidth;
+            int viewHeight;
+            float viewAspect;
+            int serverCommandSequence;
+            int processedSnapshotNum;
+            int localServer;
+            char gametype[32];
+            char szHostName[256];
+            int maxclients;
+            int privateClients;
+            char mapname[64];
+            int gameEndTime;
+            int voteTime;
+            int voteYes;
+            int voteNo;
+            char voteString[256];
+            int redCrosshair;
+            XModel *gameModels[512];
+            const FxEffectDef *fxs[100];
+            const FxEffectDef *smokeGrenadeFx;
+            shellshock_parms_t holdBreathParams;
+            char teamChatMsgs[8][271];
+            int teamChatMsgTimes[8];
+            int teamChatPos;
+            int teamLastChatPos;
+            float compassWidth;
+            float compassHeight;
+            float compassY;
+            clientInfo_t corpseinfo[8];
+        };
+        static_assert(sizeof(cgs_t) == 15972, "");
+
     }
 }
 
