@@ -15,6 +15,8 @@ namespace iw3
         static auto CG_GetPredictedPlayerState = reinterpret_cast<const playerState_s *(*)(int localClientNum)>(0x82309120);
         static auto CG_RegisterGraphics = reinterpret_cast<void (*)(int localClientNum, const char *mapname)>(0x8230D858);
 
+        static auto CL_CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x822E6E60);
+        static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name, unsigned int *checksum)>(0x82243940);
         static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)>(0x822E4D18);
         static auto CL_GamepadButtonEvent = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, int key, int down, unsigned int time)>(0x822DD1E8);
 
@@ -63,6 +65,7 @@ namespace iw3
         static auto Dvar_RegisterColor = reinterpret_cast<dvar_s *(*)(const char *dvarName, double r, double g, double b, double a, unsigned __int16 flags, const char *description)>(0x821D4D98);
         static auto Dvar_RegisterEnum = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char **valueList, unsigned __int16 defaultIndex, unsigned __int16 flags, const char *description)>(0x821D4F88);
         static auto Dvar_RegisterInt = reinterpret_cast<dvar_s *(*)(const char *dvarName, int value, int min, int max, unsigned __int16 flags, const char *description)>(0x821D5138);
+        static auto Dvar_RegisterString = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(0x821D1040);
 
         static auto GetEntity = reinterpret_cast<gentity_s *(*)(scr_entref_t entref)>(0x82257F30);
 
@@ -79,6 +82,7 @@ namespace iw3
         static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233A938);
 
         static auto R_AddCmdDrawText = reinterpret_cast<void (*)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale, double yScale, double rotation, const float *color, int style)>(0x8216C0B8);
+        static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_s *dvar)>(0x8234AF50);
         static auto R_DrawAllDynEnt = reinterpret_cast<void (*)(const GfxViewInfo *viewInfo)>(0x8215FF98);
         static auto R_GetImageList = reinterpret_cast<void (*)(ImageList *imageList)>(0x82152A58);
         static auto R_RegisterFont = reinterpret_cast<int (*)(const char *name)>(0x8216EC00);

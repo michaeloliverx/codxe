@@ -1376,6 +1376,12 @@ namespace iw3
 
         static_assert(sizeof(serverStaticHeader_t) == 0x0080, "");
 
+        enum DvarFlags : unsigned __int16
+        {
+            DVAR_FLAG_NONE = 0x0,
+            DVAR_CODINFO = 0x100, // On change, this is sent to all clients (if you are host)
+        };
+
         union DvarValue
         {
             bool enabled;
@@ -1595,7 +1601,7 @@ namespace iw3
         struct clipMap_t
         {
             const char *name;
-            int isInUse; // 82A23244
+            int isInUse;
             int planeCount;
             cplane_s *planes;
             unsigned int numStaticModels;
@@ -1645,6 +1651,11 @@ namespace iw3
             DynEntityColl *dynEntCollList[2];
             unsigned int checksum;
         };
+        static_assert(offsetof(clipMap_t, isInUse) == 4, "");
+        static_assert(offsetof(clipMap_t, numSubModels) == 132, "");
+        static_assert(offsetof(clipMap_t, cmodels) == 136, "");
+        static_assert(offsetof(clipMap_t, numBrushes) == 140, "");
+        static_assert(offsetof(clipMap_t, brushes) == 144, "");
 
         struct scr_entref_t
         {
@@ -2224,6 +2235,8 @@ namespace iw3
             clientInfo_t corpseinfo[8];
         };
         static_assert(sizeof(cgs_t) == 15972, "");
+
+#define CONTENTS_PLAYERCLIP 0x10000
 
     }
 }

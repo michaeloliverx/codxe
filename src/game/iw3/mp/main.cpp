@@ -1,5 +1,6 @@
 #include "main.h"
 #include "components/cg.h"
+#include "components/clipmap.h"
 #include "components/cmds.h"
 #include "components/g_client_fields.h"
 #include "components/pm.h"
@@ -1438,6 +1439,8 @@ namespace iw3
                 DrawFixedFPS();
             }
 
+            clipmap::HandleBrushCollisionChange();
+
             CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
         }
 
@@ -1449,149 +1452,43 @@ namespace iw3
             CheckKeyboardCompletion();
         }
 
-        std::vector<int> originalBrushContents;
-        std::string lastMapName;
-
         /**
-         * Save the original contents of the brushes in the map.
+         * Checks if a 3D point is contained within an axis-aligned bounding box
          */
-        void SaveOriginalBrushContents()
+        bool IsPointInBounds(const float mins[3], const float maxs[3], const float point[3])
         {
-            dvar_s *mapname = Dvar_FindMalleableVar("mapname");
-            if (lastMapName != mapname->current.string)
-            {
-                originalBrushContents.clear();
-                originalBrushContents.resize(cm->numBrushes);
-                for (int i = 0; i < cm->numBrushes; i++)
-                    originalBrushContents[i] = cm->brushes[i].contents;
-
-                lastMapName = mapname->current.string;
-            }
+            return (point[0] >= mins[0] && point[0] <= maxs[0]) &&
+                   (point[1] >= mins[1] && point[1] <= maxs[1]) &&
+                   (point[2] >= mins[2] && point[2] <= maxs[2]);
         }
 
-        void RemoveBrushCollisions(int heightLimit)
+        void GSCrGetPlayerclipBrushesContainingPoint()
         {
-            SaveOriginalBrushContents();
-
-            for (int i = 0; i < cm->numBrushes; i++)
-            {
-                cbrush_t &brush = cm->brushes[i];
-                float height = brush.maxs[2] - brush.mins[2];
-                if (height > heightLimit)
-                    brush.contents &= ~0x10000;
-            }
-        }
-
-        void RestoreBrushCollisions()
-        {
-            SaveOriginalBrushContents();
-
-            for (int i = 0; i < cm->numBrushes; i++)
-                cm->brushes[i].contents = originalBrushContents[i];
-        }
-
-        void GScr_RemoveBrushCollisionsOverHeight(scr_entref_t entref)
-        {
-            int heightLimit = Scr_GetInt(0);
-            RemoveBrushCollisions(heightLimit);
-        }
-
-        bool IsPointInsideBounds(const float point[3], const float mins[3], const float maxs[3])
-        {
-            return (point[0] >= mins[0] && point[0] <= maxs[0] &&
-                    point[1] >= mins[1] && point[1] <= maxs[1] &&
-                    point[2] >= mins[2] && point[2] <= maxs[2]);
-        }
-
-        void GScr_EnableCollisionForBrushContainingOrigin()
-        {
-            SaveOriginalBrushContents();
-
-            float point[3] = {0.0f, 0.0f, 0.0f};
+            float point[3] = {0};
             Scr_GetVector(0, point);
 
-            int matchBrushIndex = -1;
-
-            for (int i = 0; i < cm->numBrushes; i++)
+            std::vector<int> brushIndices;
+            for (int i = 0; i < cm->numBrushes; ++i)
             {
-                cbrush_t &brush = cm->brushes[i];
-                if (IsPointInsideBounds(point, brush.mins, brush.maxs) && !(brush.contents & 0x10000))
-                {
-                    matchBrushIndex = i;
-                    break;
-                }
+                auto &brush = cm->brushes[i];
+                if (brush.contents & CONTENTS_PLAYERCLIP && IsPointInBounds(brush.mins, brush.maxs, point))
+                    brushIndices.push_back(i);
             }
 
-            if (matchBrushIndex == -1)
+            Scr_MakeArray();
+            for (size_t i = 0; i < brushIndices.size(); ++i)
             {
-                CG_GameMessage(0, "No brush found");
-                xbox::DbgPrint("No brush found\n");
-                return;
+                Scr_AddInt(brushIndices[i]);
+                Scr_AddArray();
             }
-
-            cbrush_t &brush = cm->brushes[matchBrushIndex];
-            // Enable the collision flag
-            brush.contents |= 0x10000;
-
-            // log and print the brush index
-            xbox::DbgPrint("Brush collision enabled %d\n", matchBrushIndex);
-
-            const char *state = (brush.contents & 0x10000) ? "^2enabled" : "^1disabled";
-            CG_GameMessage(0, va("brush %d collision %s", matchBrushIndex, state));
-        }
-
-        void GScr_DisableCollisionForBrushContainingOrigin()
-        {
-            SaveOriginalBrushContents();
-
-            float point[3] = {0.0f, 0.0f, 0.0f};
-            Scr_GetVector(0, point);
-
-            int matchBrushIndex = -1;
-
-            for (int i = 0; i < cm->numBrushes; i++)
-            {
-                cbrush_t &brush = cm->brushes[i];
-                if (IsPointInsideBounds(point, brush.mins, brush.maxs) && (brush.contents & 0x10000))
-                {
-                    matchBrushIndex = i;
-                    break;
-                }
-            }
-
-            if (matchBrushIndex == -1)
-            {
-                CG_GameMessage(0, "No brush found with collision enabled");
-                xbox::DbgPrint("No brush found with collision enabled\n");
-                return;
-            }
-
-            cbrush_t &brush = cm->brushes[matchBrushIndex];
-            // Disable the collision flag
-            brush.contents &= ~0x10000;
-
-            // Log and print the brush index
-            xbox::DbgPrint("Brush collision disabled %d\n", matchBrushIndex);
-
-            const char *state = (brush.contents & 0x10000) ? "^2enabled" : "^1disabled";
-            CG_GameMessage(0, va("brush %d collision %s", matchBrushIndex, state));
         }
 
         Detour Scr_GetFunction_Detour;
 
         BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
         {
-            if (std::strcmp(*pName, "removebrushcollisionsoverheight") == 0)
-                return reinterpret_cast<BuiltinFunction>(&GScr_RemoveBrushCollisionsOverHeight);
-
-            if (std::strcmp(*pName, "restorebrushcollisions") == 0)
-                return reinterpret_cast<BuiltinFunction>(&RestoreBrushCollisions);
-
-            if (std::strcmp(*pName, "enablecollisionforbrushcontainingorigin") == 0)
-                return reinterpret_cast<BuiltinFunction>(&GScr_EnableCollisionForBrushContainingOrigin);
-
-            if (std::strcmp(*pName, "disablecollisionforbrushcontainingorigin") == 0)
-                return reinterpret_cast<BuiltinFunction>(&GScr_DisableCollisionForBrushContainingOrigin);
+            if (_stricmp(*pName, "getplayerclipbrushescontainingpoint") == 0)
+                return reinterpret_cast<BuiltinFunction>(&GSCrGetPlayerclipBrushesContainingPoint);
 
             return Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
         }
@@ -1769,6 +1666,7 @@ namespace iw3
             xbox::DbgPrint("Initializing MP\n");
 
             RegisterComponent(new cg());
+            RegisterComponent(new clipmap());
             RegisterComponent(new cmds());
             RegisterComponent(new g_client_fields());
             RegisterComponent(new pm());
