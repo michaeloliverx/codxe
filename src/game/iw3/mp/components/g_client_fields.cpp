@@ -1,5 +1,5 @@
-#include "common.h"
 #include "g_client_fields.h"
+#include "common.h"
 
 const unsigned int CLIENT_FIELD_MASK = 0xC000;
 
@@ -122,7 +122,7 @@ namespace iw3
             }
         }
 
-        void init_gscr_fields()
+        g_client_fields::g_client_fields()
         {
             GScr_AddFieldsForClient_Detour = Detour(GScr_AddFieldsForClient, GScr_AddFieldsForClient_Hook);
             GScr_AddFieldsForClient_Detour.Install();
@@ -132,6 +132,13 @@ namespace iw3
 
             Scr_SetEntityField_Detour = Detour(Scr_SetEntityField, Scr_SetEntityField_Hook);
             Scr_SetEntityField_Detour.Install();
+        }
+
+        g_client_fields::~g_client_fields()
+        {
+            GScr_AddFieldsForClient_Detour.Remove();
+            Scr_GetEntityField_Detour.Remove();
+            Scr_SetEntityField_Detour.Remove();
         }
     }
 }
