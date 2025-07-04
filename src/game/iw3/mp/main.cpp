@@ -1567,16 +1567,6 @@ namespace iw3
             return Cmd_ExecFromFastFile_Detour.GetOriginal<decltype(Cmd_ExecFromFastFile)>()(localClientNum, controllerIndex, filename);
         }
 
-        Detour R_DrawAllDynEnt_Detour;
-
-        void R_DrawAllDynEnt_Hook(const GfxViewInfo *viewInfo)
-        {
-            if (Dvar_GetBool("r_drawDynEnts"))
-            {
-                R_DrawAllDynEnt_Detour.GetOriginal<decltype(R_DrawAllDynEnt)>()(viewInfo);
-            }
-        }
-
         dvar_s *pm_cj_hud_enable = nullptr;
         dvar_s *pm_cj_hud_color = nullptr;
         dvar_s *pm_cj_hud_x = nullptr;
@@ -2104,11 +2094,6 @@ namespace iw3
 
             Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
             Cmd_ExecFromFastFile_Detour.Install();
-
-            R_DrawAllDynEnt_Detour = Detour(R_DrawAllDynEnt, R_DrawAllDynEnt_Hook);
-            R_DrawAllDynEnt_Detour.Install();
-
-            Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
 
             pm_cj_hud_enable = Dvar_RegisterBool("pm_cj_hud_enable", false, 0, "Draw player speed and z origin");
             pm_cj_hud_color = Dvar_RegisterColor("pm_cj_hud_color", 1.0, 1.0, 1.0, 0.4, 0, "Draw player speed and z origin color");
