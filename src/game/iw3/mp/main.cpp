@@ -1900,23 +1900,7 @@ namespace iw3
                 }
             }
 
-            // Now do the original function logic
-            if (cmd->serverTime - svsHeader->time <= 20000)
-            {
-                memcpy(&cl->lastUsercmd, cmd, sizeof(usercmd_s));
-
-                if (cl->header.state == 4)
-                {
-                    int clientIndex = cl - svsHeader->clients;
-                    G_SetLastServerTime(clientIndex, cmd->serverTime);
-                    ClientThink(clientIndex);
-                }
-            }
-            else
-            {
-                char *msg = va("Invalid command time %i from client %s, current server time is %i", cmd->serverTime, cl->name, svsHeader->time);
-                Com_PrintError(CON_CHANNEL_SERVER, msg);
-            }
+            SV_ClientThinkDetour.GetOriginal<decltype(SV_ClientThink)>()(cl, cmd);
         }
 
         void PlayerCmd_HoldBreathButtonPressed(scr_entref_t entref)
