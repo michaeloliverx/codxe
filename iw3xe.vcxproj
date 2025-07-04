@@ -71,6 +71,7 @@
     </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
+      <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\g_client_fields.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
@@ -94,6 +95,7 @@
       <ClCompile Include="src\xboxkrnl.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\g_client_fields.h" />
       <ClInclude Include="src\game\iw3\mp\main.h" />
       <ClInclude Include="src\game\iw3\mp\structs.h" />
