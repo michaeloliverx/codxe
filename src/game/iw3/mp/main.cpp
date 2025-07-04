@@ -444,61 +444,6 @@ namespace iw3
                 SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
         }
 
-        const int MAX_CLIENTS = 18;
-
-        struct SavedPos
-        {
-            float origin[3];
-            float viewangles[3];
-        };
-
-        SavedPos g_saved_positions[MAX_CLIENTS] = {}; // Global array for saved positions per client
-
-        void Cmd_savepos_f(gentity_s *ent)
-        {
-            if (!CheatsOk(ent))
-                return;
-
-            int entityIndex = ent - g_entities;
-            if (entityIndex < 0 || entityIndex >= MAX_CLIENTS)
-                return;
-
-            // Save position
-            g_saved_positions[entityIndex].origin[0] = ent->r.currentOrigin[0];
-            g_saved_positions[entityIndex].origin[1] = ent->r.currentOrigin[1];
-            g_saved_positions[entityIndex].origin[2] = ent->r.currentOrigin[2];
-
-            g_saved_positions[entityIndex].viewangles[0] = ent->client->ps.viewangles[0];
-            g_saved_positions[entityIndex].viewangles[1] = ent->client->ps.viewangles[1];
-            g_saved_positions[entityIndex].viewangles[2] = ent->client->ps.viewangles[2];
-        }
-
-        void Cmd_loadpos_f(gentity_s *ent)
-        {
-            if (!CheatsOk(ent))
-                return;
-
-            int entityIndex = ent - g_entities;
-            if (entityIndex < 0 || entityIndex >= MAX_CLIENTS)
-                return;
-
-            SavedPos &pos = g_saved_positions[entityIndex];
-
-            if (pos.origin[0] == 0 && pos.origin[1] == 0 && pos.origin[2] == 0)
-            {
-                const char *commandString = va("e \"%s\"", "No saved position");
-                SV_GameSendServerCommand(entityIndex, SV_CMD_CAN_IGNORE, commandString);
-                return;
-            }
-
-            // Clear velocity
-            ent->client->ps.velocity[0] = 0;
-            ent->client->ps.velocity[1] = 0;
-            ent->client->ps.velocity[2] = 0;
-
-            TeleportPlayer(ent, pos.origin, pos.viewangles);
-        }
-
         Detour ClientCommand_Detour;
 
         void ClientCommand_Hook(int clientNum)
@@ -514,10 +459,6 @@ namespace iw3
                 Cmd_UFO_f(ent);
             else if (I_strnicmp(cmd, "god", 3) == 0)
                 Cmd_God_f(ent);
-            else if (I_strnicmp(cmd, "savepos", 7) == 0)
-                Cmd_savepos_f(ent);
-            else if (I_strnicmp(cmd, "loadpos", 7) == 0)
-                Cmd_loadpos_f(ent);
             else
                 ClientCommand_Detour.GetOriginal<decltype(ClientCommand)>()(clientNum);
         }
@@ -2103,12 +2044,6 @@ namespace iw3
 
             cmd_function_s *cmdinput_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
-
-            cmd_function_s *savepos_VAR = new cmd_function_s;
-            Cmd_AddCommandInternal("savepos", nullptr, savepos_VAR);
-
-            cmd_function_s *loadpos_VAR = new cmd_function_s;
-            Cmd_AddCommandInternal("loadpos", nullptr, loadpos_VAR);
 
             Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
             Scr_GetFunction_Detour.Install();
