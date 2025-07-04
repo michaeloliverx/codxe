@@ -27,6 +27,14 @@ namespace iw3
             BG_CalculateView_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateView_IdleAngles)>()(vs, angles);
         }
 
+        Detour R_DrawAllDynEnt_Detour;
+
+        void R_DrawAllDynEnt_Hook(const GfxViewInfo *viewInfo)
+        {
+            if (Dvar_GetBool("r_drawDynEnts"))
+                R_DrawAllDynEnt_Detour.GetOriginal<decltype(R_DrawAllDynEnt)>()(viewInfo);
+        }
+
         cg::cg()
         {
             // Default to true for idle gun sway
@@ -38,6 +46,11 @@ namespace iw3
 
             BG_CalculateView_IdleAngles_Detour = Detour(BG_CalculateView_IdleAngles, BG_CalculateView_IdleAngles_Hook);
             BG_CalculateView_IdleAngles_Detour.Install();
+
+            R_DrawAllDynEnt_Detour = Detour(R_DrawAllDynEnt, R_DrawAllDynEnt_Hook);
+            R_DrawAllDynEnt_Detour.Install();
+
+            Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
         }
 
         cg::~cg()
