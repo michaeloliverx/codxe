@@ -100,7 +100,7 @@ namespace iw3
         static auto Scr_MakeArray = reinterpret_cast<void (*)()>(0x82210CA0);
         static auto Scr_ReadFile_FastFile = reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(0x82221220);
 
-        static auto SV_ClientThink = reinterpret_cast<void (*)(int clientNum, usercmd_s *cmd)>(0x82208448);
+        static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82208448);
         static auto SV_Cmd_ArgvBuffer = reinterpret_cast<void (*)(int arg, char *buffer, int bufferLength)>(0x82239F48);
         static auto SV_GameSendServerCommand = reinterpret_cast<void (*)(int clientNum, svscmd_type type, const char *text)>(0x82204BB8);
         static auto SV_LinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82355A00);
