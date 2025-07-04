@@ -1332,32 +1332,51 @@ getentbyorigin(origin, matchNumber)
 	}
 }
 
-removeBarriersOverHeight(height)
+RestoreBrushCollision()
 {
-	restorebrushcollisions();
-	removebrushcollisionsoverheight(height);
-	if (height == 0)
-		iprintln("Barriers removed");
-	else
-		iprintln("Barriers above " + height + " height removed");
+	SetDvar("noclip_brushes", "");
+	IPrintLn("^2Collision restored for all brushes.");
 }
 
-restoreBarriers()
+RemoveAllBrushCollision()
 {
-	restorebrushcollisions();
-	iprintln("Barriers restored");
+	SetDvar("noclip_brushes", "*");
+	IPrintLn("^2Collision disabled for all brushes.");
 }
 
-enablecollisionforbrushcontainingorigin_wrapper()
+RemoveBrushCollisionForPoint(point)
 {
-	enablecollisionforbrushcontainingorigin(self.origin);
+	brushIndices = getplayerclipbrushescontainingpoint(point);
+	if(brushIndices.size == 0)
+	{
+		self IPrintLn("^1No playerclip brushes found at this point.");
+		return;
+	}
+
+	brush_str = "";
+
+	for( i = 0; i < brushIndices.size; i++)
+	{
+		brushIndex = brushIndices[i];
+		if(brushIndex == 0)
+			brush_str += brushIndex;
+		else
+			brush_str += " " + brushIndex;
+	}
+
+	currentValue = GetDvar("noclip_brushes");
+	newValue = currentValue + " " + brush_str;
+	SetDvar("noclip_brushes", newValue);
+	IPrintLn("^2Disabled collision on brushes: " + newValue);
 }
 
 disablecollisionforbrushcontainingorigin_wrapper()
 {
-	disablecollisionforbrushcontainingorigin(self.origin);
+	// Get all playerclip brushes that contain the player's position
+	point = self.origin;
+	point = point - (0, 0, 1); // Adjust the point slightly above the player to avoid ground collision
+	RemoveBrushCollisionForPoint(point);
 }
-
 
 /**
  * Check if a button is pressed.
@@ -2572,14 +2591,9 @@ generateMenuOptions()
 
 		// Barrier submenu
 		self addMenu("barrier_menu", "enhanced_menu");
-		self addMenuOption("barrier_menu", "Remove All Barriers", ::removeBarriersOverHeight, 0);
-		self addMenuOption("barrier_menu", "Remove Barriers > 100 Height", ::removeBarriersOverHeight, 100);
-		self addMenuOption("barrier_menu", "Remove Barriers > 500 Height", ::removeBarriersOverHeight, 500);
-		self addMenuOption("barrier_menu", "Remove Barriers > 1000 Height", ::removeBarriersOverHeight, 1000);
-		self addMenuOption("barrier_menu", "Remove Barriers > 1500 Height", ::removeBarriersOverHeight, 1500);
-		self addMenuOption("barrier_menu", "Enable Collision at origin", ::enablecollisionforbrushcontainingorigin_wrapper);
+		self addMenuOption("barrier_menu", "Remove All Barriers", ::RemoveAllBrushCollision);
 		self addMenuOption("barrier_menu", "Disable Collision at origin", ::disablecollisionforbrushcontainingorigin_wrapper);
-		self addMenuOption("barrier_menu", "Restore Barriers", ::restoreBarriers);
+		self addMenuOption("barrier_menu", "Restore Barriers", ::RestoreBrushCollision);
 
 		// Bot Action submenu
 		self addMenu("bot_action_menu", "enhanced_menu");
