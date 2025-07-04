@@ -1,5 +1,6 @@
 #include "main.h"
 #include "components/cg.h"
+#include "components/g_client_fields.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest
@@ -2058,6 +2059,7 @@ namespace iw3
             xbox::DbgPrint("Initializing MP\n");
 
             RegisterComponent(new cg());
+            RegisterComponent(new g_client_fields());
 
             UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
             UI_DrawBuildNumber_Detour.Install();
@@ -2132,8 +2134,6 @@ namespace iw3
 
             SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
             SV_ClientThinkDetour.Install();
-
-            init_gscr_fields();
 
             PatchViewpos();
 

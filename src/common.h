@@ -24,7 +24,6 @@
 #include "xboxkrnl.h"
 
 // IW3-specific includes
-#include "game/iw3/mp/g_client_fields.h"
 #include "game/iw3/mp/main.h"
 #include "game/iw3/mp/structs.h"
 #include "game/iw3/mp/symbols.h"
