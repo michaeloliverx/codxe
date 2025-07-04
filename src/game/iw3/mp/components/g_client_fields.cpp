@@ -51,8 +51,6 @@ namespace iw3
 
         int Scr_SetEntityField_Hook(int entnum, int offset)
         {
-            xbox::DbgPrint("Scr_SetEntityField entnum=%d offset=%d\n", entnum, offset);
-
             auto entity = &g_entities[entnum];
 
             // Client field case
