@@ -2,6 +2,7 @@
 #include "components/cg.h"
 #include "components/cmds.h"
 #include "components/g_client_fields.h"
+#include "components/pm.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest
@@ -1440,46 +1441,6 @@ namespace iw3
             CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
         }
 
-        Detour Sys_SnapVector_Detour;
-
-        static dvar_s *pm_pc_mp_velocity_snap = nullptr;
-
-        void Sys_SnapVector_Hook(float *v)
-        {
-            if (pm_pc_mp_velocity_snap->current.enabled)
-            {
-                // Use __frnd for round-to-nearest-even behavior
-                v[0] = (float)__frnd((double)v[0]);
-                v[1] = (float)__frnd((double)v[1]);
-                v[2] = (float)__frnd((double)v[2]);
-            }
-            else
-            {
-                Sys_SnapVector_Detour.GetOriginal<decltype(Sys_SnapVector)>()(v);
-            }
-        }
-
-        dvar_s *pm_multi_bounce = nullptr;
-
-        Detour PM_FoliageSounds_Detour;
-
-        void PM_FoliageSounds_Hook(pmove_t *pm)
-        {
-            PM_FoliageSounds_Detour.GetOriginal<decltype(PM_FoliageSounds)>()(pm);
-
-            // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L106-L124
-            if (pm_multi_bounce->current.enabled)
-            {
-                static float previousZ = pm->ps->jumpOriginZ;
-
-                if (pm->ps->jumpOriginZ != NULL)
-                    previousZ = pm->ps->jumpOriginZ;
-
-                pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFFE7F | 0x4000;
-                pm->ps->jumpOriginZ = previousZ;
-            }
-        }
-
         void DrawBranding()
         {
             const char *branding = "IW3xe";
@@ -1811,31 +1772,6 @@ namespace iw3
             }
         }
 
-        dvar_s *pm_bhop_auto = nullptr;
-
-        Detour Jump_Check_Detour;
-
-        int Jump_Check_Hook(pmove_t *pm, pml_t *pml)
-        {
-            // If auto bhop is enabled, pretend jump wasn't held
-            if (pm_bhop_auto->current.enabled)
-            {
-                // Temporarily clear old jump button state
-                const int old_buttons = pm->oldcmd.buttons;
-                pm->oldcmd.buttons &= ~0x400;
-
-                // Call original
-                int result = Jump_Check_Detour.GetOriginal<decltype(Jump_Check)>()(pm, pml);
-
-                // Restore old state
-                pm->oldcmd.buttons = old_buttons;
-                return result;
-            }
-
-            // Otherwise, default behavior
-            return Jump_Check_Detour.GetOriginal<decltype(Jump_Check)>()(pm, pml);
-        }
-
         std::vector<Module *> components;
 
         void RegisterComponent(Module *module)
@@ -1851,6 +1787,7 @@ namespace iw3
             RegisterComponent(new cg());
             RegisterComponent(new cmds());
             RegisterComponent(new g_client_fields());
+            RegisterComponent(new pm());
 
             UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
             UI_DrawBuildNumber_Detour.Install();
@@ -1887,21 +1824,6 @@ namespace iw3
             pm_cj_hud_x = Dvar_RegisterInt("pm_cj_hud_x", 0, 0, 640, 0, "Virtual screen x coordinate of the player speed and z origin");
             pm_cj_hud_y = Dvar_RegisterInt("pm_cj_hud_y", 470, 0, 480, 0, "Virtual screen y coordinate of the player speed and z origin");
 
-            // This allows FPS-dependent physics
-            pm_pc_mp_velocity_snap = Dvar_RegisterBool(
-                "pm_pc_mp_velocity_snap",
-                false,
-                0,
-                "Enable PC Multiplayer style velocity snapping (round to nearest). ");
-
-            Sys_SnapVector_Detour = Detour(Sys_SnapVector, Sys_SnapVector_Hook);
-            Sys_SnapVector_Detour.Install();
-
-            // Requires jump_slowdownEnable to be set to 0
-            pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", false, 0, "Enable multi-bounces");
-            PM_FoliageSounds_Detour = Detour(PM_FoliageSounds, PM_FoliageSounds_Hook);
-            PM_FoliageSounds_Detour.Install();
-
             cmd_function_s *cmdinput_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
 
@@ -1920,11 +1842,6 @@ namespace iw3
             Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
             Pmove_Detour = Detour(Pmove, Pmove_Hook);
             Pmove_Detour.Install();
-
-            // ADD CODINFO and make global
-            pm_bhop_auto = Dvar_RegisterBool("pm_bhop_auto", false, 0x80, "Enable auto-bunnyhop");
-            Jump_Check_Detour = Detour(Jump_Check, Jump_Check_Hook);
-            Jump_Check_Detour.Install();
         }
 
         void shutdown()
@@ -1942,7 +1859,6 @@ namespace iw3
             Scr_GetMethod_Detour.Remove();
             SV_ClientThinkDetour.Remove();
             Pmove_Detour.Remove();
-            Jump_Check_Detour.Remove();
 
             // TODO: move module loader/unloader logic to a self contained class
             // Clean up in reverse order

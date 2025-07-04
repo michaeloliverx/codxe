@@ -74,6 +74,7 @@
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\g_client_fields.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
       <ClCompile Include="src\game\t4\mp\main.cpp" />
@@ -99,6 +100,7 @@
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\cmds.h" />
       <ClInclude Include="src\game\iw3\mp\components\g_client_fields.h" />
+      <ClInclude Include="src\game\iw3\mp\components\pm.h" />
       <ClInclude Include="src\game\iw3\mp\main.h" />
       <ClInclude Include="src\game\iw3\mp\structs.h" />
       <ClInclude Include="src\game\iw3\mp\symbols.h" />
