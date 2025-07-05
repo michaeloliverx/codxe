@@ -996,14 +996,6 @@ getdisplayname(ent)
 		return ent.classname;
 }
 
-setSaveIndex()
-{
-	i = self.cj["savenum"];
-	self.cj["savenum"] = (i + 1) % 10;
-
-	self iPrintln("Position " + (self.cj["savenum"] + 1) + " set");
-}
-
 forge_get_mode()
 {
 	return level.forge_change_modes[self.cj["forge_change_mode_index"]];
@@ -2542,7 +2534,6 @@ generateMenuOptions()
 
 	self addMenuOption("main", "Player Settings", ::menuAction, "CHANGE_MENU", "player_settings");
 	self addMenu("player_settings", "main");
-	self addMenuOption("player_settings", "Set Save Index", ::setSaveIndex);
 	self addMenuOption("player_settings", "Distance HUD", ::toggle_hud_display, "distance");
 	self addMenuOption("player_settings", "Speed HUD", ::toggle_hud_display, "speed");
 	self addMenuOption("player_settings", "Height HUD", ::toggle_hud_display, "z_origin");
@@ -2671,12 +2662,35 @@ watch_buttons()
 			}
 			else if (self button_pressed_twice("melee"))
 			{
-				self savePos(self.cj["savenum"]);
+				self savePos();
 				wait .2;
 			}
 			else if (!self.ufo && self button_pressed("smoke"))
 			{
-				self loadPos(self.cj["savenum"]);
+				savenum = self.cj["savenum"];
+				if(savenum == 0)
+				{
+					self IPrintLn("No positions saved yet.");
+				}
+				else
+				{
+					// Load last position immediately
+					self loadPos(savenum);
+					// If user holds the button, load previous positions when pressing use
+					while (self button_pressed("smoke"))
+					{
+						if(self button_pressed("use"))
+						{
+							savenum = savenum - 1;
+							if (savenum < 1)
+								savenum = self.cj["savenum"];
+							self loadPos(savenum);
+							self IPrintLn("Position " + savenum + " loaded");
+						}
+						wait .1;
+					}
+				}
+
 				wait .2;
 			}
 			else if (self button_pressed("frag"))
@@ -2726,14 +2740,20 @@ watch_buttons()
 	}
 }
 
-savePos(i)
+savePos()
 {
 	if (!self isOnGround())
 		return;
 
+	self.cj["savenum"] += 1;
+
 	self.cj["settings"]["rpg_switched"] = false;
-	self.cj["saves"]["org"][i] = self.origin;
-	self.cj["saves"]["ang"][i] = self getPlayerAngles();
+	self.cj["saves"]["org"][self.cj["savenum"]] = self.origin;
+	self.cj["saves"]["ang"][self.cj["savenum"]] = self getPlayerAngles();
+
+	self IPrintLn("Position " + self.cj["savenum"] + " saved");
+
+	self.kills += 1;
 }
 
 loadPos(i)
@@ -2755,6 +2775,8 @@ loadPos(i)
 
 	wait 0.05;
 	self freezecontrols(false);
+
+	self.assists += 1;
 }
 
 initBot()
