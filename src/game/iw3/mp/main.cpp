@@ -1,5 +1,6 @@
 #include "main.h"
 #include "components/cg.h"
+#include "components/cj_tas.h"
 #include "components/clipmap.h"
 #include "components/cmds.h"
 #include "components/g_client_fields.h"
@@ -1626,6 +1627,7 @@ namespace iw3
             xbox::DbgPrint("Initializing MP\n");
 
             RegisterComponent(new cg());
+            RegisterComponent(new cj_tas());
             RegisterComponent(new clipmap());
             RegisterComponent(new cmds());
             RegisterComponent(new g_client_fields());
