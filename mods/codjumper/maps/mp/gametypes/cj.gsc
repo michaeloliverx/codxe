@@ -2951,12 +2951,12 @@ toggleMultiBouncing()
 	if (value == 0)
 	{
 		setDvar("pm_multi_bounce", 1);
-		self iprintln("Multi Bouncing [^2ON^7]");
+		iprintln("Multi Bouncing [^2ON^7]");
 	}
 	else
 	{
 		setDvar("pm_multi_bounce", 0);
-		self iprintln("Multi Bouncing [^1OFF^7]");
+		iprintln("Multi Bouncing [^1OFF^7]");
 	}
 }
 
