@@ -922,18 +922,12 @@ ufoend()
 
 ufocontrolsON()
 {
-	self setClientDvar("player_view_pitch_up", 89.9);	// allow looking straight up
-	self setClientDvar("player_view_pitch_down", 89.9); // allow looking straight down
-
 	self.ufo = true;
 }
 
 ufocontrolsOFF()
 {
-	self setClientDvar("player_view_pitch_down", 70);
-
 	self.ufo = false;
-
 	self freezeControls(false);
 }
 
