@@ -2405,7 +2405,7 @@ generateMenuOptions()
 		self addMenuOption("host_menu", "Toggle Old School Mode", ::toggleOldschool);
 
 		// Map Menu
-		if (getDvarInt("ui_allow_teamchange") == 1)
+		if (self == level.players[0])
 		{
 			// Map selector
 			self addMenuOption("main", "Select map", ::menuAction, "CHANGE_MENU", "host_menu_maps");
