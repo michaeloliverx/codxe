@@ -1618,6 +1618,11 @@ get_dvars()
 	dvars["r_zfar"].max = 4000;
 	dvars["r_zfar"].step = 500;
 
+	dvars["g_compassShowEnemies"] = spawnstruct();
+	dvars["g_compassShowEnemies"].type = "boolean";
+	dvars["g_compassShowEnemies"].name = "g_compassShowEnemies";
+	dvars["g_compassShowEnemies"].default_value = 0;
+
 	return dvars;
 }
 
