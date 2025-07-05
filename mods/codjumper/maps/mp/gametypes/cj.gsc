@@ -36,8 +36,6 @@ init()
 	level.forge_change_modes[2] = "roll";
 	level.forge_change_modes[3] = "z";
 
-	level.hardcoreMode = true; // Force hardcore mode
-
 	gametype = level.gametype;
 
 	setDvar("scr_" + gametype + "_scorelimit", 0);
@@ -89,13 +87,8 @@ onPlayerConnect()
 		if (isDefined(player.pers["isBot"]))
 			continue;
 
-		// JumpCrouch / binds helper
-		player setClientDvar("activeaction", "vstr VSTR_LEAN_DISABLED;");
-		player setClientDvar("VSTR_LEAN_ENABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 3; bind DPAD_LEFT +leanleft; bind DPAD_RIGHT +leanright");
-		player setClientDvar("VSTR_LEAN_DISABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 2; bind DPAD_LEFT +actionslot 3; bind DPAD_RIGHT +actionslot 4");
-		player setClientDvar("BUTTON_A_ACTION", "+gostand;-gostand");
-
 		player setupPlayer();
+		player onPlayerConnectDvars();
 		player thread onPlayerSpawned();
 	}
 }
@@ -110,8 +103,72 @@ onPlayerSpawned()
 		self cj_setup_loadout();
 		self thread replenish_ammo();
 		self thread watch_buttons();
-		self resetFOV();
+		self onPlayerSpawnedDvars();
 	}
+}
+
+onPlayerConnectDvars()
+{
+	// JumpCrouch / binds helper
+	self setClientDvar("activeaction", "vstr VSTR_LEAN_DISABLED;");
+	self setClientDvar("VSTR_LEAN_ENABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 3; bind DPAD_LEFT +leanleft; bind DPAD_RIGHT +leanright");
+	self setClientDvar("VSTR_LEAN_DISABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 2; bind DPAD_LEFT +actionslot 3; bind DPAD_RIGHT +actionslot 4");
+	self setClientDvar("BUTTON_A_ACTION", "+gostand;-gostand");
+
+	// Remove unlocalized errors
+	self setClientDvars("loc_warnings", 0, "loc_warningsAsErrors", 0, "cg_errordecay", 1, "con_errormessagetime", 0, "uiscript_debug", 0);
+
+	// Set team names
+	self setClientDvars("g_TeamName_Allies", "Jumpers", "g_TeamName_Axis", "Bots");
+
+	self setClientDvars("cg_overheadRankSize", 0, "cg_overheadIconSize", 0); // Remove overhead rank and icon
+
+	self setClientDvar("nightVisionDisableEffects", 1); // Remove nightvision fx
+
+	// Remove objective waypoints on screen
+	self setClientDvar("waypointIconWidth", 0.1);
+	self setClientDvar("waypointIconHeight", 0.1);
+	self setClientDvar("waypointOffscreenPointerWidth", 0.1);
+	self setClientDvar("waypointOffscreenPointerHeight", 0.1);
+
+	// Disable FX
+	self setClientDvars("fx_enable", 0, "fx_marks", 0, "fx_marks_ents", 0, "fx_marks_smodels", 0);
+
+	self setClientDvar("clanname", ""); // Remove clan tag
+	self setClientDvar("motd", "CodJumper");
+
+	self setClientDvar("aim_automelee_range", 0); // Remove melee lunge
+
+	// Disable autoaim for enemy players
+	self setClientDvars("aim_slowdown_enabled", 0, "aim_lockon_enabled", 0);
+
+	// Don't show enemy player names
+	self setClientDvars("cg_enemyNameFadeIn", 0, "cg_enemyNameFadeOut", 0);
+
+	self setClientDvar("cg_scoreboardPingText", 1);
+
+	self setClientDvar("cg_chatHeight", 0); // prevent people from freezing consoles via say command
+
+	// look straight up
+	self setclientdvar("player_view_pitch_up", 89.9);
+
+	// Remove glow color applied to the mode and map name strings on the connect screen
+	self setClientDvar("ui_ConnectScreenTextGlowColor", 0);
+
+	self setClientDvar("cg_descriptiveText", 0);		  // Remove spectator button icons and text
+	self setClientDvar("player_spectateSpeedScale", 1.5); // Faster movement in spectator/ufo
+}
+
+onPlayerSpawnedDvars()
+{
+	// If a player has a custom FOV set, use it
+	if (isdefined(self.cj["settings"]["cg_fov"]))
+		self setClientDvar("cg_fov", self.cj["settings"]["cg_fov"]);
+
+	// HUD
+	self setClientDvar("ui_hud_hardcore", 1);		// Hardcore HUD
+	self setClientDvar("cg_drawCrosshair", 0);		// Disable crosshair
+	self setClientDvar("g_compassShowEnemies", 0);	// Disable compass
 }
 
 is_int(num)
@@ -2003,12 +2060,6 @@ replace_weapon(weapon)
 	self cj_setup_loadout();
 }
 
-resetFOV()
-{
-	if (isdefined(self.cj["settings"]["cg_fov"]))
-		self setClientDvar("cg_fov", self.cj["settings"]["cg_fov"]);
-}
-
 setupPlayer()
 {
 	self.cj = [];
@@ -2038,52 +2089,6 @@ setupPlayer()
 	self.cj["loadout"].sidearm = "deserteaglegold_mp";
 	self.cj["loadout"].fastReload = false;
 	self.cj["loadout"].incomingWeapon = undefined;
-
-	// Remove unlocalized errors
-	self setClientDvars("loc_warnings", 0, "loc_warningsAsErrors", 0, "cg_errordecay", 1, "con_errormessagetime", 0, "uiscript_debug", 0);
-
-	// Set team names
-	self setClientDvars("g_TeamName_Allies", "Jumpers", "g_TeamName_Axis", "Bots");
-
-	self setClientDvars("cg_overheadRankSize", 0, "cg_overheadIconSize", 0); // Remove overhead rank and icon
-
-	self setClientDvar("nightVisionDisableEffects", 1); // Remove nightvision fx
-
-	// Remove objective waypoints on screen
-	self setClientDvar("waypointIconWidth", 0.1);
-	self setClientDvar("waypointIconHeight", 0.1);
-	self setClientDvar("waypointOffscreenPointerWidth", 0.1);
-	self setClientDvar("waypointOffscreenPointerHeight", 0.1);
-
-	// Disable FX
-	self setClientDvars("fx_enable", 0, "fx_marks", 0, "fx_marks_ents", 0, "fx_marks_smodels", 0);
-
-	self setClientDvar("clanname", ""); // Remove clan tag
-	self setClientDvar("motd", "CodJumper");
-
-	self setClientDvar("aim_automelee_range", 0); // Remove melee lunge
-
-	// Disable autoaim for enemy players
-	self setClientDvars("aim_slowdown_enabled", 0, "aim_lockon_enabled", 0);
-
-	// Don't show enemy player names
-	self setClientDvars("cg_enemyNameFadeIn", 0, "cg_enemyNameFadeOut", 0);
-
-	// Always show enemies on the map but hide compass, can see enemy positions when pressing start
-	self setClientDvars("g_compassShowEnemies", 1, "compassSize", 0.001);
-
-	self setClientDvar("cg_scoreboardPingText", 1);
-
-	self setClientDvar("cg_chatHeight", 0); // prevent people from freezing consoles via say command
-
-	// look straight up
-	self setclientdvar("player_view_pitch_up", 89.9);
-
-	// Remove glow color applied to the mode and map name strings on the connect screen
-	self setClientDvar("ui_ConnectScreenTextGlowColor", 0);
-
-	self setClientDvar("cg_descriptiveText", 0);		  // Remove spectator button icons and text
-	self setClientDvar("player_spectateSpeedScale", 1.5); // Faster movement in spectator/ufo
 }
 
 /**
