@@ -2845,6 +2845,9 @@ addClone()
 
 changeMap(mapname)
 {
+	// test clients stay in connecting state when changing map
+	// so we need to kick them
+	kickAllBots();
 	Map(mapname);
 }
 
