@@ -70,15 +70,14 @@ namespace iw3
 
         pm::pm()
         {
-            // TODO: Add correct CODINFO dvar flag for all
-            pm_bhop_auto = Dvar_RegisterBool("pm_bhop_auto", false, 0x80, "Constantly jump when holding jump");
-            pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", false, 0, "Enable multi-bounces");
+            pm_bhop_auto = Dvar_RegisterBool("pm_bhop_auto", false, DVAR_CODINFO, "Constantly jump when holding jump");
+            pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", false, DVAR_CODINFO, "Enable multi-bounces");
 
             // This allows FPS-dependent physics
             pm_pc_mp_velocity_snap = Dvar_RegisterBool(
                 "pm_pc_mp_velocity_snap",
                 false,
-                0,
+                DVAR_CODINFO,
                 "Enable PC Multiplayer style velocity snapping (round to nearest). ");
 
             Jump_Check_Detour = Detour(Jump_Check, Jump_Check_Hook);
