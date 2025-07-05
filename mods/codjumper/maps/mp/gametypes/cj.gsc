@@ -293,22 +293,20 @@ rpgSwitch()
 	}
 }
 
-toggle_look_straight_down()
+toggle_pc_lookdown_pitch()
 {
-	setting = "player_view_pitch_down";
-	printName = "Look straight down";
+	console_default = 70;
+	pc_default = 85;
 
-	if (!isdefined(self.cj["settings"][setting]) || self.cj["settings"][setting] == false)
+	if(getDvarInt("player_view_pitch_down") == console_default)
 	{
-		self.cj["settings"][setting] = true;
-		self setClientDvar(setting, 89.9);
-		self iPrintln(printName + " [^2ON^7]");
+		setdvar("player_view_pitch_down", pc_default);
+		iPrintln("PC lookdown pitch [^2ON^7]");
 	}
 	else
 	{
-		self.cj["settings"][setting] = false;
-		self setClientDvar(setting, 70);
-		self iPrintln(printName + " [^1OFF^7]");
+		setdvar("player_view_pitch_down", console_default);
+		iPrintln("PC lookdown pitch [^1OFF^7]");
 	}
 }
 
@@ -2416,6 +2414,8 @@ generateMenuOptions()
 
 		self addMenuOption("host_menu", "Toggle Multi Bouncing", ::toggleMultiBouncing);
 		self addMenuOption("host_menu", "Toggle Auto Bhop", ::toggleBhopAuto);
+		self addMenuOption("host_menu", "Toggle PC lookdown pitch", ::toggle_pc_lookdown_pitch);
+
 	}
 
 	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
@@ -2541,7 +2541,7 @@ generateMenuOptions()
 	self addMenuOption("player_settings", "Lean Toggle", ::LeanBindToggle);
 	self addMenuOption("player_settings", "Cycle Visions", ::CycleVision);
 	self addMenuOption("player_settings", "Revert Vision", ::RevertVision);
-	self addMenuOption("player_settings", "Look Straight Down", ::toggle_look_straight_down);
+
 
 	// Bot submenu
 	self addMenuOption("main", "Bot Menu", ::menuAction, "CHANGE_MENU", "bot_menu");
