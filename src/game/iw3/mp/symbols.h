@@ -7,6 +7,9 @@ namespace iw3
     namespace mp
     {
         // Functions
+        static auto AngleNormalize180 = reinterpret_cast<float (*)(float angle)>(0x820A0088);
+        static auto AngleNormalize360 = reinterpret_cast<float (*)(float angle)>(0x821D9DA8);
+
         static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82239FD0);
         static auto Cbuf_ExecuteBuffer = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x8223AAE8);
 
@@ -147,7 +150,7 @@ namespace iw3
         static auto CL_GetPredictedOriginForServerTime = reinterpret_cast<int (*)(clientActive_t *cl, int serverTime, float *predictedOrigin, float *predictedVelocity, int *bobCycle, int *movementDir)>(0x822CAA38);
 
         // Variables
-        static auto cgArray = reinterpret_cast<cg_s *>(0x823F28A0);
+        static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
         static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
         static auto clients = reinterpret_cast<clientActive_t **>(0x82435AB8);
         static auto clientConnections = reinterpret_cast<clientConnection_t *>(0x824302E0);
