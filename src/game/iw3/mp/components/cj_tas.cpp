@@ -2,7 +2,8 @@
 #include "common.h"
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
-#define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
+// #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
+#define SHORT2ANGLE(x) ((x) * (360.0f / 65536.0f))
 
 namespace iw3
 {
@@ -27,39 +28,58 @@ namespace iw3
             }
         }
 
-        void JumpAtEdge(int localClientNum)
+        pmove_t *predict_pmove(int localClientNum)
         {
-            static auto com_maxfps = Dvar_FindMalleableVar("com_maxfps");
+            // On console this is 85!
+            // vsync is 60 FPS, so we predict at 60 FPS
+            // static auto com_maxfps = Dvar_FindMalleableVar("com_maxfps");
 
-            pmove_t *pmove = &cg_pmove[0];
+            // Current in-flight pmove
+            pmove_t *pmove_current = &cg_pmove[localClientNum];
+            auto pmove_current_clone = clone_pmove(pmove_current);
+
+            // Advance time for the current pmove by one frame
+            pmove_current_clone->cmd.serverTime = pmove_current_clone->oldcmd.serverTime;
+            pmove_current_clone->cmd.serverTime += 1000 / 60;
 
             clientActive_t *localClientGlobals = &(*clients)[localClientNum];
-            auto *cmd = &localClientGlobals->cmds[localClientGlobals->cmdNumber & 0x7F];
+            auto *viewangles = localClientGlobals->viewangles;
 
-            auto predicted = clone_pmove(pmove);
+            pmove_current_clone->cmd.angles[PITCH] = ANGLE2SHORT(viewangles[PITCH]);
+            pmove_current_clone->cmd.angles[YAW] = ANGLE2SHORT(viewangles[YAW]);
 
-            predicted->cmd.serverTime = predicted->oldcmd.serverTime;
-            predicted->cmd.serverTime += 1000 / com_maxfps->current.integer;
-            // TODO: does this help?
-            // // Convert all three angles from viewangles to cmd->angles
-            // cmd->angles[0] = ANGLE2SHORT(localClientGlobals->viewangles[0]); // Pitch
-            // cmd->angles[1] = ANGLE2SHORT(localClientGlobals->viewangles[1]); // Yaw
-            // cmd->angles[2] = ANGLE2SHORT(localClientGlobals->viewangles[2]); // Roll
+            // Run the prediction
+            PmoveSingle(pmove_current_clone);
 
-            PmoveSingle(predicted);
+            return pmove_current_clone;
+        }
+
+        void JumpAtEdge(int localClientNum)
+        {
+            clientActive_t *localClientGlobals = &(*clients)[localClientNum];
+            auto *current_cmd = &localClientGlobals->cmds[localClientGlobals->cmdNumber & 0x7F];
+
+            pmove_t *pmove_current = &cg_pmove[localClientNum];
+            auto pmove_predicted = predict_pmove(localClientNum);
 
             // TODOL which is button for jump?
             // 1022 = On ground
             // 1023 = In air
-            bool next_frame_not_on_ground = predicted->ps->groundEntityNum != 1022;
-            if (next_frame_not_on_ground)
-                cmd->buttons |= 1024; // JUMP
+
+            bool on_ground = pmove_current->ps->groundEntityNum == 1022;
+            bool in_air_next_frame = pmove_predicted->ps->groundEntityNum == 1023;
+            // bool in_air = pmove_current->ps->groundEntityNum == 1023;
+
+            // bool in_air = pmove_current->ps->groundEntityNum == 1023;
+
+            if (on_ground && in_air_next_frame)
+                current_cmd->buttons |= 1024; // JUMP
 
             // bool next_frame_in_air = predicted->ps->groundEntityNum == 1023;
             // if (next_frame_in_air)
             //     cmd->buttons |= 1024; // JUMP
 
-            delete_pmove(predicted);
+            delete_pmove(pmove_predicted);
         }
 
         void JumpOnShootRPG(int localClientNum)
@@ -93,55 +113,94 @@ namespace iw3
             delete_pmove(currentPmove);
         }
 
-        void BackwardsRPG(int localClientNum)
-        {
-            static auto com_maxfps = Dvar_FindMalleableVar("com_maxfps");
-            static auto rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+        // void LookdownRPG(int localClientNum)
+        // {
+        //     // Default value of "player_view_pitch_down" on console
+        //     auto rpg_lookdown_pitch = 70.0f;
+        //     // auto rpg_lookdown_yaw = 180.0f;
 
-            pmove_t *pmove = &cg_pmove[localClientNum];
-            // clientActive_t *cgameGlob = &(*clients)[localClientNum];
-            // auto *cmd = &cgameGlob->cmds[cgameGlob->cmdNumber & 0x7F];
+        //     pmove_t *pmove_current = &cg_pmove[localClientNum];
+        //     pmove_t *pmove_predicted = predict_pmove(localClientNum);
 
-            if (pmove->ps->weapon != rpg_mp_index)
-            {
-                return; // only predict if we are using RPG
-            }
+        //     clientActive_t *cgameGlob = &(*clients)[localClientNum];
+        //     usercmd_s *cmd = &cgameGlob->cmds[cgameGlob->cmdNumber & 0x7F];
 
-            auto next_pmove = clone_pmove(pmove);
+        //     // Check if we are holding RPG
 
-            // Advance time
-            next_pmove->cmd.serverTime = next_pmove->oldcmd.serverTime;
-            next_pmove->cmd.serverTime += 1000 / 60; // Predict next frame
+        //     static auto should_reset = false;
+        //     static auto previous_pitch = cgameGlob->viewangles[PITCH];
+        //     // static auto previous_yaw = cgameGlob->viewangles[YAW];
 
-            // Run the prediction
-            PmoveSingle(next_pmove);
+        //     if (should_reset)
+        //     {
+        //         // Reset the view angles to the previous state
+        //         cgameGlob->viewangles[PITCH] = previous_pitch;
+        //         // cgameGlob->viewangles[YAW] = previous_yaw;
+        //         should_reset = false;
+        //     }
 
-            // Check if we are shooting RPG
-            bool next_frame_shot_rpg = next_pmove->ps->weaponDelay <= 3 && next_pmove->ps->weaponDelay != 0;
-            if (next_frame_shot_rpg)
-            {
-                CG_GameMessage(0, "RPG SHOOT");
-                // cmd->buttons |= 1024; // JUMP
-            }
+        //     static auto rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+        //     auto holding_rpg = pmove_current->ps->weapon == rpg_mp_index;
+        //     auto reloading = pmove_current->ps->weaponstate == WEAPON_RELOADING;
 
-            // // TODO: what is weaponstate?
-            // if (next_frame_shot_rpg && pmove->ps->weaponstate != 7)
-            // {
-            //     auto yaw = 90.0f; // 90 degrees
+        //     bool shoot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
 
-            //     auto delta_angles = cgArray[localClientNum].activeSnapshots[0].ps.delta_angles;
+        //     if (shoot_rpg_next_frame && holding_rpg && !reloading)
+        //     {
+        //         previous_pitch = cgameGlob->viewangles[PITCH];
+        //         // previous_yaw = cgameGlob->viewangles[YAW];
 
-            //     auto adjusted_yaw = yaw - delta_angles[1]; // Adjust yaw based on delta angles
+        //         auto &delta_angles = cgArray[localClientNum].activeSnapshots[0].ps.delta_angles;
+        //         cmd->angles[PITCH] = ANGLE2SHORT(rpg_lookdown_pitch - delta_angles[PITCH]);
 
-            //     // Set yaw in local camera state
-            //     cgameGlob->viewangles[1] = adjusted_yaw;
-            //     // Set yaw in usercmd
-            //     cmd->angles[1] = ANGLE2SHORT(adjusted_yaw);
-            // }
+        //         // should_reset = true;
+        //     }
 
-            // // Clean up the prediction
-            delete_pmove(next_pmove);
-        }
+        //     // Clean up the prediction
+        //     delete_pmove(pmove_predicted);
+        // }
+
+        // void LookdownRPG(int localClientNum)
+        // {
+        //     // Default value of "player_view_pitch_down" on console
+        //     auto rpg_lookdown_pitch = 70.0f;
+
+        //     pmove_t *pmove_current = &cg_pmove[localClientNum];
+        //     pmove_t *pmove_predicted = predict_pmove(localClientNum);
+
+        //     clientActive_t *cgameGlob = &(*clients)[localClientNum];
+        //     usercmd_s *cmd = &cgameGlob->cmds[cgameGlob->cmdNumber & 0x7F];
+
+        //     static auto should_reset = false;
+        //     static auto previous_pitch = cgameGlob->viewangles[PITCH];
+
+        //     if (should_reset)
+        //     {
+        //         // Reset the view angles to the previous state
+        //         cgameGlob->viewangles[PITCH] = previous_pitch;
+        //         should_reset = false;
+        //     }
+
+        //     static auto rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+        //     auto holding_rpg = pmove_current->ps->weapon == rpg_mp_index;
+        //     auto reloading = pmove_current->ps->weaponstate == WEAPON_RELOADING;
+
+        //     bool shot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
+
+        //     if (shot_rpg_next_frame && holding_rpg && !reloading)
+        //     {
+        //         CG_GameMessage(0, "RPG SHOOT PREDICTED");
+        //         previous_pitch = cgameGlob->viewangles[PITCH];
+
+        //         // auto &delta_angles = cgArray[localClientNum].activeSnapshots[0].ps.delta_angles;
+        //         // cmd->angles[PITCH] = ANGLE2SHORT(rpg_lookdown_pitch - delta_angles[PITCH]);
+
+        //         should_reset = true;
+        //     }
+
+        //     // Clean up the prediction
+        //     delete_pmove(pmove_predicted);
+        // }
 
         void LookDownOnShootRPG(int localClientNum)
         {
@@ -166,31 +225,114 @@ namespace iw3
             bool nextFrameShotRpg = currentPmove->ps->weaponDelay <= 3 && pmove->ps->weaponDelay != 0;
             if (nextFrameShotRpg)
             {
-                float delta_x = static_cast<float>(cgArray[localClientNum].activeSnapshots[0].ps.delta_angles[0]);
+                // float delta_x = static_cast<float>(cgArray[localClientNum].activeSnapshots[0].ps.delta_angles[0]);
                 // float delta_y = static_cast<float>(cgArray[localClientNum].activeSnapshots[0].ps.delta_angles[1]);
 
                 CG_GameMessage(0, "RPG SHOOT");
                 // cmd->buttons |= 1024; // JUMP
-                localClientGlobals->viewangles[0] = 70 - delta_x;
+                // localClientGlobals->viewangles[0] = 70 - delta_x;
                 localClientGlobals->viewangles[1] = 180;
             }
 
             delete_pmove(currentPmove);
         }
 
+        // #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+        // #define SHORT2ANGLE(x) ((x) * (360.0f / 65536))
+
+        //         pmove_t *predict_pmove(int localClientNum)
+        //         {
+        //             static auto com_maxfps = Dvar_FindMalleableVar("com_maxfps");
+
+        //             pmove_t *pmove_current = &cg_pmove[localClientNum];
+        //             auto pmove_current_clone = clone_pmove(pmove_current);
+
+        //             // Advance time by one frame
+        //             pmove_current_clone->cmd.serverTime = pmove_current_clone->oldcmd.serverTime;
+        //             pmove_current_clone->cmd.serverTime += 1000 / com_maxfps->current.integer;
+
+        //             // Desired world yaw angle
+        //             float desiredYaw = 85.0f;
+
+        //             // Get delta angles from current snapshot
+        //             auto &delta_angles = cgArray[localClientNum].activeSnapshots[0].ps.delta_angles;
+
+        //             // Convert delta_angles[1] to degrees
+        //             float deltaYaw = SHORT2ANGLE(delta_angles[1]);
+
+        //             // Convert desired world yaw into input-relative cmd.angle
+        //             pmove_current_clone->cmd.angles[0] = 0;
+        //             pmove_current_clone->cmd.angles[1] = ANGLE2SHORT(desiredYaw - deltaYaw);
+        //             pmove_current_clone->cmd.angles[2] = 0;
+
+        //             // Predict!
+        //             PmoveSingle(pmove_current_clone);
+
+        //             return pmove_current_clone;
+        //         }
+
+        inline clientActive_t &CG_GetLocalClientGlobals(int localClientNum)
+        {
+            return (*clients)[localClientNum];
+        }
+
+        void AutoBHOP_Holding_Jump()
+        {
+            auto localClientNum = 0;
+
+            pmove_t *pmove_current = &cg_pmove[localClientNum];
+
+            clientActive_t *localClientGlobals = &(*clients)[localClientNum];
+
+            auto angles = localClientGlobals->viewangles;
+            DbgPrint("localClientGlobals->viewangles: %d %d %d\n", angles[0], angles[1], angles[2]);
+
+            usercmd_s *cmd = &localClientGlobals->cmds[localClientGlobals->cmdNumber & 0x7F];
+
+            auto pmove_predicted = predict_pmove(localClientNum);
+
+            // 1022 = On ground, 1023 = In air
+            auto in_air = pmove_current->ps->groundEntityNum == 1023;
+            auto on_ground_predicted = pmove_predicted->ps->groundEntityNum == 1022;
+
+            if (in_air && on_ground_predicted)
+            {
+                // Clear the jump button for the current frame
+                cmd->buttons &= ~1024; // JUMP
+            }
+
+            // Clean up the prediction
+            delete_pmove(pmove_predicted);
+        }
+
         Detour CL_CreateNewCommands_Detour;
 
         void CL_CreateNewCommands_Hook(int localClientNum)
         {
+
+            auto ca = &(*clients)[localClientNum];
+            auto viewangles = ca->viewangles;
+            // auto &cg = cgArray[localClientNum];
+
+            // DbgPrint("CL_CreateNewCommands_Hook: localClientNum: %d, viewangles: %f %f %f\n",
+            //          localClientNum, viewangles[0], viewangles[1], viewangles[2]);
+
+            // if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
+            // {
+            //     auto cg = &(*cgArray)[localClientNum];
+            //     auto &delta_angles1 = cg->activeSnapshots[0].ps.delta_angles;
+            //     DbgPrint("BEFORE CMD cgArray[%d].activeSnapshots[0].ps.delta_angles: %f %f %f\n",
+            //              localClientNum, delta_angles1[0], delta_angles1[1], delta_angles1[2]);
+            // }
+
             CL_CreateNewCommands_Detour.GetOriginal<decltype(CL_CreateNewCommands)>()(localClientNum);
             if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
             {
-
-                // Jump on next frame if we are at the edge
-                if (cj_tas_jump_at_edge->current.enabled)
-                {
-                    JumpAtEdge(localClientNum);
-                }
+                // // Jump on next frame if we are at the edge
+                // if (cj_tas_jump_at_edge->current.enabled)
+                // {
+                //     JumpAtEdge(localClientNum);
+                // }
                 // // // Jump on next frame if we shoot RPG
                 // // if (cj_tas_jump_on_shoot_rpg->current.enabled)
                 // // {
@@ -199,6 +341,20 @@ namespace iw3
 
                 // BackwardsRPG(localClientNum);
                 // LookDownOnShootRPG(localClientNum);
+
+                // AutoBHOP_Holding_Jump();
+                // LookdownRPG(localClientNum);
+
+                auto cg = &(*cgArray)[localClientNum];
+                viewangles[PITCH] = AngleNormalize360(50 - cg->snap->ps.delta_angles[PITCH]);
+                viewangles[YAW] = AngleNormalize360(36 - cg->snap->ps.delta_angles[YAW]);
+
+                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+                if (cmd->buttons & 1024) // JUMP
+                {
+                    viewangles[PITCH] = AngleNormalize360(0 - cg->snap->ps.delta_angles[PITCH]);
+                    viewangles[YAW] = AngleNormalize360(36 - cg->snap->ps.delta_angles[YAW]);
+                }
             }
         }
 
@@ -209,6 +365,9 @@ namespace iw3
 
             cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", true, 0, "");
             // cj_tas_jump_on_shoot_rpg = Dvar_RegisterBool("cj_tas_jump_on_shoot_rpg", true, 0, "Jump on next frame if we shoot RPG");
+
+            auto sizeof_cg_s = sizeof(cg_s);
+            DbgPrint("sizeof(cg_s): %d\n", sizeof_cg_s);
         }
 
         cj_tas::~cj_tas()
