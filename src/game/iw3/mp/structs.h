@@ -1561,6 +1561,38 @@ namespace iw3
 
         struct weaponState_t;
 
+        enum weaponstate_t : __int32
+        {
+            WEAPON_READY = 0x0,
+            WEAPON_RAISING = 0x1,
+            WEAPON_RAISING_ALTSWITCH = 0x2,
+            WEAPON_DROPPING = 0x3,
+            WEAPON_DROPPING_QUICK = 0x4,
+            WEAPON_FIRING = 0x5,
+            WEAPON_RECHAMBERING = 0x6,
+            WEAPON_RELOADING = 0x7,
+            WEAPON_RELOADING_INTERUPT = 0x8,
+            WEAPON_RELOAD_START = 0x9,
+            WEAPON_RELOAD_START_INTERUPT = 0xA,
+            WEAPON_RELOAD_END = 0xB,
+            WEAPON_MELEE_INIT = 0xC,
+            WEAPON_MELEE_FIRE = 0xD,
+            WEAPON_MELEE_END = 0xE,
+            WEAPON_OFFHAND_INIT = 0xF,
+            WEAPON_OFFHAND_PREPARE = 0x10,
+            WEAPON_OFFHAND_HOLD = 0x11,
+            WEAPON_OFFHAND_START = 0x12,
+            WEAPON_OFFHAND = 0x13,
+            WEAPON_OFFHAND_END = 0x14,
+            WEAPON_DETONATING = 0x15,
+            WEAPON_SPRINT_RAISE = 0x16,
+            WEAPON_SPRINT_LOOP = 0x17,
+            WEAPON_SPRINT_DROP = 0x18,
+            WEAPON_NIGHTVISION_WEAR = 0x19,
+            WEAPON_NIGHTVISION_REMOVE = 0x1A,
+            WEAPONSTATES_NUM = 0x1B,
+        };
+
         enum connstate_t
         {
             CA_DISCONNECTED = 0x0,
@@ -2178,6 +2210,35 @@ namespace iw3
             void (*callback)(gentity_s *, int);
         };
 
+        struct clientConnection_t
+        {
+            int qport;
+            int clientNum;
+            int lastPacketSentTime;
+            int lastPacketTime;
+            netadr_t serverAddress;
+            int connectTime;
+            int connectPacketCount;
+            char serverMessage[256];
+            int challenge;
+            int checksumFeed;
+            int reliableSequence;
+            int reliableAcknowledge;
+            char reliableCommands[128][1024];
+            int serverMessageSequence;
+            int serverCommandSequence;
+            int lastExecutedServerCommand;
+            char serverCommands[128][1024];
+            int timeDemoBaseTime;
+            netchan_t netchan;
+            char netchanOutgoingBuffer[2048];
+            char netchanIncomingBuffer[131072];
+            netProfileInfo_t OOBProf;
+            unsigned __int8 statPacketsToSend;
+            int statPacketSendTime[7];
+        };
+        static_assert(sizeof(clientConnection_t) == 398692, "");
+
         struct ClientArchiveData
         {
             int serverTime;
@@ -2193,16 +2254,101 @@ namespace iw3
         static_assert(offsetof(ClientArchiveData, bobCycle) == 0x1C, "");
         static_assert(offsetof(ClientArchiveData, movementDir) == 0x20, "");
 
+        struct clSnapshot_t
+        {
+            int valid;
+            int snapFlags;
+            int serverTime;
+            int messageNum;
+            int deltaNum;
+            int ping;
+            int cmdNum;
+            playerState_s ps;
+            int numEntities;
+            int numClients;
+            int parseEntitiesNum;
+            int parseClientsNum;
+            int serverCommandNum;
+        };
+        static_assert(sizeof(clSnapshot_t) == 12184, "");
+
+        struct gameState_t
+        {
+            int stringOffsets[2350];
+            char stringData[131072];
+            int dataCount;
+        };
+
+        enum StanceState : __int32
+        {
+            CL_STANCE_STAND = 0x0,
+            CL_STANCE_CROUCH = 0x1,
+            CL_STANCE_PRONE = 0x2,
+        };
+
+        struct outPacket_t
+        {
+            int p_cmdNumber;
+            int p_serverTime;
+            int p_realtime;
+        };
+
         struct clientActive_t
         {
-            char pad[152880];
+            bool usingAds;
+            int timeoutcount;
+            clSnapshot_t snap;
+            bool alwaysFalse;
+            int serverTime;
+            int oldServerTime;
+            int oldFrameServerTime;
+            int serverTimeDelta;
+            int oldSnapServerTime;
+            int extrapolatedSnapshot;
+            int newSnapshots;
+            gameState_t gameState;
+            char mapname[64];
+            int parseEntitiesNum;
+            int parseClientsNum;
+            int mouseDx[2];
+            int mouseDy[2];
+            int mouseIndex;
+            bool stanceHeld;
+            StanceState stance;
+            StanceState stancePosition;
+            int stanceTime;
+            int cgameUserCmdWeapon;
+            int cgameUserCmdOffHandIndex;
+            float cgameFOVSensitivityScale;
+            float cgameMaxPitchSpeed;
+            float cgameMaxYawSpeed;
+            float cgameKickAngles[3];
+            float cgameOrigin[3];
+            float cgameVelocity[3];
+            int cgameBobCycle;
+            int cgameMovementDir;
+            int cgameExtraButtons;
+            int cgamePredictedDataServerTime;
             float viewangles[3];
-            char pad2[262164];
-            usercmd_s cmds[128];
+            int serverId;
+            int skelTimeStamp;
+            volatile int skelMemPos;
+            char skelMemory[262144];
+            char *skelMemoryStart;
+            bool allowedAllocSkel;
+            __declspec(align(4)) usercmd_s cmds[128];
             int cmdNumber;
             ClientArchiveData clientArchive[256];
             int clientArchiveIndex;
-            char pad3[1402252];
+            outPacket_t outPackets[32];
+            clSnapshot_t snapshots[32];
+            entityState_s entityBaselines[1024];
+            entityState_s parseEntities[2048];
+            clientState_s parseClients[2048];
+            int corruptedTranslationFile;
+            char translationVersion[256];
+            float vehicleViewYaw;
+            float vehicleViewPitch;
         };
         static_assert(sizeof(clientActive_t) == 1830628, "");
         static_assert(offsetof(clientActive_t, viewangles) == 152880, "");
@@ -2323,6 +2469,10 @@ namespace iw3
         static_assert(sizeof(cgs_t) == 15972, "");
 
 #define CONTENTS_PLAYERCLIP 0x10000
+
+#define PITCH 0
+#define YAW 1
+#define ROLL 2
 
     }
 }
