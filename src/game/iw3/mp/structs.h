@@ -2011,7 +2011,107 @@ namespace iw3
             int localClientNum;
         };
 
-#pragma warning(disable : 4324)
+        struct score_t
+        {
+            int client;
+            int score;
+            int ping;
+            int deaths;
+            int team;
+            int kills;
+            int rank;
+            int assists;
+            Material *hStatusIcon;
+            Material *hRankIcon;
+        };
+
+        enum InvalidCmdHintType : __int32
+        {
+            INVALID_CMD_NONE = 0x0,
+            INVALID_CMD_NO_AMMO_BULLETS = 0x1,
+            INVALID_CMD_NO_AMMO_FRAG_GRENADE = 0x2,
+            INVALID_CMD_NO_AMMO_SPECIAL_GRENADE = 0x3,
+            INVALID_CMD_NO_AMMO_FLASH_GRENADE = 0x4,
+            INVALID_CMD_STAND_BLOCKED = 0x5,
+            INVALID_CMD_CROUCH_BLOCKED = 0x6,
+            INVALID_CMD_TARGET_TOO_CLOSE = 0x7,
+            INVALID_CMD_LOCKON_REQUIRED = 0x8,
+            INVALID_CMD_NOT_ENOUGH_CLEARANCE = 0x9,
+        };
+
+        struct viewDamage_t
+        {
+            int time;
+            int duration;
+            float yaw;
+        };
+
+        const struct __declspec(align(4)) shellshock_parms_t
+        {
+            char pad[0x268];
+        };
+        static_assert(sizeof(shellshock_parms_t) == 0x268, "");
+
+        struct shellshock_t
+        {
+            const shellshock_parms_t *parms;
+            int startTime;
+            int duration;
+            int loopEndTime;
+            float sensitivity;
+            float viewDelta[2];
+            int hasSavedScreen;
+        };
+
+        struct visionSetVars_t
+        {
+            bool glowEnable;
+            float glowBloomCutoff;
+            float glowBloomDesaturation;
+            float glowBloomIntensity0;
+            float glowBloomIntensity1;
+            float glowRadius0;
+            float glowRadius1;
+            float glowSkyBleedIntensity0;
+            float glowSkyBleedIntensity1;
+            bool filmEnable;
+            float filmBrightness;
+            float filmContrast;
+            float filmDesaturation;
+            bool filmInvert;
+            float filmLightTint[3];
+            float filmDarkTint[3];
+        };
+        static_assert(sizeof(visionSetVars_t) == 0x50, "");
+
+        enum visionSetLerpStyle_t : __int32
+        {
+            VISIONSETLERP_UNDEFINED = 0x0,
+            VISIONSETLERP_NONE = 0x1,
+            VISIONSETLERP_TO_LINEAR = 0x2,
+            VISIONSETLERP_TO_SMOOTH = 0x3,
+            VISIONSETLERP_BACKFORTH_LINEAR = 0x4,
+            VISIONSETLERP_BACKFORTH_SMOOTH = 0x5,
+        };
+
+        struct visionSetLerpData_t
+        {
+            int timeStart;
+            int timeDuration;
+            visionSetLerpStyle_t style;
+        };
+
+        struct hudElemSoundInfo_t
+        {
+            int lastPlayedTime;
+        };
+
+        struct cgFrameInfo_t
+        {
+            float aimSpreadScale;
+        };
+
+        // TODO: not correct
         struct __declspec(align(8)) cg_s
         {
             int clientNum;
@@ -2041,137 +2141,189 @@ namespace iw3
             int landTime;
             float heightToCeiling;
             refdef_s refdef;
-            float refdefViewAngles[3]; // 309600
+            float refdefViewAngles[3];
             float lastVieworg[3];
-            // float swayViewAngles[3];
-            // float swayAngles[3];
-            // float swayOffset[3];
-            // int iEntityLastType[1024];
-            // XModel *pEntityLastXModel[1024];
-            // float zoomSensitivity;
-            // bool isLoading;
-            // char objectiveText[1024];
-            // char scriptMainMenu[256];
-            // int scoresRequestTime;
-            // int numScores;
-            // int teamScores[4];
-            // int teamPings[4];
-            // int teamPlayers[4];
-            // score_t scores[24];
-            // int scoreLimit;
-            // int scoreFadeTime;
-            // int scoresTop;
-            // int scoresOffBottom;
-            // int scoresBottom;
-            // int selectedGamerIndex;
-            // int bannerLines[4];
-            // unsigned __int64 selectedGamerXuid;
-            // int drawHud;
-            // int crosshairClientNum;
-            // int crosshairClientLastTime;
-            // int crosshairClientStartTime;
-            // int identifyClientNum;
-            // int cursorHintIcon;
-            // int cursorHintTime;
-            // int cursorHintFade;
-            // int cursorHintString;
-            // int lastClipFlashTime;
-            // InvalidCmdHintType invalidCmdHintType;
-            // int invalidCmdHintTime;
-            // int lastHealthPulseTime;
-            // int lastHealthLerpDelay;
-            // int lastHealthClient;
-            // float lastHealth;
-            // float healthOverlayFromAlpha;
-            // float healthOverlayToAlpha;
-            // int healthOverlayPulseTime;
-            // int healthOverlayPulseDuration;
-            // int healthOverlayPulsePhase;
-            // bool healthOverlayHurt;
-            // int healthOverlayLastHitTime;
-            // float healthOverlayOldHealth;
-            // int healthOverlayPulseIndex;
-            // int proneBlockedEndTime;
-            // int lastStance;
-            // int lastStanceChangeTime;
-            // int lastStanceFlashTime;
-            // int voiceTime;
-            // unsigned int weaponSelect;
-            // int weaponSelectTime;
-            // unsigned int weaponLatestPrimaryIdx;
-            // int prevViewmodelWeapon;
-            // int equippedOffHand;
-            // viewDamage_t viewDamage[8];
-            // int damageTime;
-            // float damageX;
-            // float damageY;
-            // float damageValue;
-            // float viewFade;
-            // int weapIdleTime;
-            // int nomarks;
-            // int v_dmg_time;
-            // float v_dmg_pitch;
-            // float v_dmg_roll;
-            // float fBobCycle;
-            // float xyspeed;
-            // float kickAVel[3];
-            // float kickAngles[3];
-            // float offsetAngles[3];
-            // float gunPitch;
-            // float gunYaw;
-            // float gunXOfs;
-            // float gunYOfs;
-            // float gunZOfs;
-            // float vGunOffset[3];
-            // float vGunSpeed[3];
-            // float viewModelAxis[4][3];
-            // float rumbleScale;
-            // float compassNorthYaw;
-            // float compassNorth[2];
-            // Material *compassMapMaterial;
-            // float compassMapUpperLeft[2];
-            // float compassMapWorldSize[2];
-            // int compassFadeTime;
-            // int healthFadeTime;
-            // int ammoFadeTime;
-            // int stanceFadeTime;
-            // int sprintFadeTime;
-            // int offhandFadeTime;
-            // int offhandFlashTime;
-            // shellshock_t shellshock;
+            float swayViewAngles[3];
+            float swayAngles[3];
+            float swayOffset[3];
+            int iEntityLastType[1024];
+            XModel *pEntityLastXModel[1024];
+            float zoomSensitivity;
+            bool isLoading;
+            char objectiveText[1024];
+            char scriptMainMenu[256];
+            int scoresRequestTime;
+            int numScores;
+            int teamScores[4];
+            int teamPings[4];
+            int teamPlayers[4];
+            score_t scores[24];
+            int scoreLimit;
+            int scoreFadeTime;
+            int scoresTop;
+            int scoresOffBottom;
+            int scoresBottom;
+            int selectedGamerIndex;
+            int bannerLines[4];
+            unsigned __int64 selectedGamerXuid;
+            int drawHud;
+            int crosshairClientNum;
+            int crosshairClientLastTime;
+            int crosshairClientStartTime;
+            int identifyClientNum;
+            int cursorHintIcon;
+            int cursorHintTime;
+            int cursorHintFade;
+            int cursorHintString;
+            int lastClipFlashTime;
+            InvalidCmdHintType invalidCmdHintType;
+            int invalidCmdHintTime;
+            int lastHealthPulseTime;
+            int lastHealthLerpDelay;
+            int lastHealthClient;
+            float lastHealth;
+            float healthOverlayFromAlpha;
+            float healthOverlayToAlpha;
+            int healthOverlayPulseTime;
+            int healthOverlayPulseDuration;
+            int healthOverlayPulsePhase;
+            bool healthOverlayHurt;
+            int healthOverlayLastHitTime;
+            float healthOverlayOldHealth;
+            int healthOverlayPulseIndex;
+            int proneBlockedEndTime;
+            int lastStance;
+            int lastStanceChangeTime;
+            int lastStanceFlashTime;
+            int voiceTime;
+            unsigned int weaponSelect;
+            int weaponSelectTime;
+            unsigned int weaponLatestPrimaryIdx;
+            int prevViewmodelWeapon;
+            int equippedOffHand;
+            viewDamage_t viewDamage[8];
+            int damageTime;
+            float damageX;
+            float damageY;
+            float damageValue;
+            float viewFade;
+            int weapIdleTime;
+            int nomarks;
+            int v_dmg_time;
+            float v_dmg_pitch;
+            float v_dmg_roll;
+            float fBobCycle;
+            float xyspeed;
+            float kickAVel[3];
+            float kickAngles[3];
+            float offsetAngles[3];
+            float gunPitch;
+            float gunYaw;
+            float gunXOfs;
+            float gunYOfs;
+            float gunZOfs;
+            float vGunOffset[3];
+            float vGunSpeed[3];
+            float viewModelAxis[4][3];
+            float rumbleScale;
+            float compassNorthYaw;
+            float compassNorth[2];
+            Material *compassMapMaterial;
+            float compassMapUpperLeft[2];
+            float compassMapWorldSize[2];
+            int compassFadeTime;
+            int healthFadeTime;
+            int ammoFadeTime;
+            int stanceFadeTime;
+            int sprintFadeTime;
+            int offhandFadeTime;
+            int offhandFlashTime;
+            shellshock_t shellshock;
             // cg_s::<unnamed_tag>testShock;
-            // int holdBreathTime;
-            // int holdBreathInTime;
-            // int holdBreathDelay;
-            // float holdBreathFrac;
-            // float radarProgress;
-            // float selectedLocation[2];
-            // SprintState sprintStates;
-            // int adsViewErrorDone;
-            // int inKillCam;
+            struct
+            {
+                int time;
+                int duration;
+            } testShock;
+            int holdBreathTime;
+            int holdBreathInTime;
+            int holdBreathDelay;
+            float holdBreathFrac;
+            float radarProgress;
+            float selectedLocation[2];
+            SprintState sprintStates;
+            int adsViewErrorDone;
+            int inKillCam;
             // bgs_t bgs;
+            struct
+            {
+                char pad[663508];
+            } bgs; // Placeholder for bgs_t
             // cpose_t viewModelPose;
-            // visionSetVars_t visionSetPreLoaded[4];
-            // char visionSetPreLoadedName[4][64];
-            // visionSetVars_t visionSetFrom[2];
-            // visionSetVars_t visionSetTo[2];
-            // visionSetVars_t visionSetCurrent[2];
-            // visionSetLerpData_t visionSetLerpData[2];
-            // char visionNameNaked[64];
-            // char visionNameNight[64];
-            // int extraButtons;
-            // int lastActionSlotTime;
-            // bool playerTeleported;
-            // int stepViewStart;
-            // float stepViewChange;
-            // _BYTE lastFrame[4];
-            // hudElemSoundInfo_t hudElemSound[32];
-            // int vehicleFrame;
+            struct
+            {
+                char pad[52];
+            } viewModelPose;
+            visionSetVars_t visionSetPreLoaded[4];
+            char visionSetPreLoadedName[4][64];
+            visionSetVars_t visionSetFrom[2];
+            visionSetVars_t visionSetTo[2];
+            visionSetVars_t visionSetCurrent[2];
+            visionSetLerpData_t visionSetLerpData[2];
+            char visionNameNaked[64];
+            char visionNameNight[64];
+            int extraButtons;
+            int lastActionSlotTime;
+            bool playerTeleported;
+            int stepViewStart;
+            float stepViewChange;
+            cgFrameInfo_t lastFrame;
+            hudElemSoundInfo_t hudElemSound[32];
+            int vehicleFrame;
         };
-#pragma warning(default : 4324)
 
+        static_assert(sizeof(cg_s) == 985704, "");
+        static_assert(offsetof(cg_s, clientNum) == 0, "");
+        static_assert(offsetof(cg_s, localClientNum) == 4, "");
+        static_assert(offsetof(cg_s, demoType) == 8, "");
+        static_assert(offsetof(cg_s, renderScreen) == 20, "");
+        static_assert(offsetof(cg_s, latestSnapshotTime) == 28, "");
+        static_assert(offsetof(cg_s, snap) == 32, "");
+        static_assert(offsetof(cg_s, nextSnap) == 36, "");
+        static_assert(offsetof(cg_s, frameInterpolation) == 280360, "");
+        static_assert(offsetof(cg_s, frametime) == 280364, "");
+        static_assert(offsetof(cg_s, time) == 280368, "");
+        static_assert(offsetof(cg_s, oldTime) == 280372, "");
+        static_assert(offsetof(cg_s, mapRestart) == 280380, "");
         static_assert(offsetof(cg_s, predictedPlayerState) == 280388, "");
+        static_assert(offsetof(cg_s, predictedPlayerState.weapon) == 280624, "");
+        static_assert(offsetof(cg_s, predictedErrorTime) == 293036, "");
+        static_assert(offsetof(cg_s, predictedError) == 293040, "");
+        static_assert(offsetof(cg_s, landChange) == 293052, "");
+        static_assert(offsetof(cg_s, landTime) == 293056, "");
+        static_assert(offsetof(cg_s, refdef) == 293064, "");
         static_assert(offsetof(cg_s, refdefViewAngles) == 309600, "");
+        static_assert(offsetof(cg_s, lastVieworg) == 309612, "");
+        static_assert(offsetof(cg_s, invalidCmdHintType) == 320248, "");
+        static_assert(offsetof(cg_s, invalidCmdHintTime) == 320252, "");
+        static_assert(offsetof(cg_s, proneBlockedEndTime) == 320308, "");
+        static_assert(offsetof(cg_s, lastStance) == 320312, "");
+        static_assert(offsetof(cg_s, lastStanceChangeTime) == 320316, "");
+        static_assert(offsetof(cg_s, kickAVel) == 320492, "");
+        static_assert(offsetof(cg_s, kickAngles) == 320504, "");
+        static_assert(offsetof(cg_s, nomarks) == 320468, "");
+        static_assert(offsetof(cg_s, viewModelAxis) == 320572, "");
+        static_assert(offsetof(cg_s, ammoFadeTime) == 320664, "");
+        static_assert(offsetof(cg_s, offhandFadeTime) == 320676, "");
+        static_assert(offsetof(cg_s, shellshock) == 320684, "");
+        static_assert(offsetof(cg_s, testShock.time) == 320716, "");
+        static_assert(offsetof(cg_s, testShock.duration) == 320720, "");
+        static_assert(offsetof(cg_s, inKillCam) == 320776, "");
+        static_assert(offsetof(cg_s, isLoading) == 317856, "");
+        static_assert(offsetof(cg_s, viewModelPose) == 984288, "");
+        // static_assert(offsetof(cg_s, visionSetPreLoaded) == 984336, "");
+        // static_assert(offsetof(cg_s, playerTeleported) == 985552, "");
+        // static_assert(offsetof(cg_s, vehicleFrame) == 985696, "");
 
         typedef void (*BuiltinFunction)();
         typedef void (*BuiltinMethod)(scr_entref_t);
@@ -2357,12 +2509,6 @@ namespace iw3
         static_assert(offsetof(clientActive_t, clientArchiveIndex) == 428372, "");
 
         struct FxEffectDef;
-
-        const struct __declspec(align(4)) shellshock_parms_t
-        {
-            char pad[0x268];
-        };
-        static_assert(sizeof(shellshock_parms_t) == 0x268, "");
 
         struct __declspec(align(8)) animation_s
         {
