@@ -2428,6 +2428,7 @@ generateMenuOptions()
 	self addMenuOption("main", "CodJumper Menu (Beta)", ::menuAction, "CHANGE_MENU", "menu_codjumper");
 	self addMenu("menu_codjumper", "main");
 	self addMenuOption("menu_codjumper", "TAS | Jump at Edge", ::toggleJumpAtEdge);
+	self addMenuOption("menu_codjumper", "TAS | Jump on RPG fire", ::toggleJumpOnRpgFire);
 	self addMenuOption("menu_codjumper", "TAS | Toggle RPG lookdown", ::toggleRpgLookdown);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown set angles", ::setRpgLookdownAngles);
 
@@ -2659,6 +2660,24 @@ toggleJumpAtEdge()
 	{
 		self setClientDvar("cj_tas_jump_at_edge", 0);
 		self IPrintLn("TAS - Jump at Edge [^1OFF^7]");
+	}
+}
+
+toggleJumpOnRpgFire()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_jump_on_rpg_fire"]))
+		self.cj["settings"]["cj_tas_jump_on_rpg_fire"] = false;
+
+	self.cj["settings"]["cj_tas_jump_on_rpg_fire"] = !self.cj["settings"]["cj_tas_jump_on_rpg_fire"];
+	if (self.cj["settings"]["cj_tas_jump_on_rpg_fire"])
+	{
+		self setClientDvar("cj_tas_jump_on_rpg_fire", 1);
+		self IPrintLn("TAS - Jump on RPG fire [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_jump_on_rpg_fire", 0);
+		self IPrintLn("TAS - Jump on RPG fire [^1OFF^7]");
 	}
 }
 

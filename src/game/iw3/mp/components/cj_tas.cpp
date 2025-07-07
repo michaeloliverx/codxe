@@ -8,13 +8,18 @@ namespace iw3
     namespace mp
     {
         dvar_s *cj_tas_jump_at_edge = nullptr;
+
+        dvar_s *cj_tas_jump_on_rpg_fire = nullptr;
+
         dvar_s *cj_tas_rpg_lookdown = nullptr;
         dvar_s *cj_tas_rpg_lookdown_yaw = nullptr;
         dvar_s *cj_tas_rpg_lookdown_pitch = nullptr;
 
         bool cj_tas::TAS_Enabled()
         {
-            const bool tas_enabled = cj_tas_jump_at_edge->current.enabled || cj_tas_rpg_lookdown->current.enabled;
+            const bool tas_enabled = (cj_tas_jump_at_edge->current.enabled ||
+                                      cj_tas_jump_on_rpg_fire->current.enabled ||
+                                      cj_tas_rpg_lookdown->current.enabled);
             return tas_enabled;
         }
 
@@ -91,6 +96,11 @@ namespace iw3
 
             bool shot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
 
+            if (cj_tas_jump_on_rpg_fire->current.enabled && shot_rpg_next_frame && holding_rpg && !reloading)
+            {
+                cmd->buttons |= 1024; // JUMP
+            }
+
             if (cj_tas_rpg_lookdown->current.enabled && shot_rpg_next_frame && holding_rpg && !reloading)
             {
                 previous_pitch = ca->viewangles[PITCH];
@@ -142,6 +152,9 @@ namespace iw3
             CL_CreateNewCommands_Detour.Install();
 
             cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", false, 0, "Enable jump at edge");
+
+            cj_tas_jump_on_rpg_fire = Dvar_RegisterBool("cj_tas_jump_on_rpg_fire", false, 0, "Jump exactly when firing the RPG");
+
             cj_tas_rpg_lookdown = Dvar_RegisterBool("cj_tas_rpg_lookdown", false, 0, "Enable RPG lookdown");
             cj_tas_rpg_lookdown_yaw = Dvar_RegisterInt("cj_tas_rpg_lookdown_yaw", 0, -180, 180, 0, "RPG lookdown yaw angle in degrees");
             cj_tas_rpg_lookdown_pitch = Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle in degrees");
