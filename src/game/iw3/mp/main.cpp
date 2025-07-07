@@ -1423,27 +1423,42 @@ namespace iw3
             R_AddCmdDrawText(buff, 16, font, x, y, 1.0, 1.0, 0.0, color, 0);
         }
 
-        void CG_DrawCoordinates()
+        void CG_DrawCoordinatesTAS()
         {
+            static auto cj_tas_rpg_lookdown = Dvar_FindMalleableVar("cj_tas_rpg_lookdown");
+            if (!cj_tas_rpg_lookdown->current.enabled)
+            {
+                return;
+            }
+
             auto ps = CG_GetPredictedPlayerState(0);
+
+            int speed2D = static_cast<int>(sqrtf(ps->velocity[0] * ps->velocity[0] + ps->velocity[1] * ps->velocity[1]));
 
             char buff[256];
             sprintf_s(buff,
-                      "x:     %.6f\n"
-                      "y:     %.6f\n"
-                      "z:     %.6f\n"
-                      "yaw: %.6f",
-                      ps->origin[0], ps->origin[1], ps->origin[2], ps->viewangles[1]);
+                      "x: %.6f\n"
+                      "y: %.6f\n"
+                      "z: %.6f\n"
+                      "pitch: %.6f\n"
+                      "yaw: %.6f\n"
+                      "speed: %d\n",
+                      ps->origin[0],
+                      ps->origin[1],
+                      ps->origin[2],
+                      ps->viewangles[0],
+                      ps->viewangles[1],
+                      speed2D);
 
             static Font_s *bigDevFont = (Font_s *)R_RegisterFont("fonts/bigDevFont");
             static Font_s *consoleFont = (Font_s *)R_RegisterFont("fonts/consoleFont");
 
             float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
-            float y = 40.f;
+            float y = 50.f;
             float colorWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-            float colorPurple[4] = {0.5f, 0.0f, 1.0f, 1.0f};
+            // float colorPurple[4] = {0.5f, 0.0f, 1.0f, 1.0f};
 
-            R_AddCmdDrawText("CHEATER", 10, bigDevFont, x, 30, 1.0, 1.0, 0.0, colorPurple, 0);
+            R_AddCmdDrawText("TAS", 10, bigDevFont, x, 30, 1.0, 1.0, 0.0, colorWhite, 0);
 
             R_AddCmdDrawText(buff, 256, consoleFont, x, y, 1.0, 1.0, 0.0, colorWhite, 0);
         }
@@ -1466,7 +1481,7 @@ namespace iw3
                 DrawFixedFPS();
             }
 
-            CG_DrawCoordinates();
+            CG_DrawCoordinatesTAS();
 
             clipmap::HandleBrushCollisionChange();
 
