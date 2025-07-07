@@ -1427,9 +1427,7 @@ namespace iw3
         {
             static auto cj_tas_rpg_lookdown = Dvar_FindMalleableVar("cj_tas_rpg_lookdown");
             if (!cj_tas_rpg_lookdown->current.enabled)
-            {
                 return;
-            }
 
             auto ps = CG_GetPredictedPlayerState(0);
 

@@ -29,6 +29,11 @@ namespace iw3
 
         pmove_t *predict_pmove(int localClientNum, int framesToAdvance = 1)
         {
+            // On console this is 85!
+            // vsync is 60 FPS, so we predict at 60 FPS
+            // TODO: investigate if this is correct
+            // static auto com_maxfps = Dvar_FindMalleableVar("com_maxfps");
+
             pmove_t *pmove_current = &cg_pmove[localClientNum];
             auto pmove_clone = clone_pmove(pmove_current);
 
@@ -37,15 +42,12 @@ namespace iw3
             int frameTime = 1000 / 60; // assuming 60 FPS
             for (int i = 0; i < framesToAdvance; ++i)
             {
-                // Advance time by 1 frame
                 pmove_clone->oldcmd = pmove_clone->cmd;
                 pmove_clone->cmd.serverTime += frameTime;
 
-                // Set input angles (you can vary these per frame if needed)
                 pmove_clone->cmd.angles[PITCH] = ANGLE2SHORT(ca->viewangles[PITCH]);
                 pmove_clone->cmd.angles[YAW] = ANGLE2SHORT(ca->viewangles[YAW]);
 
-                // Run single frame of prediction
                 PmoveSingle(pmove_clone);
             }
 
@@ -59,12 +61,9 @@ namespace iw3
             static auto cj_tas_rpg_lookdown_yaw = Dvar_FindMalleableVar("cj_tas_rpg_lookdown_yaw");
 
             if (!cj_tas_rpg_lookdown->current.enabled)
-            {
-                // If the dvar is disabled, do nothing
                 return;
-            }
 
-                pmove_t *pmove_current = &cg_pmove[localClientNum];
+            pmove_t *pmove_current = &cg_pmove[localClientNum];
             auto pmove_predicted = predict_pmove(localClientNum, 2);
 
             auto ca = &(*clients)[localClientNum];
