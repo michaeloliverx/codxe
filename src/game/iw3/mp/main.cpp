@@ -1423,6 +1423,31 @@ namespace iw3
             R_AddCmdDrawText(buff, 16, font, x, y, 1.0, 1.0, 0.0, color, 0);
         }
 
+        void CG_DrawCoordinates()
+        {
+            auto ps = CG_GetPredictedPlayerState(0);
+
+            char buff[256];
+            sprintf_s(buff,
+                      "x:     %.6f\n"
+                      "y:     %.6f\n"
+                      "z:     %.6f\n"
+                      "yaw: %.6f",
+                      ps->origin[0], ps->origin[1], ps->origin[2], ps->viewangles[1]);
+
+            static Font_s *bigDevFont = (Font_s *)R_RegisterFont("fonts/bigDevFont");
+            static Font_s *consoleFont = (Font_s *)R_RegisterFont("fonts/consoleFont");
+
+            float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
+            float y = 40.f;
+            float colorWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            float colorPurple[4] = {0.5f, 0.0f, 1.0f, 1.0f};
+
+            R_AddCmdDrawText("CHEATER", 10, bigDevFont, x, 30, 1.0, 1.0, 0.0, colorPurple, 0);
+
+            R_AddCmdDrawText(buff, 256, consoleFont, x, y, 1.0, 1.0, 0.0, colorWhite, 0);
+        }
+
         Detour CG_DrawActive_Detour;
 
         void CG_DrawActive_Hook(int localClientNum)
@@ -1440,6 +1465,8 @@ namespace iw3
             {
                 DrawFixedFPS();
             }
+
+            CG_DrawCoordinates();
 
             clipmap::HandleBrushCollisionChange();
 

@@ -28,30 +28,56 @@ namespace iw3
             }
         }
 
-        pmove_t *predict_pmove(int localClientNum)
+        // pmove_t *predict_pmove(int localClientNum)
+        // {
+        //     // On console this is 85!
+        //     // vsync is 60 FPS, so we predict at 60 FPS
+        //     // static auto com_maxfps = Dvar_FindMalleableVar("com_maxfps");
+
+        //     // Current in-flight pmove
+        //     pmove_t *pmove_current = &cg_pmove[localClientNum];
+        //     auto pmove_current_clone = clone_pmove(pmove_current);
+
+        //     // Advance time for the current pmove by one frame
+        //     pmove_current_clone->cmd.serverTime = pmove_current_clone->oldcmd.serverTime;
+        //     pmove_current_clone->cmd.serverTime += 1000 / 60;
+
+        //     // auto cg = &(*cgArray)[localClientNum];
+        //     auto ca = &(*clients)[localClientNum];
+
+        //     // DO I NEED DELTA ANGLES HERE?
+        //     pmove_current_clone->cmd.angles[PITCH] = ANGLE2SHORT(ca->viewangles[PITCH]);
+        //     pmove_current_clone->cmd.angles[YAW] = ANGLE2SHORT(ca->viewangles[YAW]);
+
+        //     // Run the prediction
+        //     PmoveSingle(pmove_current_clone);
+
+        //     return pmove_current_clone;
+        // }
+
+        pmove_t *predict_pmove(int localClientNum, int framesToAdvance = 1)
         {
-            // On console this is 85!
-            // vsync is 60 FPS, so we predict at 60 FPS
-            // static auto com_maxfps = Dvar_FindMalleableVar("com_maxfps");
-
-            // Current in-flight pmove
             pmove_t *pmove_current = &cg_pmove[localClientNum];
-            auto pmove_current_clone = clone_pmove(pmove_current);
+            auto pmove_clone = clone_pmove(pmove_current);
 
-            // Advance time for the current pmove by one frame
-            pmove_current_clone->cmd.serverTime = pmove_current_clone->oldcmd.serverTime;
-            pmove_current_clone->cmd.serverTime += 1000 / 60;
+            auto ca = &(*clients)[localClientNum];
 
-            clientActive_t *localClientGlobals = &(*clients)[localClientNum];
-            auto *viewangles = localClientGlobals->viewangles;
+            int frameTime = 1000 / 60; // assuming 60 FPS
+            for (int i = 0; i < framesToAdvance; ++i)
+            {
+                // Advance time by 1 frame
+                pmove_clone->oldcmd = pmove_clone->cmd;
+                pmove_clone->cmd.serverTime += frameTime;
 
-            pmove_current_clone->cmd.angles[PITCH] = ANGLE2SHORT(viewangles[PITCH]);
-            pmove_current_clone->cmd.angles[YAW] = ANGLE2SHORT(viewangles[YAW]);
+                // Set input angles (you can vary these per frame if needed)
+                pmove_clone->cmd.angles[PITCH] = ANGLE2SHORT(ca->viewangles[PITCH]);
+                pmove_clone->cmd.angles[YAW] = ANGLE2SHORT(ca->viewangles[YAW]);
 
-            // Run the prediction
-            PmoveSingle(pmove_current_clone);
+                // Run single frame of prediction
+                PmoveSingle(pmove_clone);
+            }
 
-            return pmove_current_clone;
+            return pmove_clone;
         }
 
         void JumpAtEdge(int localClientNum)
@@ -305,57 +331,108 @@ namespace iw3
             delete_pmove(pmove_predicted);
         }
 
+        // Semi working
+        // void BlocRPG(int localClientNum)
+        // {
+        //     pmove_t *pmove_current = &cg_pmove[localClientNum];
+        //     auto pmove_predicted = predict_pmove(localClientNum);
+
+        //     auto ca = &(*clients)[localClientNum];
+        //     auto cg = &(*cgArray)[localClientNum];
+        //     auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+        //     // auto oldcmd = &ca->cmds[(ca->cmdNumber - 1) & 0x7F];
+
+        //     static auto rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+        //     auto holding_rpg = pmove_current->ps->weapon == rpg_mp_index;
+        //     auto reloading = pmove_current->ps->weaponstate == WEAPON_RELOADING;
+
+        //     bool shot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
+
+        //     if (shot_rpg_next_frame && holding_rpg && !reloading)
+        //     {
+        //         // Local game
+        //         ca->viewangles[PITCH] = AngleNormalize360(50 - cg->snap->ps.delta_angles[PITCH]);
+        //         ca->viewangles[YAW] = AngleNormalize360(-90 - cg->snap->ps.delta_angles[YAW]);
+
+        //         // cmd
+        //         cmd->angles[PITCH] = ANGLE2SHORT(AngleNormalize360(50 - cg->snap->ps.delta_angles[PITCH]));
+        //         cmd->angles[YAW] = ANGLE2SHORT(AngleNormalize360(-90 - cg->snap->ps.delta_angles[YAW]));
+        //     }
+
+        //     // cmd->angles[PITCH] = ANGLE2SHORT(AngleNormalize360(50 - cg->snap->ps.delta_angles[PITCH]));
+        //     // cmd->angles[YAW] = ANGLE2SHORT(AngleNormalize360(-90 - cg->snap->ps.delta_angles[YAW]));
+
+        //     delete_pmove(pmove_predicted);
+        // }
+
+        void BlocRPG(int localClientNum)
+        {
+            pmove_t *pmove_current = &cg_pmove[localClientNum];
+            auto pmove_predicted = predict_pmove(localClientNum, 2);
+
+            auto ca = &(*clients)[localClientNum];
+            auto cg = &(*cgArray)[localClientNum];
+            auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+
+            static auto should_reset = false;
+            static auto previous_pitch = ca->viewangles[PITCH];
+            static auto previous_yaw = ca->viewangles[YAW];
+            if (should_reset)
+            {
+                // Reset the view angles to the previous state
+                ca->viewangles[PITCH] = previous_pitch;
+                ca->viewangles[YAW] = previous_yaw;
+                should_reset = false;
+            }
+
+            static auto rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+            auto holding_rpg = pmove_current->ps->weapon == rpg_mp_index;
+            auto reloading = pmove_current->ps->weaponstate == WEAPON_RELOADING;
+
+            bool shot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
+
+            if (shot_rpg_next_frame && holding_rpg && !reloading)
+            {
+                previous_pitch = ca->viewangles[PITCH];
+                previous_yaw = ca->viewangles[YAW];
+                should_reset = true;
+
+                const auto pitch_offset = 70.0f; // Adjust this value as needed
+                const auto yaw_offset = -90.0f; // Adjust this value as needed
+
+                // Local game
+                ca->viewangles[PITCH] = AngleNormalize360(pitch_offset - cg->snap->ps.delta_angles[PITCH]);
+                ca->viewangles[YAW] = AngleNormalize360(yaw_offset - cg->snap->ps.delta_angles[YAW]);
+
+                // cmd
+                cmd->angles[PITCH] = ANGLE2SHORT(AngleNormalize360(pitch_offset - cg->snap->ps.delta_angles[PITCH]));
+                cmd->angles[YAW] = ANGLE2SHORT(AngleNormalize360(yaw_offset - cg->snap->ps.delta_angles[YAW]));
+            }
+
+            delete_pmove(pmove_predicted);
+        }
+
         Detour CL_CreateNewCommands_Detour;
 
         void CL_CreateNewCommands_Hook(int localClientNum)
         {
-
-            auto ca = &(*clients)[localClientNum];
-            auto viewangles = ca->viewangles;
-            // auto &cg = cgArray[localClientNum];
-
-            // DbgPrint("CL_CreateNewCommands_Hook: localClientNum: %d, viewangles: %f %f %f\n",
-            //          localClientNum, viewangles[0], viewangles[1], viewangles[2]);
-
-            // if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
-            // {
-            //     auto cg = &(*cgArray)[localClientNum];
-            //     auto &delta_angles1 = cg->activeSnapshots[0].ps.delta_angles;
-            //     DbgPrint("BEFORE CMD cgArray[%d].activeSnapshots[0].ps.delta_angles: %f %f %f\n",
-            //              localClientNum, delta_angles1[0], delta_angles1[1], delta_angles1[2]);
-            // }
-
             CL_CreateNewCommands_Detour.GetOriginal<decltype(CL_CreateNewCommands)>()(localClientNum);
             if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
             {
-                // // Jump on next frame if we are at the edge
-                // if (cj_tas_jump_at_edge->current.enabled)
-                // {
-                //     JumpAtEdge(localClientNum);
-                // }
-                // // // Jump on next frame if we shoot RPG
-                // // if (cj_tas_jump_on_shoot_rpg->current.enabled)
-                // // {
-                // JumpOnShootRPG(localClientNum);
-                // // }
-
-                // BackwardsRPG(localClientNum);
-                // LookDownOnShootRPG(localClientNum);
-
-                // AutoBHOP_Holding_Jump();
-                // LookdownRPG(localClientNum);
-
-                auto cg = &(*cgArray)[localClientNum];
-                viewangles[PITCH] = AngleNormalize360(50 - cg->snap->ps.delta_angles[PITCH]);
-                viewangles[YAW] = AngleNormalize360(36 - cg->snap->ps.delta_angles[YAW]);
-
-                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
-                if (cmd->buttons & 1024) // JUMP
-                {
-                    viewangles[PITCH] = AngleNormalize360(0 - cg->snap->ps.delta_angles[PITCH]);
-                    viewangles[YAW] = AngleNormalize360(36 - cg->snap->ps.delta_angles[YAW]);
-                }
+                BlocRPG(localClientNum);
             }
+        }
+
+        Detour CL_FinishMove_Detour;
+
+        void CL_FinishMove_Hook(int localClientNum, usercmd_s *cmd)
+        {
+            CL_FinishMove_Detour.GetOriginal<decltype(CL_FinishMove)>()(localClientNum, cmd);
+
+            // if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
+            // {
+            //     BlocRPG(localClientNum);
+            // }
         }
 
         cj_tas::cj_tas()
@@ -363,11 +440,11 @@ namespace iw3
             CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
             CL_CreateNewCommands_Detour.Install();
 
+            // CL_FinishMove_Detour = Detour(CL_FinishMove, CL_FinishMove_Hook);
+            // CL_FinishMove_Detour.Install();
+
             cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", true, 0, "");
             // cj_tas_jump_on_shoot_rpg = Dvar_RegisterBool("cj_tas_jump_on_shoot_rpg", true, 0, "Jump on next frame if we shoot RPG");
-
-            auto sizeof_cg_s = sizeof(cg_s);
-            DbgPrint("sizeof(cg_s): %d\n", sizeof_cg_s);
         }
 
         cj_tas::~cj_tas()
