@@ -2429,7 +2429,7 @@ generateMenuOptions()
 	self addMenu("menu_codjumper", "main");
 	self addMenuOption("menu_codjumper", "TAS | Jump at Edge", ::toggleJumpAtEdge);
 	self addMenuOption("menu_codjumper", "TAS | Jump on RPG fire", ::toggleJumpOnRpgFire);
-	self addMenuOption("menu_codjumper", "TAS | Toggle RPG lookdown", ::toggleRpgLookdown);
+	self addMenuOption("menu_codjumper", "TAS | RPG lookdown", ::toggleRpgLookdown);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown set angles", ::setRpgLookdownAngles);
 
 	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
