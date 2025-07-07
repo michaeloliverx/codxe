@@ -136,6 +136,7 @@ namespace iw3
 
         cj_tas::~cj_tas()
         {
+            CL_CreateNewCommands_Detour.Remove();
         }
     }
 }
