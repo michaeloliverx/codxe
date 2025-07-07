@@ -11,8 +11,8 @@ namespace iw3
         public:
             cj_tas();
             ~cj_tas();
-
             const char *get_name() override { return "cj_tas"; };
+            static bool TAS_Enabled();
         };
     }
 }

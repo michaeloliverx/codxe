@@ -7,9 +7,16 @@ namespace iw3
 {
     namespace mp
     {
+        dvar_s *cj_tas_jump_at_edge = nullptr;
         dvar_s *cj_tas_rpg_lookdown = nullptr;
         dvar_s *cj_tas_rpg_lookdown_yaw = nullptr;
         dvar_s *cj_tas_rpg_lookdown_pitch = nullptr;
+
+        bool cj_tas::TAS_Enabled()
+        {
+            const bool tas_enabled = cj_tas_jump_at_edge->current.enabled || cj_tas_rpg_lookdown->current.enabled;
+            return tas_enabled;
+        }
 
         pmove_t *clone_pmove(pmove_t *pmove)
         {
@@ -54,13 +61,9 @@ namespace iw3
             return pmove_clone;
         }
 
-        void RPGLookdown(int localClientNum)
+        void TAS_Cycle(int localClientNum)
         {
-            static auto cj_tas_rpg_lookdown = Dvar_FindMalleableVar("cj_tas_rpg_lookdown");
-            static auto cj_tas_rpg_lookdown_pitch = Dvar_FindMalleableVar("cj_tas_rpg_lookdown_pitch");
-            static auto cj_tas_rpg_lookdown_yaw = Dvar_FindMalleableVar("cj_tas_rpg_lookdown_yaw");
-
-            if (!cj_tas_rpg_lookdown->current.enabled)
+            if (!cj_tas::TAS_Enabled())
                 return;
 
             pmove_t *pmove_current = &cg_pmove[localClientNum];
@@ -88,7 +91,7 @@ namespace iw3
 
             bool shot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
 
-            if (shot_rpg_next_frame && holding_rpg && !reloading)
+            if (cj_tas_rpg_lookdown->current.enabled && shot_rpg_next_frame && holding_rpg && !reloading)
             {
                 previous_pitch = ca->viewangles[PITCH];
                 previous_yaw = ca->viewangles[YAW];
@@ -110,6 +113,15 @@ namespace iw3
                 // cmd->rightmove = -cmd->rightmove;
             }
 
+            // 1022 = On ground
+            // 1023 = In air
+            bool will_leave_ground_this_frame = pmove_current->ps->groundEntityNum == 1022 && pmove_predicted->ps->groundEntityNum == 1023;
+            if (cj_tas_jump_at_edge->current.enabled && will_leave_ground_this_frame)
+            {
+                // If we are going to leave the ground, we should jump
+                cmd->buttons |= 1024; // JUMP
+            }
+
             delete_pmove(pmove_predicted);
         }
 
@@ -120,7 +132,7 @@ namespace iw3
             CL_CreateNewCommands_Detour.GetOriginal<decltype(CL_CreateNewCommands)>()(localClientNum);
             if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
             {
-                RPGLookdown(localClientNum);
+                TAS_Cycle(localClientNum);
             }
         }
 
@@ -129,6 +141,7 @@ namespace iw3
             CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
             CL_CreateNewCommands_Detour.Install();
 
+            cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", false, 0, "Enable jump at edge");
             cj_tas_rpg_lookdown = Dvar_RegisterBool("cj_tas_rpg_lookdown", false, 0, "Enable RPG lookdown");
             cj_tas_rpg_lookdown_yaw = Dvar_RegisterInt("cj_tas_rpg_lookdown_yaw", 0, -180, 180, 0, "RPG lookdown yaw angle in degrees");
             cj_tas_rpg_lookdown_pitch = Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle in degrees");

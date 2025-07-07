@@ -1425,8 +1425,7 @@ namespace iw3
 
         void CG_DrawCoordinatesTAS()
         {
-            static auto cj_tas_rpg_lookdown = Dvar_FindMalleableVar("cj_tas_rpg_lookdown");
-            if (!cj_tas_rpg_lookdown->current.enabled)
+            if (!cj_tas::TAS_Enabled())
                 return;
 
             auto ps = CG_GetPredictedPlayerState(0);
