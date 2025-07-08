@@ -151,6 +151,8 @@ namespace iw3
         static auto CL_GetPredictedOriginForServerTime = reinterpret_cast<int (*)(clientActive_t *cl, int serverTime, float *predictedOrigin, float *predictedVelocity, int *bobCycle, int *movementDir)>(0x822CAA38);
         static auto CL_SetStance = reinterpret_cast<void (*)(int localClientNum, int stance)>(0x822D92A0);
 
+        static auto CG_Init = reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(0x8230DEA0);
+
         // Variables
         static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
         static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);

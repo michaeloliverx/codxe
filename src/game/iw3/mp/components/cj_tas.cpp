@@ -19,6 +19,8 @@ namespace iw3
         dvar_s *cj_tas_rpg_lookdown_yaw = nullptr;
         dvar_s *cj_tas_rpg_lookdown_pitch = nullptr;
 
+        unsigned int rpg_mp_index = 0;
+
         bool cj_tas::TAS_Enabled()
         {
             const bool tas_enabled = (cj_tas_bhop_auto->current.enabled ||
@@ -27,6 +29,12 @@ namespace iw3
                                       cj_tas_crouch_on_jump->current.enabled ||
                                       cj_tas_rpg_lookdown->current.enabled);
             return tas_enabled;
+        }
+
+        void cj_tas::On_CG_Init()
+        {
+            // Weapon indexes change every game
+            rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
         }
 
         pmove_t *clone_pmove(pmove_t *pmove)
@@ -95,7 +103,6 @@ namespace iw3
                 should_reset = false;
             }
 
-            static auto rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
             auto holding_rpg = pmove_current->ps->weapon == rpg_mp_index;
             auto reloading = pmove_current->ps->weaponstate == WEAPON_RELOADING;
 
