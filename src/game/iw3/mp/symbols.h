@@ -120,6 +120,7 @@ namespace iw3
         static auto UI_DrawBuildNumber = reinterpret_cast<void (*)(int localClientNum)>(0x821EBB30);
         static auto UI_DrawTextExt = reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style)>(0x821EB858);
         static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x821F2F28);
+        static auto UI_SafeTranslateString = reinterpret_cast<const char *(*)(char *reference)>(0x821ECA78);
 
         static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x821CD858);
 

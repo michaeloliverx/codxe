@@ -7,6 +7,11 @@ namespace iw3
     {
         dvar_s *bg_bobIdle = nullptr;
 
+        dvar_s *cg_scoreboardLabel_Score = nullptr;
+        dvar_s *cg_scoreboardLabel_Kills = nullptr;
+        dvar_s *cg_scoreboardLabel_Assists = nullptr;
+        dvar_s *cg_scoreboardLabel_Deaths = nullptr;
+
         Detour BG_CalculateWeaponPosition_IdleAngles_Detour;
 
         void BG_CalculateWeaponPosition_IdleAngles_Hook(weaponState_t *ws, float *angles)
@@ -60,6 +65,41 @@ namespace iw3
             // UI_DrawBuildNumber_Detour.GetOriginal<decltype(UI_DrawBuildNumber)>()
         }
 
+        Detour UI_SafeTranslateString_Detour;
+
+        const char *UI_SafeTranslateString_Hook(char *reference)
+        {
+            if (_ReturnAddress() == (void *)0x822FDDDC) // CG_DrawScoreboard_ListColumnHeaders -> UI_SafeTranslateString
+            {
+                if (strcmp(reference, "CGAME_SB_SCORE") == 0)
+                {
+                    const char *val = cg_scoreboardLabel_Score->current.string;
+                    if (val && *val)
+                        return val;
+                }
+                else if (strcmp(reference, "CGAME_SB_KILLS") == 0)
+                {
+                    const char *val = cg_scoreboardLabel_Kills->current.string;
+                    if (val && *val)
+                        return val;
+                }
+                else if (strcmp(reference, "CGAME_SB_ASSISTS") == 0)
+                {
+                    const char *val = cg_scoreboardLabel_Assists->current.string;
+                    if (val && *val)
+                        return val;
+                }
+                else if (strcmp(reference, "CGAME_SB_DEATHS") == 0)
+                {
+                    const char *val = cg_scoreboardLabel_Deaths->current.string;
+                    if (val && *val)
+                        return val;
+                }
+            }
+
+            return UI_SafeTranslateString_Detour.GetOriginal<decltype(UI_SafeTranslateString)>()(reference);
+        }
+
         cg::cg()
         {
             UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
@@ -79,6 +119,33 @@ namespace iw3
             R_DrawAllDynEnt_Detour.Install();
 
             Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
+
+            UI_SafeTranslateString_Detour = Detour(UI_SafeTranslateString, UI_SafeTranslateString_Hook);
+            UI_SafeTranslateString_Detour.Install();
+
+            cg_scoreboardLabel_Score = Dvar_RegisterString(
+                "cg_scoreboardLabel_Score",
+                "",
+                DVAR_FLAG_NONE,
+                "Override label for 'Score' column on scoreboard");
+
+            cg_scoreboardLabel_Kills = Dvar_RegisterString(
+                "cg_scoreboardLabel_Kills",
+                "",
+                DVAR_FLAG_NONE,
+                "Override label for 'Kills' column on scoreboard");
+
+            cg_scoreboardLabel_Assists = Dvar_RegisterString(
+                "cg_scoreboardLabel_Assists",
+                "",
+                DVAR_FLAG_NONE,
+                "Override label for 'Assists' column on scoreboard");
+
+            cg_scoreboardLabel_Deaths = Dvar_RegisterString(
+                "cg_scoreboardLabel_Deaths",
+                "",
+                DVAR_FLAG_NONE,
+                "Override label for 'Deaths' column on scoreboard");
         }
 
         cg::~cg()

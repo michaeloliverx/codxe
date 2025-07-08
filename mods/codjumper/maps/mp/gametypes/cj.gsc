@@ -169,6 +169,12 @@ onPlayerSpawnedDvars()
 	self setClientDvar("ui_hud_hardcore", 1);		// Hardcore HUD
 	self setClientDvar("cg_drawCrosshair", 0);		// Disable crosshair
 	self setClientDvar("g_compassShowEnemies", 0);	// Disable compass
+
+	// self setClientDvar("cg_scoreboardLabel_Score", "");
+	self setClientDvar("cg_scoreboardLabel_Kills", "Saves");
+	self setClientDvar("cg_scoreboardLabel_Assists", "Loads");
+	// self setClientDvar("cg_scoreboardLabel_Deaths", "");
+
 }
 
 is_int(num)
