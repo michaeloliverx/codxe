@@ -79,6 +79,8 @@ namespace iw3
 
         static auto Load_MapEntsPtr = reinterpret_cast<void (*)()>(0x822A9648);
 
+        static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x821E5B38);
+
         static auto PM_FoliageSounds = reinterpret_cast<void (*)(pmove_t *pm)>(0x82335E90);
         static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233B470);
         static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233A938);
@@ -120,6 +122,7 @@ namespace iw3
 
         static auto UI_DrawBuildNumber = reinterpret_cast<void (*)(int localClientNum)>(0x821EBB30);
         static auto UI_DrawTextExt = reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style)>(0x821EB858);
+        static auto UI_OpenMenu = reinterpret_cast<void (*)(int localClientNum, const char *menuName)>(0x821EA1E0);
         static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x821F2F28);
         static auto UI_SafeTranslateString = reinterpret_cast<const char *(*)(char *reference)>(0x821ECA78);
 
@@ -156,5 +159,6 @@ namespace iw3
         static auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
         static ScreenPlacement &scrPlaceFullUnsafe = *reinterpret_cast<ScreenPlacement *>(0x8246F468);
         static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x849F1580);
+        static auto uiInfoArray = reinterpret_cast<uiInfo_s **>(0x849F2DF0);
     }
 }
