@@ -62,6 +62,7 @@ namespace iw3
         static auto Dvar_FindMalleableVar = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x821D4C10);
         static auto Dvar_GetBool = reinterpret_cast<bool (*)(const char *dvarName)>(0x821D15D8);
         static auto Dvar_GetInt = reinterpret_cast<int (*)(const char *dvarName)>(0x821D1570);
+        static auto Dvar_GetString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x821D1478);
         static auto Dvar_RegisterBool = reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, unsigned __int16 flags, const char *description)>(0x821D5180);
         static auto Dvar_RegisterColor = reinterpret_cast<dvar_s *(*)(const char *dvarName, double r, double g, double b, double a, unsigned __int16 flags, const char *description)>(0x821D4D98);
         static auto Dvar_RegisterEnum = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char **valueList, unsigned __int16 defaultIndex, unsigned __int16 flags, const char *description)>(0x821D4F88);
@@ -120,6 +121,7 @@ namespace iw3
         static auto UI_DrawBuildNumber = reinterpret_cast<void (*)(int localClientNum)>(0x821EBB30);
         static auto UI_DrawTextExt = reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style)>(0x821EB858);
         static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x821F2F28);
+        static auto UI_SafeTranslateString = reinterpret_cast<const char *(*)(char *reference)>(0x821ECA78);
 
         static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x821CD858);
 

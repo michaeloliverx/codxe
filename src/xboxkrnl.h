@@ -1,6 +1,17 @@
 #pragma once
 
-extern "C" void DbgPrint(const char *format, ...);
+extern "C"
+{
+    /**
+     * Prints a debug message to the console.
+     */
+    void DbgPrint(const char *format, ...);
+
+    /**
+     * Returns the return address of the current function.
+     */
+    void *_ReturnAddress();
+}
 
 namespace xbox
 {
