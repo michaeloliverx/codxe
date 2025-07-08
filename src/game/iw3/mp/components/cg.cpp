@@ -1,4 +1,5 @@
 #include "cg.h"
+#include "cj_tas.h"
 #include "common.h"
 
 namespace iw3
@@ -112,6 +113,14 @@ namespace iw3
                 Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
         }
 
+        Detour CG_Init_Detour;
+
+        void CG_Init_Hook(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)
+        {
+            CG_Init_Detour.GetOriginal<decltype(CG_Init)>()(localClientNum, serverMessageNum, serverCommandSequence, clientNum);
+            cj_tas::On_CG_Init();
+        }
+
         cg::cg()
         {
             Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
@@ -137,6 +146,9 @@ namespace iw3
 
             UI_SafeTranslateString_Detour = Detour(UI_SafeTranslateString, UI_SafeTranslateString_Hook);
             UI_SafeTranslateString_Detour.Install();
+
+            CG_Init_Detour = Detour(CG_Init, CG_Init_Hook);
+            CG_Init_Detour.Install();
 
             cg_scoreboardLabel_Score = Dvar_RegisterString(
                 "cg_scoreboardLabel_Score",
@@ -170,6 +182,7 @@ namespace iw3
             UI_SafeTranslateString_Detour.Remove();
             BG_CalculateWeaponPosition_IdleAngles_Detour.Remove();
             BG_CalculateView_IdleAngles_Detour.Remove();
+            CG_Init_Detour.Remove();
         }
     }
 }

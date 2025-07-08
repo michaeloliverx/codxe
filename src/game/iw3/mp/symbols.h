@@ -7,6 +7,9 @@ namespace iw3
     namespace mp
     {
         // Functions
+        static auto AngleNormalize180 = reinterpret_cast<float (*)(float angle)>(0x820A0088);
+        static auto AngleNormalize360 = reinterpret_cast<float (*)(float angle)>(0x821D9DA8);
+
         static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82239FD0);
         static auto Cbuf_ExecuteBuffer = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x8223AAE8);
 
@@ -144,12 +147,17 @@ namespace iw3
         static auto BG_FindWeaponIndexForName = reinterpret_cast<unsigned int (*)(const char *name)>(0x8232DC38);
 
         static auto CL_CreateNewCommands = reinterpret_cast<void (*)(int localClientNum)>(0x822DCAE8);
+        static auto CL_FinishMove = reinterpret_cast<void (*)(int localClientNum, usercmd_s *cmd)>(0x822DA220);
         static auto CL_GetPredictedOriginForServerTime = reinterpret_cast<int (*)(clientActive_t *cl, int serverTime, float *predictedOrigin, float *predictedVelocity, int *bobCycle, int *movementDir)>(0x822CAA38);
+        static auto CL_SetStance = reinterpret_cast<void (*)(int localClientNum, int stance)>(0x822D92A0);
+
+        static auto CG_Init = reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(0x8230DEA0);
 
         // Variables
-        static auto cgArray = reinterpret_cast<cg_s *>(0x823F28A0);
+        static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
         static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
         static auto clients = reinterpret_cast<clientActive_t **>(0x82435AB8);
+        static auto clientConnections = reinterpret_cast<clientConnection_t *>(0x824302E0);
         static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
         static auto cg_pmove = reinterpret_cast<pmove_t *>(0x823F6040);
         static auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);

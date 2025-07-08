@@ -2381,29 +2381,9 @@ generateMenuOptions()
 	self addMenu("main");
 	is_host = self GetEntityNumber() == 0;
 
-	// DVAR menu
-	self addMenuOption("main", "DVAR Menu", ::menuAction, "CHANGE_MENU", "dvar_menu");
-	self addMenu("dvar_menu", "main");
-	self addMenuOption("dvar_menu", "^1Reset All^7", ::reset_all_client_dvars);
-	dvars = getarraykeys(level.DVARS);
-	for (i = dvars.size - 1; i >= 0; i--) // reverse order to display the dvars in the order they are defined
-	{
-		dvar = level.DVARS[dvars[i]];
-		if (!is_host && isdefined(dvar.scope) && dvar.scope == "global")
-			continue;
-		if (dvar.type == "slider")
-			self addMenuOption("dvar_menu", dvar.name, ::slider_start, dvar);
-		else if (dvar.type == "boolean")
-			self addMenuOption("dvar_menu", dvar.name, ::toggle_boolean_dvar, dvar);
-	}
-
 	// Host submenu
 	if (is_host)
 	{
-		self addMenuOption("main", "Global settings", ::menuAction, "CHANGE_MENU", "host_menu");
-		self addMenu("host_menu", "main");
-		self addMenuOption("host_menu", "Toggle Old School Mode", ::toggleOldschool);
-
 		// Map Menu
 		if (self == level.players[0])
 		{
@@ -2420,14 +2400,40 @@ generateMenuOptions()
 			}
 		}
 
-		self addMenuOption("host_menu", "Toggle Multi Bouncing", ::toggleMultiBouncing);
-		self addMenuOption("host_menu", "Toggle Auto Bhop", ::toggleBhopAuto);
-		self addMenuOption("host_menu", "Toggle PC lookdown pitch", ::toggle_pc_lookdown_pitch);
+		self addMenuOption("main", "Global settings", ::menuAction, "CHANGE_MENU", "host_menu");
+		self addMenu("host_menu", "main");
+		self addMenuOption("host_menu", "Toggle Old School Mode", ::toggleOldschool);
 
+		self addMenuOption("host_menu", "Toggle Multi Bouncing", ::toggleMultiBouncing);
+		self addMenuOption("host_menu", "Toggle PC lookdown pitch", ::toggle_pc_lookdown_pitch);
 	}
 
-	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
+	// DVAR menu
+	self addMenuOption("main", "DVAR Menu", ::menuAction, "CHANGE_MENU", "dvar_menu");
+	self addMenu("dvar_menu", "main");
+	self addMenuOption("dvar_menu", "^1Reset All^7", ::reset_all_client_dvars);
+	dvars = getarraykeys(level.DVARS);
+	for (i = dvars.size - 1; i >= 0; i--) // reverse order to display the dvars in the order they are defined
+	{
+		dvar = level.DVARS[dvars[i]];
+		if (!is_host && isdefined(dvar.scope) && dvar.scope == "global")
+			continue;
+		if (dvar.type == "slider")
+			self addMenuOption("dvar_menu", dvar.name, ::slider_start, dvar);
+		else if (dvar.type == "boolean")
+			self addMenuOption("dvar_menu", dvar.name, ::toggle_boolean_dvar, dvar);
+	}
 
+	self addMenuOption("main", "CodJumper Menu (Beta)", ::menuAction, "CHANGE_MENU", "menu_codjumper");
+	self addMenu("menu_codjumper", "main");
+	self addMenuOption("menu_codjumper", "TAS | Hold Jump BHOP", ::toggleHoldJumpBhop);
+	self addMenuOption("menu_codjumper", "TAS | Jump at Edge", ::toggleJumpAtEdge);
+	self addMenuOption("menu_codjumper", "TAS | Jump on RPG fire", ::toggleJumpOnRpgFire);
+	self addMenuOption("menu_codjumper", "TAS | Crouch on Jump", ::toggleCrouchOnJump);
+	self addMenuOption("menu_codjumper", "TAS | RPG lookdown", ::toggleRpgLookdown);
+	self addMenuOption("menu_codjumper", "TAS | RPG lookdown set angles", ::setRpgLookdownAngles);
+
+	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
 	self addMenu("menu_game_objects", "main");
 	self addMenuOption("menu_game_objects", "Spawn Object", ::menuAction, "CHANGE_MENU", "menu_game_objects_spawn");
 	self addMenu("menu_game_objects_spawn", "menu_game_objects");
@@ -2619,6 +2625,130 @@ generateMenuOptions()
 	themes = getarraykeys(level.THEMES);
 	for (i = themes.size - 1; i >= 0; i--) // reverse order to display in the order they are defined
 		self addMenuOption("theme_menu", themes[i], ::menuAction, "CHANGE_THEME", themes[i]);
+}
+
+toggleRpgLookdown()
+{
+	if (!isdefined(self.cj["settings"]["tas_rpg_lookdown"]))
+		self.cj["settings"]["tas_rpg_lookdown"] = false;
+
+	self.cj["settings"]["tas_rpg_lookdown"] = !self.cj["settings"]["tas_rpg_lookdown"];
+	if (self.cj["settings"]["tas_rpg_lookdown"])
+	{
+		self setClientDvar("cj_tas_rpg_lookdown", 1);
+		self IPrintLn("TAS - RPG lookdown [^2ON^7]");
+		setRpgLookdownAngles();
+	}
+	else
+	{
+		self setClientDvar("cj_tas_rpg_lookdown", 0);
+		self IPrintLn("TAS - RPG lookdown [^1OFF^7]");
+	}
+}
+
+toggleHoldJumpBhop()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_bhop_auto"]))
+		self.cj["settings"]["cj_tas_bhop_auto"] = false;
+
+	self.cj["settings"]["cj_tas_bhop_auto"] = !self.cj["settings"]["cj_tas_bhop_auto"];
+	if (self.cj["settings"]["cj_tas_bhop_auto"])
+	{
+		self setClientDvar("cj_tas_bhop_auto", 1);
+		self IPrintLn("TAS - Hold Jump BHOP [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_bhop_auto", 0);
+		self IPrintLn("TAS - Hold Jump BHOP [^1OFF^7]");
+	}
+}
+
+toggleJumpAtEdge()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_jump_at_edge"]))
+		self.cj["settings"]["cj_tas_jump_at_edge"] = false;
+
+	self.cj["settings"]["cj_tas_jump_at_edge"] = !self.cj["settings"]["cj_tas_jump_at_edge"];
+	if (self.cj["settings"]["cj_tas_jump_at_edge"])
+	{
+		self setClientDvar("cj_tas_jump_at_edge", 1);
+		self IPrintLn("TAS - Jump at Edge [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_jump_at_edge", 0);
+		self IPrintLn("TAS - Jump at Edge [^1OFF^7]");
+	}
+}
+
+toggleJumpOnRpgFire()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_jump_on_rpg_fire"]))
+		self.cj["settings"]["cj_tas_jump_on_rpg_fire"] = false;
+
+	self.cj["settings"]["cj_tas_jump_on_rpg_fire"] = !self.cj["settings"]["cj_tas_jump_on_rpg_fire"];
+	if (self.cj["settings"]["cj_tas_jump_on_rpg_fire"])
+	{
+		self setClientDvar("cj_tas_jump_on_rpg_fire", 1);
+		self IPrintLn("TAS - Jump on RPG fire [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_jump_on_rpg_fire", 0);
+		self IPrintLn("TAS - Jump on RPG fire [^1OFF^7]");
+	}
+}
+
+toggleCrouchOnJump()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_crouch_on_jump"]))
+		self.cj["settings"]["cj_tas_crouch_on_jump"] = false;
+
+	self.cj["settings"]["cj_tas_crouch_on_jump"] = !self.cj["settings"]["cj_tas_crouch_on_jump"];
+	if (self.cj["settings"]["cj_tas_crouch_on_jump"])
+	{
+		self setClientDvar("cj_tas_crouch_on_jump", 1);
+		self IPrintLn("TAS - Crouch on Jump [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_crouch_on_jump", 0);
+		self IPrintLn("TAS - Crouch on Jump [^1OFF^7]");
+	}
+}
+
+setRpgLookdownAngles()
+{
+	angles = self getPlayerAngles();
+	pitch = angles[0];
+	yaw = angles[1];
+	self setRpgLookdownPitch(pitch);
+	self setRpgLookdownYaw(yaw);
+}
+
+setRpgLookdownPitch(pitch)
+{
+	if(!isdefined(pitch))
+	{
+		angles = self getPlayerAngles();
+		pitch = angles[0];
+	}
+	pitch = int(pitch);	// Truncate to int
+	self setClientDvar("cj_tas_rpg_lookdown_pitch", pitch);
+	self IPrintLn("RPG Lookdown pitch set to ^5" + pitch + "^7");
+}
+
+setRpgLookdownYaw(yaw)
+{
+	if(!isdefined(yaw))
+	{
+		angles = self getPlayerAngles();
+		yaw = angles[1];
+	}
+	yaw = int(yaw);	// Truncate to int
+	self setClientDvar("cj_tas_rpg_lookdown_yaw", yaw);
+	self IPrintLn("RPG Lookdown Yaw set to ^5" + yaw + "^7");
 }
 
 /**
@@ -2995,20 +3125,5 @@ toggleMultiBouncing()
 	{
 		setDvar("pm_multi_bounce", 0);
 		iprintln("Multi Bouncing [^1OFF^7]");
-	}
-}
-
-toggleBhopAuto()
-{
-	value = getDvarInt("pm_bhop_auto");
-	if (value == 0)
-	{
-		setDvar("pm_bhop_auto", 1);
-		iprintln("Auto Bhop [^2ON^7]");
-	}
-	else
-	{
-		setDvar("pm_bhop_auto", 0);
-		iprintln("Auto Bhop [^1OFF^7]");
 	}
 }
