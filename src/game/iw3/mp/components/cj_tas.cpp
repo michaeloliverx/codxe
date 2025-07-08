@@ -90,7 +90,6 @@ namespace iw3
 
             if (should_reset)
             {
-                // Reset the view angles to the previous state
                 ca->viewangles[PITCH] = previous_pitch;
                 ca->viewangles[YAW] = previous_yaw;
                 should_reset = false;
@@ -142,7 +141,6 @@ namespace iw3
 
             if (cj_tas_bhop_auto->current.enabled && is_in_air && is_on_ground_next_frame)
             {
-                // Clear the jump button if we are in the air and will land next frame
                 cmd->buttons &= ~1024; // Clear JUMP button
             }
 
