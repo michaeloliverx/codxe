@@ -2260,20 +2260,6 @@ initMenuHudElem()
 	menuHeaderAuthorFontElem.vertAlign = "fullscreen";
 	menuHeaderAuthorFontElem settext("by mo");
 	self.menuHeaderAuthorFontElem = menuHeaderAuthorFontElem;
-
-	menuVersionFontElem = newClientHudElem(self);
-	menuVersionFontElem.elemType = "font";
-	menuVersionFontElem.font = "default";
-	menuVersionFontElem.fontscale = 1.4;
-	menuVersionFontElem.alpha = 0.5;
-	menuVersionFontElem.x = (level.SCREEN_MAX_WIDTH - menuWidth) + menuTextPaddingLeft;
-	menuVersionFontElem.y = int(level.SCREEN_MAX_HEIGHT - (level.fontHeight * menuVersionFontElem.fontscale) - menuTextPaddingLeft);
-	menuVersionFontElem.alignX = "left";
-	menuVersionFontElem.alignY = "top";
-	menuVersionFontElem.horzAlign = "fullscreen";
-	menuVersionFontElem.vertAlign = "fullscreen";
-	menuVersionFontElem settext(level.VERSION);
-	self.menuVersionFontElem = menuVersionFontElem;
 }
 
 /**
@@ -2336,7 +2322,6 @@ menuAction(action, param1)
 		self.menuTextFontElem destroy();
 		self.menuHeaderFontElem destroy();
 		self.menuHeaderAuthorFontElem destroy();
-		self.menuVersionFontElem destroy();
 		self.cj["menu_open"] = false;
 		self freezecontrols(false);
 		break;
