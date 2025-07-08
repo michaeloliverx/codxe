@@ -7,6 +7,8 @@ namespace iw3
 {
     namespace mp
     {
+        dvar_s *cj_tas_bhop_auto = nullptr;
+
         dvar_s *cj_tas_jump_at_edge = nullptr;
 
         dvar_s *cj_tas_jump_on_rpg_fire = nullptr;
@@ -17,7 +19,8 @@ namespace iw3
 
         bool cj_tas::TAS_Enabled()
         {
-            const bool tas_enabled = (cj_tas_jump_at_edge->current.enabled ||
+            const bool tas_enabled = (cj_tas_bhop_auto->current.enabled ||
+                                      cj_tas_jump_at_edge->current.enabled ||
                                       cj_tas_jump_on_rpg_fire->current.enabled ||
                                       cj_tas_rpg_lookdown->current.enabled);
             return tas_enabled;
@@ -123,13 +126,22 @@ namespace iw3
                 // cmd->rightmove = -cmd->rightmove;
             }
 
-            // 1022 = On ground
-            // 1023 = In air
-            bool will_leave_ground_this_frame = pmove_current->ps->groundEntityNum == 1022 && pmove_predicted->ps->groundEntityNum == 1023;
+            bool is_on_ground = pmove_current->ps->groundEntityNum == 1022;              // 1022 = On ground
+            bool is_in_air = pmove_current->ps->groundEntityNum == 1023;                 // 1023 = In air
+            bool is_on_ground_next_frame = pmove_predicted->ps->groundEntityNum == 1022; // 1022 = On ground
+            bool is_in_air_next_frame = pmove_predicted->ps->groundEntityNum == 1023;    // 1023 = In air
+            bool will_leave_ground_this_frame = is_on_ground && is_in_air_next_frame;
+
             if (cj_tas_jump_at_edge->current.enabled && will_leave_ground_this_frame)
             {
                 // If we are going to leave the ground, we should jump
                 cmd->buttons |= 1024; // JUMP
+            }
+
+            if (cj_tas_bhop_auto->current.enabled && is_in_air && is_on_ground_next_frame)
+            {
+                // Clear the jump button if we are in the air and will land next frame
+                cmd->buttons &= ~1024; // Clear JUMP button
             }
 
             delete_pmove(pmove_predicted);
@@ -150,6 +162,8 @@ namespace iw3
         {
             CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
             CL_CreateNewCommands_Detour.Install();
+
+            cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
 
             cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", false, 0, "Enable jump at edge");
 

@@ -5,32 +5,8 @@ namespace iw3
 {
     namespace mp
     {
-        dvar_s *pm_bhop_auto = nullptr;
         dvar_s *pm_multi_bounce = nullptr;
         dvar_s *pm_pc_mp_velocity_snap = nullptr;
-
-        Detour Jump_Check_Detour;
-
-        int Jump_Check_Hook(pmove_t *pm, pml_t *pml)
-        {
-            // If auto bhop is enabled, pretend jump wasn't held
-            if (pm_bhop_auto->current.enabled)
-            {
-                // Temporarily clear old jump button state
-                const int old_buttons = pm->oldcmd.buttons;
-                pm->oldcmd.buttons &= ~0x400;
-
-                // Call original
-                int result = Jump_Check_Detour.GetOriginal<decltype(Jump_Check)>()(pm, pml);
-
-                // Restore old state
-                pm->oldcmd.buttons = old_buttons;
-                return result;
-            }
-
-            // Otherwise, default behavior
-            return Jump_Check_Detour.GetOriginal<decltype(Jump_Check)>()(pm, pml);
-        }
 
         Detour Sys_SnapVector_Detour;
 
@@ -70,7 +46,6 @@ namespace iw3
 
         pm::pm()
         {
-            pm_bhop_auto = Dvar_RegisterBool("pm_bhop_auto", false, DVAR_CODINFO, "Constantly jump when holding jump");
             pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", false, DVAR_CODINFO, "Enable multi-bounces");
 
             // This allows FPS-dependent physics
@@ -79,9 +54,6 @@ namespace iw3
                 false,
                 DVAR_CODINFO,
                 "Enable PC Multiplayer style velocity snapping (round to nearest). ");
-
-            Jump_Check_Detour = Detour(Jump_Check, Jump_Check_Hook);
-            Jump_Check_Detour.Install();
 
             // Requires jump_slowdownEnable to be set to 0
             PM_FoliageSounds_Detour = Detour(PM_FoliageSounds, PM_FoliageSounds_Hook);
@@ -93,7 +65,6 @@ namespace iw3
 
         pm::~pm()
         {
-            Jump_Check_Detour.Remove();
             PM_FoliageSounds_Detour.Remove();
             Sys_SnapVector_Detour.Remove();
         }

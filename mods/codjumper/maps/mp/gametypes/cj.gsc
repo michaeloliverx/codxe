@@ -2405,7 +2405,6 @@ generateMenuOptions()
 		self addMenuOption("host_menu", "Toggle Old School Mode", ::toggleOldschool);
 
 		self addMenuOption("host_menu", "Toggle Multi Bouncing", ::toggleMultiBouncing);
-		self addMenuOption("host_menu", "Toggle Auto Bhop", ::toggleBhopAuto);
 		self addMenuOption("host_menu", "Toggle PC lookdown pitch", ::toggle_pc_lookdown_pitch);
 	}
 
@@ -2427,6 +2426,7 @@ generateMenuOptions()
 
 	self addMenuOption("main", "CodJumper Menu (Beta)", ::menuAction, "CHANGE_MENU", "menu_codjumper");
 	self addMenu("menu_codjumper", "main");
+	self addMenuOption("menu_codjumper", "TAS | Hold Jump BHOP", ::toggleHoldJumpBhop);
 	self addMenuOption("menu_codjumper", "TAS | Jump at Edge", ::toggleJumpAtEdge);
 	self addMenuOption("menu_codjumper", "TAS | Jump on RPG fire", ::toggleJumpOnRpgFire);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown", ::toggleRpgLookdown);
@@ -2642,6 +2642,24 @@ toggleRpgLookdown()
 	{
 		self setClientDvar("cj_tas_rpg_lookdown", 0);
 		self IPrintLn("TAS - RPG lookdown [^1OFF^7]");
+	}
+}
+
+toggleHoldJumpBhop()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_bhop_auto"]))
+		self.cj["settings"]["cj_tas_bhop_auto"] = false;
+
+	self.cj["settings"]["cj_tas_bhop_auto"] = !self.cj["settings"]["cj_tas_bhop_auto"];
+	if (self.cj["settings"]["cj_tas_bhop_auto"])
+	{
+		self setClientDvar("cj_tas_bhop_auto", 1);
+		self IPrintLn("TAS - Hold Jump BHOP [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_bhop_auto", 0);
+		self IPrintLn("TAS - Hold Jump BHOP [^1OFF^7]");
 	}
 }
 
@@ -3088,20 +3106,5 @@ toggleMultiBouncing()
 	{
 		setDvar("pm_multi_bounce", 0);
 		iprintln("Multi Bouncing [^1OFF^7]");
-	}
-}
-
-toggleBhopAuto()
-{
-	value = getDvarInt("pm_bhop_auto");
-	if (value == 0)
-	{
-		setDvar("pm_bhop_auto", 1);
-		iprintln("Auto Bhop [^2ON^7]");
-	}
-	else
-	{
-		setDvar("pm_bhop_auto", 0);
-		iprintln("Auto Bhop [^1OFF^7]");
 	}
 }
