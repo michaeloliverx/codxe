@@ -157,6 +157,13 @@ onPlayerConnectDvars()
 
 	self setClientDvar("cg_descriptiveText", 0);		  // Remove spectator button icons and text
 	self setClientDvar("player_spectateSpeedScale", 1.5); // Faster movement in spectator/ufo
+
+	self setClientDvar("bg_bobIdle", 0);	// Disable idle gun bob
+	self setClientDvar("r_drawDynEnts", 0); // Disable dynamic entities
+	self setClientDvar("r_dof_enable", 0); // Disable depth of field
+	// Alter LOD bias to prevent models from popping in and out
+	self setClientDvar("r_lodBiasRigid", -1000);
+	self setClientDvar("r_lodBiasSkinned", -1000);
 }
 
 onPlayerSpawnedDvars()
