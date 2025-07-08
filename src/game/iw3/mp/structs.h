@@ -9,6 +9,92 @@ namespace iw3
     namespace mp
     {
 
+        struct menuDef_t;
+
+        struct UiContext_cursor
+        {
+            float x;
+            float y;
+        };
+        static_assert(sizeof(UiContext_cursor) == 0x8, "");
+
+        union UILocalVar_u
+        {
+            int integer;
+            float value;
+            const char *string;
+        };
+
+        enum UILocalVarType : __int32
+        {
+            UILOCALVAR_INT = 0x0,
+            UILOCALVAR_FLOAT = 0x1,
+            UILOCALVAR_STRING = 0x2,
+        };
+
+        struct UILocalVar
+        {
+            UILocalVarType type;
+            const char *name;
+            UILocalVar_u u;
+        };
+
+        struct UILocalVarContext
+        {
+            UILocalVar table[256];
+        };
+
+        struct UiContext
+        {
+            int localClientNum;
+            float bias;
+            int realTime;
+            int frameTime;
+            UiContext_cursor cursor;
+            int isCursorVisible;
+            int screenWidth;
+            int screenHeight;
+            float screenAspect;
+            float FPS;
+            float blurRadiusOut;
+            menuDef_t *Menus[512];
+            int menuCount;
+            menuDef_t *menuStack[16];
+            int openMenuCount;
+            UILocalVarContext localVars;
+        };
+        static_assert(sizeof(UiContext) == 0x1478, "");
+
+        enum uiMenuCommand_t : __int32
+        {
+            UIMENU_NONE = 0x0,
+            UIMENU_MAIN = 0x1,
+            UIMENU_INGAME = 0x2,
+            UIMENU_PREGAME = 0x3,
+            UIMENU_POSTGAME = 0x4,
+            UIMENU_WM_QUICKMESSAGE = 0x5,
+            UIMENU_SCRIPT_POPUP = 0x6,
+            UIMENU_SCOREBOARD = 0x7,
+            UIMENU_SPLITSCREENGAMESETUP = 0x8,
+            UIMENU_SYSTEMLINKJOINGAME = 0x9,
+            UIMENU_PARTY = 0xA,
+            UIMENU_GAMELOBBY = 0xB,
+            UIMENU_PRIVATELOBBY = 0xC,
+        };
+
+        struct __declspec(align(4)) uiInfo_s
+        {
+            UiContext uiDC;
+            int myTeamCount;
+            int playerRefresh;
+            int playerIndex;
+            int timeIndex;
+            int previousTimes[4];
+            uiMenuCommand_t currentMenuType;
+            bool allowScriptMenuResponse;
+        };
+        static_assert(sizeof(uiInfo_s) == 5280, "");
+
         /* 9096 */
         struct EntHandle
         {

@@ -100,8 +100,23 @@ namespace iw3
             return UI_SafeTranslateString_Detour.GetOriginal<decltype(UI_SafeTranslateString)>()(reference);
         }
 
+        Detour Menus_OpenByName_Detour;
+
+        void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
+        {
+            if (strcmp(menuName, "settings_map_splitscreen") == 0)
+                // Splitscreen map list only contains a subset of maps
+                // Opening the full map settings menu allows selecting any map
+                Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, "settings_map");
+            else
+                Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+        }
+
         cg::cg()
         {
+            Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
+            Menus_OpenByName_Detour.Install();
+
             UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
             UI_DrawBuildNumber_Detour.Install();
 
@@ -150,8 +165,9 @@ namespace iw3
 
         cg::~cg()
         {
+            Menus_OpenByName_Detour.Remove();
             UI_DrawBuildNumber_Detour.Remove();
-
+            UI_SafeTranslateString_Detour.Remove();
             BG_CalculateWeaponPosition_IdleAngles_Detour.Remove();
             BG_CalculateView_IdleAngles_Detour.Remove();
         }
