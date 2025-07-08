@@ -13,6 +13,8 @@ namespace iw3
 
         dvar_s *cj_tas_jump_on_rpg_fire = nullptr;
 
+        dvar_s *cj_tas_crouch_on_jump = nullptr;
+
         dvar_s *cj_tas_rpg_lookdown = nullptr;
         dvar_s *cj_tas_rpg_lookdown_yaw = nullptr;
         dvar_s *cj_tas_rpg_lookdown_pitch = nullptr;
@@ -22,6 +24,7 @@ namespace iw3
             const bool tas_enabled = (cj_tas_bhop_auto->current.enabled ||
                                       cj_tas_jump_at_edge->current.enabled ||
                                       cj_tas_jump_on_rpg_fire->current.enabled ||
+                                      cj_tas_crouch_on_jump->current.enabled ||
                                       cj_tas_rpg_lookdown->current.enabled);
             return tas_enabled;
         }
@@ -134,7 +137,6 @@ namespace iw3
 
             if (cj_tas_jump_at_edge->current.enabled && will_leave_ground_this_frame)
             {
-                // If we are going to leave the ground, we should jump
                 cmd->buttons |= 1024; // JUMP
             }
 
@@ -142,6 +144,11 @@ namespace iw3
             {
                 // Clear the jump button if we are in the air and will land next frame
                 cmd->buttons &= ~1024; // Clear JUMP button
+            }
+
+            if (cj_tas_crouch_on_jump->current.enabled && cmd->buttons & 1024)
+            {
+                CL_SetStance(localClientNum, CL_STANCE_CROUCH);
             }
 
             delete_pmove(pmove_predicted);
@@ -168,6 +175,8 @@ namespace iw3
             cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", false, 0, "Enable jump at edge");
 
             cj_tas_jump_on_rpg_fire = Dvar_RegisterBool("cj_tas_jump_on_rpg_fire", false, 0, "Jump exactly when firing the RPG");
+
+            cj_tas_crouch_on_jump = Dvar_RegisterBool("cj_tas_crouch_on_jump", false, 0, "Enable crouch on jump");
 
             cj_tas_rpg_lookdown = Dvar_RegisterBool("cj_tas_rpg_lookdown", false, 0, "Enable RPG lookdown");
             cj_tas_rpg_lookdown_yaw = Dvar_RegisterInt("cj_tas_rpg_lookdown_yaw", 0, -180, 180, 0, "RPG lookdown yaw angle in degrees");

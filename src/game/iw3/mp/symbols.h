@@ -149,6 +149,7 @@ namespace iw3
         static auto CL_CreateNewCommands = reinterpret_cast<void (*)(int localClientNum)>(0x822DCAE8);
         static auto CL_FinishMove = reinterpret_cast<void (*)(int localClientNum, usercmd_s *cmd)>(0x822DA220);
         static auto CL_GetPredictedOriginForServerTime = reinterpret_cast<int (*)(clientActive_t *cl, int serverTime, float *predictedOrigin, float *predictedVelocity, int *bobCycle, int *movementDir)>(0x822CAA38);
+        static auto CL_SetStance = reinterpret_cast<void (*)(int localClientNum, int stance)>(0x822D92A0);
 
         // Variables
         static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
