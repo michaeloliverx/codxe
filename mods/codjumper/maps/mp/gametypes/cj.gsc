@@ -2868,28 +2868,32 @@ watch_buttons()
 	}
 }
 
-savePos()
+savePos(savenum)
 {
+	if (!isdefined(savenum))
+	{
+		self.cj["savenum"] += 1;
+		savenum = self.cj["savenum"];
+	}
+
 	if (!self isOnGround())
 		return;
 
-	self.cj["savenum"] += 1;
-
 	self.cj["settings"]["rpg_switched"] = false;
-	self.cj["saves"]["org"][self.cj["savenum"]] = self.origin;
-	self.cj["saves"]["ang"][self.cj["savenum"]] = self getPlayerAngles();
+	self.cj["saves"]["org"][savenum] = self.origin;
+	self.cj["saves"]["ang"][savenum] = self getPlayerAngles();
 
-	self IPrintLn("Position " + self.cj["savenum"] + " saved");
+	self IPrintLn("Position " + savenum + " saved");
 
 	self.kills += 1;
 }
 
-loadPos(i)
+loadPos(savenum)
 {
 	self SetVelocity((0, 0, 0)); // stop the player from moving
 
-	self setPlayerAngles(self.cj["saves"]["ang"][i]);
-	self setOrigin(self.cj["saves"]["org"][i]);
+	self setPlayerAngles(self.cj["saves"]["ang"][savenum]);
+	self setOrigin(self.cj["saves"]["org"][savenum]);
 
 	self notify("position_loaded");
 
