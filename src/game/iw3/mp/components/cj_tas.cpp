@@ -2,11 +2,63 @@
 #include "common.h"
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+#define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
 
 namespace iw3
 {
     namespace mp
     {
+        bool is_recording = false;
+        bool is_playing = false;
+        std::vector<usercmd_s> current_recording;
+
+        static cmd_function_s Cmd_Startrecord_VAR;
+        static cmd_function_s Cmd_Stoprecord_VAR;
+        static cmd_function_s Cmd_Playrecord_VAR;
+
+        void Cmd_Startrecord_f()
+        {
+            if (is_recording)
+            {
+                CG_GameMessage(0, "Already recording!\n");
+                return;
+            }
+
+            is_recording = true;
+            current_recording.clear();
+            CG_GameMessage(0, "Started recording user commands.\n");
+        }
+
+        void Cmd_Stoprecord_f()
+        {
+            if (!is_recording)
+            {
+                CG_GameMessage(0, "Not recording!\n");
+                return;
+            }
+
+            is_recording = false;
+            CG_GameMessage(0, "Stopped recording user commands.\n");
+        }
+
+        void Cmd_Playrecord_f()
+        {
+            if (is_playing)
+            {
+                CG_GameMessage(0, "Already playing!\n");
+                return;
+            }
+
+            if (current_recording.empty())
+            {
+                CG_GameMessage(0, "No recording to play!\n");
+                return;
+            }
+
+            is_playing = true;
+            CG_GameMessage(0, "Started playing user commands.\n");
+        }
+
         dvar_s *cj_tas_bhop_auto = nullptr;
 
         dvar_s *cj_tas_jump_at_edge = nullptr;
@@ -168,12 +220,55 @@ namespace iw3
             {
                 TAS_Cycle(localClientNum);
             }
+
+            if (is_recording)
+            {
+                // Record the current usercmd
+                auto ca = &(*clients)[localClientNum];
+                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+                if (cmd->serverTime > 0)
+                {
+                    current_recording.push_back(*cmd);
+                }
+            }
+            if (is_playing && !current_recording.empty())
+            {
+                auto ca = &(*clients)[localClientNum];
+                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+
+                static size_t play_frame = 0;
+
+                // Play the recorded usercmd
+                if (play_frame < current_recording.size())
+                {
+                    cmd->buttons = current_recording[play_frame].buttons;
+                    cmd->angles[PITCH] = current_recording[play_frame].angles[PITCH];
+                    cmd->angles[YAW] = current_recording[play_frame].angles[YAW];
+                    cmd->angles[ROLL] = current_recording[play_frame].angles[ROLL];
+                    cmd->weapon = current_recording[play_frame].weapon;
+                    cmd->offHandIndex = current_recording[play_frame].offHandIndex;
+                    cmd->forwardmove = current_recording[play_frame].forwardmove;
+                    cmd->rightmove = current_recording[play_frame].rightmove;
+
+                    play_frame++;
+                }
+                else
+                {
+                    is_playing = false;
+                    play_frame = 0; // Reset frame index for next play
+                    CG_GameMessage(0, "Finished playing user commands.\n");
+                }
+            }
         }
 
         cj_tas::cj_tas()
         {
             CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
             CL_CreateNewCommands_Detour.Install();
+
+            Cmd_AddCommandInternal("startrecord", Cmd_Startrecord_f, &Cmd_Startrecord_VAR);
+            Cmd_AddCommandInternal("stoprecord", Cmd_Stoprecord_f, &Cmd_Stoprecord_VAR);
+            Cmd_AddCommandInternal("playrecord", Cmd_Playrecord_f, &Cmd_Playrecord_VAR);
 
             cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
 
