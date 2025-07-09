@@ -2943,6 +2943,11 @@ setSelectedBot(num)
 
 spawnSelectedBot()
 {
+	// Capture the player's origin and angles first
+	// because initBot can take a while to spawn the bot
+	origin = self.origin;
+	playerAngles = self getPlayerAngles();
+
 	if (!isdefined(self.cj["bots"][self.cj["botnumber"]]))
 	{
 		self.cj["bots"][self.cj["botnumber"]] = initBot();
@@ -2952,9 +2957,6 @@ spawnSelectedBot()
 			return;
 		}
 	}
-
-	origin = self.origin;
-	playerAngles = self getPlayerAngles();
 
 	wait 0.5;
 	for (i = 3; i > 0; i--)
