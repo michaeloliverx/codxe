@@ -2886,8 +2886,7 @@ savePos()
 
 loadPos(i)
 {
-	self freezecontrols(true);
-	wait 0.05;
+	self SetVelocity((0, 0, 0)); // stop the player from moving
 
 	self setPlayerAngles(self.cj["saves"]["ang"][i]);
 	self setOrigin(self.cj["saves"]["org"][i]);
@@ -2900,9 +2899,6 @@ loadPos(i)
 		self switchToWeapon("rpg_mp");
 		self.cj["settings"]["rpg_switched"] = false;
 	}
-
-	wait 0.05;
-	self freezecontrols(false);
 
 	self.assists += 1;
 }
