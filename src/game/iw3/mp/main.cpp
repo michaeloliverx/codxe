@@ -1575,6 +1575,27 @@ namespace iw3
             Scr_AddInt(cl->lastUsercmd.rightmove);
         }
 
+        void PlayerCmd_SetVelocity(scr_entref_t entref)
+        {
+            if (entref.classnum != 0)
+                Scr_ObjectError("not an entity");
+
+            auto ent = &g_entities[entref.entnum];
+            if (!ent->client)
+                Scr_ObjectError(va("entity %i is not a player", entref.entnum));
+
+            if (Scr_GetNumParam() != 1)
+                Scr_Error("Usage: <client> SetVelocity( vec3 )\n");
+
+            float velocity[3] = {0};
+
+            Scr_GetVector(0, velocity);
+
+            ent->client->ps.velocity[0] = velocity[0];
+            ent->client->ps.velocity[1] = velocity[1];
+            ent->client->ps.velocity[2] = velocity[2];
+        }
+
         Detour Scr_GetMethod_Detour;
 
         BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
@@ -1597,6 +1618,9 @@ namespace iw3
 
             if (std::strcmp(*pName, "getrightmove") == 0)
                 return reinterpret_cast<BuiltinMethod>(&PlayerCmd_GetRightMove);
+
+            if (std::strcmp(*pName, "setvelocity") == 0)
+                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_SetVelocity);
 
             return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
         }

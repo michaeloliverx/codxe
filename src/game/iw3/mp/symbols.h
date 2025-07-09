@@ -108,7 +108,10 @@ namespace iw3
         static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index)>(0x8220FD10);
         static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x822570E0);
         static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue)>(0x8220FA88);
+        static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x8220F3E0);
         static auto Scr_MakeArray = reinterpret_cast<void (*)()>(0x82210CA0);
+        static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x8220FDD0);
+        static auto Scr_ParamError = reinterpret_cast<void (*)(unsigned int index, const char *error)>(0x8220FE08);
         static auto Scr_ReadFile_FastFile = reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(0x82221220);
 
         static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82208448);
