@@ -2970,24 +2970,16 @@ spawnSelectedBot()
 
 toggleOldschool()
 {
-	setting = "oldschool";
-	printName = "Old School Mode";
-
-	if (!isdefined(self.cj["settings"][setting]) || self.cj["settings"][setting] == false)
+	jump_height = getDvarInt("jump_height");
+	if (jump_height == 39)
 	{
-		self.cj["settings"][setting] = true;
-		self.cj["settings"]["jump_slowdownEnable"] = false;
 		setDvar("jump_height", 64);
-		setDvar("jump_slowdownEnable", 0);
-		iPrintln(printName + " [^2ON^7]");
+		iPrintln("Old School Mode [^2ON^7]");
 	}
 	else
 	{
-		self.cj["settings"][setting] = false;
-		self.cj["settings"]["jump_slowdownEnable"] = true;
 		setDvar("jump_height", 39);
-		setDvar("jump_slowdownEnable", 1);
-		iPrintln(printName + " [^1OFF^7]");
+		iPrintln("Old School Mode [^1OFF^7]");
 	}
 }
 
