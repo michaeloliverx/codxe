@@ -10,6 +10,7 @@ namespace iw3
     {
         struct RecordedCmd
         {
+            int serverTime;
             int buttons;
             int angles[2]; // PITCH, YAW
             unsigned __int8 weapon;
@@ -101,6 +102,61 @@ namespace iw3
             play_frame = 0;
             is_playing = false;
             CG_GameMessage(0, "Playback ^1stopped\n");
+        }
+
+        void CaptureCommand(usercmd_s *const cmd)
+        {
+            auto cg = &(*cgArray)[0];
+
+            RecordedCmd recorded_cmd;
+            recorded_cmd.buttons = cmd->buttons;
+            recorded_cmd.angles[PITCH] = cmd->angles[PITCH] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
+            recorded_cmd.angles[YAW] = cmd->angles[YAW] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
+            recorded_cmd.weapon = cmd->weapon;
+            recorded_cmd.offHandIndex = cmd->offHandIndex;
+            recorded_cmd.forwardmove = cmd->forwardmove;
+            recorded_cmd.rightmove = cmd->rightmove;
+
+            current_recording.push_back(recorded_cmd);
+        }
+
+        void UpdateCommand(usercmd_s *const cmd)
+        {
+            if (current_recording.empty())
+                return;
+
+            if (play_frame >= current_recording.size())
+            {
+                Cmd_Stopplayback_f();
+            }
+
+            auto cg = &(*cgArray)[0];
+            auto ca = &(*clients)[0];
+            auto data = current_recording[play_frame];
+
+            cmd->buttons = data.buttons;
+
+            auto delta_angles = cg->nextSnap->ps.delta_angles;
+            auto viewangles = ca->viewangles;
+            auto invertedNormPitch = -AngleNormalize180(viewangles[PITCH]);
+            auto invertedNormYaw = -AngleNormalize180(viewangles[YAW]);
+            auto deltaPitch = AngleDelta(delta_angles[PITCH], static_cast<float>(SHORT2ANGLE(data.angles[PITCH])));
+            auto deltaYaw = AngleDelta(delta_angles[YAW], static_cast<float>(SHORT2ANGLE(data.angles[YAW])));
+
+            // Calculate the view delta (not the final angles)
+            auto viewDeltaPitch = invertedNormPitch - deltaPitch;
+            auto viewDeltaYaw = invertedNormYaw - deltaYaw;
+
+            // Add the delta to existing angles (like in the original)
+            cmd->angles[PITCH] += ANGLE2SHORT(viewDeltaPitch);
+            cmd->angles[YAW] += ANGLE2SHORT(viewDeltaYaw);
+
+            cmd->weapon = data.weapon;
+            cmd->offHandIndex = data.offHandIndex;
+            cmd->forwardmove = data.forwardmove;
+            cmd->rightmove = data.rightmove;
+
+            play_frame++;
         }
 
         dvar_s *cj_tas_bhop_auto = nullptr;
@@ -265,66 +321,17 @@ namespace iw3
                 TAS_Cycle(localClientNum);
             }
 
-            auto cg = &(*cgArray)[localClientNum];
+            // auto cg = &(*cgArray)[localClientNum];
             auto ca = &(*clients)[localClientNum];
             auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
-            // DbgPrint("CL_CreateNewCommands_Hook: cmdNumber=%d, serverTime=%d, cmd->angles[%d, %d, %d] \n",
-            //          ca->cmdNumber, cmd->serverTime, cmd->angles[PITCH], cmd->angles[YAW], cmd->angles[ROLL]);
 
             if (is_recording)
             {
-                // Record the current usercmd
-
-                if (cmd->serverTime > 0)
-                {
-                    RecordedCmd recorded_cmd;
-                    recorded_cmd.buttons = cmd->buttons;
-                    recorded_cmd.angles[PITCH] = cmd->angles[PITCH] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
-                    recorded_cmd.angles[YAW] = cmd->angles[YAW] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
-                    recorded_cmd.weapon = cmd->weapon;
-                    recorded_cmd.offHandIndex = cmd->offHandIndex;
-                    recorded_cmd.forwardmove = cmd->forwardmove;
-                    recorded_cmd.rightmove = cmd->rightmove;
-
-                    current_recording.push_back(recorded_cmd);
-                }
+                CaptureCommand(cmd);
             }
-            if (is_playing && !current_recording.empty())
+            if (is_playing)
             {
-
-                // Play the recorded usercmd
-                if (play_frame < current_recording.size())
-                {
-                    auto data = current_recording[play_frame];
-
-                    cmd->buttons = data.buttons;
-
-                    auto delta_angles = cg->nextSnap->ps.delta_angles;
-                    auto viewangles = ca->viewangles;
-                    auto invertedNormPitch = -AngleNormalize180(viewangles[PITCH]);
-                    auto invertedNormYaw = -AngleNormalize180(viewangles[YAW]);
-                    auto deltaPitch = AngleDelta(delta_angles[PITCH], static_cast<float>(SHORT2ANGLE(data.angles[PITCH])));
-                    auto deltaYaw = AngleDelta(delta_angles[YAW], static_cast<float>(SHORT2ANGLE(data.angles[YAW])));
-
-                    // Calculate the view delta (not the final angles)
-                    auto viewDeltaPitch = invertedNormPitch - deltaPitch;
-                    auto viewDeltaYaw = invertedNormYaw - deltaYaw;
-
-                    // Add the delta to existing angles (like in the original)
-                    cmd->angles[PITCH] += ANGLE2SHORT(viewDeltaPitch);
-                    cmd->angles[YAW] += ANGLE2SHORT(viewDeltaYaw);
-
-                    cmd->weapon = data.weapon;
-                    cmd->offHandIndex = data.offHandIndex;
-                    cmd->forwardmove = data.forwardmove;
-                    cmd->rightmove = data.rightmove;
-
-                    play_frame++;
-                }
-                else
-                {
-                    Cmd_Stopplayback_f(); // Stop playback when we reach the end of the recording
-                }
+                UpdateCommand(cmd);
             }
         }
 
