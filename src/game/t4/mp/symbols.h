@@ -33,9 +33,12 @@ namespace t4
         static auto CG_BoldGameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC88);
         static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82159560);
         static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC68);
+        static auto CG_Init = reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(0x82171A30);
 
         static auto CM_EntityString = reinterpret_cast<const char *(*)()>(0x82264788);
         static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0);
+
+        static auto Cbuf_ExecuteBuffer = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x822711A8);
 
         static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
 
@@ -47,6 +50,7 @@ namespace t4
         static auto Dvar_GetString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x822BE230);
         static auto Dvar_RegisterBool = reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x822BF198);
         static auto Dvar_RegisterString = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(0x822BF370);
+        static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822BFB20);
 
         static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8220A270);
         static auto GScr_AllocString = reinterpret_cast<int (*)(const char *s)>(0x8222D368);
@@ -54,6 +58,9 @@ namespace t4
         static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822B9CC0);
 
         static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x821E4220);
+
+        static auto Menu_IsMenuOpenAndVisible = reinterpret_cast<bool (*)(int localClientNum, const char *menuName)>(0x8229F6C0);
+        static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x822AFE88);
 
         static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213FAE8);
         static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213ECE8);
@@ -86,13 +93,17 @@ namespace t4
         static auto Scr_SetClientField = reinterpret_cast<void (*)(gclient_s *client, int offset, scriptInstance_t inst)>(0x8220A2D0);
         static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst)>(0x82254E90);
 
+        static auto String_Parse = reinterpret_cast<int (*)(const char **p, char *out, int len)>(0x822A8680);
+
         static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82284D50);
         static auto SV_GameSendServerCommand = reinterpret_cast<void (*)(int clientNum, svscmd_type type, const char *text)>(0x82285FA8);
         static auto SV_LinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82290C38);
         static auto SV_SetBrushModel = reinterpret_cast<int (*)(gentity_s *ent)>(0x82286190);
         static auto SV_UnlinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82290BF0);
         static auto Sys_SnapVector = reinterpret_cast<void (*)(float *v)>(0x822EA5A0);
+
         static auto UI_DrawBuildNumber = reinterpret_cast<void (*)()>(0x8229BCF8);
+        static auto UI_RunMenuScript = reinterpret_cast<void (*)(int localClientNum, const char **args, const char *actualScript)>(0x822A29B8);
 
         static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x822C38D8);
     }

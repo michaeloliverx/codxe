@@ -10,6 +10,7 @@
 #include "components/image_loader.h"
 #include "components/map.h"
 #include "components/test_module.h"
+#include "components/ui.h"
 
 namespace t4
 {
@@ -36,6 +37,7 @@ namespace t4
             // RegisterComponent(new ImageLoader());
             RegisterComponent(new Map());
             RegisterComponent(new TestModule());
+            RegisterComponent(new ui());
         }
 
         void shutdown()
