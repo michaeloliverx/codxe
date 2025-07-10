@@ -130,6 +130,14 @@ namespace iw3
                 Cmd_Stopplayback_f();
             }
 
+            const int movementThreshold = 45;
+
+            if (std::abs(cmd->forwardmove) >= movementThreshold ||
+                std::abs(cmd->rightmove) >= movementThreshold)
+            {
+                Cmd_Stopplayback_f();
+            }
+
             auto cg = &(*cgArray)[0];
             auto ca = &(*clients)[0];
             auto data = current_recording[play_frame];
@@ -321,7 +329,6 @@ namespace iw3
                 TAS_Cycle(localClientNum);
             }
 
-            // auto cg = &(*cgArray)[localClientNum];
             auto ca = &(*clients)[localClientNum];
             auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
 
