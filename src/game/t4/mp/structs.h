@@ -960,5 +960,7 @@ namespace t4
         static_assert(sizeof(SpawnFuncEntry) == 0x8, "");
         static_assert(offsetof(SpawnFuncEntry, classname) == 0x0, "");
         static_assert(offsetof(SpawnFuncEntry, callback) == 0x4, "");
+
+        struct UiContext;
     }
 }

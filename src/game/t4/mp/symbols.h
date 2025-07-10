@@ -33,9 +33,12 @@ namespace t4
         static auto CG_BoldGameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC88);
         static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82159560);
         static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC68);
+        static auto CG_Init = reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(0x82171A30);
 
         static auto CM_EntityString = reinterpret_cast<const char *(*)()>(0x82264788);
         static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0);
+
+        static auto Cbuf_ExecuteBuffer = reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x822711A8);
 
         static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
 
@@ -47,6 +50,7 @@ namespace t4
         static auto Dvar_GetString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x822BE230);
         static auto Dvar_RegisterBool = reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x822BF198);
         static auto Dvar_RegisterString = reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(0x822BF370);
+        static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822BFB20);
 
         static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8220A270);
         static auto GScr_AllocString = reinterpret_cast<int (*)(const char *s)>(0x8222D368);
@@ -54,6 +58,8 @@ namespace t4
         static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822B9CC0);
 
         static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x821E4220);
+
+        static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x822AFE88);
 
         static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213FAE8);
         static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213ECE8);

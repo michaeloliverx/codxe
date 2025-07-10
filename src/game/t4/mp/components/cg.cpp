@@ -29,6 +29,18 @@ namespace t4
             BG_CalculateView_IdleAngles_Detour.GetOriginal<decltype(BG_CalculateView_IdleAngles)>()(vs, angles);
         }
 
+        Detour Menus_OpenByName_Detour;
+
+        void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
+        {
+            // Splitscreen map list only contains a subset of maps
+            // The menu UI determines the map list based on the splitscreen setting
+            if (strcmp(menuName, "menu_gamesetup_splitscreen") == 0)
+                Cbuf_ExecuteBuffer(0, 0, "set splitscreen 0");
+
+            Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+        }
+
         cg::cg()
         {
             DbgPrint("cg initialized\n");
@@ -39,6 +51,9 @@ namespace t4
 
             BG_CalculateView_IdleAngles_Detour = Detour(BG_CalculateView_IdleAngles, BG_CalculateView_IdleAngles_Hook);
             BG_CalculateView_IdleAngles_Detour.Install();
+
+            Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
+            Menus_OpenByName_Detour.Install();
         }
 
         cg::~cg()
@@ -46,6 +61,8 @@ namespace t4
             DbgPrint("cg shutdown\n");
             BG_CalculateWeaponPosition_IdleAngles_Detour.Remove();
             BG_CalculateView_IdleAngles_Detour.Remove();
+
+            Menus_OpenByName_Detour.Remove();
         }
     }
 }
