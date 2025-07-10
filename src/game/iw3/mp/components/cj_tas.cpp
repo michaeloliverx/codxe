@@ -8,55 +8,99 @@ namespace iw3
 {
     namespace mp
     {
+        struct RecordedCmd
+        {
+            int buttons;
+            int angles[2]; // PITCH, YAW
+            unsigned __int8 weapon;
+            unsigned __int8 offHandIndex;
+            char forwardmove;
+            char rightmove;
+        };
+        size_t play_frame = 0;
         bool is_recording = false;
         bool is_playing = false;
-        std::vector<usercmd_s> current_recording;
+        std::vector<RecordedCmd> current_recording;
 
         static cmd_function_s Cmd_Startrecord_VAR;
         static cmd_function_s Cmd_Stoprecord_VAR;
-        static cmd_function_s Cmd_Playrecord_VAR;
+        static cmd_function_s Cmd_Togglerecord_VAR;
+        static cmd_function_s Cmd_Startplayback_VAR;
+        static cmd_function_s Cmd_Stopplayback_VAR;
 
         void Cmd_Startrecord_f()
         {
             if (is_recording)
             {
-                CG_GameMessage(0, "Already recording!\n");
+                CG_GameMessage(0, "^3Already recording");
                 return;
             }
 
             is_recording = true;
             current_recording.clear();
-            CG_GameMessage(0, "Started recording user commands.\n");
+            CG_GameMessage(0, "Recording ^2started");
         }
 
         void Cmd_Stoprecord_f()
         {
             if (!is_recording)
             {
-                CG_GameMessage(0, "Not recording!\n");
+                CG_GameMessage(0, "^1Not currently recording.");
                 return;
             }
 
             is_recording = false;
-            CG_GameMessage(0, "Stopped recording user commands.\n");
+            CG_GameMessage(0, "Recording ^1stopped");
         }
 
-        void Cmd_Playrecord_f()
+        void Cmd_Togglerecord_f()
         {
+            if (is_recording)
+            {
+                Cmd_Stoprecord_f();
+            }
+            else
+            {
+                Cmd_Startrecord_f();
+            }
+        }
+
+        void Cmd_Startplayback_f()
+        {
+            if (is_recording)
+            {
+                CG_GameMessage(0, "^1Stop recording before starting playback.\n");
+                return;
+            }
+
             if (is_playing)
             {
-                CG_GameMessage(0, "Already playing!\n");
+                CG_GameMessage(0, "^3Already playing.\n");
                 return;
             }
 
             if (current_recording.empty())
             {
-                CG_GameMessage(0, "No recording to play!\n");
+                CG_GameMessage(0, "^1No recording available to play.\n");
                 return;
             }
 
+            play_frame = 0;
             is_playing = true;
-            CG_GameMessage(0, "Started playing user commands.\n");
+            CG_GameMessage(0, "Playback ^2started\n");
+        }
+
+        void Cmd_Stopplayback_f()
+        {
+            if (!is_playing)
+            {
+                CG_GameMessage(0, "^1Not currently playing.\n");
+                return;
+            }
+
+            play_frame = 0;
+            is_playing = false;
+            CG_GameMessage(0, "Playback ^1stopped\n");
         }
 
         dvar_s *cj_tas_bhop_auto = nullptr;
@@ -221,42 +265,65 @@ namespace iw3
                 TAS_Cycle(localClientNum);
             }
 
+            auto cg = &(*cgArray)[localClientNum];
+            auto ca = &(*clients)[localClientNum];
+            auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+            // DbgPrint("CL_CreateNewCommands_Hook: cmdNumber=%d, serverTime=%d, cmd->angles[%d, %d, %d] \n",
+            //          ca->cmdNumber, cmd->serverTime, cmd->angles[PITCH], cmd->angles[YAW], cmd->angles[ROLL]);
+
             if (is_recording)
             {
                 // Record the current usercmd
-                auto ca = &(*clients)[localClientNum];
-                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+
                 if (cmd->serverTime > 0)
                 {
-                    current_recording.push_back(*cmd);
+                    RecordedCmd recorded_cmd;
+                    recorded_cmd.buttons = cmd->buttons;
+                    recorded_cmd.angles[PITCH] = cmd->angles[PITCH] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
+                    recorded_cmd.angles[YAW] = cmd->angles[YAW] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
+                    recorded_cmd.weapon = cmd->weapon;
+                    recorded_cmd.offHandIndex = cmd->offHandIndex;
+                    recorded_cmd.forwardmove = cmd->forwardmove;
+                    recorded_cmd.rightmove = cmd->rightmove;
+
+                    current_recording.push_back(recorded_cmd);
                 }
             }
             if (is_playing && !current_recording.empty())
             {
-                auto ca = &(*clients)[localClientNum];
-                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
-
-                static size_t play_frame = 0;
 
                 // Play the recorded usercmd
                 if (play_frame < current_recording.size())
                 {
-                    cmd->buttons = current_recording[play_frame].buttons;
-                    cmd->angles[PITCH] = current_recording[play_frame].angles[PITCH];
-                    cmd->angles[YAW] = current_recording[play_frame].angles[YAW];
-                    cmd->angles[ROLL] = current_recording[play_frame].angles[ROLL];
-                    cmd->weapon = current_recording[play_frame].weapon;
-                    cmd->offHandIndex = current_recording[play_frame].offHandIndex;
-                    cmd->forwardmove = current_recording[play_frame].forwardmove;
-                    cmd->rightmove = current_recording[play_frame].rightmove;
+                    auto data = current_recording[play_frame];
+
+                    cmd->buttons = data.buttons;
+
+                    auto delta_angles = cg->nextSnap->ps.delta_angles;
+                    auto viewangles = ca->viewangles;
+                    auto invertedNormPitch = -AngleNormalize180(viewangles[PITCH]);
+                    auto invertedNormYaw = -AngleNormalize180(viewangles[YAW]);
+                    auto deltaPitch = AngleDelta(delta_angles[PITCH], static_cast<float>(SHORT2ANGLE(data.angles[PITCH])));
+                    auto deltaYaw = AngleDelta(delta_angles[YAW], static_cast<float>(SHORT2ANGLE(data.angles[YAW])));
+
+                    // Calculate the view delta (not the final angles)
+                    auto viewDeltaPitch = invertedNormPitch - deltaPitch;
+                    auto viewDeltaYaw = invertedNormYaw - deltaYaw;
+
+                    // Add the delta to existing angles (like in the original)
+                    cmd->angles[PITCH] += ANGLE2SHORT(viewDeltaPitch);
+                    cmd->angles[YAW] += ANGLE2SHORT(viewDeltaYaw);
+
+                    cmd->weapon = data.weapon;
+                    cmd->offHandIndex = data.offHandIndex;
+                    cmd->forwardmove = data.forwardmove;
+                    cmd->rightmove = data.rightmove;
 
                     play_frame++;
                 }
                 else
                 {
-                    is_playing = false;
-                    play_frame = 0; // Reset frame index for next play
-                    CG_GameMessage(0, "Finished playing user commands.\n");
+                    Cmd_Stopplayback_f(); // Stop playback when we reach the end of the recording
                 }
             }
         }
@@ -268,7 +335,9 @@ namespace iw3
 
             Cmd_AddCommandInternal("startrecord", Cmd_Startrecord_f, &Cmd_Startrecord_VAR);
             Cmd_AddCommandInternal("stoprecord", Cmd_Stoprecord_f, &Cmd_Stoprecord_VAR);
-            Cmd_AddCommandInternal("playrecord", Cmd_Playrecord_f, &Cmd_Playrecord_VAR);
+            Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
+            Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
+            Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
 
             cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
 

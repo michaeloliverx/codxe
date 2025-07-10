@@ -7,6 +7,7 @@ namespace iw3
     namespace mp
     {
         // Functions
+        static auto AngleDelta = reinterpret_cast<float (*)(float a1, float a2)>(0x821DABC0);
         static auto AngleNormalize180 = reinterpret_cast<float (*)(float angle)>(0x820A0088);
         static auto AngleNormalize360 = reinterpret_cast<float (*)(float angle)>(0x821D9DA8);
 
