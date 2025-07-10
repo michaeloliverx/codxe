@@ -128,6 +128,7 @@ namespace iw3
             if (play_frame >= current_recording.size())
             {
                 Cmd_Stopplayback_f();
+                return;
             }
 
             const int movementThreshold = 45;
