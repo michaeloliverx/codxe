@@ -141,7 +141,7 @@ namespace iw3
 
             auto cg = &(*cgArray)[0];
             auto ca = &(*clients)[0];
-            auto data = current_recording[play_frame];
+            const auto &data = current_recording[play_frame];
 
             cmd->buttons = data.buttons;
 
