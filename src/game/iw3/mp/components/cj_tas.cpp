@@ -131,21 +131,25 @@ namespace iw3
                 return;
             }
 
+            auto cg = &(*cgArray)[0];
+            auto ca = &(*clients)[0];
+            const auto &data = current_recording[play_frame];
+            auto delta_angles = cg->nextSnap->ps.delta_angles;
+
             const int movementThreshold = 45;
 
             if (std::abs(cmd->forwardmove) >= movementThreshold ||
                 std::abs(cmd->rightmove) >= movementThreshold)
             {
+                // Set client viewangles to match the recorded angles
+                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(data.angles[PITCH])) - delta_angles[PITCH];
+                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(data.angles[YAW])) - delta_angles[YAW];
+
                 Cmd_Stopplayback_f();
             }
 
-            auto cg = &(*cgArray)[0];
-            auto ca = &(*clients)[0];
-            const auto &data = current_recording[play_frame];
-
             cmd->buttons = data.buttons;
 
-            auto delta_angles = cg->nextSnap->ps.delta_angles;
             auto viewangles = ca->viewangles;
             auto invertedNormPitch = -AngleNormalize180(viewangles[PITCH]);
             auto invertedNormYaw = -AngleNormalize180(viewangles[YAW]);
@@ -159,6 +163,10 @@ namespace iw3
             // Add the delta to existing angles (like in the original)
             cmd->angles[PITCH] += ANGLE2SHORT(viewDeltaPitch);
             cmd->angles[YAW] += ANGLE2SHORT(viewDeltaYaw);
+
+            // Set client viewangles to match the recorded angles
+            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(data.angles[PITCH])) - delta_angles[PITCH];
+            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(data.angles[YAW])) - delta_angles[YAW];
 
             cmd->weapon = data.weapon;
             cmd->offHandIndex = data.offHandIndex;
