@@ -145,6 +145,7 @@ namespace iw3
                 ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(data.angles[YAW])) - delta_angles[YAW];
 
                 Cmd_Stopplayback_f();
+                return;
             }
 
             cmd->buttons = data.buttons;
