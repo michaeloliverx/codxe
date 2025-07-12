@@ -1,4 +1,4 @@
-#include "constants.h"
+#include "mod_config.h"
 #include "common.h"
 
 namespace t4
