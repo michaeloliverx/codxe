@@ -1,6 +1,3 @@
-#include maps\mp\gametypes\_hud_util;
-#include maps\mp\_utility;
-
 init()
 {
 	level thread onPlayerConnect();
