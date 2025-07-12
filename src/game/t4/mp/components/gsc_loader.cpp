@@ -12,13 +12,15 @@ namespace t4
             // filename - the file name without extension, e.g., "example" - paths are unix style e.g. "maps/mp/gametypes/example"
             // extFilename - the file name with extension, e.g., "example.gsc" - paths are unix style e.g. // "maps/mp/gametypes/example.gsc"
 
-            std::string base = "game:\\_codxe\\raw\\";
-            std::string normalizedFilename = extFilename;
+            std::string base = GetModBasePath();
+            if (base.empty())
+            {
+                return Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(a1, filename, extFilename, codePos, archive);
+            }
 
-            // Replace forward slashes with backslashes for Windows/Xbox path compatibility
-            std::replace(normalizedFilename.begin(), normalizedFilename.end(), '/', '\\');
-
-            std::string fullPath = base + normalizedFilename;
+            std::string fullPath = base + "\\";
+            fullPath += extFilename; // Use the full path with extension
+            std::replace(fullPath.begin(), fullPath.end(), '/', '\\');
 
             DbgPrint("Full path: %s\n", fullPath.c_str());
 

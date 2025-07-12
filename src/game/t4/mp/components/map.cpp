@@ -21,12 +21,23 @@ namespace t4
             if (DUMP_MAP_ENTS)
             {
                 // Write stock map ents to disk
-                std::string ents_dump_path = va("game:/_codxe/dump/%s.ents", mapEnts->name);                                // IW4x naming convention
+                std::string ents_dump_path = va("%s\\%s.ents", t4::DUMP_DIR, mapEnts->name); // IW4x naming convention
+                DbgPrint("Dumping map ents to file: %s\n", ents_dump_path.c_str());
                 std::replace(ents_dump_path.begin(), ents_dump_path.end(), '/', '\\');                                      // Replace forward slashes with backslashes
                 filesystem::write_file_to_disk(ents_dump_path.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1); // Exclude the null terminator
             }
 
-            std::string ents_read_path = va("game:/_codxe/raw/%s.ents", mapEnts->name);
+            std::string base = GetModBasePath();
+            if (base.empty())
+            {
+                DbgPrint("No active mod found, skipping custom map ents loading.\n");
+                return;
+            }
+
+            std::string ents_read_path = base + "\\";
+            ents_read_path += mapEnts->name; // Use the map name without extension
+            ents_read_path += ".ents";       // Append the .ents extension
+            DbgPrint("Reading map ents from file: %s\n", ents_read_path.c_str());
             std::replace(ents_read_path.begin(), ents_read_path.end(), '/', '\\');
 
             FILE *file = fopen(ents_read_path.c_str(), "rb");
