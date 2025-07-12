@@ -150,9 +150,8 @@ namespace iw3
 
             cmd->buttons = data.buttons;
 
-            auto viewangles = ca->viewangles;
-            auto invertedNormPitch = -AngleNormalize180(viewangles[PITCH]);
-            auto invertedNormYaw = -AngleNormalize180(viewangles[YAW]);
+            auto invertedNormPitch = -AngleNormalize180(ca->viewangles[PITCH]);
+            auto invertedNormYaw = -AngleNormalize180(ca->viewangles[YAW]);
             auto deltaPitch = AngleDelta(delta_angles[PITCH], static_cast<float>(SHORT2ANGLE(data.angles[PITCH])));
             auto deltaYaw = AngleDelta(delta_angles[YAW], static_cast<float>(SHORT2ANGLE(data.angles[YAW])));
 
