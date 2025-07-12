@@ -10,7 +10,6 @@ namespace iw3
     {
         struct RecordedCmd
         {
-            int serverTime;
             int buttons;
             int angles[2]; // PITCH, YAW
             unsigned __int8 weapon;
