@@ -80,6 +80,7 @@
       <ClCompile Include="src\game\iw3\mp\components\scr_vm_functions.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
+      <ClCompile Include="src\game\t4\common\mod_config.cpp" />
       <ClCompile Include="src\game\t4\mp\main.cpp" />
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
@@ -112,6 +113,7 @@
       <ClInclude Include="src\game\iw3\mp\structs.h" />
       <ClInclude Include="src\game\iw3\mp\symbols.h" />
       <ClInclude Include="src\game\iw3\sp\main.h" />
+      <ClInclude Include="src\game\t4\common\mod_config.h" />
       <ClInclude Include="src\game\t4\mp\main.h" />
       <ClInclude Include="src\game\t4\mp\symbols.h" />
       <ClInclude Include="src\game\t4\mp\structs.h" />

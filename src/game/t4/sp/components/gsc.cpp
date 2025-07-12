@@ -1,8 +1,6 @@
 #include "gsc.h"
 #include "common.h"
 
-bool DUMP_GSC = false;
-
 namespace t4
 {
     namespace sp
@@ -12,42 +10,35 @@ namespace t4
 
         char *Scr_AddSourceBuffer_Hook(scriptInstance_t inst, const char *filename, const char *extFilename, const char *codePos, bool archive)
         {
-            // filename - the file name without extension, e.g., "example" - paths are unix style e.g. "maps/mp/gametypes/example"
-            // extFilename - the file name with extension, e.g., "example.gsc" - paths are unix style e.g. // "maps/mp/gametypes/example.gsc"
-
-            std::string script_path = va("game:/_codxe/raw/%s", extFilename);
-            std::replace(script_path.begin(), script_path.end(), '/', '\\'); // Normalize path for Windows/Xbox compatibility
-
-            FILE *file = fopen(script_path.c_str(), "rb");
-            if (file)
+            auto callOriginal = [&]()
             {
-                DbgPrint("GSCLoader: Found shadowed script file: %s\n", script_path.c_str());
-                fseek(file, 0, SEEK_END);
-                long file_size = ftell(file);
-                rewind(file);
+                return Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(inst, filename, extFilename, codePos, archive);
+            };
 
-                // Allocate temp buffer from hunk
-                auto buffer = (char *)Hunk_AllocateTempMemoryHighInternal(file_size + 1);
-                if (buffer)
-                {
-                    fread(buffer, 1, file_size, file);
-                    buffer[file_size] = '\0'; // Null terminate
+            // Check if mod is active
+            std::string modBasePath = GetModBasePath();
+            if (modBasePath.empty())
+                return callOriginal();
 
-                    fclose(file);
-                    return buffer; // Return overwritten script
-                }
+            // Build full path to override file
+            std::string overridePath = modBasePath + "\\" + extFilename;
+            std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
 
-                fclose(file);
-            }
+            // Try to load override file
+            std::string fileContent = filesystem::read_file_to_string(overridePath);
+            if (fileContent.empty())
+                return callOriginal();
 
-            auto buffer = Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(inst, filename, extFilename, codePos, archive);
-            if (DUMP_GSC)
-            {
-                std::string script_dump_path = va("game:/_codxe/dump/%s", extFilename);
-                std::replace(script_dump_path.begin(), script_dump_path.end(), '/', '\\'); // Replace forward slashes with backslashes
-                DbgPrint("GSCLoader: Dumping script to: %s\n", script_dump_path.c_str());
-                filesystem::write_file_to_disk(script_dump_path.c_str(), buffer, std::strlen(buffer));
-            }
+            // Allocate buffer using game's memory allocator
+            char *buffer = (char *)Hunk_AllocateTempMemoryHighInternal(fileContent.size() + 1);
+            if (!buffer)
+                return callOriginal();
+
+            // Copy content and null terminate
+            memcpy(buffer, fileContent.c_str(), fileContent.size());
+            buffer[fileContent.size()] = '\0';
+
+            DbgPrint("GSCLoader: Loaded override script: %s\n", overridePath.c_str());
             return buffer;
         }
 
