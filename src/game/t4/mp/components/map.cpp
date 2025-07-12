@@ -18,46 +18,39 @@ namespace t4
 
             auto mapEnts = (*varclipMap_t)->mapEnts;
 
+            // Dump map entities if enabled
             if (DUMP_MAP_ENTS)
             {
-                // Write stock map ents to disk
-                std::string ents_dump_path = va("%s\\%s.ents", t4::DUMP_DIR, mapEnts->name); // IW4x naming convention
-                DbgPrint("Dumping map ents to file: %s\n", ents_dump_path.c_str());
-                std::replace(ents_dump_path.begin(), ents_dump_path.end(), '/', '\\');                                      // Replace forward slashes with backslashes
-                filesystem::write_file_to_disk(ents_dump_path.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1); // Exclude the null terminator
+                std::string dumpPath = va("%s\\%s.ents", t4::DUMP_DIR, mapEnts->name);  // IW4x naming convention
+                std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
+                filesystem::write_file_to_disk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
+                DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
             }
 
-            std::string base = GetModBasePath();
-            if (base.empty())
-            {
-                DbgPrint("No active mod found, skipping custom map ents loading.\n");
-                return;
-            }
-
-            std::string ents_read_path = base + "\\";
-            ents_read_path += mapEnts->name; // Use the map name without extension
-            ents_read_path += ".ents";       // Append the .ents extension
-            DbgPrint("Reading map ents from file: %s\n", ents_read_path.c_str());
-            std::replace(ents_read_path.begin(), ents_read_path.end(), '/', '\\');
-
-            FILE *file = fopen(ents_read_path.c_str(), "rb");
-            if (!file)
+            // Check for mod override
+            std::string modBasePath = GetModBasePath();
+            if (modBasePath.empty())
                 return;
 
-            fseek(file, 0, SEEK_END);
-            long file_size = ftell(file);
-            rewind(file);
+            // Build path to override file
+            std::string overridePath = va("%s\\%s.ents", modBasePath.c_str(), mapEnts->name);
+            std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
+            
+            // Try to load override file
+            std::string fileContent = filesystem::read_file_to_string(overridePath);
+            if (fileContent.empty())
+                return;
 
-            char *buffer = new char[file_size + 1]; // +1 for null terminator
-            fread(buffer, 1, file_size, file);
-            buffer[file_size] = '\0'; // Null-terminate the string
-            fclose(file);
+            // Allocate new buffer and copy content
+            char *buffer = new char[fileContent.size() + 1];
+            memcpy(buffer, fileContent.c_str(), fileContent.size());
+            buffer[fileContent.size()] = '\0';
 
-            DbgPrint("Loaded map ents from file: %s\n", ents_read_path.c_str());
+            // Replace map entities
+            mapEnts->entityString = buffer;
+            mapEnts->numEntityChars = fileContent.size() + 1;
 
-            // TODO: Check for memory leaks on the old varclipMap_t fields still existing
-            (*varclipMap_t)->mapEnts->entityString = buffer;          // Assign the new entityString
-            (*varclipMap_t)->mapEnts->numEntityChars = file_size + 1; // Update the number of characters (including null terminator)
+            DbgPrint("Loaded map ents override from: %s\n", overridePath.c_str());
         }
 
         Map::Map()
