@@ -335,19 +335,20 @@ namespace iw3
             CL_CreateNewCommands_Detour.GetOriginal<decltype(CL_CreateNewCommands)>()(localClientNum);
             if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
             {
+
+                auto ca = &(*clients)[localClientNum];
+                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+
+                if (is_recording)
+                {
+                    CaptureCommand(cmd);
+                }
+                if (is_playing)
+                {
+                    UpdateCommand(cmd);
+                }
+
                 TAS_Cycle(localClientNum);
-            }
-
-            auto ca = &(*clients)[localClientNum];
-            auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
-
-            if (is_recording)
-            {
-                CaptureCommand(cmd);
-            }
-            if (is_playing)
-            {
-                UpdateCommand(cmd);
             }
         }
 
