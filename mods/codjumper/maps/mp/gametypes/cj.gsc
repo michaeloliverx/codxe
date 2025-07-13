@@ -2617,6 +2617,10 @@ generateMenuOptions()
 	themes = getarraykeys(level.THEMES);
 	for (i = themes.size - 1; i >= 0; i--) // reverse order to display in the order they are defined
 		self addMenuOption("theme_menu", themes[i], ::menuAction, "CHANGE_THEME", themes[i]);
+
+	self addMenuOption("main", "Graphics Menu", ::menuAction, "CHANGE_MENU", "graphics_menu");
+	self addMenu("graphics_menu", "main");
+	self addMenuOption("graphics_menu", "Toggle Greenscreen", ::toggleGreenscreen);
 }
 
 toggleRpgLookdown()
@@ -3111,5 +3115,29 @@ toggleMultiBouncing()
 	{
 		setDvar("pm_multi_bounce", 0);
 		iprintln("Multi Bouncing [^1OFF^7]");
+	}
+}
+
+toggleGreenscreen()
+{
+	if (!isdefined(self.cj["settings"]["greenscreen"]))
+		self.cj["settings"]["greenscreen"] = false;
+
+	self.cj["settings"]["greenscreen"] = !self.cj["settings"]["greenscreen"];
+	if (self.cj["settings"]["greenscreen"])
+	{
+		self setClientDvar("r_zfar", 0.000001);
+		self setClientDvar("r_znear", 10000);
+		self setClientDvar("r_clear", 3);
+		self setClientDvar("r_clearcolor", "0 1 0 0");
+		self IPrintLn("Greenscreen [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("r_zfar", 0);
+		self setClientDvar("r_znear", 4);
+		self setClientDvar("r_clear", 3);
+		self setClientDvar("r_clearcolor", "0 0 0 0");
+		self IPrintLn("Greenscreen [^1OFF^7]");
 	}
 }
