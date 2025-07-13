@@ -11,6 +11,7 @@ namespace iw3
     {
         struct RecordedCmd
         {
+            int serverTime;
             int buttons;
             int angles[2];         // PITCH, YAW
             float delta_angles[2]; // PITCH, YAW
@@ -22,6 +23,8 @@ namespace iw3
         size_t play_frame = 0;
         bool is_recording = false;
         bool is_playing = false;
+        int playback_start_time = 0;
+        int recording_start_time = 0;
         std::vector<RecordedCmd> current_recording;
 
         static cmd_function_s Cmd_Startrecord_VAR;
@@ -89,6 +92,8 @@ namespace iw3
 
             play_frame = 0;
             is_playing = true;
+            playback_start_time = 0; // Will be set on first UpdateCommand
+            recording_start_time = current_recording[0].serverTime;
             CG_GameMessage(0, "Playback ^2started\n");
         }
 
@@ -110,6 +115,7 @@ namespace iw3
             auto cg = &(*cgArray)[0];
 
             RecordedCmd recorded_cmd;
+            recorded_cmd.serverTime = cmd->serverTime;
             recorded_cmd.buttons = cmd->buttons;
             recorded_cmd.angles[PITCH] = cmd->angles[PITCH];
             recorded_cmd.angles[YAW] = cmd->angles[YAW];
@@ -138,6 +144,18 @@ namespace iw3
             auto ca = &(*clients)[0];
             const auto &data = current_recording[play_frame];
 
+            // Initialize playback start time on first frame
+            if (playback_start_time == 0)
+            {
+                playback_start_time = cmd->serverTime;
+            }
+
+            // Calculate the relative time offset from the start of the recording
+            int recording_time_offset = data.serverTime - recording_start_time;
+
+            // Apply this offset to the current playback time
+            cmd->serverTime = playback_start_time + recording_time_offset;
+
             static auto player_view_pitch_down = Dvar_FindMalleableVar("player_view_pitch_down");
 
             const auto ps_delta_pitch = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
@@ -156,7 +174,7 @@ namespace iw3
             const auto net_pitch = expectated_pitch - ps_delta_pitch;
             const auto net_yaw = expectated_yaw - ps_delta_yaw;
 
-            const int movementThreshold = 45;
+            const int movementThreshold = 75;
 
             if (std::abs(cmd->forwardmove) >= movementThreshold ||
                 std::abs(cmd->rightmove) >= movementThreshold)
