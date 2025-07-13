@@ -1,5 +1,6 @@
 #include "cj_tas.h"
 #include "common.h"
+#include <algorithm>
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
 #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
@@ -11,7 +12,8 @@ namespace iw3
         struct RecordedCmd
         {
             int buttons;
-            int angles[2]; // PITCH, YAW
+            int angles[2];         // PITCH, YAW
+            float delta_angles[2]; // PITCH, YAW
             unsigned __int8 weapon;
             unsigned __int8 offHandIndex;
             char forwardmove;
@@ -109,8 +111,10 @@ namespace iw3
 
             RecordedCmd recorded_cmd;
             recorded_cmd.buttons = cmd->buttons;
-            recorded_cmd.angles[PITCH] = cmd->angles[PITCH] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
-            recorded_cmd.angles[YAW] = cmd->angles[YAW] + ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
+            recorded_cmd.angles[PITCH] = cmd->angles[PITCH];
+            recorded_cmd.angles[YAW] = cmd->angles[YAW];
+            recorded_cmd.delta_angles[PITCH] = cg->nextSnap->ps.delta_angles[PITCH];
+            recorded_cmd.delta_angles[YAW] = cg->nextSnap->ps.delta_angles[YAW];
             recorded_cmd.weapon = cmd->weapon;
             recorded_cmd.offHandIndex = cmd->offHandIndex;
             recorded_cmd.forwardmove = cmd->forwardmove;
@@ -133,39 +137,45 @@ namespace iw3
             auto cg = &(*cgArray)[0];
             auto ca = &(*clients)[0];
             const auto &data = current_recording[play_frame];
-            auto delta_angles = cg->nextSnap->ps.delta_angles;
+
+            static auto player_view_pitch_down = Dvar_FindMalleableVar("player_view_pitch_down");
+
+            const auto ps_delta_pitch = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
+            const auto ps_delta_yaw = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
+
+            auto expectated_pitch = (data.angles[PITCH] + ANGLE2SHORT(data.delta_angles[PITCH])) & 0xFFFF;
+            // DbgPrint("Expectated pitch: %d\n", expectated_pitch);
+            // For some reason the pitch can be larger than the max pitch which causes the screen to judder
+            auto max_pitch = ANGLE2SHORT(player_view_pitch_down->current.value);
+            // DbgPrint("Max pitch: %d\n", max_pitch);
+            if (expectated_pitch > max_pitch)
+                expectated_pitch = max_pitch;
+
+            const auto expectated_yaw = data.angles[YAW] + ANGLE2SHORT(data.delta_angles[YAW]);
+
+            const auto net_pitch = expectated_pitch - ps_delta_pitch;
+            const auto net_yaw = expectated_yaw - ps_delta_yaw;
 
             const int movementThreshold = 45;
 
             if (std::abs(cmd->forwardmove) >= movementThreshold ||
                 std::abs(cmd->rightmove) >= movementThreshold)
             {
-                // Set client viewangles to match the recorded angles
-                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(data.angles[PITCH])) - delta_angles[PITCH];
-                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(data.angles[YAW])) - delta_angles[YAW];
-
                 Cmd_Stopplayback_f();
+                // Set client viewangles to match the recorded angles
+                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
+                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
                 return;
             }
 
             cmd->buttons = data.buttons;
-
-            auto invertedNormPitch = -AngleNormalize180(ca->viewangles[PITCH]);
-            auto invertedNormYaw = -AngleNormalize180(ca->viewangles[YAW]);
-            auto deltaPitch = AngleDelta(delta_angles[PITCH], static_cast<float>(SHORT2ANGLE(data.angles[PITCH])));
-            auto deltaYaw = AngleDelta(delta_angles[YAW], static_cast<float>(SHORT2ANGLE(data.angles[YAW])));
-
-            // Calculate the view delta (not the final angles)
-            auto viewDeltaPitch = invertedNormPitch - deltaPitch;
-            auto viewDeltaYaw = invertedNormYaw - deltaYaw;
-
-            // Add the delta to existing angles (like in the original)
-            cmd->angles[PITCH] += ANGLE2SHORT(viewDeltaPitch);
-            cmd->angles[YAW] += ANGLE2SHORT(viewDeltaYaw);
+            // Set the command angles to the recorded angles
+            cmd->angles[PITCH] = net_pitch;
+            cmd->angles[YAW] = net_yaw;
 
             // Set client viewangles to match the recorded angles
-            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(data.angles[PITCH])) - delta_angles[PITCH];
-            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(data.angles[YAW])) - delta_angles[YAW];
+            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
+            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
 
             cmd->weapon = data.weapon;
             cmd->offHandIndex = data.offHandIndex;
