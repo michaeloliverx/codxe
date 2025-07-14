@@ -89,6 +89,7 @@ onPlayerConnect()
 
 		player setupPlayer();
 		player onPlayerConnectDvars();
+		player thread rpgSwitch();
 		player thread onPlayerSpawned();
 	}
 }
@@ -331,13 +332,11 @@ toggleRPGSwitch()
 	if (!isdefined(self.cj["settings"][setting]) || self.cj["settings"][setting] == false)
 	{
 		self.cj["settings"][setting] = true;
-		self thread rpgSwitch();
 		self iPrintln(printName + " [^2ON^7]");
 	}
 	else
 	{
 		self.cj["settings"][setting] = false;
-		self notify("stop_rpg_switch");
 		self iPrintln(printName + " [^1OFF^7]");
 	}
 }
@@ -345,14 +344,14 @@ toggleRPGSwitch()
 rpgSwitch()
 {
 	self endon("disconnect");
-	self endon("end_respawn");
 
-	self notify("stop_rpg_switch");
-	self endon("stop_rpg_switch");
-
-	while(self.cj["settings"]["rpg_switch_enabled"])
+	for(;;)
 	{
 		self waittill("weapon_fired");
+
+		if (!isdefined(self.cj["settings"]["rpg_switch_enabled"]) || !self.cj["settings"]["rpg_switch_enabled"])
+			continue;
+
 		if (self getCurrentWeapon() == "rpg_mp")
 		{
 			self.cj["settings"]["rpg_switched"] = true;
@@ -2080,7 +2079,7 @@ setupPlayer()
 	self.cj["savenum"] = 0;
 	self.cj["saves"] = [];
 	self.cj["settings"] = [];
-	self.cj["settings"]["rpg_switch_enabled"] = false;
+	self.cj["settings"]["rpg_switch_enabled"] = true;
 	self.cj["settings"]["rpg_switched"] = false;
 
 	self.cj["meter_hud"] = [];
