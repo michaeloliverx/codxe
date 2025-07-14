@@ -2418,12 +2418,14 @@ generateMenuOptions()
 
 	self addMenuOption("main", "CodJumper Menu (Beta)", ::menuAction, "CHANGE_MENU", "menu_codjumper");
 	self addMenu("menu_codjumper", "main");
+	self addMenuOption("menu_codjumper", "HUD | Display player info", ::togglePlayerInfo);
 	self addMenuOption("menu_codjumper", "TAS | Hold Jump BHOP", ::toggleHoldJumpBhop);
 	self addMenuOption("menu_codjumper", "TAS | Jump at Edge", ::toggleJumpAtEdge);
 	self addMenuOption("menu_codjumper", "TAS | Jump on RPG fire", ::toggleJumpOnRpgFire);
 	self addMenuOption("menu_codjumper", "TAS | Crouch on Jump", ::toggleCrouchOnJump);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown", ::toggleRpgLookdown);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown set angles", ::setRpgLookdownAngles);
+	self addMenuOption("menu_codjumper", "TAS | Playback force RPG", ::toggleForceRpgPlayback);
 
 	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
 	self addMenu("menu_game_objects", "main");
@@ -3139,5 +3141,41 @@ toggleGreenscreen()
 		self setClientDvar("r_clear", 3);
 		self setClientDvar("r_clearcolor", "0 0 0 0");
 		self IPrintLn("Greenscreen [^1OFF^7]");
+	}
+}
+
+toggleForceRpgPlayback()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_playback_force_rpg"]))
+		self.cj["settings"]["cj_tas_playback_force_rpg"] = false;
+
+	self.cj["settings"]["cj_tas_playback_force_rpg"] = !self.cj["settings"]["cj_tas_playback_force_rpg"];
+	if (self.cj["settings"]["cj_tas_playback_force_rpg"])
+	{
+		self setClientDvar("cj_tas_playback_force_rpg", 1);
+		self IPrintLn("TAS - Force RPG Playback [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_playback_force_rpg", 0);
+		self IPrintLn("TAS - Force RPG Playback [^1OFF^7]");
+	}
+}
+
+togglePlayerInfo()
+{
+	if (!isdefined(self.cj["settings"]["cg_draw_player_info"]))
+		self.cj["settings"]["cg_draw_player_info"] = false;
+
+	self.cj["settings"]["cg_draw_player_info"] = !self.cj["settings"]["cg_draw_player_info"];
+	if (self.cj["settings"]["cg_draw_player_info"])
+	{
+		self setClientDvar("cg_draw_player_info", 1);
+		self IPrintLn("Player Info [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cg_draw_player_info", 0);
+		self IPrintLn("Player Info [^1OFF^7]");
 	}
 }

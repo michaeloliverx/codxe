@@ -1,12 +1,231 @@
 #include "cj_tas.h"
 #include "common.h"
+#include <algorithm>
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+#define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
 
 namespace iw3
 {
     namespace mp
     {
+        struct RecordedCmd
+        {
+            int serverTime;
+            int buttons;
+            int angles[2];         // PITCH, YAW
+            float delta_angles[2]; // PITCH, YAW
+            unsigned __int8 weapon;
+            unsigned __int8 offHandIndex;
+            char forwardmove;
+            char rightmove;
+        };
+        size_t play_frame = 0;
+        bool is_recording = false;
+        bool is_playing = false;
+        int playback_start_time = 0;
+        int recording_start_time = 0;
+        std::vector<RecordedCmd> current_recording;
+
+        static cmd_function_s Cmd_Startrecord_VAR;
+        static cmd_function_s Cmd_Stoprecord_VAR;
+        static cmd_function_s Cmd_Togglerecord_VAR;
+        static cmd_function_s Cmd_Startplayback_VAR;
+        static cmd_function_s Cmd_Stopplayback_VAR;
+
+        dvar_s *cj_tas_rpg_fire_slowdown_trick = nullptr;
+
+        dvar_s *cj_tas_playback_force_rpg = nullptr;
+
+        unsigned int rpg_mp_index = 0;
+
+        void cj_tas::On_CG_Init()
+        {
+            // Weapon indexes change every game
+            rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+        }
+
+        void Cmd_Startrecord_f()
+        {
+            if (is_recording)
+            {
+                CG_GameMessage(0, "^3Already recording");
+                return;
+            }
+
+            is_recording = true;
+            current_recording.clear();
+            CG_GameMessage(0, "Recording ^2started");
+        }
+
+        void Cmd_Stoprecord_f()
+        {
+            if (!is_recording)
+            {
+                CG_GameMessage(0, "^1Not currently recording.");
+                return;
+            }
+
+            is_recording = false;
+            CG_GameMessage(0, "Recording ^1stopped");
+        }
+
+        void Cmd_Togglerecord_f()
+        {
+            if (is_recording)
+            {
+                Cmd_Stoprecord_f();
+            }
+            else
+            {
+                Cmd_Startrecord_f();
+            }
+        }
+
+        void Cmd_Startplayback_f()
+        {
+            if (is_recording)
+            {
+                CG_GameMessage(0, "^1Stop recording before starting playback.\n");
+                return;
+            }
+
+            if (is_playing)
+            {
+                CG_GameMessage(0, "^3Already playing.\n");
+                return;
+            }
+
+            if (current_recording.empty())
+            {
+                CG_GameMessage(0, "^1No recording available to play.\n");
+                return;
+            }
+
+            play_frame = 0;
+            is_playing = true;
+            playback_start_time = 0; // Will be set on first UpdateCommand
+            recording_start_time = current_recording[0].serverTime;
+            CG_GameMessage(0, "Playback ^2started\n");
+        }
+
+        void Cmd_Stopplayback_f()
+        {
+            if (!is_playing)
+            {
+                CG_GameMessage(0, "^1Not currently playing.\n");
+                return;
+            }
+
+            play_frame = 0;
+            is_playing = false;
+            CG_GameMessage(0, "Playback ^1stopped\n");
+        }
+
+        bool IsPlayback()
+        {
+            return is_playing;
+        }
+
+        void CaptureCommand(usercmd_s *const cmd)
+        {
+            auto cg = &(*cgArray)[0];
+
+            RecordedCmd recorded_cmd;
+            recorded_cmd.serverTime = cmd->serverTime;
+            recorded_cmd.buttons = cmd->buttons;
+            recorded_cmd.angles[PITCH] = cmd->angles[PITCH];
+            recorded_cmd.angles[YAW] = cmd->angles[YAW];
+            recorded_cmd.delta_angles[PITCH] = cg->nextSnap->ps.delta_angles[PITCH];
+            recorded_cmd.delta_angles[YAW] = cg->nextSnap->ps.delta_angles[YAW];
+            recorded_cmd.weapon = cmd->weapon;
+            recorded_cmd.offHandIndex = cmd->offHandIndex;
+            recorded_cmd.forwardmove = cmd->forwardmove;
+            recorded_cmd.rightmove = cmd->rightmove;
+
+            current_recording.push_back(recorded_cmd);
+        }
+
+        void UpdateCommand(usercmd_s *const cmd)
+        {
+            if (current_recording.empty())
+                return;
+
+            if (play_frame >= current_recording.size())
+            {
+                Cmd_Stopplayback_f();
+                return;
+            }
+
+            auto cg = &(*cgArray)[0];
+            auto ca = &(*clients)[0];
+            const auto &data = current_recording[play_frame];
+
+            // Initialize playback start time on first frame
+            if (playback_start_time == 0)
+            {
+                playback_start_time = cmd->serverTime;
+            }
+
+            // Calculate the relative time offset from the start of the recording
+            int recording_time_offset = data.serverTime - recording_start_time;
+
+            // Apply this offset to the current playback time
+            cmd->serverTime = playback_start_time + recording_time_offset;
+
+            static auto player_view_pitch_down = Dvar_FindMalleableVar("player_view_pitch_down");
+
+            const auto ps_delta_pitch = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
+            const auto ps_delta_yaw = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
+
+            auto expectated_pitch = (data.angles[PITCH] + ANGLE2SHORT(data.delta_angles[PITCH])) & 0xFFFF;
+            // DbgPrint("Expectated pitch: %d\n", expectated_pitch);
+            // For some reason the pitch can be larger than the max pitch which causes the screen to judder
+            auto max_pitch = ANGLE2SHORT(player_view_pitch_down->current.value);
+            // DbgPrint("Max pitch: %d\n", max_pitch);
+            if (expectated_pitch > max_pitch)
+                expectated_pitch = max_pitch;
+
+            const auto expectated_yaw = data.angles[YAW] + ANGLE2SHORT(data.delta_angles[YAW]);
+
+            const auto net_pitch = expectated_pitch - ps_delta_pitch;
+            const auto net_yaw = expectated_yaw - ps_delta_yaw;
+
+            const int movementThreshold = 75;
+
+            if (std::abs(cmd->forwardmove) >= movementThreshold ||
+                std::abs(cmd->rightmove) >= movementThreshold)
+            {
+                Cmd_Stopplayback_f();
+                // Set client viewangles to match the recorded angles
+                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
+                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
+                return;
+            }
+
+            cmd->buttons |= data.buttons;
+            // Set the command angles to the recorded angles
+            cmd->angles[PITCH] = net_pitch;
+            cmd->angles[YAW] = net_yaw;
+
+            // Set client viewangles to match the recorded angles
+            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
+            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
+
+            cmd->weapon = data.weapon;
+
+            if (cj_tas_playback_force_rpg->current.enabled)
+            {
+                cmd->weapon = static_cast<unsigned char>(rpg_mp_index); // Force the weapon to be RPG
+            }
+
+            cmd->offHandIndex = data.offHandIndex;
+            cmd->forwardmove = data.forwardmove;
+            cmd->rightmove = data.rightmove;
+
+            play_frame++;
+        }
+
         dvar_s *cj_tas_bhop_auto = nullptr;
 
         dvar_s *cj_tas_jump_at_edge = nullptr;
@@ -19,22 +238,15 @@ namespace iw3
         dvar_s *cj_tas_rpg_lookdown_yaw = nullptr;
         dvar_s *cj_tas_rpg_lookdown_pitch = nullptr;
 
-        unsigned int rpg_mp_index = 0;
-
         bool cj_tas::TAS_Enabled()
         {
-            const bool tas_enabled = (cj_tas_bhop_auto->current.enabled ||
+            const bool tas_enabled = (IsPlayback() ||
+                                      cj_tas_bhop_auto->current.enabled ||
                                       cj_tas_jump_at_edge->current.enabled ||
                                       cj_tas_jump_on_rpg_fire->current.enabled ||
                                       cj_tas_crouch_on_jump->current.enabled ||
                                       cj_tas_rpg_lookdown->current.enabled);
             return tas_enabled;
-        }
-
-        void cj_tas::On_CG_Init()
-        {
-            // Weapon indexes change every game
-            rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
         }
 
         pmove_t *clone_pmove(pmove_t *pmove)
@@ -166,6 +378,19 @@ namespace iw3
             CL_CreateNewCommands_Detour.GetOriginal<decltype(CL_CreateNewCommands)>()(localClientNum);
             if (clientUIActives[localClientNum].connectionState == CA_ACTIVE)
             {
+
+                auto ca = &(*clients)[localClientNum];
+                auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
+
+                if (is_recording)
+                {
+                    CaptureCommand(cmd);
+                }
+                if (is_playing)
+                {
+                    UpdateCommand(cmd);
+                }
+
                 TAS_Cycle(localClientNum);
             }
         }
@@ -174,6 +399,14 @@ namespace iw3
         {
             CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
             CL_CreateNewCommands_Detour.Install();
+
+            Cmd_AddCommandInternal("startrecord", Cmd_Startrecord_f, &Cmd_Startrecord_VAR);
+            Cmd_AddCommandInternal("stoprecord", Cmd_Stoprecord_f, &Cmd_Stoprecord_VAR);
+            Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
+            Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
+            Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
+
+            cj_tas_playback_force_rpg = Dvar_RegisterBool("cj_tas_playback_force_rpg", false, 0, "Force playback to equip RPG");
 
             cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
 
