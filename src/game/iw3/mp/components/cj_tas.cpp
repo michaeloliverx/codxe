@@ -33,6 +33,18 @@ namespace iw3
         static cmd_function_s Cmd_Startplayback_VAR;
         static cmd_function_s Cmd_Stopplayback_VAR;
 
+        dvar_s *cj_tas_rpg_fire_slowdown_trick = nullptr;
+
+        dvar_s *cj_tas_playback_force_rpg = nullptr;
+
+        unsigned int rpg_mp_index = 0;
+
+        void cj_tas::On_CG_Init()
+        {
+            // Weapon indexes change every game
+            rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+        }
+
         void Cmd_Startrecord_f()
         {
             if (is_recording)
@@ -196,6 +208,12 @@ namespace iw3
             ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
 
             cmd->weapon = data.weapon;
+
+            if (cj_tas_playback_force_rpg->current.enabled)
+            {
+                cmd->weapon = static_cast<unsigned char>(rpg_mp_index); // Force the weapon to be RPG
+            }
+
             cmd->offHandIndex = data.offHandIndex;
             cmd->forwardmove = data.forwardmove;
             cmd->rightmove = data.rightmove;
@@ -215,8 +233,6 @@ namespace iw3
         dvar_s *cj_tas_rpg_lookdown_yaw = nullptr;
         dvar_s *cj_tas_rpg_lookdown_pitch = nullptr;
 
-        unsigned int rpg_mp_index = 0;
-
         bool cj_tas::TAS_Enabled()
         {
             const bool tas_enabled = (cj_tas_bhop_auto->current.enabled ||
@@ -225,12 +241,6 @@ namespace iw3
                                       cj_tas_crouch_on_jump->current.enabled ||
                                       cj_tas_rpg_lookdown->current.enabled);
             return tas_enabled;
-        }
-
-        void cj_tas::On_CG_Init()
-        {
-            // Weapon indexes change every game
-            rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
         }
 
         pmove_t *clone_pmove(pmove_t *pmove)
@@ -389,6 +399,8 @@ namespace iw3
             Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
             Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
             Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
+
+            cj_tas_playback_force_rpg = Dvar_RegisterBool("cj_tas_playback_force_rpg", false, 0, "Force playback to equip RPG");
 
             cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
 

@@ -2424,6 +2424,7 @@ generateMenuOptions()
 	self addMenuOption("menu_codjumper", "TAS | Crouch on Jump", ::toggleCrouchOnJump);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown", ::toggleRpgLookdown);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown set angles", ::setRpgLookdownAngles);
+	self addMenuOption("menu_codjumper", "TAS | Playback force RPG", ::toggleForceRpgPlayback);
 
 	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
 	self addMenu("menu_game_objects", "main");
@@ -3139,5 +3140,23 @@ toggleGreenscreen()
 		self setClientDvar("r_clear", 3);
 		self setClientDvar("r_clearcolor", "0 0 0 0");
 		self IPrintLn("Greenscreen [^1OFF^7]");
+	}
+}
+
+toggleForceRpgPlayback()
+{
+	if (!isdefined(self.cj["settings"]["cj_tas_playback_force_rpg"]))
+		self.cj["settings"]["cj_tas_playback_force_rpg"] = false;
+
+	self.cj["settings"]["cj_tas_playback_force_rpg"] = !self.cj["settings"]["cj_tas_playback_force_rpg"];
+	if (self.cj["settings"]["cj_tas_playback_force_rpg"])
+	{
+		self setClientDvar("cj_tas_playback_force_rpg", 1);
+		self IPrintLn("TAS - Force RPG Playback [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cj_tas_playback_force_rpg", 0);
+		self IPrintLn("TAS - Force RPG Playback [^1OFF^7]");
 	}
 }
