@@ -186,7 +186,7 @@ namespace iw3
                 return;
             }
 
-            cmd->buttons = data.buttons;
+            cmd->buttons |= data.buttons;
             // Set the command angles to the recorded angles
             cmd->angles[PITCH] = net_pitch;
             cmd->angles[YAW] = net_yaw;
