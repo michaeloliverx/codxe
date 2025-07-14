@@ -181,7 +181,7 @@ onPlayerSpawnedDvars()
 	// self setClientDvar("cg_scoreboardLabel_Score", "");
 	self setClientDvar("cg_scoreboardLabel_Kills", "Saves");
 	self setClientDvar("cg_scoreboardLabel_Assists", "Loads");
-	// self setClientDvar("cg_scoreboardLabel_Deaths", "");
+	self setClientDvar("cg_scoreboardLabel_Deaths", "RPGs");
 
 }
 
@@ -354,6 +354,7 @@ rpgSwitch()
 
 		if (self getCurrentWeapon() == "rpg_mp")
 		{
+			self.deaths += 1; // Using deaths to track RPGs
 			self.cj["settings"]["rpg_switched"] = true;
 			self switchToWeapon(self.cj["loadout"].sidearm);
 			wait 0.4;
