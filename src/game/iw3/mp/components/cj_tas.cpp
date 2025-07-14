@@ -122,6 +122,11 @@ namespace iw3
             CG_GameMessage(0, "Playback ^1stopped\n");
         }
 
+        bool IsPlayback()
+        {
+            return is_playing;
+        }
+
         void CaptureCommand(usercmd_s *const cmd)
         {
             auto cg = &(*cgArray)[0];
@@ -235,7 +240,8 @@ namespace iw3
 
         bool cj_tas::TAS_Enabled()
         {
-            const bool tas_enabled = (cj_tas_bhop_auto->current.enabled ||
+            const bool tas_enabled = (IsPlayback() ||
+                                      cj_tas_bhop_auto->current.enabled ||
                                       cj_tas_jump_at_edge->current.enabled ||
                                       cj_tas_jump_on_rpg_fire->current.enabled ||
                                       cj_tas_crouch_on_jump->current.enabled ||
