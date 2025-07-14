@@ -179,10 +179,8 @@ namespace iw3
             const auto ps_delta_yaw = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
 
             auto expectated_pitch = (data.angles[PITCH] + ANGLE2SHORT(data.delta_angles[PITCH])) & 0xFFFF;
-            // DbgPrint("Expectated pitch: %d\n", expectated_pitch);
             // For some reason the pitch can be larger than the max pitch which causes the screen to judder
             auto max_pitch = ANGLE2SHORT(player_view_pitch_down->current.value);
-            // DbgPrint("Max pitch: %d\n", max_pitch);
             if (expectated_pitch > max_pitch)
                 expectated_pitch = max_pitch;
 
