@@ -8,6 +8,11 @@ enum GameTitleId
 
 void monitor_title_id()
 {
+	// Xenia loads extremely fast
+	// but we need to wait a bit for the game to load on real hardware
+	// otherwise the game will crash
+	bool in_xenia = xbox::InXenia();
+
 	for (;;)
 	{
 		uint32_t current_title_id = xbox::XamGetCurrentTitleId();
@@ -15,11 +20,15 @@ void monitor_title_id()
 		{
 			if (strncmp((char *)0x82032AC4, "multiplayer", 11) == 0)
 			{
+				if (!in_xenia)
+					Sleep(1000);
 				xbox::show_notification(L"CODxe - IW3 Multiplayer Detected");
 				iw3::mp::init();
 			}
 			else if (strncmp((char *)0x82065E48, "startSingleplayer", 17) == 0)
 			{
+				if (!in_xenia)
+					Sleep(1000);
 				xbox::show_notification(L"CODxe - IW3 Singleplayer Detected");
 				iw3::sp::init();
 			}
@@ -33,11 +42,15 @@ void monitor_title_id()
 		{
 			if (strncmp((char *)0x820024CC, "multiplayer", 11) == 0)
 			{
+				if (!in_xenia)
+					Sleep(1000);
 				xbox::show_notification(L"CODxe - T4 Multiplayer Detected");
 				t4::mp::init();
 			}
 			else if (strncmp((char *)0x82035A94, "startSingleplayer", 17) == 0)
 			{
+				if (!in_xenia)
+					Sleep(1000);
 				xbox::show_notification(L"CODxe - T4 Singleplayer Detected");
 				t4::sp::init();
 			}
