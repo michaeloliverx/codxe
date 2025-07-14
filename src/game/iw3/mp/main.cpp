@@ -1423,13 +1423,21 @@ namespace iw3
             R_AddCmdDrawText(buff, 16, font, x, y, 1.0, 1.0, 0.0, color, 0);
         }
 
-        void CG_DrawCoordinatesTAS()
+        const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+        void CG_DrawTAS()
         {
-            if (!cj_tas::TAS_Enabled())
-                return;
+            static Font_s *bigDevFont = R_RegisterFont("fonts/bigDevFont");
+            const float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
+            const float y = 30.f;
+            R_AddCmdDrawText("TAS", 5, bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
+        }
 
+        dvar_s *cg_draw_player_info = nullptr;
+
+        void CG_DrawPlayerInfo()
+        {
             auto ps = CG_GetPredictedPlayerState(0);
-
             int speed2D = static_cast<int>(sqrtf(ps->velocity[0] * ps->velocity[0] + ps->velocity[1] * ps->velocity[1]));
 
             char buff[256];
@@ -1447,17 +1455,11 @@ namespace iw3
                       ps->viewangles[1],
                       speed2D);
 
-            static Font_s *bigDevFont = (Font_s *)R_RegisterFont("fonts/bigDevFont");
-            static Font_s *consoleFont = (Font_s *)R_RegisterFont("fonts/consoleFont");
+            static Font_s *consoleFont = R_RegisterFont("fonts/consoleFont");
+            const float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
+            const float y = 50.f;
 
-            float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
-            float y = 50.f;
-            float colorWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-            // float colorPurple[4] = {0.5f, 0.0f, 1.0f, 1.0f};
-
-            R_AddCmdDrawText("TAS", 10, bigDevFont, x, 30, 1.0, 1.0, 0.0, colorWhite, 0);
-
-            R_AddCmdDrawText(buff, 256, consoleFont, x, y, 1.0, 1.0, 0.0, colorWhite, 0);
+            R_AddCmdDrawText(buff, 256, consoleFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
         }
 
         Detour CG_DrawActive_Detour;
@@ -1478,7 +1480,15 @@ namespace iw3
                 DrawFixedFPS();
             }
 
-            CG_DrawCoordinatesTAS();
+            if (cj_tas::TAS_Enabled())
+            {
+                CG_DrawTAS();
+            }
+
+            if (cg_draw_player_info->current.enabled)
+            {
+                CG_DrawPlayerInfo();
+            }
 
             clipmap::HandleBrushCollisionChange();
 
@@ -1747,6 +1757,8 @@ namespace iw3
             Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
             Pmove_Detour = Detour(Pmove, Pmove_Hook);
             Pmove_Detour.Install();
+
+            cg_draw_player_info = Dvar_RegisterBool("cg_draw_player_info", false, 0, "Draw player info (origin, viewangles, speed) on screen");
         }
 
         void shutdown()

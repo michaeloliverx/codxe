@@ -93,7 +93,7 @@ namespace iw3
         static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_s *dvar)>(0x8234AF50);
         static auto R_DrawAllDynEnt = reinterpret_cast<void (*)(const GfxViewInfo *viewInfo)>(0x8215FF98);
         static auto R_GetImageList = reinterpret_cast<void (*)(ImageList *imageList)>(0x82152A58);
-        static auto R_RegisterFont = reinterpret_cast<int (*)(const char *name)>(0x8216EC00);
+        static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name)>(0x8216EC00);
         static auto R_StreamLoadFileSynchronously = reinterpret_cast<int (*)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)>(0x82151510);
 
         static auto SetClientViewAngle = reinterpret_cast<void (*)(gentity_s *ent, float *angle)>(0x82284C60);

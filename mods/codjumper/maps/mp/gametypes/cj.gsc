@@ -2418,6 +2418,7 @@ generateMenuOptions()
 
 	self addMenuOption("main", "CodJumper Menu (Beta)", ::menuAction, "CHANGE_MENU", "menu_codjumper");
 	self addMenu("menu_codjumper", "main");
+	self addMenuOption("menu_codjumper", "HUD | Display player info", ::togglePlayerInfo);
 	self addMenuOption("menu_codjumper", "TAS | Hold Jump BHOP", ::toggleHoldJumpBhop);
 	self addMenuOption("menu_codjumper", "TAS | Jump at Edge", ::toggleJumpAtEdge);
 	self addMenuOption("menu_codjumper", "TAS | Jump on RPG fire", ::toggleJumpOnRpgFire);
@@ -3158,5 +3159,23 @@ toggleForceRpgPlayback()
 	{
 		self setClientDvar("cj_tas_playback_force_rpg", 0);
 		self IPrintLn("TAS - Force RPG Playback [^1OFF^7]");
+	}
+}
+
+togglePlayerInfo()
+{
+	if (!isdefined(self.cj["settings"]["cg_draw_player_info"]))
+		self.cj["settings"]["cg_draw_player_info"] = false;
+
+	self.cj["settings"]["cg_draw_player_info"] = !self.cj["settings"]["cg_draw_player_info"];
+	if (self.cj["settings"]["cg_draw_player_info"])
+	{
+		self setClientDvar("cg_draw_player_info", 1);
+		self IPrintLn("Player Info [^2ON^7]");
+	}
+	else
+	{
+		self setClientDvar("cg_draw_player_info", 0);
+		self IPrintLn("Player Info [^1OFF^7]");
 	}
 }
