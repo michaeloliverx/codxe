@@ -8,6 +8,33 @@ namespace iw3
 {
     namespace mp
     {
+        // TODO: verify fields
+        struct DxGlobals
+        {
+            HINSTANCE__ *hinst;
+            Direct3D *d3d9;
+            D3DDevice *device;
+            unsigned int adapterIndex;
+            _D3DFORMAT depthStencilFormat;
+            _D3DMULTISAMPLE_TYPE multiSampleType;
+            unsigned int multiSampleQuality;
+            D3DSurface *singleSampleDepthStencilSurface;
+            D3DTexture *frontBufferTexture[2];
+            unsigned int frontBufferTextureIndex;
+            _D3DTEXTUREFILTERTYPE linearNonMippedMinFilter;
+            _D3DTEXTUREFILTERTYPE linearNonMippedMagFilter;
+            _D3DTEXTUREFILTERTYPE linearMippedMinFilter;
+            _D3DTEXTUREFILTERTYPE linearMippedMagFilter;
+            _D3DTEXTUREFILTERTYPE anisotropicMinFilter;
+            _D3DTEXTUREFILTERTYPE anisotropicMagFilter;
+            int linearMippedAnisotropy;
+            int anisotropyFor2x;
+            int anisotropyFor4x;
+            int mipFilterMode;
+            unsigned int mipBias;
+            _D3DRING_BUFFER_PARAMETERS ringBufferParameters;
+            volatile int showDirtyDiscError;
+        };
 
         struct menuDef_t;
 
