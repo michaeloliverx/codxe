@@ -13,8 +13,7 @@ namespace iw3
         {
             int serverTime;
             int buttons;
-            int angles[2];         // PITCH, YAW
-            float delta_angles[2]; // PITCH, YAW
+            short angles[3];
             unsigned __int8 weapon;
             unsigned __int8 offHandIndex;
             char forwardmove;
@@ -135,10 +134,9 @@ namespace iw3
             RecordedCmd recorded_cmd;
             recorded_cmd.serverTime = cmd->serverTime;
             recorded_cmd.buttons = cmd->buttons;
-            recorded_cmd.angles[PITCH] = cmd->angles[PITCH];
-            recorded_cmd.angles[YAW] = cmd->angles[YAW];
-            recorded_cmd.delta_angles[PITCH] = ps->delta_angles[PITCH];
-            recorded_cmd.delta_angles[YAW] = ps->delta_angles[YAW];
+            recorded_cmd.angles[PITCH] = static_cast<short>(cmd->angles[PITCH]) + ANGLE2SHORT(ps->delta_angles[PITCH]);
+            recorded_cmd.angles[YAW] = static_cast<short>(cmd->angles[YAW]) + ANGLE2SHORT(ps->delta_angles[YAW]);
+            recorded_cmd.angles[ROLL] = static_cast<short>(cmd->angles[ROLL]) + ANGLE2SHORT(ps->delta_angles[ROLL]);
             recorded_cmd.weapon = cmd->weapon;
             recorded_cmd.offHandIndex = cmd->offHandIndex;
             recorded_cmd.forwardmove = cmd->forwardmove;
@@ -159,6 +157,7 @@ namespace iw3
             }
 
             const auto cg = &(*cgArray)[0];
+            const auto ps = &cg->predictedPlayerState;
             auto ca = &(*clients)[0];
             const auto &data = current_recording[play_frame];
 
@@ -174,14 +173,9 @@ namespace iw3
             // Apply this offset to the current playback time
             cmd->serverTime = playback_start_time + recording_time_offset;
 
-            const auto ps_delta_pitch = ANGLE2SHORT(cg->predictedPlayerState.delta_angles[PITCH]);
-            const auto ps_delta_yaw = ANGLE2SHORT(cg->predictedPlayerState.delta_angles[YAW]);
-
-            const auto expectated_pitch = data.angles[PITCH] + ANGLE2SHORT(data.delta_angles[PITCH]);
-            const auto expectated_yaw = data.angles[YAW] + ANGLE2SHORT(data.delta_angles[YAW]);
-
-            const auto net_pitch = expectated_pitch - ps_delta_pitch;
-            const auto net_yaw = expectated_yaw - ps_delta_yaw;
+            const auto pitch = data.angles[PITCH] - ANGLE2SHORT(ps->delta_angles[PITCH]);
+            const auto yaw = data.angles[YAW] - ANGLE2SHORT(ps->delta_angles[YAW]);
+            const auto roll = data.angles[ROLL] - ANGLE2SHORT(ps->delta_angles[ROLL]);
 
             const int movementThreshold = 75;
 
@@ -190,19 +184,22 @@ namespace iw3
             {
                 Cmd_Stopplayback_f();
                 // Set client viewangles to match the recorded angles
-                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
-                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
+                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(pitch));
+                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(yaw));
+                ca->viewangles[ROLL] = static_cast<float>(SHORT2ANGLE(roll));
                 return;
             }
 
             cmd->buttons |= data.buttons;
             // Set the command angles to the recorded angles
-            cmd->angles[PITCH] = net_pitch;
-            cmd->angles[YAW] = net_yaw;
+            cmd->angles[PITCH] = pitch;
+            cmd->angles[YAW] = yaw;
+            cmd->angles[ROLL] = roll;
 
             // Set client viewangles to match the recorded angles
-            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
-            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
+            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(pitch));
+            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(yaw));
+            ca->viewangles[ROLL] = static_cast<float>(SHORT2ANGLE(roll));
 
             cmd->weapon = data.weapon;
 
