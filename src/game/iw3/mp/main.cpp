@@ -1569,6 +1569,21 @@ namespace iw3
             ent->client->ps.velocity[2] = velocity[2];
         }
 
+        void PlayerCmd_NightVisionButtonPressed(scr_entref_t entref)
+        {
+            if (entref.classnum != 0)
+                Scr_ObjectError("not an entity");
+
+            auto ent = &g_entities[entref.entnum];
+            if (!ent->client)
+                Scr_ObjectError(va("entity %i is not a player", entref.entnum));
+
+            if (Scr_GetNumParam())
+                Scr_Error("Usage: <client> NightVisionButtonPressed()\n");
+
+            Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 262144) != 0);
+        }
+
         Detour Scr_GetMethod_Detour;
 
         BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
@@ -1594,6 +1609,9 @@ namespace iw3
 
             if (std::strcmp(*pName, "setvelocity") == 0)
                 return reinterpret_cast<BuiltinMethod>(&PlayerCmd_SetVelocity);
+
+            if (std::strcmp(*pName, "nightvisionbuttonpressed") == 0)
+                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_NightVisionButtonPressed);
 
             return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
         }
