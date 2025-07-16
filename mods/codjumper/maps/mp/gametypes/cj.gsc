@@ -1450,7 +1450,7 @@ button_pressed(button)
 	case "melee":
 		return self meleebuttonpressed();
 	case "nightvision":
-		return isdefined(self.nightVisionButtonPressedTime) && (getTime() - self.nightVisionButtonPressedTime < 200);
+		return self nightvisionbuttonpressed();
 	case "smoke":
 		return self secondaryoffhandbuttonpressed();
 	case "use":
@@ -2766,24 +2766,10 @@ replenish_ammo()
 	}
 }
 
-watch_nightvision_press()
-{
-	self endon("disconnect");
-	self endon("end_respawn");
-
-	for (;;)
-	{
-		common_scripts\utility::waittill_any("night_vision_on", "night_vision_off");
-		self.nightVisionButtonPressedTime = getTime();
-	}
-}
-
 watch_buttons()
 {
 	self endon("disconnect");
 	self endon("end_respawn");
-
-	self thread watch_nightvision_press();
 
 	for (;;)
 	{
