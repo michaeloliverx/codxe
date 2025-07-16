@@ -129,15 +129,16 @@ namespace iw3
 
         void CaptureCommand(usercmd_s *const cmd)
         {
-            auto cg = &(*cgArray)[0];
+            const auto cg = &(*cgArray)[0];
+            const auto ps = &cg->predictedPlayerState;
 
             RecordedCmd recorded_cmd;
             recorded_cmd.serverTime = cmd->serverTime;
             recorded_cmd.buttons = cmd->buttons;
             recorded_cmd.angles[PITCH] = cmd->angles[PITCH];
             recorded_cmd.angles[YAW] = cmd->angles[YAW];
-            recorded_cmd.delta_angles[PITCH] = cg->nextSnap->ps.delta_angles[PITCH];
-            recorded_cmd.delta_angles[YAW] = cg->nextSnap->ps.delta_angles[YAW];
+            recorded_cmd.delta_angles[PITCH] = ps->delta_angles[PITCH];
+            recorded_cmd.delta_angles[YAW] = ps->delta_angles[YAW];
             recorded_cmd.weapon = cmd->weapon;
             recorded_cmd.offHandIndex = cmd->offHandIndex;
             recorded_cmd.forwardmove = cmd->forwardmove;
@@ -157,7 +158,7 @@ namespace iw3
                 return;
             }
 
-            auto cg = &(*cgArray)[0];
+            const auto cg = &(*cgArray)[0];
             auto ca = &(*clients)[0];
             const auto &data = current_recording[play_frame];
 
@@ -173,17 +174,10 @@ namespace iw3
             // Apply this offset to the current playback time
             cmd->serverTime = playback_start_time + recording_time_offset;
 
-            static auto player_view_pitch_down = Dvar_FindMalleableVar("player_view_pitch_down");
+            const auto ps_delta_pitch = ANGLE2SHORT(cg->predictedPlayerState.delta_angles[PITCH]);
+            const auto ps_delta_yaw = ANGLE2SHORT(cg->predictedPlayerState.delta_angles[YAW]);
 
-            const auto ps_delta_pitch = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
-            const auto ps_delta_yaw = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
-
-            auto expectated_pitch = (data.angles[PITCH] + ANGLE2SHORT(data.delta_angles[PITCH])) & 0xFFFF;
-            // For some reason the pitch can be larger than the max pitch which causes the screen to judder
-            auto max_pitch = ANGLE2SHORT(player_view_pitch_down->current.value);
-            if (expectated_pitch > max_pitch)
-                expectated_pitch = max_pitch;
-
+            const auto expectated_pitch = data.angles[PITCH] + ANGLE2SHORT(data.delta_angles[PITCH]);
             const auto expectated_yaw = data.angles[YAW] + ANGLE2SHORT(data.delta_angles[YAW]);
 
             const auto net_pitch = expectated_pitch - ps_delta_pitch;
