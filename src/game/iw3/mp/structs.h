@@ -328,6 +328,38 @@ namespace iw3
             hudelem_s archival[31];
         };
 
+        enum weaponstate_t : __int32
+        {
+            WEAPON_READY = 0x0,
+            WEAPON_RAISING = 0x1,
+            WEAPON_RAISING_ALTSWITCH = 0x2,
+            WEAPON_DROPPING = 0x3,
+            WEAPON_DROPPING_QUICK = 0x4,
+            WEAPON_FIRING = 0x5,
+            WEAPON_RECHAMBERING = 0x6,
+            WEAPON_RELOADING = 0x7,
+            WEAPON_RELOADING_INTERUPT = 0x8,
+            WEAPON_RELOAD_START = 0x9,
+            WEAPON_RELOAD_START_INTERUPT = 0xA,
+            WEAPON_RELOAD_END = 0xB,
+            WEAPON_MELEE_INIT = 0xC,
+            WEAPON_MELEE_FIRE = 0xD,
+            WEAPON_MELEE_END = 0xE,
+            WEAPON_OFFHAND_INIT = 0xF,
+            WEAPON_OFFHAND_PREPARE = 0x10,
+            WEAPON_OFFHAND_HOLD = 0x11,
+            WEAPON_OFFHAND_START = 0x12,
+            WEAPON_OFFHAND = 0x13,
+            WEAPON_OFFHAND_END = 0x14,
+            WEAPON_DETONATING = 0x15,
+            WEAPON_SPRINT_RAISE = 0x16,
+            WEAPON_SPRINT_LOOP = 0x17,
+            WEAPON_SPRINT_DROP = 0x18,
+            WEAPON_NIGHTVISION_WEAR = 0x19,
+            WEAPON_NIGHTVISION_REMOVE = 0x1A,
+            WEAPONSTATES_NUM = 0x1B,
+        };
+
         struct playerState_s
         {
             int commandTime; // 0
@@ -375,7 +407,7 @@ namespace iw3
             int offHandIndex;
             OffhandSecondaryClass offhandSecondary;
             unsigned int weapon;
-            int weaponstate; // 240
+            weaponstate_t weaponstate; // 240
             unsigned int weaponShotCount;
             float fWeaponPosFrac;
             int adsDelayTime;
@@ -444,6 +476,26 @@ namespace iw3
             int deltaTime;
             int killCamEntity;
             hudElemState_t hud;
+
+            inline bool isOnGround()
+            {
+                return groundEntityNum == 1022;
+            }
+
+            inline bool isInAir()
+            {
+                return groundEntityNum == 1023;
+            }
+
+            inline bool isReloading()
+            {
+                return weaponstate == WEAPON_RELOADING;
+            }
+
+            inline bool holdingWeapon(unsigned int weaponIndex)
+            {
+                return (weapon == weaponIndex);
+            }
         };
 
         static_assert(offsetof(playerState_s, velocity) == 40, "");
@@ -1587,38 +1639,6 @@ namespace iw3
         struct viewState_t;
 
         struct weaponState_t;
-
-        enum weaponstate_t : __int32
-        {
-            WEAPON_READY = 0x0,
-            WEAPON_RAISING = 0x1,
-            WEAPON_RAISING_ALTSWITCH = 0x2,
-            WEAPON_DROPPING = 0x3,
-            WEAPON_DROPPING_QUICK = 0x4,
-            WEAPON_FIRING = 0x5,
-            WEAPON_RECHAMBERING = 0x6,
-            WEAPON_RELOADING = 0x7,
-            WEAPON_RELOADING_INTERUPT = 0x8,
-            WEAPON_RELOAD_START = 0x9,
-            WEAPON_RELOAD_START_INTERUPT = 0xA,
-            WEAPON_RELOAD_END = 0xB,
-            WEAPON_MELEE_INIT = 0xC,
-            WEAPON_MELEE_FIRE = 0xD,
-            WEAPON_MELEE_END = 0xE,
-            WEAPON_OFFHAND_INIT = 0xF,
-            WEAPON_OFFHAND_PREPARE = 0x10,
-            WEAPON_OFFHAND_HOLD = 0x11,
-            WEAPON_OFFHAND_START = 0x12,
-            WEAPON_OFFHAND = 0x13,
-            WEAPON_OFFHAND_END = 0x14,
-            WEAPON_DETONATING = 0x15,
-            WEAPON_SPRINT_RAISE = 0x16,
-            WEAPON_SPRINT_LOOP = 0x17,
-            WEAPON_SPRINT_DROP = 0x18,
-            WEAPON_NIGHTVISION_WEAR = 0x19,
-            WEAPON_NIGHTVISION_REMOVE = 0x1A,
-            WEAPONSTATES_NUM = 0x1B,
-        };
 
         enum connstate_t
         {

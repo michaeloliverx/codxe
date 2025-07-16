@@ -307,8 +307,8 @@ namespace iw3
                 should_reset = false;
             }
 
-            auto holding_rpg = pmove_current->ps->weapon == rpg_mp_index;
-            auto reloading = pmove_current->ps->weaponstate == WEAPON_RELOADING;
+            const bool holding_rpg = pmove_current->ps->holdingWeapon(rpg_mp_index);
+            const bool reloading = pmove_current->ps->isReloading();
 
             bool shot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
 
@@ -339,18 +339,15 @@ namespace iw3
                 // cmd->rightmove = -cmd->rightmove;
             }
 
-            bool is_on_ground = pmove_current->ps->groundEntityNum == 1022;              // 1022 = On ground
-            bool is_in_air = pmove_current->ps->groundEntityNum == 1023;                 // 1023 = In air
-            bool is_on_ground_next_frame = pmove_predicted->ps->groundEntityNum == 1022; // 1022 = On ground
-            bool is_in_air_next_frame = pmove_predicted->ps->groundEntityNum == 1023;    // 1023 = In air
-            bool will_leave_ground_this_frame = is_on_ground && is_in_air_next_frame;
+            const bool is_on_ground_next_frame = pmove_predicted->ps->isOnGround();
+            const bool will_leave_ground_this_frame = pmove_current->ps->isOnGround() && pmove_predicted->ps->isInAir();
 
             if (cj_tas_jump_at_edge->current.enabled && will_leave_ground_this_frame)
             {
                 cmd->buttons |= 1024; // JUMP
             }
 
-            if (cj_tas_bhop_auto->current.enabled && is_in_air && is_on_ground_next_frame)
+            if (cj_tas_bhop_auto->current.enabled && pmove_current->ps->isInAir() && is_on_ground_next_frame)
             {
                 cmd->buttons &= ~1024; // Clear JUMP button
             }
