@@ -82,6 +82,7 @@
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
 
       <ClCompile Include="src\game\iw4\sp\components\g_client_fields.cpp" />
+      <ClCompile Include="src\game\iw4\sp\components\pm.cpp" />
       <ClCompile Include="src\game\iw4\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw4\sp\main.cpp" />
 
@@ -120,6 +121,7 @@
       <ClInclude Include="src\game\iw3\sp\main.h" />
 
       <ClInclude Include="src\game\iw4\sp\components\g_client_fields.h" />
+      <ClInclude Include="src\game\iw4\sp\components\pm.h" />
       <ClInclude Include="src\game\iw4\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw4\sp\main.h" />
       <ClInclude Include="src\game\iw4\sp\structs.h" />
