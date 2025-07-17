@@ -32,8 +32,6 @@ namespace iw3
         static cmd_function_s Cmd_Startplayback_VAR;
         static cmd_function_s Cmd_Stopplayback_VAR;
 
-        dvar_s *cj_tas_rpg_fire_slowdown_trick = nullptr;
-
         dvar_s *cj_tas_playback_force_rpg = nullptr;
 
         unsigned int rpg_mp_index = 0;
