@@ -8,17 +8,23 @@ namespace iw4
     {
         struct playerState_s
         {
-            char pad[45016];
+            char pad[40];
+            float velocity[3];
+            char pad1[44144];
         };
-        static_assert(sizeof(playerState_s) == 45016, "");
+        static_assert(sizeof(playerState_s) == 44196, "");
+        static_assert(offsetof(playerState_s, velocity) == 40, "");
 
         struct gclient_s
         {
-            char pad0[44372];
+            playerState_s ps;
+            char pad0[176];
             int flags;
             char pad1[640];
         };
         static_assert(sizeof(gclient_s) == 45016, "");
+        static_assert(offsetof(gclient_s, ps) == 0x0, "");
+        static_assert(offsetof(gclient_s, ps.velocity) == 40, "");
         static_assert(offsetof(gclient_s, flags) == 44372, "");
 
         struct gentity_s
@@ -56,6 +62,19 @@ namespace iw4
         static_assert(offsetof(level_locals_t, clients) == 0x0, "");
         static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
         static_assert(offsetof(level_locals_t, maxclients) == 44, "");
+
+        struct weaponParms
+        {
+            float forward[3];
+            float right[3];
+            float up[3];
+            float muzzleTrace[3];
+            float gunForward[3];
+            unsigned int weaponIndex;
+            const struct WeaponDef *weapDef;
+            const struct WeaponCompleteDef *weapCompleteDef;
+        };
+        static_assert(sizeof(weaponParms) == 0x48, "");
 
         struct scr_entref_t
         {
