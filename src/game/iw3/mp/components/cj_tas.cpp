@@ -13,8 +13,7 @@ namespace iw3
         {
             int serverTime;
             int buttons;
-            int angles[2];         // PITCH, YAW
-            float delta_angles[2]; // PITCH, YAW
+            short angles[3];
             unsigned __int8 weapon;
             unsigned __int8 offHandIndex;
             char forwardmove;
@@ -33,9 +32,7 @@ namespace iw3
         static cmd_function_s Cmd_Startplayback_VAR;
         static cmd_function_s Cmd_Stopplayback_VAR;
 
-        dvar_s *cj_tas_rpg_fire_slowdown_trick = nullptr;
-
-        dvar_s *cj_tas_playback_force_rpg = nullptr;
+        dvar_s *cj_tas_playback_ignore_weapon = nullptr;
 
         unsigned int rpg_mp_index = 0;
 
@@ -129,15 +126,15 @@ namespace iw3
 
         void CaptureCommand(usercmd_s *const cmd)
         {
-            auto cg = &(*cgArray)[0];
+            const auto cg = &(*cgArray)[0];
+            const auto ps = &cg->predictedPlayerState;
 
             RecordedCmd recorded_cmd;
             recorded_cmd.serverTime = cmd->serverTime;
             recorded_cmd.buttons = cmd->buttons;
-            recorded_cmd.angles[PITCH] = cmd->angles[PITCH];
-            recorded_cmd.angles[YAW] = cmd->angles[YAW];
-            recorded_cmd.delta_angles[PITCH] = cg->nextSnap->ps.delta_angles[PITCH];
-            recorded_cmd.delta_angles[YAW] = cg->nextSnap->ps.delta_angles[YAW];
+            recorded_cmd.angles[PITCH] = static_cast<short>(cmd->angles[PITCH]) + ANGLE2SHORT(ps->delta_angles[PITCH]);
+            recorded_cmd.angles[YAW] = static_cast<short>(cmd->angles[YAW]) + ANGLE2SHORT(ps->delta_angles[YAW]);
+            recorded_cmd.angles[ROLL] = static_cast<short>(cmd->angles[ROLL]) + ANGLE2SHORT(ps->delta_angles[ROLL]);
             recorded_cmd.weapon = cmd->weapon;
             recorded_cmd.offHandIndex = cmd->offHandIndex;
             recorded_cmd.forwardmove = cmd->forwardmove;
@@ -157,7 +154,8 @@ namespace iw3
                 return;
             }
 
-            auto cg = &(*cgArray)[0];
+            const auto cg = &(*cgArray)[0];
+            const auto ps = &cg->predictedPlayerState;
             auto ca = &(*clients)[0];
             const auto &data = current_recording[play_frame];
 
@@ -173,21 +171,9 @@ namespace iw3
             // Apply this offset to the current playback time
             cmd->serverTime = playback_start_time + recording_time_offset;
 
-            static auto player_view_pitch_down = Dvar_FindMalleableVar("player_view_pitch_down");
-
-            const auto ps_delta_pitch = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[PITCH]);
-            const auto ps_delta_yaw = ANGLE2SHORT(cg->nextSnap->ps.delta_angles[YAW]);
-
-            auto expectated_pitch = (data.angles[PITCH] + ANGLE2SHORT(data.delta_angles[PITCH])) & 0xFFFF;
-            // For some reason the pitch can be larger than the max pitch which causes the screen to judder
-            auto max_pitch = ANGLE2SHORT(player_view_pitch_down->current.value);
-            if (expectated_pitch > max_pitch)
-                expectated_pitch = max_pitch;
-
-            const auto expectated_yaw = data.angles[YAW] + ANGLE2SHORT(data.delta_angles[YAW]);
-
-            const auto net_pitch = expectated_pitch - ps_delta_pitch;
-            const auto net_yaw = expectated_yaw - ps_delta_yaw;
+            const auto pitch = data.angles[PITCH] - ANGLE2SHORT(ps->delta_angles[PITCH]);
+            const auto yaw = data.angles[YAW] - ANGLE2SHORT(ps->delta_angles[YAW]);
+            const auto roll = data.angles[ROLL] - ANGLE2SHORT(ps->delta_angles[ROLL]);
 
             const int movementThreshold = 75;
 
@@ -196,25 +182,26 @@ namespace iw3
             {
                 Cmd_Stopplayback_f();
                 // Set client viewangles to match the recorded angles
-                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
-                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
+                ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(pitch));
+                ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(yaw));
+                ca->viewangles[ROLL] = static_cast<float>(SHORT2ANGLE(roll));
                 return;
             }
 
             cmd->buttons |= data.buttons;
             // Set the command angles to the recorded angles
-            cmd->angles[PITCH] = net_pitch;
-            cmd->angles[YAW] = net_yaw;
+            cmd->angles[PITCH] = pitch;
+            cmd->angles[YAW] = yaw;
+            cmd->angles[ROLL] = roll;
 
             // Set client viewangles to match the recorded angles
-            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(net_pitch));
-            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(net_yaw));
+            ca->viewangles[PITCH] = static_cast<float>(SHORT2ANGLE(pitch));
+            ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(yaw));
+            ca->viewangles[ROLL] = static_cast<float>(SHORT2ANGLE(roll));
 
-            cmd->weapon = data.weapon;
-
-            if (cj_tas_playback_force_rpg->current.enabled)
+            if (!cj_tas_playback_ignore_weapon->current.enabled)
             {
-                cmd->weapon = static_cast<unsigned char>(rpg_mp_index); // Force the weapon to be RPG
+                cmd->weapon = data.weapon;
             }
 
             cmd->offHandIndex = data.offHandIndex;
@@ -313,8 +300,8 @@ namespace iw3
                 should_reset = false;
             }
 
-            auto holding_rpg = pmove_current->ps->weapon == rpg_mp_index;
-            auto reloading = pmove_current->ps->weaponstate == WEAPON_RELOADING;
+            const bool holding_rpg = pmove_current->ps->holdingWeapon(rpg_mp_index);
+            const bool reloading = pmove_current->ps->isReloading();
 
             bool shot_rpg_next_frame = pmove_predicted->ps->weaponDelay <= 3 && pmove_predicted->ps->weaponDelay != 0;
 
@@ -345,18 +332,15 @@ namespace iw3
                 // cmd->rightmove = -cmd->rightmove;
             }
 
-            bool is_on_ground = pmove_current->ps->groundEntityNum == 1022;              // 1022 = On ground
-            bool is_in_air = pmove_current->ps->groundEntityNum == 1023;                 // 1023 = In air
-            bool is_on_ground_next_frame = pmove_predicted->ps->groundEntityNum == 1022; // 1022 = On ground
-            bool is_in_air_next_frame = pmove_predicted->ps->groundEntityNum == 1023;    // 1023 = In air
-            bool will_leave_ground_this_frame = is_on_ground && is_in_air_next_frame;
+            const bool is_on_ground_next_frame = pmove_predicted->ps->isOnGround();
+            const bool will_leave_ground_this_frame = pmove_current->ps->isOnGround() && pmove_predicted->ps->isInAir();
 
             if (cj_tas_jump_at_edge->current.enabled && will_leave_ground_this_frame)
             {
                 cmd->buttons |= 1024; // JUMP
             }
 
-            if (cj_tas_bhop_auto->current.enabled && is_in_air && is_on_ground_next_frame)
+            if (cj_tas_bhop_auto->current.enabled && pmove_current->ps->isInAir() && is_on_ground_next_frame)
             {
                 cmd->buttons &= ~1024; // Clear JUMP button
             }
@@ -404,7 +388,7 @@ namespace iw3
             Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
             Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
 
-            cj_tas_playback_force_rpg = Dvar_RegisterBool("cj_tas_playback_force_rpg", false, 0, "Force playback to equip RPG");
+            cj_tas_playback_ignore_weapon = Dvar_RegisterBool("cj_tas_playback_ignore_weapon", false, 0, "Ignore weapon in playback");
 
             cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
 
