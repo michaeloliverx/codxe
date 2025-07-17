@@ -32,7 +32,7 @@ namespace iw3
         static cmd_function_s Cmd_Startplayback_VAR;
         static cmd_function_s Cmd_Stopplayback_VAR;
 
-        dvar_s *cj_tas_playback_force_rpg = nullptr;
+        dvar_s *cj_tas_playback_ignore_weapon = nullptr;
 
         unsigned int rpg_mp_index = 0;
 
@@ -199,11 +199,9 @@ namespace iw3
             ca->viewangles[YAW] = static_cast<float>(SHORT2ANGLE(yaw));
             ca->viewangles[ROLL] = static_cast<float>(SHORT2ANGLE(roll));
 
-            cmd->weapon = data.weapon;
-
-            if (cj_tas_playback_force_rpg->current.enabled)
+            if (!cj_tas_playback_ignore_weapon->current.enabled)
             {
-                cmd->weapon = static_cast<unsigned char>(rpg_mp_index); // Force the weapon to be RPG
+                cmd->weapon = data.weapon;
             }
 
             cmd->offHandIndex = data.offHandIndex;
@@ -390,7 +388,7 @@ namespace iw3
             Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
             Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
 
-            cj_tas_playback_force_rpg = Dvar_RegisterBool("cj_tas_playback_force_rpg", false, 0, "Force playback to equip RPG");
+            cj_tas_playback_ignore_weapon = Dvar_RegisterBool("cj_tas_playback_ignore_weapon", false, 0, "Ignore weapon in playback");
 
             cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
 
