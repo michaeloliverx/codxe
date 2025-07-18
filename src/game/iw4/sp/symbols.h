@@ -41,6 +41,8 @@ namespace iw4
         static auto Weapon_RocketLauncher_Fire = reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp, weaponParms *gunVel, struct lockonFireParms *lockParms, lockonFireParms *magicBullet)>(0x82231AE8);
         static auto PM_StepSlideMove = reinterpret_cast<void (*)(struct pmove_t *pm, struct pml_t *pml, int gravity)>(0x8232AF08);
 
+        static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x821690A8);
+
         // Data
         static auto fields = reinterpret_cast<client_fields_s *>(0x8201ACF0);
         static auto g_clients = reinterpret_cast<gclient_s *>(0x82EAC5E8);
@@ -48,8 +50,6 @@ namespace iw4
         static auto level = reinterpret_cast<level_locals_t *>(0x82EC2598);
         static auto methods_1 = reinterpret_cast<BuiltinMethodDef *>(0x8201CA80);
         static const int METHODS_1_COUNT = 35;
-
-        // static auto methods_0 = reinterpret_cast<BuiltinMethodDef *>(0x8201CA80);
-        // static const int METHODS_0_COUNT = 104;
+        static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x827261E4);
     }
 }

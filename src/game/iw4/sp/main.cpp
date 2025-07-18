@@ -1,3 +1,4 @@
+#include "components/clipmap.h"
 #include "components/g_client_fields.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
@@ -20,11 +21,10 @@ namespace iw4
         {
             DbgPrint("IW4 SP: Registering modules\n");
 
+            RegisterComponent(new clipmap());
             RegisterComponent(new g_client_fields());
             RegisterComponent(new pm());
             RegisterComponent(new scr_parser());
-
-            Dvar_SetBoolByName("mis_cheat", 1); // Unlock all missions
         }
 
         void shutdown()
