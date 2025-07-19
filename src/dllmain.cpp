@@ -77,7 +77,7 @@ void monitor_title_id()
 			return;
 		}
 
-		Sleep(0);
+		Sleep(50);
 	}
 }
 
