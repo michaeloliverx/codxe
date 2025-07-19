@@ -49,7 +49,6 @@ namespace t4
 
         if (!filesystem::exists(modBasePath))
         {
-            DbgPrint("GSCLoader: Active mod directory does not exist: %s\n", modBasePath.c_str());
             // TODO: Display error message to user
             cachedModBasePath = "";
             isCached = true;
