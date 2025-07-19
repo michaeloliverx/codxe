@@ -13,8 +13,11 @@ namespace iw4
             {
                 return Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(filename, extFilename);
             };
-            bool dump_scripts = false;
-            if (dump_scripts)
+
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
+            if (config.dump_raw)
             {
                 auto contents = callOriginal();
                 // Dump the script to a file
@@ -26,16 +29,13 @@ namespace iw4
             }
 
             // Check if mod is active
-            std::string modBasePath = t4::GetModBasePath();
-            // DbgPrint("GSCLoader: Mod base path: %s\n", modBasePath.c_str());
+            std::string modBasePath = config.GetModBasePath();
             if (modBasePath.empty())
                 return callOriginal();
 
             // Build full path to override file
             std::string overridePath = modBasePath + "\\" + extFilename;
             std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
-
-            // DbgPrint("GSCLoader: Checking for override script: %s\n", overridePath.c_str());
 
             // Try to load override file
             std::string fileContent = filesystem::read_file_to_string(overridePath);

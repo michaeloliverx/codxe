@@ -42,6 +42,7 @@ namespace iw4
         static auto PM_StepSlideMove = reinterpret_cast<void (*)(struct pmove_t *pm, struct pml_t *pml, int gravity)>(0x8232AF08);
 
         static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x821690A8);
+        static auto CM_ContentsOfBrushModel = reinterpret_cast<int (*)(unsigned int bmodelIndex)>(0x82276238);
 
         // Data
         static auto fields = reinterpret_cast<client_fields_s *>(0x8201ACF0);

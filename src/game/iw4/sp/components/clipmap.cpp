@@ -5,6 +5,7 @@ namespace iw4
 {
     namespace sp
     {
+
         Detour Load_clipMap_t_Detour;
         void Load_clipMap_t_Hook(bool atStreamStart)
         {
@@ -14,12 +15,13 @@ namespace iw4
             if (!varclipMap_t || !*varclipMap_t || !(*varclipMap_t)->name || !(*varclipMap_t)->mapEnts)
                 return;
 
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
             auto mapEnts = (*varclipMap_t)->mapEnts;
 
-            // TODO: Fetch from config file
-            bool DUMP_MAP_ENTS = true;
             // Dump map entities if enabled
-            if (DUMP_MAP_ENTS)
+            if (config.dump_map_ents)
             {
                 std::string dumpPath = va("%s\\%s.ents", t4::DUMP_DIR, mapEnts->name); // IW4x naming convention
                 std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
@@ -28,7 +30,7 @@ namespace iw4
             }
 
             // Check for mod override
-            std::string modBasePath = t4::GetModBasePath();
+            std::string modBasePath = config.GetModBasePath();
             if (modBasePath.empty())
                 return;
 

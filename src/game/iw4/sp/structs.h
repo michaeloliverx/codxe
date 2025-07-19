@@ -128,7 +128,10 @@ namespace iw4
             float halfSize[3];
         };
 
-        struct XModel;
+        struct XModel
+        {
+            const char *name;
+        };
 
         struct cplane_s
         {

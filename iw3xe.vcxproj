@@ -58,7 +58,7 @@
       <ProgramDatabaseFile Condition="'$(Configuration)'=='Debug'">$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <OptimizeReferences Condition="'$(Configuration)'=='Release'">true</OptimizeReferences>
       <SetChecksum Condition="'$(Configuration)'=='Release'">true</SetChecksum>
-      <AdditionalDependencies>d3d9ltcg.lib;xgraphics.lib</AdditionalDependencies>
+      <AdditionalDependencies>d3d9ltcg.lib;xgraphics.lib;xjson.lib</AdditionalDependencies>
       <AdditionalOptions>/DLL /ENTRY:"_DllMainCRTStartup" /ALIGN:128,4096 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Deploy>
@@ -71,6 +71,8 @@
     </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
+      <ClCompile Include="src\common\config.cpp" />
+
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
@@ -109,6 +111,8 @@
       <ClCompile Include="src\xboxkrnl.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <ClInclude Include="src\common\config.h" />
+
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
       <ClInclude Include="src\game\iw3\mp\components\cmds.h" />
