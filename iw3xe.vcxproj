@@ -83,6 +83,7 @@
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
 
+      <ClCompile Include="src\game\iw4\sp\components\cg.cpp" />
       <ClCompile Include="src\game\iw4\sp\components\clipmap.cpp" />
       <ClCompile Include="src\game\iw4\sp\components\g_client_fields.cpp" />
       <ClCompile Include="src\game\iw4\sp\components\pm.cpp" />
@@ -125,6 +126,7 @@
       <ClInclude Include="src\game\iw3\mp\symbols.h" />
       <ClInclude Include="src\game\iw3\sp\main.h" />
 
+      <ClInclude Include="src\game\iw4\sp\components\cg.h" />
       <ClInclude Include="src\game\iw4\sp\components\clipmap.h" />
       <ClInclude Include="src\game\iw4\sp\components\g_client_fields.h" />
       <ClInclude Include="src\game\iw4\sp\components\pm.h" />

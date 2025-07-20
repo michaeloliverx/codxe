@@ -442,5 +442,57 @@ namespace iw4
         };
         static_assert(sizeof(clipMap_t) == 0x100, "");
 
+        struct Font_s;
+        struct Material;
+
+        struct CachedAssets_t
+        {
+            Material *scrollBarArrowUp;
+            Material *scrollBarArrowDown;
+            Material *scrollBarArrowLeft;
+            Material *scrollBarArrowRight;
+            Material *scrollBar;
+            Material *scrollBarThumb;
+            Material *sliderBar;
+            Material *sliderThumb;
+            Material *whiteMaterial;
+            Material *cursor;
+            Material *textDecodeCharacters;
+            Material *textDecodeCharactersGlow;
+            Font_s *bigFont;
+            Font_s *smallFont;
+            Font_s *consoleFont;
+            Font_s *boldFont;
+            Font_s *textFont;
+            Font_s *extraBigFont;
+            Font_s *objectiveFont;
+            Font_s *hudBigFont;
+            Font_s *hudSmallFont;
+        };
+
+        struct __declspec(align(4)) sharedUiInfo_t
+        {
+            CachedAssets_t assets;
+            bool preventPause;
+        };
+
+        struct ScreenPlacement
+        {
+            float scaleVirtualToReal[2];
+            float scaleVirtualToFull[2];
+            float scaleRealToVirtual[2];
+            float realViewportPosition[2];
+            float realViewportSize[2];
+            float virtualViewableMin[2];
+            float virtualViewableMax[2];
+            float realViewableMin[2];
+            float realViewableMax[2];
+            float virtualAdjustableMin[2];
+            float virtualAdjustableMax[2];
+            float realAdjustableMin[2];
+            float realAdjustableMax[2];
+            float subScreenLeft;
+        };
+
     }
 }

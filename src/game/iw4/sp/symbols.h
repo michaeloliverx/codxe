@@ -44,6 +44,13 @@ namespace iw4
         static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x821690A8);
         static auto CM_ContentsOfBrushModel = reinterpret_cast<int (*)(unsigned int bmodelIndex)>(0x82276238);
 
+        static auto ScrPlace_GetActivePlacement = reinterpret_cast<const ScreenPlacement *(*)(int localClientNum)>(0x82141160);
+        static auto ScrPlace_GetFullPlacement = reinterpret_cast<const ScreenPlacement *(*)(int localClientNum)>(0x82141110);
+        static auto ScrPlace_GetUnsafeFullPlacement = reinterpret_cast<const ScreenPlacement *(*)(void)>(0x82141120);
+
+        static auto UI_RefreshViewport = reinterpret_cast<void (*)(int localClientNum)>(0x822C4880);
+        static auto UI_DrawText = reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x, double y, int horzAlign, int vertAlign, double scale, const float *color, int style)>(0x822C1D60);
+
         // Data
         static auto fields = reinterpret_cast<client_fields_s *>(0x8201ACF0);
         static auto g_clients = reinterpret_cast<gclient_s *>(0x82EAC5E8);
@@ -52,5 +59,8 @@ namespace iw4
         static auto methods_1 = reinterpret_cast<BuiltinMethodDef *>(0x8201CA80);
         static const int METHODS_1_COUNT = 35;
         static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x827261E4);
+        static auto scrPlaceFull = reinterpret_cast<const ScreenPlacement *>(0x8266BD90);
+        static auto sharedUiInfo = reinterpret_cast<sharedUiInfo_t *>(0x838F37D8);
+
     }
 }
