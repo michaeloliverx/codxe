@@ -4,7 +4,7 @@
 
 namespace
 {
-    const char *CONFIG_PATH = "game:\\_codxe\\config.json";
+    const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
     const char *MOD_DIR = "game:\\_codxe\\mods";
     const char *DUMP_DIR = "game:\\_codxe\\dump";
 }

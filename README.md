@@ -34,13 +34,13 @@ To run CoDxe, you will need one of the following:
 
 ### GSC Loader
 
-The raw GSC loader enables loading .gsc scripts directly from the mod directory. This allows you to edit gameplay scripts without modifying or rebuilding the original fastfiles (`.ff`). You can have multiple isolated mods, each with its own set of scripts. The active mod is defined in a `config.json` file.
+The raw GSC loader enables loading .gsc scripts directly from the mod directory. This allows you to edit gameplay scripts without modifying or rebuilding the original fastfiles (`.ff`). You can have multiple isolated mods, each with its own set of scripts. The active mod is defined in a `codxe.json` file.
 
 #### Setup Instructions
 
-Create a `_codxe\mods` folder in your game directory, and place a `config.json` in `_codxe` to define which mod is active.
+Create a `_codxe\mods` folder in your game directory, and place a `codxe.json` in `_codxe` to define which mod is active.
 
-In `config.json`, set `"active_mod"` to the name of your mod folder:
+In `codxe.json`, set `"active_mod"` to the name of your mod folder:
 
 ```json
 {
@@ -59,7 +59,7 @@ game:\_codxe\mods\my_mod\
 ```
 game:.
 └───_codxe
-    │   config.json                                  ← sets the active mod
+    │   codxe.json                                  ← sets the active mod
     │
     └───mods
         └───my_mod                                   ← your mod folder (name must match config)
@@ -70,6 +70,10 @@ game:.
                             custom_logic.gsc         ← your custom script
 
 ```
+
+**Why the underscore in `_codxe`?**
+
+The underscore keeps the folder at the top of file listings, making it quicker to find. It also separates CoDxe system files from the game's core content for better organization.
 
 #### :scroll: Script Overriding
 
@@ -154,6 +158,6 @@ allow_game_relative_writes = true
 In some way or another, this project would not have been possible without the following people and projects:
 
 - [callofduty4x](https://github.com/callofduty4x)
-- [IW4x]([IW4x](https://github.com/iw4x))
+- [IW4x](<[IW4x](https://github.com/iw4x)>)
 - [kej](https://github.com/kejjjjj)
 - [ClementDreptin](https://github.com/ClementDreptin/ModdingResources)
