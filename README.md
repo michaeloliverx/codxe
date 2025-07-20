@@ -13,6 +13,9 @@ To run CoDxe, you will need one of the following:
 - Xbox 360 capable of running unsigned code (JTAG/RGH/DEVKIT/Bad Update)
 - [Xenia Canary - Xbox 360 Emulator](https://github.com/xenia-canary/xenia-canary) (Use the latest version)
 
+> [!WARNING]
+> Only **Xenia Canary** supports plugins. Master builds will not work.
+
 ## Game Compatibility
 
 | Game                                        | Version | Singleplayer       | Multiplayer        | Supported Region                                |
@@ -33,7 +36,56 @@ To run CoDxe, you will need one of the following:
 
 ### GSC Loader
 
-The raw GSC loader enables loading .gsc scripts directly from the mod directory. This allows you to edit gameplay scripts without modifying the original fastfiles. See the example mods for guidance on structure and usage.
+The raw GSC loader enables loading .gsc scripts directly from the mod directory. This allows you to edit gameplay scripts without modifying or rebuilding the original fastfiles (`.ff`). You can have multiple isolated mods, each with its own set of scripts. The active mod is defined in a `config.json` file.
+
+#### Setup Instructions
+
+Create a `_codxe\mods` folder in your game directory, and place a `config.json` in `_codxe` to define which mod is active.
+
+In `config.json`, set `"active_mod"` to the name of your mod folder:
+
+```json
+{
+  "active_mod": "my_mod"
+}
+```
+
+Once configured, the engine will redirect script lookups to:
+
+```
+game:\_codxe\mods\my_mod\
+```
+
+**Example tree structure:**
+
+```
+game:.
+└───_codxe
+    │   config.json                                  ← sets the active mod
+    │
+    └───mods
+        └───my_mod                                   ← your mod folder (name must match config)
+            └───maps
+                └───mp
+                    └───gametypes
+                            _callbacksetup.gsc       ← overrides built-in script
+                            custom_logic.gsc         ← your custom script
+
+```
+
+#### :scroll: Script Overriding
+
+The loader operates using a virtual filesystem. All `.gsc` scripts — whether loaded from `.ff` files or external mod folders — are treated as if they exist in a single shared root.
+
+For example:
+
+- A file in `common_mp.ff/maps/mp/gametypes/_callbacksetup.gsc`
+- Can be overridden by a file in `game:\_codxe\mods\my_mod\maps\mp\gametypes\_callbacksetup.gsc`
+
+Your version will take precedence over the copy embedded in the original fastfile. You can also add **new scripts** and call them from overridden entry points (e.g. `_callbacksetup.gsc`) — just ensure you hook them properly.
+
+> [!NOTE]
+> You **must override** at least one existing script (like `_callbacksetup.gsc`) to gain control over the script VM and begin loading your own logic.
 
 ### Map Ents Loader
 
@@ -79,13 +131,21 @@ The GSC VM has been extended with additional features to support enhanced moddin
 
 ## Getting Started
 
-Coming soon: Build instructions, example mods, and modding tutorials.
-
 ### Xenia Canary Setup
 
-*Required config settings:*
+_Required config settings:_
 
 ```toml
+# xenia.config.toml
 allow_plugins = true
 allow_game_relative_writes = true
 ```
+
+### 🚧 Coming Soon
+
+- Build instructions
+- Setup guides for JTAG/RGH/DEVKIT consoles
+- Xenia setup guide
+- xenia canary netplay
+- Modding tutorials with example scripts
+- Template mod structure for each game
