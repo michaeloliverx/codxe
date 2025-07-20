@@ -2425,7 +2425,7 @@ generateMenuOptions()
 	self addMenuOption("menu_codjumper", "TAS | Crouch on Jump", ::toggleCrouchOnJump);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown", ::toggleRpgLookdown);
 	self addMenuOption("menu_codjumper", "TAS | RPG lookdown set angles", ::setRpgLookdownAngles);
-	self addMenuOption("menu_codjumper", "TAS | Playback force RPG", ::toggleForceRpgPlayback);
+	self addMenuOption("menu_codjumper", "TAS | Playback ignore weapon", ::togglePlaybackIgnoreWeapon);
 
 	self addMenuOption("main", "Game Objects Menu", ::menuAction, "CHANGE_MENU", "menu_game_objects");
 	self addMenu("menu_game_objects", "main");
@@ -2862,14 +2862,16 @@ watch_buttons()
 
 savePos(savenum)
 {
+	if (!self isOnGround())
+		return;
+
 	if (!isdefined(savenum))
 	{
 		self.cj["savenum"] += 1;
 		savenum = self.cj["savenum"];
 	}
 
-	if (!self isOnGround())
-		return;
+	wait 0.05;
 
 	self.cj["settings"]["rpg_switched"] = false;
 	self.cj["saves"]["org"][savenum] = self.origin;
@@ -3130,21 +3132,21 @@ toggleGreenscreen()
 	}
 }
 
-toggleForceRpgPlayback()
+togglePlaybackIgnoreWeapon()
 {
-	if (!isdefined(self.cj["settings"]["cj_tas_playback_force_rpg"]))
-		self.cj["settings"]["cj_tas_playback_force_rpg"] = false;
+	if (!isdefined(self.cj["settings"]["cj_tas_playback_ignore_weapon"]))
+		self.cj["settings"]["cj_tas_playback_ignore_weapon"] = false;
 
-	self.cj["settings"]["cj_tas_playback_force_rpg"] = !self.cj["settings"]["cj_tas_playback_force_rpg"];
-	if (self.cj["settings"]["cj_tas_playback_force_rpg"])
+	self.cj["settings"]["cj_tas_playback_ignore_weapon"] = !self.cj["settings"]["cj_tas_playback_ignore_weapon"];
+	if (self.cj["settings"]["cj_tas_playback_ignore_weapon"])
 	{
-		self setClientDvar("cj_tas_playback_force_rpg", 1);
-		self IPrintLn("TAS - Force RPG Playback [^2ON^7]");
+		self setClientDvar("cj_tas_playback_ignore_weapon", 1);
+		self IPrintLn("TAS - Playback Ignore Weapon [^2ON^7]");
 	}
 	else
 	{
-		self setClientDvar("cj_tas_playback_force_rpg", 0);
-		self IPrintLn("TAS - Force RPG Playback [^1OFF^7]");
+		self setClientDvar("cj_tas_playback_ignore_weapon", 0);
+		self IPrintLn("TAS - Playback Ignore Weapon [^1OFF^7]");
 	}
 }
 
