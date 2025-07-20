@@ -15,8 +15,27 @@ namespace t4
                 return Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(inst, filename, extFilename, codePos, archive);
             };
 
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
+            if (config.dump_raw)
+            {
+                DbgPrint("GSCLoader: Dumping script %s\n", extFilename);
+                auto contents = callOriginal();
+                if (contents)
+                {
+                    // Dump the script to a file
+                    std::string dumpPath = std::string(DUMP_DIR) + "\\" + extFilename;
+                    std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
+                    filesystem::write_file_to_disk(dumpPath.c_str(), contents, std::strlen(contents));
+                    DbgPrint("GSCLoader: Dumped script to %s\n", dumpPath.c_str());
+                }
+
+                return contents;
+            }
+
             // Check if mod is active
-            std::string modBasePath = GetModBasePath();
+            std::string modBasePath = config.GetModBasePath();
             if (modBasePath.empty())
                 return callOriginal();
 

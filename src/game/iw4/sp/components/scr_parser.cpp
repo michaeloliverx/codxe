@@ -21,7 +21,7 @@ namespace iw4
             {
                 auto contents = callOriginal();
                 // Dump the script to a file
-                std::string dumpPath = std::string(t4::DUMP_DIR) + "\\" + extFilename;
+                std::string dumpPath = std::string(DUMP_DIR) + "\\" + extFilename;
                 std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
                 filesystem::write_file_to_disk(dumpPath.c_str(), contents, std::strlen(contents));
                 DbgPrint("GSCLoader: Dumped script to %s\n", dumpPath.c_str());

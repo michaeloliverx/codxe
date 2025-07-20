@@ -2,12 +2,9 @@
 
 #include "common.h"
 
-namespace
-{
-    const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
-    const char *MOD_DIR = "game:\\_codxe\\mods";
-    const char *DUMP_DIR = "game:\\_codxe\\dump";
-}
+extern const char *CONFIG_PATH;
+extern const char *MOD_DIR;
+extern const char *DUMP_DIR;
 
 bool DirectoryExists(const char *path);
 bool FileExists(const char *path);

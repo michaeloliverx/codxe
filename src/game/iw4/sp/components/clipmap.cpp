@@ -23,7 +23,7 @@ namespace iw4
             // Dump map entities if enabled
             if (config.dump_map_ents)
             {
-                std::string dumpPath = va("%s\\%s.ents", t4::DUMP_DIR, mapEnts->name); // IW4x naming convention
+                std::string dumpPath = va("%s\\%s.ents", DUMP_DIR, mapEnts->name); // IW4x naming convention
                 std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
                 filesystem::write_file_to_disk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
                 DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
