@@ -58,7 +58,7 @@
       <ProgramDatabaseFile Condition="'$(Configuration)'=='Debug'">$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <OptimizeReferences Condition="'$(Configuration)'=='Release'">true</OptimizeReferences>
       <SetChecksum Condition="'$(Configuration)'=='Release'">true</SetChecksum>
-      <AdditionalDependencies>d3d9ltcg.lib;xgraphics.lib</AdditionalDependencies>
+      <AdditionalDependencies>d3d9ltcg.lib;xgraphics.lib;xjson.lib</AdditionalDependencies>
       <AdditionalOptions>/DLL /ENTRY:"_DllMainCRTStartup" /ALIGN:128,4096 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Deploy>
@@ -71,6 +71,8 @@
     </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
+      <ClCompile Include="src\common\config.cpp" />
+
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
@@ -80,6 +82,14 @@
       <ClCompile Include="src\game\iw3\mp\components\scr_vm_functions.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
+
+      <ClCompile Include="src\game\iw4\sp\components\cg.cpp" />
+      <ClCompile Include="src\game\iw4\sp\components\clipmap.cpp" />
+      <ClCompile Include="src\game\iw4\sp\components\g_client_fields.cpp" />
+      <ClCompile Include="src\game\iw4\sp\components\pm.cpp" />
+      <ClCompile Include="src\game\iw4\sp\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\iw4\sp\main.cpp" />
+
       <ClCompile Include="src\game\t4\common\mod_config.cpp" />
       <ClCompile Include="src\game\t4\mp\main.cpp" />
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
@@ -102,6 +112,8 @@
       <ClCompile Include="src\xboxkrnl.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <ClInclude Include="src\common\config.h" />
+
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
       <ClInclude Include="src\game\iw3\mp\components\cmds.h" />
@@ -113,6 +125,16 @@
       <ClInclude Include="src\game\iw3\mp\structs.h" />
       <ClInclude Include="src\game\iw3\mp\symbols.h" />
       <ClInclude Include="src\game\iw3\sp\main.h" />
+
+      <ClInclude Include="src\game\iw4\sp\components\cg.h" />
+      <ClInclude Include="src\game\iw4\sp\components\clipmap.h" />
+      <ClInclude Include="src\game\iw4\sp\components\g_client_fields.h" />
+      <ClInclude Include="src\game\iw4\sp\components\pm.h" />
+      <ClInclude Include="src\game\iw4\sp\components\scr_parser.h" />
+      <ClInclude Include="src\game\iw4\sp\main.h" />
+      <ClInclude Include="src\game\iw4\sp\structs.h" />
+      <ClInclude Include="src\game\iw4\sp\symbols.h" />
+
       <ClInclude Include="src\game\t4\common\mod_config.h" />
       <ClInclude Include="src\game\t4\mp\main.h" />
       <ClInclude Include="src\game\t4\mp\symbols.h" />

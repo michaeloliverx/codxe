@@ -3,7 +3,8 @@
 enum GameTitleId
 {
 	GAME_TITLE_ID_IW3 = 0x415607E6, // Call of Duty 4: Modern Warfare
-	GAME_TITLE_ID_T4 = 0x4156081C	// Call of Duty: World at War
+	GAME_TITLE_ID_T4 = 0x4156081C,	// Call of Duty: World at War
+	GAME_TITLE_ID_IW4 = 0X41560817, // Call of Duty: Modern Warfare 2
 };
 
 void monitor_title_id()
@@ -57,6 +58,21 @@ void monitor_title_id()
 			else
 			{
 				xbox::show_notification(L"CODxe - T4 Unsupported Executable");
+			}
+			return;
+		}
+		else if (current_title_id == GAME_TITLE_ID_IW4)
+		{
+			if (strncmp((char *)0x8203C924, "startSingleplayer", 17) == 0)
+			{
+				if (!in_xenia)
+					Sleep(1000);
+				xbox::show_notification(L"CODxe - IW4 Singleplayer Detected");
+				iw4::sp::init();
+			}
+			else
+			{
+				xbox::show_notification(L"CODxe - IW4 Unsupported Executable");
 			}
 			return;
 		}

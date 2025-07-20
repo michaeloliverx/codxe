@@ -17,12 +17,16 @@
 #include <xbox.h>
 #include <xgraphics.h>
 #include <io.h>
+#include <xjson.h>
 
 // Project-specific includes
 #include "detour.h"
 #include "filesystem.h"
 #include "version.h"
 #include "xboxkrnl.h"
+
+// Common includes
+#include "common/config.h"
 
 // IW3-specific includes
 #include "game/iw3/mp/main.h"
@@ -31,6 +35,11 @@
 
 #include "game/iw3/sp/main.h"
 #include "game/iw3/sp/structs.h"
+
+// IW4-specific includes
+#include "game/iw4/sp/main.h"
+#include "game/iw4/sp/structs.h"
+#include "game/iw4/sp/symbols.h"
 
 // T4-specific includes
 #include "game/t4/mp/main.h"
