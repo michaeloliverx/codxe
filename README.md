@@ -80,3 +80,12 @@ The GSC VM has been extended with additional features to support enhanced moddin
 ## Getting Started
 
 Coming soon: Build instructions, example mods, and modding tutorials.
+
+### Xenia Canary Setup
+
+*Required config settings:*
+
+```toml
+allow_plugins = true
+allow_game_relative_writes = true
+```
