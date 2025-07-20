@@ -35,23 +35,28 @@ namespace t4
 
         struct gclient_s
         {
-            char pad[8780];
+            char pad_0[8780];
             int buttons; // Offset 8780
             int oldbuttons;
             int latched_buttons;       // Offset 8784
             int buttonsSinceLastFrame; // Offset 8792
+            char pad_1[240];
         };
-
+        static_assert(sizeof(gclient_s) == 9036, "");
         static_assert(offsetof(gclient_s, buttons) == 8780, "");
         static_assert(offsetof(gclient_s, buttonsSinceLastFrame) == 8792, "");
 
         struct gentity_s
         {
-            char pad[384];
+            char pad_0[384];   //
             gclient_s *client; // OFS: 384 SIZE: 0x4
-            char pad2[500];
+            char pad_1[48];    //
+            int flags;         // OFS: 436 SIZE: 0x4
+            char pad_2[448];   //
         };
         static_assert(sizeof(gentity_s) == 888, "");
+        static_assert(offsetof(gentity_s, client) == 384, "");
+        static_assert(offsetof(gentity_s, flags) == 436, "");
 
         struct usercmd_s
         {
