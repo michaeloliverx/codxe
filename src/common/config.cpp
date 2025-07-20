@@ -4,6 +4,10 @@
 #define INVALID_FILE_ATTRIBUTES ((DWORD) - 1)
 #endif
 
+const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
+const char *MOD_DIR = "game:\\_codxe\\mods";
+const char *DUMP_DIR = "game:\\_codxe\\dump";
+
 bool DirectoryExists(const char *path)
 {
     DWORD attrs = GetFileAttributesA(path);
