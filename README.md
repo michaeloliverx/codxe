@@ -1,12 +1,10 @@
 # CoDxe
 
-## Overview
-
 **CoDxe** is an open-source modding environment for the **Xbox 360** versions of older Call of Duty games.
 
 It supports both physical Xbox 360 consoles and emulation via Xenia.
 
-### Requirements
+## Requirements
 
 To run CoDxe, you will need one of the following:
 
