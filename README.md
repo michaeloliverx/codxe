@@ -145,6 +145,7 @@ allow_game_relative_writes = true
 - Setup guides for JTAG/RGH/DEVKIT consoles
 - Xenia setup guide
 - xenia canary netplay
+- xenia canary install content (title updates, DLC, etc.)
 - Modding tutorials with example scripts
 - Template mod structure for each game
 
