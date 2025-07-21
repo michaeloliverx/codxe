@@ -20,6 +20,9 @@ namespace t4
         // Null-terminated array of client fields
         static auto client_fields = reinterpret_cast<client_fields_s *>(0x82019DD0);
 
+        const int ENTITY_TYPE_COUNT = 19;
+        static auto entityTypeNames = reinterpret_cast<const char **>(0x824B60C8);
+
         // Functions
         static auto BG_AddPredictableEventToPlayerstate = reinterpret_cast<void (*)(unsigned __int8 newEvent, unsigned __int8 eventParm, struct playerState_s *ps)>(0x820EFC08);
 

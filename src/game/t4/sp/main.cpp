@@ -1,4 +1,5 @@
 #include "components/g_client_fields.h"
+#include "components/g_scr_mover.h"
 #include "components/gsc.h"
 #include "components/test_module.h"
 #include "main.h"
@@ -20,6 +21,7 @@ namespace t4
         {
             DbgPrint("T4 SP: Registering modules\n");
             RegisterComponent(new g_client_fields());
+            RegisterComponent(new g_scr_mover());
             RegisterComponent(new GSC());
             RegisterComponent(new TestModule());
         }

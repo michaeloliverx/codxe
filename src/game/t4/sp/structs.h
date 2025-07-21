@@ -33,6 +33,29 @@ namespace t4
             KEY_INMENU = 0x800000,
         };
 
+        enum entityType_t : __int32
+        {
+            ET_GENERAL,
+            ET_PLAYER,
+            ET_PLAYER_CORPSE,
+            ET_ITEM,
+            ET_MISSILE,
+            ET_INVISIBLE,
+            ET_SCRIPTMOVER,
+            ET_SOUND_BLEND,
+            ET_FX,
+            ET_LOOP_FX,
+            ET_PRIMARY_LIGHT,
+            ET_MG42,
+            ET_PLANE,
+            ET_VEHICLE,
+            ET_VEHICLE_CORPSE,
+            ET_VEHICLE_COLLMAP,
+            ET_ACTOR,
+            ET_ACTOR_SPAWNER,
+            ET_ACTOR_CORPSE
+        };
+
         struct gclient_s
         {
             char pad_0[8780];
@@ -56,7 +79,9 @@ namespace t4
         {
             struct entityState_s
             {
-                char pad_0[168];
+                int number;
+                int eType;
+                char pad_0[160];
                 int index; // OFS: 168
                 char pad_00[108];
             } s;
@@ -80,16 +105,20 @@ namespace t4
                 int eventTime;
             } r;
 
-            gclient_s *client;   // OFS: 384 SIZE: 0x4
-            char pad_0000[48];   //
-            int flags;           // OFS: 436 SIZE: 0x4
-            char pad_00000[448]; //
+            gclient_s *client;          // OFS: 384 SIZE: 0x4
+            char pad_0[20];             //
+            unsigned __int16 classname; // OFS: 408 SIZE: 0x2
+            char pad_1[26];             //
+            int flags;                  // OFS: 436 SIZE: 0x4
+            char pad_2[448];            //
         };
         static_assert(sizeof(gentity_s) == 888, "");
         static_assert(offsetof(gentity_s, s.index) == 168, "");
+
         static_assert(offsetof(gentity_s, r.bmodel) == 281, "");
         static_assert(offsetof(gentity_s, r.contents) == 324, "");
         static_assert(offsetof(gentity_s, client) == 384, "");
+        static_assert(offsetof(gentity_s, classname) == 408, "");
         static_assert(offsetof(gentity_s, flags) == 436, "");
 
         struct usercmd_s
