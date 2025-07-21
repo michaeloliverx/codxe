@@ -123,13 +123,13 @@ Each entity is defined using a block of key-value pairs:
 
 The GSC VM has been extended with additional features to support enhanced modding. Each game has its own set of extensions, see below for details.
 
-#### IW4 SP
+#### Client Fields
 
-**New Built-in player fields**
-
-- `self.ufo` – Enables UFO mode, allowing the player to freely fly around the map.
-- `self.noclip` – Enables no-clip mode, letting the player pass through walls and geometry.
-- `self.god` – Enables God mode, making the player invulnerable to all damage.
+| Field         | Type   | Description                                                               | Supported in             |
+| ------------- | ------ | ------------------------------------------------------------------------- | ------------------------ |
+| `self.ufo`    | `bool` | Enables UFO mode, allowing the player to freely fly around the map.       | IW3 MP, T4 SP/MP, IW4 SP |
+| `self.noclip` | `bool` | Enables no-clip mode, letting the player pass through walls and geometry. | IW3 MP, T4 SP/MP, IW4 SP |
+| `self.god`    | `bool` | Enables God mode, making the player invulnerable to all damage.           | IW3 MP, T4 SP/MP, IW4 SP |
 
 ## Getting Started
 
