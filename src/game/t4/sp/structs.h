@@ -33,6 +33,29 @@ namespace t4
             KEY_INMENU = 0x800000,
         };
 
+        enum entityType_t : __int32
+        {
+            ET_GENERAL,
+            ET_PLAYER,
+            ET_PLAYER_CORPSE,
+            ET_ITEM,
+            ET_MISSILE,
+            ET_INVISIBLE,
+            ET_SCRIPTMOVER,
+            ET_SOUND_BLEND,
+            ET_FX,
+            ET_LOOP_FX,
+            ET_PRIMARY_LIGHT,
+            ET_MG42,
+            ET_PLANE,
+            ET_VEHICLE,
+            ET_VEHICLE_CORPSE,
+            ET_VEHICLE_COLLMAP,
+            ET_ACTOR,
+            ET_ACTOR_SPAWNER,
+            ET_ACTOR_CORPSE
+        };
+
         struct gclient_s
         {
             char pad_0[8780];
@@ -56,7 +79,9 @@ namespace t4
         {
             struct entityState_s
             {
-                char pad_0[168];
+                int number;
+                int eType;
+                char pad_0[160];
                 int index; // OFS: 168
                 char pad_00[108];
             } s;
@@ -80,16 +105,20 @@ namespace t4
                 int eventTime;
             } r;
 
-            gclient_s *client;   // OFS: 384 SIZE: 0x4
-            char pad_0000[48];   //
-            int flags;           // OFS: 436 SIZE: 0x4
-            char pad_00000[448]; //
+            gclient_s *client;          // OFS: 384 SIZE: 0x4
+            char pad_0[28];             //
+            unsigned __int16 classname; // OFS: 416 SIZE: 0x2
+            char pad_1[18];             //
+            int flags;                  // OFS: 436 SIZE: 0x4
+            char pad_2[448];            //
         };
         static_assert(sizeof(gentity_s) == 888, "");
         static_assert(offsetof(gentity_s, s.index) == 168, "");
+
         static_assert(offsetof(gentity_s, r.bmodel) == 281, "");
         static_assert(offsetof(gentity_s, r.contents) == 324, "");
         static_assert(offsetof(gentity_s, client) == 384, "");
+        static_assert(offsetof(gentity_s, classname) == 416, "");
         static_assert(offsetof(gentity_s, flags) == 436, "");
 
         struct usercmd_s
@@ -198,5 +227,55 @@ namespace t4
         };
         static_assert(offsetof(level_locals_t, clients) == 0x0, "");
         static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
+
+        struct __declspec(align(4)) cLeaf_t
+        {
+            unsigned __int16 firstCollAabbIndex;
+            unsigned __int16 collAabbCount;
+            int brushContents;
+            int terrainContents;
+            float mins[3];
+            float maxs[3];
+            int leafBrushNode;
+            __int16 cluster;
+        };
+        static_assert(sizeof(cLeaf_t) == 44, "");
+
+        struct cmodel_t
+        {
+            float mins[3];
+            float maxs[3];
+            float radius;
+            cLeaf_t leaf;
+        };
+        static_assert(sizeof(cmodel_t) == 72, "");
+        static_assert(offsetof(cmodel_t, mins) == 0x0, "");
+        static_assert(offsetof(cmodel_t, maxs) == 12, "");
+        static_assert(offsetof(cmodel_t, radius) == 24, "");
+        static_assert(offsetof(cmodel_t, leaf) == 28, "");
+
+        struct MapEnts
+        {
+            const char *name;   // OFS: 0x0 SIZE: 0x4
+            char *entityString; // OFS: 0x4 SIZE: 0x4
+            int numEntityChars; // OFS: 0x8 SIZE: 0x4
+        };
+        static_assert(sizeof(MapEnts) == 12, "");
+        static_assert(offsetof(MapEnts, name) == 0x0, "");
+        static_assert(offsetof(MapEnts, entityString) == 0x4, "");
+
+        struct clipMap_t
+        {
+            const char *name;
+            int isInUse;
+            char pad[140];
+            int numSubModels;
+            cmodel_t *cmodels;
+            char pad2[24];
+            MapEnts *mapEnts; // OFS: 180 SIZE: 0xC
+        };
+        static_assert(offsetof(clipMap_t, numSubModels) == 148, "");
+        static_assert(offsetof(clipMap_t, cmodels) == 152, "");
+        static_assert(offsetof(clipMap_t, mapEnts) == 180, "");
     }
 }

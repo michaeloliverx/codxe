@@ -103,6 +103,7 @@
       <ClCompile Include="src\game\t4\mp\components\test_module.cpp" />
       <ClCompile Include="src\game\t4\mp\components\ui.cpp" />
 
+      <ClCompile Include="src\game\t4\sp\components\g_scr_mover.cpp" />
       <ClCompile Include="src\game\t4\sp\components\g_client_fields.cpp" />
       <ClCompile Include="src\game\t4\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\t4\sp\components\test_module.cpp" />
@@ -152,6 +153,7 @@
       <ClInclude Include="src\game\t4\mp\components\test_module.h" />
       <ClInclude Include="src\game\t4\mp\components\ui.h" />
 
+      <ClInclude Include="src\game\t4\sp\components\g_scr_mover.h" />
       <ClInclude Include="src\game\t4\sp\components\g_client_fields.h" />
       <ClInclude Include="src\game\t4\sp\components\gsc.h" />
       <ClInclude Include="src\game\t4\sp\components\test_module.h" />

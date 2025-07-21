@@ -7,6 +7,7 @@ namespace t4
     namespace sp
     {
         // Data
+        static auto cm = reinterpret_cast<clipMap_t *>(0x831A0F00);
         static auto g_clients = reinterpret_cast<gclient_s *>(0x82ABAC00);
         static auto g_entities = reinterpret_cast<gentity_s *>(0x8293A280);
         static auto level = reinterpret_cast<level_locals_t *>(0x82AC3930);
@@ -20,9 +21,13 @@ namespace t4
         // Null-terminated array of client fields
         static auto client_fields = reinterpret_cast<client_fields_s *>(0x82019DD0);
 
+        const int ENTITY_TYPE_COUNT = 19;
+        static auto entityTypeNames = reinterpret_cast<const char **>(0x824B60C8);
+
         // Functions
         static auto BG_AddPredictableEventToPlayerstate = reinterpret_cast<void (*)(unsigned __int8 newEvent, unsigned __int8 eventParm, struct playerState_s *ps)>(0x820EFC08);
 
+        static auto CM_EntityString = reinterpret_cast<const char *(*)()>(0x82241C88);
         static auto CL_CmdButtons = reinterpret_cast<void (*)(int a1, usercmd_s *a2)>(0x822E38F8);
 
         static auto ClientScr_ReadOnly = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC6F8);
