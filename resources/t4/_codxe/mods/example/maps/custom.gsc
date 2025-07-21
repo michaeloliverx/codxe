@@ -134,11 +134,11 @@ toggle_godmode()
     if (self.god)
     {
         self.god = false;
-        iprintln("godmode OFF");
+        self iprintln("godmode OFF");
     }
     else
     {
         self.god = true;
-        iprintln("godmode ON");
+        self iprintln("godmode ON");
     }
 }
