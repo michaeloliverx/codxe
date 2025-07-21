@@ -106,9 +106,9 @@ namespace t4
             } r;
 
             gclient_s *client;          // OFS: 384 SIZE: 0x4
-            char pad_0[20];             //
-            unsigned __int16 classname; // OFS: 408 SIZE: 0x2
-            char pad_1[26];             //
+            char pad_0[28];             //
+            unsigned __int16 classname; // OFS: 416 SIZE: 0x2
+            char pad_1[18];             //
             int flags;                  // OFS: 436 SIZE: 0x4
             char pad_2[448];            //
         };
@@ -118,7 +118,7 @@ namespace t4
         static_assert(offsetof(gentity_s, r.bmodel) == 281, "");
         static_assert(offsetof(gentity_s, r.contents) == 324, "");
         static_assert(offsetof(gentity_s, client) == 384, "");
-        static_assert(offsetof(gentity_s, classname) == 408, "");
+        static_assert(offsetof(gentity_s, classname) == 416, "");
         static_assert(offsetof(gentity_s, flags) == 436, "");
 
         struct usercmd_s
