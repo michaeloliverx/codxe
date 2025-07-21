@@ -46,15 +46,49 @@ namespace t4
         static_assert(offsetof(gclient_s, buttons) == 8780, "");
         static_assert(offsetof(gclient_s, buttonsSinceLastFrame) == 8792, "");
 
+        struct EntHandle
+        {
+            unsigned __int16 number;
+            unsigned __int16 infoIndex;
+        };
+
         struct gentity_s
         {
-            char pad_0[384];   //
-            gclient_s *client; // OFS: 384 SIZE: 0x4
-            char pad_1[48];    //
-            int flags;         // OFS: 436 SIZE: 0x4
-            char pad_2[448];   //
+            struct entityState_s
+            {
+                char pad_0[168];
+                int index; // OFS: 168
+                char pad_00[108];
+            } s;
+
+            struct entityShared_t
+            {
+                unsigned __int8 linked;
+                unsigned __int8 bmodel;
+                unsigned __int8 svFlags;
+                int clientMask[2];
+                unsigned __int8 inuse;
+                int broadcastTime;
+                float mins[3];
+                float maxs[3];
+                int contents;
+                float absmin[3];
+                float absmax[3];
+                float currentOrigin[3];
+                float currentAngles[3];
+                EntHandle ownerNum;
+                int eventTime;
+            } r;
+
+            gclient_s *client;   // OFS: 384 SIZE: 0x4
+            char pad_0000[48];   //
+            int flags;           // OFS: 436 SIZE: 0x4
+            char pad_00000[448]; //
         };
         static_assert(sizeof(gentity_s) == 888, "");
+        static_assert(offsetof(gentity_s, s.index) == 168, "");
+        static_assert(offsetof(gentity_s, r.bmodel) == 281, "");
+        static_assert(offsetof(gentity_s, r.contents) == 324, "");
         static_assert(offsetof(gentity_s, client) == 384, "");
         static_assert(offsetof(gentity_s, flags) == 436, "");
 
@@ -117,5 +151,52 @@ namespace t4
 
         typedef void (*BuiltinMethod)(scr_entref_t entref);
 
+        struct SpawnFuncEntry
+        {
+            const char *classname;
+            void (*callback)(gentity_s *);
+        };
+
+        enum fieldtype_t : __int32
+        {
+            F_INT = 0x0,
+            F_SHORT = 0x1,
+            F_BYTE = 0x2,
+            F_FLOAT = 0x3,
+            F_LSTRING = 0x4,
+            F_STRING = 0x5,
+            F_VECTOR = 0x6,
+            F_ENTITY = 0x7,
+            F_ENTHANDLE = 0x8,
+            F_ACTOR = 0x9,
+            F_SENTIENT = 0xA,
+            F_SENTIENTHANDLE = 0xB,
+            F_CLIENT = 0xC,
+            F_PATHNODE = 0xD,
+            F_VECTORHACK = 0xE,
+            F_MODEL = 0xF,
+            F_OBJECT = 0x10,
+            F_ACTORGROUP = 0x11,
+            F_BITFLAG = 0x12,
+        };
+
+        struct client_fields_s
+        {
+            const char *name;
+            int ofs;
+            fieldtype_t type;
+            unsigned int whichbits;
+            void (*setter)(gclient_s *pSelf, const client_fields_s *pField);
+            void (*getter)(gclient_s *pSelf, const client_fields_s *pField);
+        };
+
+        struct level_locals_t
+        {
+            gclient_s *clients;
+            gentity_s *gentities;
+            int num_entities;
+        };
+        static_assert(offsetof(level_locals_t, clients) == 0x0, "");
+        static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
     }
 }

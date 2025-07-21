@@ -7,69 +7,6 @@ namespace t4
     {
         const int CLIENT_FIELD_MASK = 0x6000;
 
-        enum fieldtype_t : __int32
-        {
-            F_INT = 0x0,
-            F_SHORT = 0x1,
-            F_BYTE = 0x2,
-            F_FLOAT = 0x3,
-            F_LSTRING = 0x4,
-            F_STRING = 0x5,
-            F_VECTOR = 0x6,
-            F_ENTITY = 0x7,
-            F_ENTHANDLE = 0x8,
-            F_ACTOR = 0x9,
-            F_SENTIENT = 0xA,
-            F_SENTIENTHANDLE = 0xB,
-            F_CLIENT = 0xC,
-            F_PATHNODE = 0xD,
-            F_VECTORHACK = 0xE,
-            F_MODEL = 0xF,
-            F_OBJECT = 0x10,
-            F_ACTORGROUP = 0x11,
-            F_BITFLAG = 0x12,
-        };
-
-        struct client_fields_s
-        {
-            const char *name;
-            int ofs;
-            fieldtype_t type;
-            unsigned int whichbits;
-            void (*setter)(gclient_s *pSelf, const client_fields_s *pField);
-            void (*getter)(gclient_s *pSelf, const client_fields_s *pField);
-        };
-
-        static auto client_fields = reinterpret_cast<client_fields_s *>(0x82019DD0);
-
-        static auto ClientScr_ReadOnly = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC6F8);
-        static auto ClientScr_GetName = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC730);
-        static auto ClientScr_SetScore = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC938);
-        static auto ClientScr_SetSessionState = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC7A0);
-        static auto ClientScr_GetSessionState = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC8B0);
-        static auto ClientScr_SetStatusIcon = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCA40);
-        static auto ClientScr_GetStatusIcon = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCA80);
-        static auto ClientScr_SetSpectatorClient = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC9D8);
-        static auto ClientScr_SetArchiveTime = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCBB0);
-        static auto ClientScr_GetArchiveTime = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCC00);
-        static auto ClientScr_SetPSOffsetTime = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCC48);
-        static auto ClientScr_GetPSOffsetTime = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCC80);
-        static auto ClientScr_SetHeadIcon = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCAD0);
-        static auto ClientScr_GetHeadIcon = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCB30);
-
-        static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index, scriptInstance_t inst)>(0x823479F8);
-
-        struct level_locals_t
-        {
-            gclient_s *clients;
-            gentity_s *gentities;
-        };
-        static_assert(offsetof(level_locals_t, clients) == 0x0, "");
-        static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
-
-        static auto level = reinterpret_cast<level_locals_t *>(0x82AC3930);
-        static auto g_clients = reinterpret_cast<gclient_s *>(0x82ABAC00);
-
         void ClientScr_SetGod(gclient_s *pSelf, const client_fields_s *field)
         {
             auto ent = &g_entities[pSelf - g_clients];
@@ -122,15 +59,6 @@ namespace t4
                 {"god", 0, F_INT, 0x0, ClientScr_SetGod, ClientScr_GetGod},
                 {NULL, 0, F_INT, 0x0, NULL, NULL}};
 
-        static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x821BCC90);
-        static auto Scr_AddClassField = reinterpret_cast<void (*)(unsigned int classnum, const char *name, unsigned __int16 offset, scriptInstance_t inst)>(0x8233DE38);
-
-        static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst)>(0x82212D38);
-        static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst, unsigned int whichbits)>(0x82212FA8);
-
-        static auto Scr_SetClientField = reinterpret_cast<void (*)(gclient_s *client, int offset, scriptInstance_t inst)>(0x821BCCF0);
-        static auto Scr_GetObjectField = reinterpret_cast<void (*)(unsigned int classnum, int entnum, int offset, scriptInstance_t inst)>(0x82213670);
-
         Detour GScr_AddFieldsForClient_Detour;
 
         void GScr_AddFieldsForClient_Hook()
@@ -182,44 +110,8 @@ namespace t4
             }
         }
 
-        void DebugPrintClientFields()
-        {
-            DbgPrint("=== Client Fields ===\n");
-
-            // Loop until we hit a null name (typical terminator for such arrays)
-            for (int i = 0; client_fields[i].name != nullptr; i++)
-            {
-                const auto &field = client_fields[i];
-                DbgPrint("[%d] Field: %s\n", i, field.name);
-                DbgPrint("    Offset: 0x%X (%d)\n", field.ofs, field.ofs);
-                DbgPrint("    Type: 0x%X\n", field.type);
-                DbgPrint("    WhichBits: 0x%X\n", field.whichbits);
-                DbgPrint("    Setter: 0x%p\n", field.setter);
-                DbgPrint("    Getter: 0x%p\n", field.getter);
-                DbgPrint("\n");
-            }
-
-            DbgPrint("=== End of Client Fields ===\n");
-        }
-
-        static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int numGEntities, int sizeofGEntity_t, playerState_s *clients, int sizeofGameClient)>(0x8225CCA8);
-        Detour SV_LocateGameData_Detour;
-        void SV_LocateGameData_Hook(gentity_s *gEnts, int numGEntities, int sizeofGEntity_t, playerState_s *clients, int sizeofGameClient)
-        {
-            DbgPrint("SV_LocateGameData_Hook called with:\n");
-            DbgPrint("gEnts: 0x%p, numGEntities: %d, sizeofGEntity_t: %d\n", gEnts, numGEntities, sizeofGEntity_t);
-            DbgPrint("clients: 0x%p, sizeofGameClient: %d\n", clients, sizeofGameClient);
-
-            // Call the original function
-            SV_LocateGameData_Detour.GetOriginal<decltype(SV_LocateGameData)>()(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
-        }
-
         g_client_fields::g_client_fields()
         {
-
-            SV_LocateGameData_Detour = Detour(SV_LocateGameData, SV_LocateGameData_Hook);
-            // SV_LocateGameData_Detour.Install();
-
             GScr_AddFieldsForClient_Detour = Detour(GScr_AddFieldsForClient, GScr_AddFieldsForClient_Hook);
             GScr_AddFieldsForClient_Detour.Install();
 
