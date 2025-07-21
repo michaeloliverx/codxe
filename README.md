@@ -4,6 +4,8 @@
 
 It supports both physical Xbox 360 consoles and emulation via Xenia.
 
+WHY? As a fun project to explore modding the CoD games I grew up with, and to provide a more flexible and powerful modding experience.
+
 ## Requirements
 
 To run CoDxe, you will need one of the following:
@@ -27,7 +29,7 @@ To run CoDxe, you will need one of the following:
 | Feature                   | IW3 SP             | IW3 MP             | T4 SP              | T4 MP              | IW4 SP             |
 | ------------------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ |
 | Raw `.gsc` loader         | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Raw map ents loader       | :white_check_mark: | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: |
+| Raw map ents loader       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Raw `.dds` texture loader | :x:                | :white_check_mark: | :x:                | :x:                | :x:                |
 
 ## Features
