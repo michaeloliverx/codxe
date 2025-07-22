@@ -117,6 +117,7 @@
       <ClCompile Include="src\xboxkrnl.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
 
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
