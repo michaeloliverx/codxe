@@ -10,8 +10,7 @@ namespace t4
         {
             static auto consoleFont = R_RegisterFont("fonts/consoleFont", -1);
 
-            const char *text = "CoDxe - IW4 SP"
-                               " " __DATE__ " " __TIME__;
+            const char *text = branding::GetBrandingString(branding::GAME_T4, branding::MODE_SP);
 
             const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f}; // RGBA white color
 

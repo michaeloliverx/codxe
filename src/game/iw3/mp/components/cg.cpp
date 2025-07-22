@@ -43,18 +43,12 @@ namespace iw3
 
         void DrawBranding()
         {
-            const char *branding = "IW3xe";
-            const char *build = __DATE__ " " __TIME__;
-            char brandingWithBuild[256];
+            const char *brandingWithBuild = branding::GetBrandingString(branding::GAME_IW3, branding::MODE_MP);
 
-            // Combine branding and build number
-            _snprintf(brandingWithBuild, sizeof(brandingWithBuild), "%s (Build %d)", branding, BUILD_NUMBER);
-
-            static Font_s *font = (Font_s *)R_RegisterFont("fonts/consoleFont");
+            static Font_s *font = R_RegisterFont("fonts/consoleFont");
             float color[4] = {1.0, 1.0, 1.0, 0.4};
 
             R_AddCmdDrawText(brandingWithBuild, 256, font, 10, 20, 1.0, 1.0, 0.0, color, 0);
-            R_AddCmdDrawText(build, 256, font, 10, 40, 1.0, 1.0, 0.0, color, 0);
         }
 
         Detour UI_DrawBuildNumber_Detour;

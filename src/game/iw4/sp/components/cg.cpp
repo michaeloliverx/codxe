@@ -10,12 +10,11 @@ namespace iw4
         {
             auto const placement = ScrPlace_GetUnsafeFullPlacement();
 
-            const char *text = "CoDxe - IW4 SP"
-                               " " __DATE__ " " __TIME__;
+            const char *text = branding::GetBrandingString(branding::GAME_IW4, branding::MODE_SP);
 
             const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f}; // RGBA white color
 
-            const float x = -20.0f;
+            const float x = -100.0f;
             const float y = 10.0f;
 
             UI_DrawText(placement, text, 64, sharedUiInfo->assets.consoleFont, x, y, 0, 0, 0.2, color_white_rgba, 0);

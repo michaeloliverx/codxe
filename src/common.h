@@ -26,6 +26,7 @@
 #include "xboxkrnl.h"
 
 // Common includes
+#include "common/branding.h"
 #include "common/config.h"
 
 // IW3-specific includes
