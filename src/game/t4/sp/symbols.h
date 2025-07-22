@@ -24,6 +24,8 @@ namespace t4
         const int ENTITY_TYPE_COUNT = 19;
         static auto entityTypeNames = reinterpret_cast<const char **>(0x824B60C8);
 
+        static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x8253F2F0);
+
         // Functions
         static auto BG_AddPredictableEventToPlayerstate = reinterpret_cast<void (*)(unsigned __int8 newEvent, unsigned __int8 eventParm, struct playerState_s *ps)>(0x820EFC08);
 
@@ -77,6 +79,8 @@ namespace t4
         static auto SV_UnlinkEntity = reinterpret_cast<void (*)(gentity_s *gEnt)>(0x8225DB50);
         static auto SV_SetBrushModel = reinterpret_cast<void (*)(gentity_s *ent)>(0x8225CC20);
         static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int numGEntities, int sizeofGEntity_t, playerState_s *clients, int sizeofGameClient)>(0x8225CCA8);
+
+        static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82165290);
 
         static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x82294218);
 
