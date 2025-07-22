@@ -1,3 +1,4 @@
+#include "components/cg.h"
 #include "components/clipmap.h"
 #include "components/g_client_fields.h"
 #include "components/g_scr_mover.h"
@@ -21,6 +22,7 @@ namespace t4
         void init()
         {
             DbgPrint("T4 SP: Registering modules\n");
+            RegisterComponent(new cg());
             RegisterComponent(new clipmap());
             RegisterComponent(new g_client_fields());
             RegisterComponent(new g_scr_mover());
