@@ -180,6 +180,13 @@ namespace t4
 
         typedef void (*BuiltinMethod)(scr_entref_t entref);
 
+        struct BuiltinMethodDef
+        {
+            const char *actionString;
+            void (*actionFunc)(scr_entref_t);
+            int type;
+        };
+
         struct SpawnFuncEntry
         {
             const char *classname;
