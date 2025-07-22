@@ -32,6 +32,8 @@ namespace t4
         static auto CM_EntityString = reinterpret_cast<const char *(*)()>(0x82241C88);
         static auto CL_CmdButtons = reinterpret_cast<void (*)(int a1, usercmd_s *a2)>(0x822E38F8);
 
+        static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8224D8E0);
+
         static auto ClientScr_ReadOnly = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC6F8);
         static auto ClientScr_GetName = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC730);
         static auto ClientScr_SetScore = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC938);
@@ -47,7 +49,10 @@ namespace t4
         static auto ClientScr_SetHeadIcon = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCAD0);
         static auto ClientScr_GetHeadIcon = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BCB30);
 
+        static auto Com_Printf = reinterpret_cast<void (*)(int channel, const char *fmt, ...)>(0x8224F7A0);
         static auto Com_PrintError = reinterpret_cast<void (*)(int channel, const char *fmt, ...)>(0x8224F8C0);
+        static auto Com_PrintMessage = reinterpret_cast<void (*)(int channel, const char *msg, int error)>(0x8224F804);
+        static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)>(0x8214EA60);
 
         static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822862F8);
 
@@ -81,6 +86,34 @@ namespace t4
         static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int numGEntities, int sizeofGEntity_t, playerState_s *clients, int sizeofGameClient)>(0x8225CCA8);
 
         static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82165290);
+
+        static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x8226B7D0);
+
+        struct Font_s;
+
+        struct ScreenPlacement;
+        static auto scrPlaceFullUnsafe = reinterpret_cast<ScreenPlacement *>(0x8253F1D0);
+
+        static auto UI_DrawText = reinterpret_cast<void (*)(const ScreenPlacement *scrPlace,
+                                                            const char *text,
+                                                            int maxChars,
+                                                            Font_s *font,
+                                                            float x,
+                                                            float y,
+                                                            int horzAlign,
+                                                            int vertAlign,
+                                                            float scale,
+                                                            const float *color,
+                                                            int style)>(0x82266F28);
+
+        struct XAssetType;
+        struct XAssetHeader;
+
+        static auto DB_FindXAssetHeader = reinterpret_cast<XAssetHeader (*)(XAssetType type, const char *name, bool errorIfMissing, int waitTime)>(0x8216B688);
+
+        // imageTrack is unused internally, it seems to be remnant from `useFastFile` dvar
+        // dev build could load raw font objects
+        static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name, int imageTrack)>(0x8242B460);
 
         static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x82294218);
 
