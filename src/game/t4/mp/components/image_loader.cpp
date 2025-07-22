@@ -371,7 +371,7 @@ namespace t4
                 blockSize = 16; // 16 bytes per 4x4 block (two 8-byte channels)
                 break;
             default:
-                xbox::DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
+                DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
                 return 0;
             }
 
@@ -417,14 +417,14 @@ namespace t4
 
                 if (ddsMipLevelSize == 0)
                 {
-                    xbox::DbgPrint("  [ERROR] Unsupported format %d for mip level %u! Skipping...\n", image->texture.basemap->Format.DataFormat, mipLevel);
+                    DbgPrint("  [ERROR] Unsupported format %d for mip level %u! Skipping...\n", image->texture.basemap->Format.DataFormat, mipLevel);
                     break;
                 }
 
                 // Ensure we're not reading out of bounds
                 if (ddsOffset + ddsMipLevelSize > ddsImage.data.size())
                 {
-                    xbox::DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
+                    DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
                     break;
                 }
 
@@ -432,7 +432,7 @@ namespace t4
 
                 GPUEndianSwapTexture(levelData, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
-                xbox::DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
+                DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
 
                 UINT address = baseAddress;
                 if (mipLevel > 0)
@@ -441,7 +441,7 @@ namespace t4
                     address = mipAddress + mipLevelOffset;
                 }
 
-                xbox::DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, ddsMipLevelSize);
+                DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, ddsMipLevelSize);
 
                 // // Write the base level
                 XGTileTextureLevel(

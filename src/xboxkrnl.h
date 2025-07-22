@@ -20,8 +20,6 @@ namespace xbox
 
     extern "C"
     {
-        void DbgPrint(const char *format, ...);
-
         uint32_t ExCreateThread(
             HANDLE *pHandle,
             uint32_t stackSize,

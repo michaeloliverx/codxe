@@ -49,7 +49,7 @@ namespace filesystem
     {
         if (!file_path || !data || data_size == 0)
         {
-            xbox::DbgPrint("write_file_to_disk: Invalid parameters!\n");
+            DbgPrint("write_file_to_disk: Invalid parameters!\n");
             return 0;
         }
 
@@ -69,12 +69,12 @@ namespace filesystem
         {
             fwrite(data, 1, data_size, file);
             fclose(file);
-            xbox::DbgPrint("Successfully wrote file: %s\n", file_path);
+            DbgPrint("Successfully wrote file: %s\n", file_path);
             return 1;
         }
         else
         {
-            xbox::DbgPrint("Failed to write file: %s\n", file_path);
+            DbgPrint("Failed to write file: %s\n", file_path);
             return 0;
         }
     }
@@ -92,7 +92,7 @@ namespace filesystem
         std::ifstream file(file_path, std::ios::binary);
         if (!file)
         {
-            xbox::DbgPrint("read_file_to_string: Failed to open file: %s\n", file_path.c_str());
+            DbgPrint("read_file_to_string: Failed to open file: %s\n", file_path.c_str());
             return "";
         }
 
@@ -109,7 +109,7 @@ namespace filesystem
 
         if (hFind == INVALID_HANDLE_VALUE)
         {
-            xbox::DbgPrint("ERROR: Directory '%s' does not exist or cannot be accessed.\n", directory.c_str());
+            DbgPrint("ERROR: Directory '%s' does not exist or cannot be accessed.\n", directory.c_str());
             return filenames; // Return empty vector
         }
 

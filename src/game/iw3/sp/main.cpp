@@ -58,14 +58,14 @@ namespace iw3
         void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)
         {
             CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth, flags);
-            xbox::DbgPrint("CL_ConsolePrint txt=%s \n", txt);
+            DbgPrint("CL_ConsolePrint txt=%s \n", txt);
         }
 
         Detour CL_GamepadButtonEvent_Detour;
 
         void CL_GamepadButtonEvent_Hook(int localClientNum, int controllerIndex, int key, int down, unsigned int time)
         {
-            xbox::DbgPrint("CL_GamepadButtonEvent localClientNum=%d controllerIndex=%d key=%d down=%d time=%d\n", localClientNum, controllerIndex, key, down, time);
+            DbgPrint("CL_GamepadButtonEvent localClientNum=%d controllerIndex=%d key=%d down=%d time=%d\n", localClientNum, controllerIndex, key, down, time);
             CL_GamepadButtonEvent_Detour.GetOriginal<decltype(CL_GamepadButtonEvent)>()(localClientNum, controllerIndex, key, down, time);
 
             if (key == K_BUTTON_RSTICK && down)
@@ -74,12 +74,12 @@ namespace iw3
                 auto result = ShowKeyboard(L"Title", L"Description", L"Default Text", value, 100, 0);
                 if (result == ERROR_SUCCESS)
                 {
-                    xbox::DbgPrint("ShowKeyboard result: %s\n", value.c_str());
+                    DbgPrint("ShowKeyboard result: %s\n", value.c_str());
                     Cbuf_AddText(0, value.c_str());
                 }
                 else
                 {
-                    xbox::DbgPrint("ShowKeyboard cancelled.\n");
+                    DbgPrint("ShowKeyboard cancelled.\n");
                 }
             }
         }
@@ -91,7 +91,7 @@ namespace iw3
             // TODO: don't write null byte to file
             // and add null byte to entityString when reading from file
 
-            xbox::DbgPrint("Load_MapEntsPtr_Hook\n");
+            DbgPrint("Load_MapEntsPtr_Hook\n");
 
             // TODO: write comment what this is ***
             // Get pointer to pointer stored at 0x82475914
@@ -121,7 +121,7 @@ namespace iw3
                 // If the file exists, replace entityString
                 if (filesystem::file_exists(raw_file_path))
                 {
-                    xbox::DbgPrint("Found entity file: %s\n", raw_file_path.c_str());
+                    DbgPrint("Found entity file: %s\n", raw_file_path.c_str());
                     std::string new_entity_string = filesystem::read_file_to_string(raw_file_path);
                     if (!new_entity_string.empty())
                     {
@@ -133,18 +133,18 @@ namespace iw3
                         {
                             memcpy(new_memory, new_entity_string.c_str(), new_size); // Copy with null terminator
                             mapEnts->entityString = new_memory;
-                            xbox::DbgPrint("Replaced entityString from file: %s\n", raw_file_path.c_str());
+                            DbgPrint("Replaced entityString from file: %s\n", raw_file_path.c_str());
                         }
                         else
                         {
-                            xbox::DbgPrint("Failed to allocate memory for entityString replacement.\n");
+                            DbgPrint("Failed to allocate memory for entityString replacement.\n");
                         }
                     }
                 }
             }
             else
             {
-                xbox::DbgPrint("Hooked Load_MapEntsPtr: varMapEntsPtr is NULL or invalid.\n");
+                DbgPrint("Hooked Load_MapEntsPtr: varMapEntsPtr is NULL or invalid.\n");
             }
         }
 
@@ -152,14 +152,14 @@ namespace iw3
 
         char *Scr_ReadFile_FastFile_Hook(const char *filename, const char *extFilename, const char *codePos, bool archive)
         {
-            xbox::DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
+            DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
 
             std::string raw_file_path = "game:\\raw\\";
             raw_file_path += extFilename;
             std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
             if (filesystem::file_exists(raw_file_path))
             {
-                xbox::DbgPrint("Found raw file: %s\n", raw_file_path.c_str());
+                DbgPrint("Found raw file: %s\n", raw_file_path.c_str());
                 // return ReadFileContents(raw_file_path);
                 std::string new_contents = filesystem::read_file_to_string(raw_file_path);
                 if (!new_contents.empty())
@@ -173,12 +173,12 @@ namespace iw3
                     {
                         memcpy(new_memory, new_contents.c_str(), new_size); // Copy with null terminator
 
-                        xbox::DbgPrint("Replaced contents from file: %s\n", raw_file_path.c_str());
+                        DbgPrint("Replaced contents from file: %s\n", raw_file_path.c_str());
                         return new_memory;
                     }
                     else
                     {
-                        xbox::DbgPrint("Failed to allocate memory for contents replacement.\n");
+                        DbgPrint("Failed to allocate memory for contents replacement.\n");
                     }
                 }
             }
@@ -237,7 +237,7 @@ namespace iw3
 
         void init()
         {
-            xbox::DbgPrint("Initializing SP\n");
+            DbgPrint("Initializing SP\n");
 
             CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
             CL_ConsolePrint_Detour.Install();

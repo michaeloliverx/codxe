@@ -47,7 +47,7 @@ bool ShowKeyboardAsync(
     // If there's already an active keyboard request, don't allow another one
     if (g_keyboardRequest.isActive)
     {
-        xbox::DbgPrint("Keyboard UI is already active, ignoring request\n");
+        DbgPrint("Keyboard UI is already active, ignoring request\n");
         return false;
     }
 
@@ -82,7 +82,7 @@ bool ShowKeyboardAsync(
     if (FAILED(hr))
     {
         // Handle error
-        xbox::DbgPrint("Failed to show keyboard UI: 0x%08X\n", hr);
+        DbgPrint("Failed to show keyboard UI: 0x%08X\n", hr);
         delete[] g_keyboardRequest.resultText;
         g_keyboardRequest.resultText = nullptr;
         return false;
@@ -90,7 +90,7 @@ bool ShowKeyboardAsync(
 
     // Mark as active
     g_keyboardRequest.isActive = true;
-    xbox::DbgPrint("Keyboard UI requested, continuing with game loop...\n");
+    DbgPrint("Keyboard UI requested, continuing with game loop...\n");
     return true;
 }
 
@@ -109,7 +109,7 @@ void CheckKeyboardCompletion()
         DWORD result;
         XGetOverlappedResult(&g_keyboardRequest.overlapped, &result, TRUE);
 
-        xbox::DbgPrint("Keyboard operation completed with result: 0x%08X\n", result);
+        DbgPrint("Keyboard operation completed with result: 0x%08X\n", result);
 
         // Operation completed
         bool success = (result == ERROR_SUCCESS);
@@ -119,12 +119,12 @@ void CheckKeyboardCompletion()
         {
             if (success)
             {
-                xbox::DbgPrint("Keyboard text entry successful\n");
+                DbgPrint("Keyboard text entry successful\n");
                 g_keyboardRequest.callback(true, g_keyboardRequest.resultText);
             }
             else
             {
-                xbox::DbgPrint("Keyboard operation failed or canceled\n");
+                DbgPrint("Keyboard operation failed or canceled\n");
                 g_keyboardRequest.callback(false, nullptr);
             }
         }
@@ -261,7 +261,7 @@ DDSImage ReadDDSFile(const std::string &filepath)
 
     if (!file.is_open())
     {
-        xbox::DbgPrint("ERROR: Unable to open file: %s\n", filepath.c_str());
+        DbgPrint("ERROR: Unable to open file: %s\n", filepath.c_str());
         return ddsImage; // Return empty DDSImage
     }
 
@@ -273,7 +273,7 @@ DDSImage ReadDDSFile(const std::string &filepath)
 
     if (magicSwapped != 0x20534444) // 'DDS ' in big-endian
     {
-        xbox::DbgPrint("ERROR: Invalid DDS file: %s\n", filepath.c_str());
+        DbgPrint("ERROR: Invalid DDS file: %s\n", filepath.c_str());
         file.close();
         return ddsImage;
     }
@@ -288,7 +288,7 @@ DDSImage ReadDDSFile(const std::string &filepath)
     // Ensure fileSize is valid before proceeding
     if (fileSize == std::streampos(-1))
     {
-        xbox::DbgPrint("ERROR: Failed to determine file size.\n");
+        DbgPrint("ERROR: Failed to determine file size.\n");
         file.close();
         return ddsImage;
     }
@@ -306,10 +306,10 @@ DDSImage ReadDDSFile(const std::string &filepath)
     file.close();
 
     // Debug output
-    xbox::DbgPrint("INFO: DDS file '%s' loaded successfully.\n", filepath.c_str());
-    xbox::DbgPrint("      Resolution: %ux%u\n", ddsImage.header.width, ddsImage.header.height);
-    xbox::DbgPrint("      MipMaps: %u\n", ddsImage.header.mipMapCount);
-    xbox::DbgPrint("      Data Size: %u bytes\n", static_cast<unsigned int>(dataSize));
+    DbgPrint("INFO: DDS file '%s' loaded successfully.\n", filepath.c_str());
+    DbgPrint("      Resolution: %ux%u\n", ddsImage.header.width, ddsImage.header.height);
+    DbgPrint("      MipMaps: %u\n", ddsImage.header.mipMapCount);
+    DbgPrint("      Data Size: %u bytes\n", static_cast<unsigned int>(dataSize));
 
     return ddsImage;
 }
@@ -324,7 +324,7 @@ namespace iw3
         void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)
         {
             CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth, flags);
-            xbox::DbgPrint("CL_ConsolePrint txt=%s \n", txt);
+            DbgPrint("CL_ConsolePrint txt=%s \n", txt);
         }
 
         void Cmd_cmdinput_f()
@@ -355,13 +355,13 @@ namespace iw3
                     }
                     else
                     {
-                        xbox::DbgPrint("Keyboard operation failed or was canceled\n");
+                        DbgPrint("Keyboard operation failed or was canceled\n");
                     }
                 });
 
             if (!success)
             {
-                xbox::DbgPrint("Failed to open keyboard UI\n");
+                DbgPrint("Failed to open keyboard UI\n");
             }
         }
 
@@ -388,7 +388,7 @@ namespace iw3
             // TODO: don't write null byte to file
             // and add null byte to entityString when reading from file
 
-            xbox::DbgPrint("Load_MapEntsPtr_Hook\n");
+            DbgPrint("Load_MapEntsPtr_Hook\n");
 
             // TODO: write comment what this is ***
             // Get pointer to pointer stored at 0x82475914
@@ -418,7 +418,7 @@ namespace iw3
                 // If the file exists, replace entityString
                 if (filesystem::file_exists(raw_file_path))
                 {
-                    xbox::DbgPrint("Found entity file: %s\n", raw_file_path.c_str());
+                    DbgPrint("Found entity file: %s\n", raw_file_path.c_str());
                     std::string new_entity_string = filesystem::read_file_to_string(raw_file_path);
                     if (!new_entity_string.empty())
                     {
@@ -436,18 +436,18 @@ namespace iw3
                             // // Update numEntityChars
                             // mapEnts->numEntityChars = static_cast<int>(new_entity_string.size());	// unnecessary
 
-                            xbox::DbgPrint("Replaced entityString from file: %s\n", raw_file_path.c_str());
+                            DbgPrint("Replaced entityString from file: %s\n", raw_file_path.c_str());
                         }
                         else
                         {
-                            xbox::DbgPrint("Failed to allocate memory for entityString replacement.\n");
+                            DbgPrint("Failed to allocate memory for entityString replacement.\n");
                         }
                     }
                 }
             }
             else
             {
-                xbox::DbgPrint("Hooked Load_MapEntsPtr: varMapEntsPtr is NULL or invalid.\n");
+                DbgPrint("Hooked Load_MapEntsPtr: varMapEntsPtr is NULL or invalid.\n");
             }
         }
 
@@ -546,14 +546,14 @@ namespace iw3
 
         char *Scr_ReadFile_FastFile_Hook(const char *filename, const char *extFilename, const char *codePos, bool archive)
         {
-            xbox::DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
+            DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
 
             std::string raw_file_path = "game:\\raw\\";
             raw_file_path += extFilename;
             std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
             if (filesystem::file_exists(raw_file_path))
             {
-                xbox::DbgPrint("Found raw file: %s\n", raw_file_path.c_str());
+                DbgPrint("Found raw file: %s\n", raw_file_path.c_str());
                 // return ReadFileContents(raw_file_path);
                 std::string new_contents = filesystem::read_file_to_string(raw_file_path);
                 if (!new_contents.empty())
@@ -567,12 +567,12 @@ namespace iw3
                     {
                         memcpy(new_memory, new_contents.c_str(), new_size); // Copy with null terminator
 
-                        xbox::DbgPrint("Replaced contents from file: %s\n", raw_file_path.c_str());
+                        DbgPrint("Replaced contents from file: %s\n", raw_file_path.c_str());
                         return new_memory;
                     }
                     else
                     {
-                        xbox::DbgPrint("Failed to allocate memory for contents replacement.\n");
+                        DbgPrint("Failed to allocate memory for contents replacement.\n");
                     }
                 }
             }
@@ -849,7 +849,7 @@ namespace iw3
                     return;
                 }
 
-                xbox::DbgPrint("Image_Dump: rowPitch=%d\n", rowPitch);
+                DbgPrint("Image_Dump: rowPitch=%d\n", rowPitch);
 
                 // Call XGUntileTextureLevel to convert the tiled texture to linear format
                 XGUntileTextureLevel(
@@ -897,7 +897,7 @@ namespace iw3
             for (unsigned int i = 0; i < imageList.count; i++)
             {
                 auto image = imageList.image[i];
-                // xbox::DbgPrint(
+                // DbgPrint(
                 //     "Image %d: Name='%s', Type=%d, Dimensions=%dx%dx%d, MipLevels=%d, Format=%d, CardMemory=%d bytes, BaseSize=%d, Streaming=%d, DelayLoad=%d, Semantic=%d, StreamSlot=%d\n",
                 //     i,
                 //     image->name,
@@ -1120,7 +1120,7 @@ namespace iw3
                 blockSize = 16; // 16 bytes per 4x4 block (two 8-byte channels)
                 break;
             default:
-                xbox::DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
+                DbgPrint("CalculateMipLevelSize: Unsupported format %d\n", format);
                 return 0;
             }
 
@@ -1166,14 +1166,14 @@ namespace iw3
 
                 if (ddsMipLevelSize == 0)
                 {
-                    xbox::DbgPrint("  [ERROR] Unsupported format %d for mip level %u! Skipping...\n", image->texture.basemap->Format.DataFormat, mipLevel);
+                    DbgPrint("  [ERROR] Unsupported format %d for mip level %u! Skipping...\n", image->texture.basemap->Format.DataFormat, mipLevel);
                     break;
                 }
 
                 // Ensure we're not reading out of bounds
                 if (ddsOffset + ddsMipLevelSize > ddsImage.data.size())
                 {
-                    xbox::DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
+                    DbgPrint("  [ERROR] Mip Level %u exceeds DDS data size! Skipping...\n", mipLevel);
                     break;
                 }
 
@@ -1181,7 +1181,7 @@ namespace iw3
 
                 GPUEndianSwapTexture(levelData, static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
-                xbox::DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
+                DbgPrint("Image_Replace_2D: Mip Level %d - Row Pitch=%u\n", mipLevel, rowPitch);
 
                 UINT address = baseAddress;
                 if (mipLevel > 0)
@@ -1190,7 +1190,7 @@ namespace iw3
                     address = mipAddress + mipLevelOffset;
                 }
 
-                xbox::DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, ddsMipLevelSize);
+                DbgPrint("Image_Replace_2D: Writing mip level %d to address 0x%08X - levelSize=%u\n", mipLevel, address, ddsMipLevelSize);
 
                 // // Write the base level
                 XGTileTextureLevel(
@@ -1339,7 +1339,7 @@ namespace iw3
             const UINT MAX_IMAGES = 2048;
             XAssetHeader assets[MAX_IMAGES];
             UINT count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
-            xbox::DbgPrint("Cmd_imageload2_f: Found %d images\n", count);
+            DbgPrint("Cmd_imageload2_f: Found %d images\n", count);
             for (UINT i = 0; i < count; i++)
             {
                 GfxImage *image = assets[i].image;
@@ -1353,7 +1353,7 @@ namespace iw3
         void CG_RegisterGraphics_Hook(int localClientNum, const char *mapname)
         {
             CG_RegisterGraphics_Detour.GetOriginal<decltype(CG_RegisterGraphics)>()(localClientNum, mapname);
-            xbox::DbgPrint("CG_RegisterGraphics mapname=%s \n", mapname);
+            DbgPrint("CG_RegisterGraphics mapname=%s \n", mapname);
             Load_images();
         }
 
@@ -1678,7 +1678,7 @@ namespace iw3
 
         void init()
         {
-            xbox::DbgPrint("Initializing MP\n");
+            DbgPrint("Initializing MP\n");
 
             RegisterComponent(new cg());
             RegisterComponent(new cj_tas());
@@ -1739,7 +1739,7 @@ namespace iw3
 
         void shutdown()
         {
-            xbox::DbgPrint("Shutting down MP\n");
+            DbgPrint("Shutting down MP\n");
 
             CG_DrawActive_Detour.Remove();
             CL_ConsolePrint_Detour.Remove();
