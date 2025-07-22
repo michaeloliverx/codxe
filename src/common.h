@@ -47,7 +47,6 @@
 #include "game/t4/mp/structs.h"
 #include "game/t4/mp/symbols.h"
 
-#include "game/t4/sp/components/test_module.h"
 #include "game/t4/sp/main.h"
 #include "game/t4/sp/structs.h"
 #include "game/t4/sp/symbols.h"

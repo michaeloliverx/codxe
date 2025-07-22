@@ -1,9 +1,10 @@
 #include "components/cg.h"
 #include "components/clipmap.h"
 #include "components/g_client_fields.h"
+#include "components/g_client_script_cmd.h"
+#include "components/g_scr_main.h"
 #include "components/g_scr_mover.h"
-#include "components/gsc.h"
-#include "components/test_module.h"
+#include "components/scr_parser.h"
 #include "main.h"
 #include "common.h"
 
@@ -24,10 +25,11 @@ namespace t4
             DbgPrint("T4 SP: Registering modules\n");
             RegisterComponent(new cg());
             RegisterComponent(new clipmap());
+            RegisterComponent(new g_scr_main()); // Needs to be registered before g_client_script_cmd
             RegisterComponent(new g_client_fields());
+            RegisterComponent(new g_client_script_cmd());
             RegisterComponent(new g_scr_mover());
-            RegisterComponent(new GSC());
-            RegisterComponent(new TestModule());
+            RegisterComponent(new scr_parser());
         }
 
         void shutdown()
