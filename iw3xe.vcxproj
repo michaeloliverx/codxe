@@ -103,13 +103,13 @@
       <ClCompile Include="src\game\t4\mp\components\test_module.cpp" />
       <ClCompile Include="src\game\t4\mp\components\ui.cpp" />
 
-      <ClCompile Include="src\game\t4\sp\components\cg.cpp" />
       <ClCompile Include="src\game\t4\sp\components\clipmap.cpp" />
       <ClCompile Include="src\game\t4\sp\components\g_scr_mover.cpp" />
       <ClCompile Include="src\game\t4\sp\components\g_client_fields.cpp" /> 
       <ClCompile Include="src\game\t4\sp\components\g_client_script_cmd.cpp" />
       <ClCompile Include="src\game\t4\sp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\t4\sp\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\ui.cpp" />
       <ClCompile Include="src\game\t4\sp\main.cpp" />
 
       <ClCompile Include="src\dllmain.cpp" />
@@ -157,13 +157,13 @@
       <ClInclude Include="src\game\t4\mp\components\test_module.h" />
       <ClInclude Include="src\game\t4\mp\components\ui.h" />
 
-      <ClInclude Include="src\game\t4\sp\components\cg.h" />
       <ClInclude Include="src\game\t4\sp\components\clipmap.h" />
       <ClInclude Include="src\game\t4\sp\components\g_scr_mover.h" />
       <ClInclude Include="src\game\t4\sp\components\g_client_fields.h" />
       <ClInclude Include="src\game\t4\sp\components\g_client_script_cmd.h" />
       <ClInclude Include="src\game\t4\sp\components\g_scr_main.h" />
       <ClInclude Include="src\game\t4\sp\components\scr_parser.h" />
+      <ClInclude Include="src\game\t4\sp\components\ui.h" />
       <ClInclude Include="src\game\t4\sp\main.h" />
       <ClInclude Include="src\game\t4\sp\structs.h" />
       <ClInclude Include="src\game\t4\sp\symbols.h" />

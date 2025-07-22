@@ -1,11 +1,10 @@
-#include "cg.h"
+#include "ui.h"
 #include "common.h"
 
 namespace t4
 {
     namespace sp
     {
-
         void DrawBranding(int localClientNum)
         {
             static auto consoleFont = R_RegisterFont("fonts/consoleFont", -1);
@@ -28,13 +27,13 @@ namespace t4
             DrawBranding(localClientNum);
         }
 
-        cg::cg()
+        ui::ui()
         {
             UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
             UI_Refresh_Detour.Install();
         }
 
-        cg::~cg()
+        ui::~ui()
         {
             UI_Refresh_Detour.Remove();
         }
