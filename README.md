@@ -160,6 +160,6 @@ allow_game_relative_writes = true
 In some way or another, this project would not have been possible without the following people and projects:
 
 - [callofduty4x](https://github.com/callofduty4x)
-- [IW4x](<[IW4x](https://github.com/iw4x)>)
+- [IW4x](https://github.com/iw4x)
 - [kej](https://github.com/kejjjjj)
 - [ClementDreptin](https://github.com/ClementDreptin/ModdingResources)
