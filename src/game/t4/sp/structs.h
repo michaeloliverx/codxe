@@ -284,7 +284,5 @@ namespace t4
         static_assert(offsetof(clipMap_t, numSubModels) == 148, "");
         static_assert(offsetof(clipMap_t, cmodels) == 152, "");
         static_assert(offsetof(clipMap_t, mapEnts) == 180, "");
-
-        struct UiContext;
     }
 }

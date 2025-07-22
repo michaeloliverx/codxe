@@ -27,31 +27,10 @@ namespace t4
             DrawBranding(localClientNum);
         }
 
-        void Campaign_UnlockAll()
-        {
-            Cbuf_AddText(0, "set mis_01 50\n");
-        }
-
-        Detour Menus_OpenByName_Detour;
-
-        void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
-        {
-            if (
-                std::strcmp(menuName, "main_solo") == 0      // solo mission select
-                || std::strcmp(menuName, "main_online") == 0 // coop mission select
-            )
-                Campaign_UnlockAll();
-
-            Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
-        }
-
         ui::ui()
         {
             UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
             UI_Refresh_Detour.Install();
-
-            Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
-            Menus_OpenByName_Detour.Install();
         }
 
         ui::~ui()
