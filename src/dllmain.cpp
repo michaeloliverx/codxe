@@ -27,6 +27,13 @@ void monitor_title_id()
 				xbox::show_notification(L"CODxe - IW2 Singleplayer Detected");
 				iw2::sp::init();
 			}
+			else if (strncmp((char *)0x820410E4, "multiplayer", 11) == 0)
+			{
+				if (!in_xenia)
+					Sleep(1000);
+				xbox::show_notification(L"CODxe - IW2 Multiplayer Detected");
+				iw2::mp::init();
+			}
 			else
 			{
 				xbox::show_notification(L"CODxe - IW2 Unsupported Executable");
