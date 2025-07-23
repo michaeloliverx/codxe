@@ -73,6 +73,9 @@
   <ItemGroup>
       <ClCompile Include="src\common\config.cpp" />
 
+      <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\iw2\sp\main.cpp" />
+
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
@@ -120,6 +123,11 @@
   <ItemGroup>
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
+
+      <ClInclude Include="src\game\iw2\sp\components\scr_parser.h" />
+      <ClInclude Include="src\game\iw2\sp\main.h" />
+      <ClInclude Include="src\game\iw2\sp\structs.h" />
+      <ClInclude Include="src\game\iw2\sp\symbols.h" />
 
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
