@@ -34,6 +34,10 @@
 #include "game/iw2/sp/structs.h"
 #include "game/iw2/sp/symbols.h"
 
+#include "game/iw2/mp/main.h"
+#include "game/iw2/mp/structs.h"
+#include "game/iw2/mp/symbols.h"
+
 // IW3-specific includes
 #include "game/iw3/mp/main.h"
 #include "game/iw3/mp/structs.h"
