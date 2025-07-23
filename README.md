@@ -154,6 +154,7 @@ allow_game_relative_writes = true
 - xenia canary install content (title updates, DLC, etc.)
 - Modding tutorials with example scripts
 - Template mod structure for each game
+- https://consolemods.org/wiki/Xbox_360:Manually_Installing_Title_Updates
 
 ## Credits
 
