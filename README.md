@@ -18,11 +18,12 @@ To run CoDxe, you will need one of the following:
 
 ## Game Compatibility
 
-| Game                                        | Version | Singleplayer       | Multiplayer        | Supported Region                                |
-| ------------------------------------------- | ------- | ------------------ | ------------------ | ----------------------------------------------- |
-| Call of Duty 4: Modern Warfare (2007) (IW3) | TU4     | :white_check_mark: | :white_check_mark: | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
-| Call of Duty 5: World at War (2008) (T4)    | TU7     | :white_check_mark: | :white_check_mark: | `Call of Duty - World at War (USA, Europe)`     |
-| Call of Duty: Modern Warfare 2 (2009) (IW4) | TU9     | :white_check_mark: | :x:                | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
+| Game                                        | Version                                                     | Singleplayer       | Multiplayer        | Supported Region                                |
+| ------------------------------------------- | ----------------------------------------------------------- | ------------------ | ------------------ | ----------------------------------------------- |
+| Call of Duty 2 (2005) (IW")                 | [TU3](resources\iw2\TU_10LC1UH_0000000000000.0000000000181) | :white_check_mark: | :x:                | `Call of Duty 2 (USA, Europe)`                  |
+| Call of Duty 4: Modern Warfare (2007) (IW3) | TU4                                                         | :white_check_mark: | :white_check_mark: | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
+| Call of Duty 5: World at War (2008) (T4)    | TU7                                                         | :white_check_mark: | :white_check_mark: | `Call of Duty - World at War (USA, Europe)`     |
+| Call of Duty: Modern Warfare 2 (2009) (IW4) | TU9                                                         | :white_check_mark: | :x:                | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
 
 ## Feature Matrix
 
@@ -155,6 +156,7 @@ allow_game_relative_writes = true
 - Modding tutorials with example scripts
 - Template mod structure for each game
 - https://consolemods.org/wiki/Xbox_360:Manually_Installing_Title_Updates
+- details on xenia Module Hash: , using a different executable etc.
 
 ## Credits
 
