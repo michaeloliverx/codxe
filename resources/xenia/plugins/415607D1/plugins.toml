@@ -1,0 +1,19 @@
+title_name = "Call of Duty 2"
+title_id = "415607D1"         # AV-2001
+#media_id = "7FD5641C" # Disc (USA, Europe): http://redump.org/disc/13281/
+
+# TU2
+
+[[plugin]]
+author = "mo"
+name = "iw3xe"
+file = "iw3xe.xex"
+hash = "3BABBD4061D5D56F" # default.xex
+is_enabled = true
+
+[[plugin]]
+author = "mo"
+name = "iw3xe"
+file = "iw3xe.xex"
+hash = "B0BD32F2F0F42467" # default_mp.xex
+is_enabled = true

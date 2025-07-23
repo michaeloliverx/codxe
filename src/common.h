@@ -29,6 +29,11 @@
 #include "common/branding.h"
 #include "common/config.h"
 
+// IW2-specific includes
+#include "game/iw2/sp/main.h"
+#include "game/iw2/sp/structs.h"
+#include "game/iw2/sp/symbols.h"
+
 // IW3-specific includes
 #include "game/iw3/mp/main.h"
 #include "game/iw3/mp/structs.h"
