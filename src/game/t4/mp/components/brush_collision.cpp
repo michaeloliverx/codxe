@@ -86,7 +86,6 @@ namespace t4
         {
             if (R_CheckDvarModified(noclip_brushes))
             {
-                CG_GameMessage(0, "noclip_brushes changed");
                 // TODO: find out why noclip_brushes->current.string isn't working
                 auto value = noclip_brushes->current.string;
 
@@ -115,7 +114,6 @@ namespace t4
                             continue;
                         }
                         cm->brushes[idx].contents &= ~0x10000; // Disable collision
-                        // CG_GameMessage(0, va("Disabled brush collision for brush %d", idx));
                     }
                 }
             }
