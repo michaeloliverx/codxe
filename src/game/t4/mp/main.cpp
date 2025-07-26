@@ -38,6 +38,15 @@ namespace t4
             RegisterComponent(new Map());
             RegisterComponent(new TestModule());
             RegisterComponent(new ui());
+
+            // Patches
+            // sub_8220D2D0
+            // Patches NO_KNOCKBACK flag check, allows knockback regardless of flags
+            *(volatile uint32_t *)0x8220D2E8 = 0x60000000; // NOP replaces bnelr
+
+            // Weapon_RocketLauncher_Fire
+            *(volatile uint32_t *)0x8225F98C = 0x60000000;
+            *(volatile uint32_t *)0x8225F990 = 0x60000000;
         }
 
         void shutdown()
