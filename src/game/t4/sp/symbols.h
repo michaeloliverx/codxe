@@ -26,6 +26,9 @@ namespace t4
 
         static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x8253F2F0);
 
+        static auto G_ASSET_ENTRY_POOL_COUNT = 30000;
+        static auto g_assetEntryPool = reinterpret_cast<XAssetEntryPoolEntry *>(0x8267A1A8);
+
         // Functions
         static auto BG_AddPredictableEventToPlayerstate = reinterpret_cast<void (*)(unsigned __int8 newEvent, unsigned __int8 eventParm, struct playerState_s *ps)>(0x820EFC08);
 
@@ -53,6 +56,11 @@ namespace t4
         static auto Com_PrintError = reinterpret_cast<void (*)(int channel, const char *fmt, ...)>(0x8224F8C0);
         static auto Com_PrintMessage = reinterpret_cast<void (*)(int channel, const char *msg, int error)>(0x8224F804);
         static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)>(0x8214EA60);
+
+        static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *name, bool value)>(0x8228CF10);
+
+        static auto DB_GetAllXAssetOfType = reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x82286138);
+        static auto DB_GetXAssetName = reinterpret_cast<const char *(*)(const XAsset *asset)>(0x82159240);
 
         static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822862F8);
 
@@ -107,9 +115,6 @@ namespace t4
                                                             float scale,
                                                             const float *color,
                                                             int style)>(0x82266F28);
-
-        struct XAssetType;
-        struct XAssetHeader;
 
         static auto DB_FindXAssetHeader = reinterpret_cast<XAssetHeader (*)(XAssetType type, const char *name, bool errorIfMissing, int waitTime)>(0x8216B688);
 

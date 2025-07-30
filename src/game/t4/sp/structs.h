@@ -4,6 +4,40 @@ namespace t4
 {
     namespace sp
     {
+
+        enum XAssetType : __int32
+        {
+            ASSET_TYPE_XMODELPIECES = 0x0,
+        };
+
+        union XAssetHeader
+        {
+            void *data;
+        };
+
+        struct XAsset
+        {
+            XAssetType type;
+            XAssetHeader header;
+        };
+
+        struct XAssetEntry
+        {
+            XAsset asset;
+            unsigned __int8 zoneIndex;
+            bool inuse;
+            unsigned __int16 nextHash;
+            unsigned __int16 nextOverride;
+            unsigned __int16 usageFrame;
+        };
+
+        union XAssetEntryPoolEntry
+        {
+            XAssetEntry entry;
+            XAssetEntryPoolEntry *next;
+        };
+        static_assert(sizeof(XAssetEntryPoolEntry) == 16, "");
+
         // usercmd_t->button bits
         enum button_mask
         {
