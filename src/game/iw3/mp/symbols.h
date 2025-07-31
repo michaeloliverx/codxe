@@ -113,7 +113,6 @@ namespace iw3
         static auto Scr_MakeArray = reinterpret_cast<void (*)()>(0x82210CA0);
         static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x8220FDD0);
         static auto Scr_ParamError = reinterpret_cast<void (*)(unsigned int index, const char *error)>(0x8220FE08);
-        static auto Scr_ReadFile_FastFile = reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(0x82221220);
 
         static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82208448);
         static auto SV_Cmd_ArgvBuffer = reinterpret_cast<void (*)(int arg, char *buffer, int bufferLength)>(0x82239F48);
@@ -156,6 +155,9 @@ namespace iw3
         static auto CL_SetStance = reinterpret_cast<void (*)(int localClientNum, int stance)>(0x822D92A0);
 
         static auto CG_Init = reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(0x8230DEA0);
+
+        static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x821D7328);
+        static auto Scr_AddSourceBuffer = reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(0x822212C0);
 
         // Variables
         static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);

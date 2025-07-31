@@ -85,6 +85,7 @@
       <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\g_client_fields.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_vm_functions.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
@@ -143,6 +144,7 @@
       <ClInclude Include="src\game\iw3\mp\components\clipmap.h" />
       <ClInclude Include="src\game\iw3\mp\components\g_client_fields.h" />
       <ClInclude Include="src\game\iw3\mp\components\pm.h" />
+      <ClInclude Include="src\game\iw3\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw3\mp\components\scr_vm_functions.h" />
       <ClInclude Include="src\game\iw3\mp\main.h" />
       <ClInclude Include="src\game\iw3\mp\structs.h" />
