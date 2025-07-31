@@ -1320,27 +1320,6 @@ namespace iw3
             Load_images();
         }
 
-        Detour Cmd_ExecFromFastFile_Detour;
-
-        bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const char *filename)
-        {
-            std::string file_path = "game:\\raw\\";
-            file_path += filename;
-
-            if (filesystem::file_exists(file_path))
-            {
-                std::string contents = filesystem::read_file_to_string(file_path);
-                if (!contents.empty())
-                {
-                    Com_Printf(CON_CHANNEL_SYSTEM, "execing %s from raw:\\\n", filename);
-                    Cbuf_ExecuteBuffer(localClientNum, controllerIndex, contents.c_str());
-                    return true;
-                }
-            }
-
-            return Cmd_ExecFromFastFile_Detour.GetOriginal<decltype(Cmd_ExecFromFastFile)>()(localClientNum, controllerIndex, filename);
-        }
-
         const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
         void DrawFixedFPS()
@@ -1675,9 +1654,6 @@ namespace iw3
 
             CG_RegisterGraphics_Detour = Detour(CG_RegisterGraphics, CG_RegisterGraphics_Hook);
             CG_RegisterGraphics_Detour.Install();
-
-            Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
-            Cmd_ExecFromFastFile_Detour.Install();
 
             cmd_function_s *cmdinput_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);

@@ -9,8 +9,8 @@ namespace iw3
 
         void Cmd_Dumpraw_f()
         {
-            XAssetHeader files[500];
-            auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_RAWFILE, files, 500);
+            XAssetHeader files[2048];
+            auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_RAWFILE, files, 2048);
 
             for (int i = 0; i < count; i++)
             {
@@ -110,10 +110,39 @@ namespace iw3
                 ClientCommand_Detour.GetOriginal<decltype(ClientCommand)>()(clientNum);
         }
 
+        Detour Cmd_ExecFromFastFile_Detour;
+
+        bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const char *filename)
+        {
+            auto callOriginal = [&]()
+            {
+                return Cmd_ExecFromFastFile_Detour.GetOriginal<decltype(Cmd_ExecFromFastFile)>()(localClientNum, controllerIndex, filename);
+            };
+
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
+            // Check if mod is active
+            std::string modBasePath = config.GetModBasePath();
+            if (modBasePath.empty())
+                return callOriginal();
+
+            std::string contents = filesystem::read_file_to_string(modBasePath + "\\" + filename);
+            if (contents.empty())
+                return callOriginal();
+
+            Com_Printf(CON_CHANNEL_SYSTEM, "execing %s from raw:\\\n", filename);
+            Cbuf_ExecuteBuffer(localClientNum, controllerIndex, contents.c_str());
+            return true;
+        }
+
         cmds::cmds()
         {
             ClientCommand_Detour = Detour(ClientCommand, ClientCommand_Hook);
             ClientCommand_Detour.Install();
+
+            Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
+            Cmd_ExecFromFastFile_Detour.Install();
 
             Cmd_AddCommandInternal("dumpraw", Cmd_Dumpraw_f, &Cmd_Dumpraw_f_VAR);
         }
@@ -121,6 +150,8 @@ namespace iw3
         cmds::~cmds()
         {
             ClientCommand_Detour.Remove();
+
+            Cmd_ExecFromFastFile_Detour.Remove();
         }
     }
 }
