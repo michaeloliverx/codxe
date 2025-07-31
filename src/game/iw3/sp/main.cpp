@@ -1,4 +1,5 @@
 #include "common.h"
+#include "components/scr_parser.h"
 
 namespace
 {
@@ -46,9 +47,6 @@ namespace iw3
         DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x822AEF88);
 
         Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822B9788);
-
-        Scr_AddSourceBuffer_t Scr_AddSourceBuffer = reinterpret_cast<Scr_AddSourceBuffer_t>(0x821C5A18);
-        Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x821C5978);
 
         // Variables
         auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82DDEFCC);
@@ -148,44 +146,6 @@ namespace iw3
             }
         }
 
-        Detour Scr_ReadFile_FastFile_Detour;
-
-        char *Scr_ReadFile_FastFile_Hook(const char *filename, const char *extFilename, const char *codePos, bool archive)
-        {
-            DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
-
-            std::string raw_file_path = "game:\\raw\\";
-            raw_file_path += extFilename;
-            std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
-            if (filesystem::file_exists(raw_file_path))
-            {
-                DbgPrint("Found raw file: %s\n", raw_file_path.c_str());
-                // return ReadFileContents(raw_file_path);
-                std::string new_contents = filesystem::read_file_to_string(raw_file_path);
-                if (!new_contents.empty())
-                {
-
-                    // Allocate new memory and copy the data
-                    size_t new_size = new_contents.size() + 1; // Include null terminator
-                    char *new_memory = static_cast<char *>(malloc(new_size));
-
-                    if (new_memory)
-                    {
-                        memcpy(new_memory, new_contents.c_str(), new_size); // Copy with null terminator
-
-                        DbgPrint("Replaced contents from file: %s\n", raw_file_path.c_str());
-                        return new_memory;
-                    }
-                    else
-                    {
-                        DbgPrint("Failed to allocate memory for contents replacement.\n");
-                    }
-                }
-            }
-
-            return Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos, archive);
-        }
-
         const unsigned int MAX_RAWFILES = 2048;
         struct RawFileList
         {
@@ -235,9 +195,17 @@ namespace iw3
             }
         }
 
+        std::vector<Module *> components;
+
+        void RegisterComponent(Module *module)
+        {
+            DbgPrint("T4 MP: Component registered: %s\n", module->get_name());
+            components.push_back(module);
+        }
+
         void init()
         {
-            DbgPrint("Initializing SP\n");
+            RegisterComponent(new scr_parser());
 
             CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
             CL_ConsolePrint_Detour.Install();
@@ -248,11 +216,23 @@ namespace iw3
             Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
             Load_MapEntsPtr_Detour.Install();
 
-            Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
-            Scr_ReadFile_FastFile_Detour.Install();
-
             cmd_function_s *rawfilesdump_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("rawfilesdump", Cmd_rawfilesdump, rawfilesdump_VAR);
+        }
+
+        void shutdown()
+        {
+            CL_ConsolePrint_Detour.Remove();
+            CL_GamepadButtonEvent_Detour.Remove();
+            Load_MapEntsPtr_Detour.Remove();
+
+            // TODO: move module loader/unloader logic to a self contained class
+            // Clean up in reverse order
+            for (auto it = components.rbegin(); it != components.rend(); ++it)
+            {
+                delete *it;
+            }
+            components.clear();
         }
     }
 }

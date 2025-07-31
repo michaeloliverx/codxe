@@ -45,6 +45,7 @@
 
 #include "game/iw3/sp/main.h"
 #include "game/iw3/sp/structs.h"
+#include "game/iw3/sp/symbols.h"
 
 // IW4-specific includes
 #include "game/iw4/sp/main.h"

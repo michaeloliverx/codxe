@@ -286,9 +286,6 @@ namespace iw3
         typedef void (*DB_EnumXAssets_FastFile_t)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride);
 
         typedef void (*Load_MapEntsPtr_t)();
-
-        typedef char *(*Scr_AddSourceBuffer_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
-        typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
     }
 
 #pragma warning(default : 4480)
