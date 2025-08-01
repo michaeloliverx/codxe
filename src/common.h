@@ -61,6 +61,15 @@
 #include "game/t4/sp/structs.h"
 #include "game/t4/sp/symbols.h"
 
+// QOS-specific includes
+#include "game/qos/sp/main.h"
+#include "game/qos/sp/structs.h"
+#include "game/qos/sp/symbols.h"
+
+#include "game/qos/mp/main.h"
+#include "game/qos/mp/structs.h"
+#include "game/qos/mp/symbols.h"
+
 /*
  * Usage:
  * Simply include this file in your source files:
