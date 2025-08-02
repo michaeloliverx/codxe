@@ -4,6 +4,7 @@
 #include "components/clipmap.h"
 #include "components/cmds.h"
 #include "components/g_client_fields.h"
+#include "components/g_scr_main.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "components/scr_vm_functions.h"
@@ -1526,38 +1527,6 @@ namespace iw3
             Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 262144) != 0);
         }
 
-        Detour Scr_GetMethod_Detour;
-
-        BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
-        {
-
-            if (std::strcmp(*pName, "botjump") == 0)
-                return reinterpret_cast<BuiltinMethod>(&GScr_BotJump);
-
-            if (std::strcmp(*pName, "clonebrushmodeltoscriptmodel") == 0)
-                return reinterpret_cast<BuiltinMethod>(&GScr_CloneBrushModelToScriptModel);
-
-            if (std::strcmp(*pName, "holdbreathbuttonpressed") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_HoldBreathButtonPressed);
-
-            if (std::strcmp(*pName, "jumpbuttonpressed") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_JumpButtonPressed);
-
-            if (std::strcmp(*pName, "getforwardmove") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_GetForwardMove);
-
-            if (std::strcmp(*pName, "getrightmove") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_GetRightMove);
-
-            if (std::strcmp(*pName, "setvelocity") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_SetVelocity);
-
-            if (std::strcmp(*pName, "nightvisionbuttonpressed") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_NightVisionButtonPressed);
-
-            return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
-        }
-
         void PatchViewpos()
         {
             // viewpos patches
@@ -1627,6 +1596,7 @@ namespace iw3
             RegisterComponent(new clipmap());
             RegisterComponent(new cmds());
             RegisterComponent(new g_client_fields());
+            RegisterComponent(new g_scr_main());
             RegisterComponent(new pm());
             RegisterComponent(new scr_parser());
             RegisterComponent(new scr_vm_functions());
@@ -1658,8 +1628,14 @@ namespace iw3
             cmd_function_s *cmdinput_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
 
-            Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
-            Scr_GetMethod_Detour.Install();
+            Scr_AddMethod("botjump", GScr_BotJump, 0);
+            Scr_AddMethod("clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0);
+            Scr_AddMethod("holdbreathbuttonpressed", PlayerCmd_HoldBreathButtonPressed, 0);
+            Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0);
+            Scr_AddMethod("getforwardmove", PlayerCmd_GetForwardMove, 0);
+            Scr_AddMethod("getrightmove", PlayerCmd_GetRightMove, 0);
+            Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, 0);
+            Scr_AddMethod("nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, 0);
 
             SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
             SV_ClientThinkDetour.Install();
@@ -1684,7 +1660,6 @@ namespace iw3
             Load_MapEntsPtr_Detour.Remove();
             R_StreamLoadFileSynchronously_Detour.Remove();
 
-            Scr_GetMethod_Detour.Remove();
             SV_ClientThinkDetour.Remove();
             Pmove_Detour.Remove();
 

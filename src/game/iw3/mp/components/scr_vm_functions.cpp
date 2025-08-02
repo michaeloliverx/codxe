@@ -1,5 +1,6 @@
 #include "scr_vm_functions.h"
 #include "common.h"
+#include "g_scr_main.h"
 
 namespace iw3
 {
@@ -36,25 +37,13 @@ namespace iw3
             }
         }
 
-        Detour Scr_GetFunction_Detour;
-
-        BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
-        {
-            if (_stricmp(*pName, "getplayerclipbrushescontainingpoint") == 0)
-                return reinterpret_cast<BuiltinFunction>(&GSCrGetPlayerclipBrushesContainingPoint);
-
-            return Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
-        }
-
         scr_vm_functions::scr_vm_functions()
         {
-            Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
-            Scr_GetFunction_Detour.Install();
+            Scr_AddFunction("getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, 0);
         }
 
         scr_vm_functions::~scr_vm_functions()
         {
-            Scr_GetFunction_Detour.Remove();
         }
     }
 }
