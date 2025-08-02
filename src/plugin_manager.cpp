@@ -140,6 +140,22 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<t5::sp::T5_SP_Plugin>,
     },
     {
+        TITLE_ID_T6,
+        0x53643D71, // Mon May  5 16:10:57 2014
+        "default_mp.xex",
+        "",
+        "Call of Duty: Black Ops II MP Title Update #18",
+        &CreatePlugin<t6::mp::T6_MP_Plugin>,
+    },
+    {
+        TITLE_ID_T6,
+        0x518A4E7C, // Wed May  8 15:22:04 2013
+        "default.xex",
+        "",
+        "Call of Duty: Black Ops II SP Title Update #18",
+        &CreatePlugin<t6::sp::T6_SP_Plugin>,
+    },
+    {
         TITLE_ID_IW5,
         0x5B10A113, // Fri Jun  1 02:27:47 2018
         "default_mp.xex",
