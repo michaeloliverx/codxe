@@ -4,7 +4,9 @@
 #include "components/clipmap.h"
 #include "components/cmds.h"
 #include "components/g_client_fields.h"
+#include "components/g_scr_main.h"
 #include "components/pm.h"
+#include "components/scr_parser.h"
 #include "components/scr_vm_functions.h"
 
 // Structure to hold data for the active keyboard request
@@ -318,15 +320,6 @@ namespace iw3
 {
     namespace mp
     {
-
-        Detour CL_ConsolePrint_Detour;
-
-        void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)
-        {
-            CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth, flags);
-            DbgPrint("CL_ConsolePrint txt=%s \n", txt);
-        }
-
         void Cmd_cmdinput_f()
         {
             bool success = ShowKeyboardAsync(
@@ -402,16 +395,20 @@ namespace iw3
                 MapEnts *mapEnts = *varMapEntsPtr;
 
                 // Write stock map ents to disk
-                std::string file_path = "game:\\dump\\";
-                file_path += mapEnts->name;
+                std::string file_path = DUMP_DIR;
+                file_path += std::string("\\") + mapEnts->name;
                 file_path += ".ents";                                        //  iw4x naming convention
                 std::replace(file_path.begin(), file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
                 filesystem::write_file_to_disk(file_path.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
 
+                Config config;
+                LoadConfigFromFile(CONFIG_PATH, config);
+
                 // Load map ents from file
                 // Path to check for existing entity file
-                std::string raw_file_path = "game:\\raw\\";
-                raw_file_path += mapEnts->name;
+                std::string raw_file_path = config.GetModBasePath();
+
+                raw_file_path += std::string("\\") + mapEnts->name;
                 raw_file_path += ".ents";                                            // IW4x naming convention
                 std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
 
@@ -478,7 +475,10 @@ namespace iw3
 
             auto image = asset->entry.asset.header.image;
 
-            std::string replacement_path = "game:\\raw\\highmip\\" + asset_name + ".dds";
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
+            std::string replacement_path = config.GetModBasePath() + "\\highmip" + "\\" + asset_name + ".dds";
             std::ifstream file(replacement_path, std::ios::binary | std::ios::ate);
             if (!file)
             {
@@ -540,44 +540,6 @@ namespace iw3
 
             // Fallback to original path if modified path failed
             return R_StreamLoadFileSynchronously_Detour.GetOriginal<decltype(R_StreamLoadFileSynchronously)>()(filename, bytesToRead, outData);
-        }
-
-        Detour Scr_ReadFile_FastFile_Detour;
-
-        char *Scr_ReadFile_FastFile_Hook(const char *filename, const char *extFilename, const char *codePos, bool archive)
-        {
-            DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
-
-            std::string raw_file_path = "game:\\raw\\";
-            raw_file_path += extFilename;
-            std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
-            if (filesystem::file_exists(raw_file_path))
-            {
-                DbgPrint("Found raw file: %s\n", raw_file_path.c_str());
-                // return ReadFileContents(raw_file_path);
-                std::string new_contents = filesystem::read_file_to_string(raw_file_path);
-                if (!new_contents.empty())
-                {
-
-                    // Allocate new memory and copy the data
-                    size_t new_size = new_contents.size() + 1; // Include null terminator
-                    char *new_memory = static_cast<char *>(malloc(new_size));
-
-                    if (new_memory)
-                    {
-                        memcpy(new_memory, new_contents.c_str(), new_size); // Copy with null terminator
-
-                        DbgPrint("Replaced contents from file: %s\n", raw_file_path.c_str());
-                        return new_memory;
-                    }
-                    else
-                    {
-                        DbgPrint("Failed to allocate memory for contents replacement.\n");
-                    }
-                }
-            }
-
-            return Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos, archive);
         }
 
         void Image_DbgPrint(const GfxImage *image)
@@ -740,7 +702,7 @@ namespace iw3
                                                DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ);
             }
 
-            std::string filename = "game:\\dump\\images\\";
+            std::string filename = std::string(DUMP_DIR) + "\\" + "images";
             std::string sanitized_name = image->name;
 
             // Remove invalid characters
@@ -748,7 +710,7 @@ namespace iw3
                                                 { return c == '*'; }),
                                  sanitized_name.end());
 
-            filename += sanitized_name + ".dds";
+            filename += "\\" + sanitized_name + ".dds";
 
             std::ofstream file(filename, std::ios::binary);
             if (!file)
@@ -888,11 +850,9 @@ namespace iw3
             //     imageList.image[imageList.count++] = &g_imageProgs[i];
             // }
 
-            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping %d images to 'raw\\images\\' %d\n", imageList.count);
-
-            CreateDirectoryA("game:\\dump", 0);
-            CreateDirectoryA("game:\\dump\\images", 0);
-            CreateDirectoryA("game:\\dump\\highmip", 0);
+            CreateDirectoryA(DUMP_DIR, 0);
+            CreateDirectoryA((std::string(DUMP_DIR) + "\\images").c_str(), 0);
+            CreateDirectoryA((std::string(DUMP_DIR) + "\\highmip").c_str(), 0);
 
             for (unsigned int i = 0; i < imageList.count; i++)
             {
@@ -1032,7 +992,7 @@ namespace iw3
                 // TODO: add sanity checks for format, size, etc.
                 // TODO: handle filenames with unsupported characters for Windows
 
-                auto output_filepath = "game:\\dump\\highmip\\" + assetName + ".dds";
+                auto output_filepath = std::string(DUMP_DIR) + "\\highmip\\" + assetName + ".dds";
 
                 std::ofstream output_file(output_filepath, std::ios::binary);
                 if (!output_file)
@@ -1269,7 +1229,10 @@ namespace iw3
 
         void Image_Replace(GfxImage *image)
         {
-            const std::string replacement_base_dir = "game:\\raw\\images";
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
+            const std::string replacement_base_dir = config.GetModBasePath() + "\\images";
             const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
 
             if (!filesystem::file_exists(replacement_path))
@@ -1336,11 +1299,10 @@ namespace iw3
 
         void Load_images()
         {
-            const UINT MAX_IMAGES = 2048;
+            const int MAX_IMAGES = 2048;
             XAssetHeader assets[MAX_IMAGES];
-            UINT count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
-            DbgPrint("Cmd_imageload2_f: Found %d images\n", count);
-            for (UINT i = 0; i < count; i++)
+            const auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
+            for (int i = 0; i < count; i++)
             {
                 GfxImage *image = assets[i].image;
                 // debug image metadata print out all
@@ -1355,27 +1317,6 @@ namespace iw3
             CG_RegisterGraphics_Detour.GetOriginal<decltype(CG_RegisterGraphics)>()(localClientNum, mapname);
             DbgPrint("CG_RegisterGraphics mapname=%s \n", mapname);
             Load_images();
-        }
-
-        Detour Cmd_ExecFromFastFile_Detour;
-
-        bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const char *filename)
-        {
-            std::string file_path = "game:\\raw\\";
-            file_path += filename;
-
-            if (filesystem::file_exists(file_path))
-            {
-                std::string contents = filesystem::read_file_to_string(file_path);
-                if (!contents.empty())
-                {
-                    Com_Printf(CON_CHANNEL_SYSTEM, "execing %s from raw:\\\n", filename);
-                    Cbuf_ExecuteBuffer(localClientNum, controllerIndex, contents.c_str());
-                    return true;
-                }
-            }
-
-            return Cmd_ExecFromFastFile_Detour.GetOriginal<decltype(Cmd_ExecFromFastFile)>()(localClientNum, controllerIndex, filename);
         }
 
         const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -1584,50 +1525,6 @@ namespace iw3
             Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 262144) != 0);
         }
 
-        Detour Scr_GetMethod_Detour;
-
-        BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
-        {
-
-            if (std::strcmp(*pName, "botjump") == 0)
-                return reinterpret_cast<BuiltinMethod>(&GScr_BotJump);
-
-            if (std::strcmp(*pName, "clonebrushmodeltoscriptmodel") == 0)
-                return reinterpret_cast<BuiltinMethod>(&GScr_CloneBrushModelToScriptModel);
-
-            if (std::strcmp(*pName, "holdbreathbuttonpressed") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_HoldBreathButtonPressed);
-
-            if (std::strcmp(*pName, "jumpbuttonpressed") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_JumpButtonPressed);
-
-            if (std::strcmp(*pName, "getforwardmove") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_GetForwardMove);
-
-            if (std::strcmp(*pName, "getrightmove") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_GetRightMove);
-
-            if (std::strcmp(*pName, "setvelocity") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_SetVelocity);
-
-            if (std::strcmp(*pName, "nightvisionbuttonpressed") == 0)
-                return reinterpret_cast<BuiltinMethod>(&PlayerCmd_NightVisionButtonPressed);
-
-            return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
-        }
-
-        void PatchViewpos()
-        {
-            // viewpos patches
-            // Force the viewpos output to be printed to the obituary channel
-            *(volatile uint32_t *)0x82320D2C = 0x38600005;
-
-            // Update viewpos output format to display float values with 6 decimal places
-            // Original format: "(%.0f %.0f %.0f) : %.0f %.0f\n"
-            const char *newFormat = "%.6f, %.6f, %.6f ,%.6f, %.6f\n";
-            memcpy((void *)0x8204F7DC, newFormat, strlen(newFormat) + 1); // Include null terminator
-        }
-
         Detour Pmove_Detour;
 
         // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L11
@@ -1685,7 +1582,9 @@ namespace iw3
             RegisterComponent(new clipmap());
             RegisterComponent(new cmds());
             RegisterComponent(new g_client_fields());
+            RegisterComponent(new g_scr_main());
             RegisterComponent(new pm());
+            RegisterComponent(new scr_parser());
             RegisterComponent(new scr_vm_functions());
 
             UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
@@ -1693,9 +1592,6 @@ namespace iw3
 
             CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
             CG_DrawActive_Detour.Install();
-
-            CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
-            CL_ConsolePrint_Detour.Install();
 
             CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
             CL_GamepadButtonEvent_Detour.Install();
@@ -1706,28 +1602,26 @@ namespace iw3
             R_StreamLoadFileSynchronously_Detour = Detour(R_StreamLoadFileSynchronously, R_StreamLoadFileSynchronously_Hook);
             R_StreamLoadFileSynchronously_Detour.Install();
 
-            Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
-            Scr_ReadFile_FastFile_Detour.Install();
-
             cmd_function_s *imagedump_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("imagedump", Cmd_imagedump, imagedump_VAR);
 
             CG_RegisterGraphics_Detour = Detour(CG_RegisterGraphics, CG_RegisterGraphics_Hook);
             CG_RegisterGraphics_Detour.Install();
 
-            Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
-            Cmd_ExecFromFastFile_Detour.Install();
-
             cmd_function_s *cmdinput_VAR = new cmd_function_s;
             Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
 
-            Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
-            Scr_GetMethod_Detour.Install();
+            Scr_AddMethod("botjump", GScr_BotJump, 0);
+            Scr_AddMethod("clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0);
+            Scr_AddMethod("holdbreathbuttonpressed", PlayerCmd_HoldBreathButtonPressed, 0);
+            Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0);
+            Scr_AddMethod("getforwardmove", PlayerCmd_GetForwardMove, 0);
+            Scr_AddMethod("getrightmove", PlayerCmd_GetRightMove, 0);
+            Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, 0);
+            Scr_AddMethod("nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, 0);
 
             SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
             SV_ClientThinkDetour.Install();
-
-            PatchViewpos();
 
             Dvar_RegisterBool("pm_fixed_fps_enable", false, 0, "Enable fixed FPS mode");
             Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
@@ -1742,12 +1636,10 @@ namespace iw3
             DbgPrint("Shutting down MP\n");
 
             CG_DrawActive_Detour.Remove();
-            CL_ConsolePrint_Detour.Remove();
             CL_GamepadButtonEvent_Detour.Remove();
             Load_MapEntsPtr_Detour.Remove();
             R_StreamLoadFileSynchronously_Detour.Remove();
-            Scr_ReadFile_FastFile_Detour.Remove();
-            Scr_GetMethod_Detour.Remove();
+
             SV_ClientThinkDetour.Remove();
             Pmove_Detour.Remove();
 

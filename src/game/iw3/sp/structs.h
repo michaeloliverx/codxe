@@ -271,24 +271,6 @@ namespace iw3
             CON_BUILTIN_CHANNEL_COUNT = 0x19,
         };
 
-        typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
-
-        typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags);
-        typedef void (*CL_GamepadButtonEvent_t)(int localClientNum, int controllerIndex, int key, int down, unsigned int time);
-
-        typedef void (*Cmd_AddCommandInternal_t)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd);
-
-        typedef void (*Com_PrintError_t)(conChannel_t channel, const char *fmt, ...);
-        typedef void (*Com_PrintMessage_t)(conChannel_t channel, const char *msg, int error);
-        typedef void (*Com_Printf_t)(conChannel_t channel, const char *fmt, ...);
-        typedef void (*Com_PrintWarning_t)(conChannel_t channel, const char *fmt, ...);
-
-        typedef void (*DB_EnumXAssets_FastFile_t)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride);
-
-        typedef void (*Load_MapEntsPtr_t)();
-
-        typedef char *(*Scr_AddSourceBuffer_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
-        typedef char *(*Scr_ReadFile_FastFile_t)(const char *filename, const char *extFilename, const char *codePos, bool archive);
     }
 
 #pragma warning(default : 4480)

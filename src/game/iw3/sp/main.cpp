@@ -1,4 +1,5 @@
 #include "common.h"
+#include "components/scr_parser.h"
 
 namespace
 {
@@ -28,38 +29,8 @@ namespace
 
 namespace iw3
 {
-
     namespace sp
     {
-        // Functions
-        Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x821DE9D8);
-
-        CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x822D7040);
-        CL_GamepadButtonEvent_t CL_GamepadButtonEvent = reinterpret_cast<CL_GamepadButtonEvent_t>(0x822CE630);
-
-        Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x821DFAD0);
-
-        Com_PrintError_t Com_PrintError = reinterpret_cast<Com_PrintError_t>(0x821DAC90);
-        Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x821DC0A0);
-        Com_PrintWarning_t Com_PrintWarning = reinterpret_cast<Com_PrintWarning_t>(0x821DA798);
-
-        DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x822AEF88);
-
-        Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822B9788);
-
-        Scr_AddSourceBuffer_t Scr_AddSourceBuffer = reinterpret_cast<Scr_AddSourceBuffer_t>(0x821C5A18);
-        Scr_ReadFile_FastFile_t Scr_ReadFile_FastFile = reinterpret_cast<Scr_ReadFile_FastFile_t>(0x821C5978);
-
-        // Variables
-        auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82DDEFCC);
-
-        Detour CL_ConsolePrint_Detour;
-
-        void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)
-        {
-            CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth, flags);
-            DbgPrint("CL_ConsolePrint txt=%s \n", txt);
-        }
 
         Detour CL_GamepadButtonEvent_Detour;
 
@@ -148,99 +119,33 @@ namespace iw3
             }
         }
 
-        Detour Scr_ReadFile_FastFile_Detour;
+        static cmd_function_s Cmd_Dumpraw_f_VAR;
 
-        char *Scr_ReadFile_FastFile_Hook(const char *filename, const char *extFilename, const char *codePos, bool archive)
+        void Cmd_Dumpraw_f()
         {
-            DbgPrint("Scr_ReadFile_FastFile_Hook extFilename=%s \n", extFilename);
+            XAssetHeader files[2048];
+            auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_RAWFILE, files, 2048);
 
-            std::string raw_file_path = "game:\\raw\\";
-            raw_file_path += extFilename;
-            std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
-            if (filesystem::file_exists(raw_file_path))
+            for (int i = 0; i < count; i++)
             {
-                DbgPrint("Found raw file: %s\n", raw_file_path.c_str());
-                // return ReadFileContents(raw_file_path);
-                std::string new_contents = filesystem::read_file_to_string(raw_file_path);
-                if (!new_contents.empty())
-                {
-
-                    // Allocate new memory and copy the data
-                    size_t new_size = new_contents.size() + 1; // Include null terminator
-                    char *new_memory = static_cast<char *>(malloc(new_size));
-
-                    if (new_memory)
-                    {
-                        memcpy(new_memory, new_contents.c_str(), new_size); // Copy with null terminator
-
-                        DbgPrint("Replaced contents from file: %s\n", raw_file_path.c_str());
-                        return new_memory;
-                    }
-                    else
-                    {
-                        DbgPrint("Failed to allocate memory for contents replacement.\n");
-                    }
-                }
-            }
-
-            return Scr_ReadFile_FastFile_Detour.GetOriginal<decltype(&Scr_ReadFile_FastFile_Hook)>()(filename, extFilename, codePos, archive);
-        }
-
-        const unsigned int MAX_RAWFILES = 2048;
-        struct RawFileList
-        {
-            unsigned int count;
-            RawFile *files[MAX_RAWFILES];
-        };
-
-        void R_AddRawFileToList(void *asset, void *inData)
-        {
-            RawFileList *rawFileList = reinterpret_cast<RawFileList *>(inData);
-            RawFile *rawFile = reinterpret_cast<RawFile *>(asset);
-
-            if (!rawFile)
-            {
-                Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: Null RawFile!\n");
-                return;
-            }
-
-            if (rawFileList->count >= MAX_RAWFILES)
-            {
-                Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: RawFileList is full!\n");
-                return;
-            }
-
-            rawFileList->files[rawFileList->count++] = rawFile;
-        }
-
-        void R_GetRawFileList(RawFileList *rawFileList)
-        {
-            rawFileList->count = 0;
-            DB_EnumXAssets_FastFile(ASSET_TYPE_RAWFILE, R_AddRawFileToList, rawFileList, true);
-        }
-
-        void Cmd_rawfilesdump()
-        {
-            RawFileList rawFileList;
-            R_GetRawFileList(&rawFileList);
-
-            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping %d raw files to `raw\\` %d\n", rawFileList.count);
-
-            for (unsigned int i = 0; i < rawFileList.count; i++)
-            {
-                auto rawfile = rawFileList.files[i];
+                auto rawfile = files[i].rawfile;
                 std::string asset_name = rawfile->name;
                 std::replace(asset_name.begin(), asset_name.end(), '/', '\\'); // Replace forward slashes with backslashes
-                filesystem::write_file_to_disk(("game:\\dump\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
+                filesystem::write_file_to_disk((std::string(DUMP_DIR) + "\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
             }
+        }
+
+        std::vector<Module *> components;
+
+        void RegisterComponent(Module *module)
+        {
+            DbgPrint("T4 MP: Component registered: %s\n", module->get_name());
+            components.push_back(module);
         }
 
         void init()
         {
-            DbgPrint("Initializing SP\n");
-
-            CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
-            CL_ConsolePrint_Detour.Install();
+            RegisterComponent(new scr_parser());
 
             CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
             CL_GamepadButtonEvent_Detour.Install();
@@ -248,11 +153,21 @@ namespace iw3
             Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
             Load_MapEntsPtr_Detour.Install();
 
-            Scr_ReadFile_FastFile_Detour = Detour(Scr_ReadFile_FastFile, Scr_ReadFile_FastFile_Hook);
-            Scr_ReadFile_FastFile_Detour.Install();
+            Cmd_AddCommandInternal("dumpraw", Cmd_Dumpraw_f, &Cmd_Dumpraw_f_VAR);
+        }
 
-            cmd_function_s *rawfilesdump_VAR = new cmd_function_s;
-            Cmd_AddCommandInternal("rawfilesdump", Cmd_rawfilesdump, rawfilesdump_VAR);
+        void shutdown()
+        {
+            CL_GamepadButtonEvent_Detour.Remove();
+            Load_MapEntsPtr_Detour.Remove();
+
+            // TODO: move module loader/unloader logic to a self contained class
+            // Clean up in reverse order
+            for (auto it = components.rbegin(); it != components.rend(); ++it)
+            {
+                delete *it;
+            }
+            components.clear();
         }
     }
 }

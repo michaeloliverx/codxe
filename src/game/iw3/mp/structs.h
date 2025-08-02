@@ -1836,6 +1836,16 @@ namespace iw3
             int type;
         };
 
+        struct BuiltinMethodDef
+        {
+            const char *actionString;
+            void (*actionFunc)(scr_entref_t);
+            int type;
+        };
+
+        typedef void (*BuiltinFunction)();
+        typedef void (*BuiltinMethod)(scr_entref_t);
+
         enum DemoType : __int32
         {
             DEMO_TYPE_NONE = 0x0,
@@ -2371,9 +2381,6 @@ namespace iw3
         // static_assert(offsetof(cg_s, visionSetPreLoaded) == 984336, "");
         // static_assert(offsetof(cg_s, playerTeleported) == 985552, "");
         // static_assert(offsetof(cg_s, vehicleFrame) == 985696, "");
-
-        typedef void (*BuiltinFunction)();
-        typedef void (*BuiltinMethod)(scr_entref_t);
 
         struct pml_t;
         enum fieldtype_t
