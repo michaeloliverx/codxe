@@ -29,25 +29,8 @@ namespace
 
 namespace iw3
 {
-
     namespace sp
     {
-        // Functions
-        Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x821DE9D8);
-
-        CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x822D7040);
-        CL_GamepadButtonEvent_t CL_GamepadButtonEvent = reinterpret_cast<CL_GamepadButtonEvent_t>(0x822CE630);
-
-        Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x821DFAD0);
-
-        Com_PrintError_t Com_PrintError = reinterpret_cast<Com_PrintError_t>(0x821DAC90);
-        Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x821DC0A0);
-        Com_PrintWarning_t Com_PrintWarning = reinterpret_cast<Com_PrintWarning_t>(0x821DA798);
-
-        Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822B9788);
-
-        // Variables
-        auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82DDEFCC);
 
         Detour CL_GamepadButtonEvent_Detour;
 
