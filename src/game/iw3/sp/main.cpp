@@ -44,8 +44,6 @@ namespace iw3
         Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x821DC0A0);
         Com_PrintWarning_t Com_PrintWarning = reinterpret_cast<Com_PrintWarning_t>(0x821DA798);
 
-        DB_EnumXAssets_FastFile_t DB_EnumXAssets_FastFile = reinterpret_cast<DB_EnumXAssets_FastFile_t>(0x822AEF88);
-
         Load_MapEntsPtr_t Load_MapEntsPtr = reinterpret_cast<Load_MapEntsPtr_t>(0x822B9788);
 
         // Variables
@@ -138,52 +136,19 @@ namespace iw3
             }
         }
 
-        const unsigned int MAX_RAWFILES = 2048;
-        struct RawFileList
-        {
-            unsigned int count;
-            RawFile *files[MAX_RAWFILES];
-        };
+        static cmd_function_s Cmd_Dumpraw_f_VAR;
 
-        void R_AddRawFileToList(void *asset, void *inData)
+        void Cmd_Dumpraw_f()
         {
-            RawFileList *rawFileList = reinterpret_cast<RawFileList *>(inData);
-            RawFile *rawFile = reinterpret_cast<RawFile *>(asset);
+            XAssetHeader files[2048];
+            auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_RAWFILE, files, 2048);
 
-            if (!rawFile)
+            for (int i = 0; i < count; i++)
             {
-                Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: Null RawFile!\n");
-                return;
-            }
-
-            if (rawFileList->count >= MAX_RAWFILES)
-            {
-                Com_PrintError(CON_CHANNEL_ERROR, "R_AddRawFileToList: RawFileList is full!\n");
-                return;
-            }
-
-            rawFileList->files[rawFileList->count++] = rawFile;
-        }
-
-        void R_GetRawFileList(RawFileList *rawFileList)
-        {
-            rawFileList->count = 0;
-            DB_EnumXAssets_FastFile(ASSET_TYPE_RAWFILE, R_AddRawFileToList, rawFileList, true);
-        }
-
-        void Cmd_rawfilesdump()
-        {
-            RawFileList rawFileList;
-            R_GetRawFileList(&rawFileList);
-
-            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping %d raw files to `raw\\` %d\n", rawFileList.count);
-
-            for (unsigned int i = 0; i < rawFileList.count; i++)
-            {
-                auto rawfile = rawFileList.files[i];
+                auto rawfile = files[i].rawfile;
                 std::string asset_name = rawfile->name;
                 std::replace(asset_name.begin(), asset_name.end(), '/', '\\'); // Replace forward slashes with backslashes
-                filesystem::write_file_to_disk(("game:\\dump\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
+                filesystem::write_file_to_disk((std::string(DUMP_DIR) + "\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
             }
         }
 
@@ -205,13 +170,11 @@ namespace iw3
             Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
             Load_MapEntsPtr_Detour.Install();
 
-            cmd_function_s *rawfilesdump_VAR = new cmd_function_s;
-            Cmd_AddCommandInternal("rawfilesdump", Cmd_rawfilesdump, rawfilesdump_VAR);
+            Cmd_AddCommandInternal("dumpraw", Cmd_Dumpraw_f, &Cmd_Dumpraw_f_VAR);
         }
 
         void shutdown()
         {
-            CL_ConsolePrint_Detour.Remove();
             CL_GamepadButtonEvent_Detour.Remove();
             Load_MapEntsPtr_Detour.Remove();
 

@@ -283,8 +283,6 @@ namespace iw3
         typedef void (*Com_Printf_t)(conChannel_t channel, const char *fmt, ...);
         typedef void (*Com_PrintWarning_t)(conChannel_t channel, const char *fmt, ...);
 
-        typedef void (*DB_EnumXAssets_FastFile_t)(XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride);
-
         typedef void (*Load_MapEntsPtr_t)();
     }
 
