@@ -17,7 +17,7 @@ namespace iw3
                 auto rawfile = files[i].rawfile;
                 std::string asset_name = rawfile->name;
                 std::replace(asset_name.begin(), asset_name.end(), '/', '\\'); // Replace forward slashes with backslashes
-                filesystem::write_file_to_disk(("game:\\dump\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
+                filesystem::write_file_to_disk((std::string(DUMP_DIR) + "\\" + asset_name).c_str(), rawfile->buffer, rawfile->len);
             }
         }
 

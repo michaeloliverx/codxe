@@ -395,16 +395,20 @@ namespace iw3
                 MapEnts *mapEnts = *varMapEntsPtr;
 
                 // Write stock map ents to disk
-                std::string file_path = "game:\\dump\\";
-                file_path += mapEnts->name;
+                std::string file_path = DUMP_DIR;
+                file_path += std::string("\\") + mapEnts->name;
                 file_path += ".ents";                                        //  iw4x naming convention
                 std::replace(file_path.begin(), file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
                 filesystem::write_file_to_disk(file_path.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
 
+                Config config;
+                LoadConfigFromFile(CONFIG_PATH, config);
+
                 // Load map ents from file
                 // Path to check for existing entity file
-                std::string raw_file_path = "game:\\raw\\";
-                raw_file_path += mapEnts->name;
+                std::string raw_file_path = config.GetModBasePath();
+
+                raw_file_path += std::string("\\") + mapEnts->name;
                 raw_file_path += ".ents";                                            // IW4x naming convention
                 std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
 
@@ -471,7 +475,10 @@ namespace iw3
 
             auto image = asset->entry.asset.header.image;
 
-            std::string replacement_path = "game:\\raw\\highmip\\" + asset_name + ".dds";
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
+            std::string replacement_path = config.GetModBasePath() + "\\highmip" + "\\" + asset_name + ".dds";
             std::ifstream file(replacement_path, std::ios::binary | std::ios::ate);
             if (!file)
             {
@@ -695,7 +702,7 @@ namespace iw3
                                                DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ);
             }
 
-            std::string filename = "game:\\dump\\images\\";
+            std::string filename = std::string(DUMP_DIR) + "\\" + "images";
             std::string sanitized_name = image->name;
 
             // Remove invalid characters
@@ -703,7 +710,7 @@ namespace iw3
                                                 { return c == '*'; }),
                                  sanitized_name.end());
 
-            filename += sanitized_name + ".dds";
+            filename += "\\" + sanitized_name + ".dds";
 
             std::ofstream file(filename, std::ios::binary);
             if (!file)
@@ -843,11 +850,9 @@ namespace iw3
             //     imageList.image[imageList.count++] = &g_imageProgs[i];
             // }
 
-            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping %d images to 'raw\\images\\' %d\n", imageList.count);
-
-            CreateDirectoryA("game:\\dump", 0);
-            CreateDirectoryA("game:\\dump\\images", 0);
-            CreateDirectoryA("game:\\dump\\highmip", 0);
+            CreateDirectoryA(DUMP_DIR, 0);
+            CreateDirectoryA((std::string(DUMP_DIR) + "\\images").c_str(), 0);
+            CreateDirectoryA((std::string(DUMP_DIR) + "\\highmip").c_str(), 0);
 
             for (unsigned int i = 0; i < imageList.count; i++)
             {
@@ -987,7 +992,7 @@ namespace iw3
                 // TODO: add sanity checks for format, size, etc.
                 // TODO: handle filenames with unsupported characters for Windows
 
-                auto output_filepath = "game:\\dump\\highmip\\" + assetName + ".dds";
+                auto output_filepath = std::string(DUMP_DIR) + "\\highmip\\" + assetName + ".dds";
 
                 std::ofstream output_file(output_filepath, std::ios::binary);
                 if (!output_file)
@@ -1224,7 +1229,10 @@ namespace iw3
 
         void Image_Replace(GfxImage *image)
         {
-            const std::string replacement_base_dir = "game:\\raw\\images";
+            Config config;
+            LoadConfigFromFile(CONFIG_PATH, config);
+
+            const std::string replacement_base_dir = config.GetModBasePath() + "\\images";
             const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
 
             if (!filesystem::file_exists(replacement_path))
@@ -1291,11 +1299,10 @@ namespace iw3
 
         void Load_images()
         {
-            const UINT MAX_IMAGES = 2048;
+            const int MAX_IMAGES = 2048;
             XAssetHeader assets[MAX_IMAGES];
-            UINT count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
-            DbgPrint("Cmd_imageload2_f: Found %d images\n", count);
-            for (UINT i = 0; i < count; i++)
+            const auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
+            for (int i = 0; i < count; i++)
             {
                 GfxImage *image = assets[i].image;
                 // debug image metadata print out all
