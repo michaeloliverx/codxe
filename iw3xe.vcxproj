@@ -126,6 +126,7 @@
       <ClCompile Include="src\game\qos\sp\components\scr_parser.cpp" />
 
       <ClCompile Include="src\game\qos\mp\main.cpp" />
+      <ClCompile Include="src\game\qos\mp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />
 
       <ClCompile Include="src\dllmain.cpp" />
@@ -206,6 +207,7 @@
       <ClInclude Include="src\game\qos\sp\symbols.h" />
 
       <ClInclude Include="src\game\qos\mp\main.h" />
+      <ClInclude Include="src\game\qos\mp\components\g_scr_main.h" />
       <ClInclude Include="src\game\qos\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\qos\mp\structs.h" />
       <ClInclude Include="src\game\qos\mp\symbols.h" />

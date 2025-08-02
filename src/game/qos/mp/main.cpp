@@ -1,3 +1,4 @@
+#include "components/g_scr_main.h"
 #include "components/scr_parser.h"
 #include "main.h"
 #include "common.h"
@@ -17,6 +18,7 @@ namespace qos
         void init()
         {
             DbgPrint("QOS SP: Registering modules\n");
+            RegisterComponent(new g_scr_main());
             RegisterComponent(new scr_parser());
         }
 
