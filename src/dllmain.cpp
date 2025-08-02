@@ -8,6 +8,7 @@ enum GameTitleId
 	GAME_TITLE_ID_IW4 = 0x41560817, // Call of Duty: Modern Warfare 2
 	GAME_TITLE_ID_QOS = 0x415607FF, // 007: Quantum of Solace
 	GAME_TITLE_ID_T5 = 0x41560855,	// Call of Duty: Black Ops
+	GAME_TITLE_ID_T6 = 0x415608C3,	// Call of Duty: Black Ops II
 };
 
 void monitor_title_id()
@@ -142,6 +143,28 @@ void monitor_title_id()
 			else
 			{
 				xbox::show_notification(L"CODxe - T5 Unsupported Executable");
+			}
+			return;
+		}
+		else if (current_title_id == GAME_TITLE_ID_T6)
+		{
+			if (strncmp((char *)0x8201D15C, "startSingleplayer", 17) == 0)
+			{
+				if (!in_xenia)
+					Sleep(1000);
+				xbox::show_notification(L"CODxe - T6 Singleplayer Detected");
+				t6::sp::init();
+			}
+			else if (strncmp((char *)0x82003580, "multiplayer", 11) == 0)
+			{
+				if (!in_xenia)
+					Sleep(1000);
+				xbox::show_notification(L"CODxe - T6 Multiplayer Detected");
+				t6::mp::init();
+			}
+			else
+			{
+				xbox::show_notification(L"CODxe - T6 Unsupported Executable");
 			}
 			return;
 		}
