@@ -1,0 +1,19 @@
+title_name = "Call of Duty: Black Ops"
+title_id = "41560855"                 # AV-2133
+#media_id = "0AEB2159" # Disc (USA, Europe): http://redump.org/disc/16718/
+
+# TU11
+
+[[plugin]]
+author = "mo"
+name = "iw3xe"
+file = "iw3xe.xex"
+hash = "0056A3C93E95617F" # default.xex
+is_enabled = true
+
+[[plugin]]
+author = "mo"
+name = "iw3xe"
+file = "iw3xe.xex"
+hash = "408AC9B9D7011930" # default_mp.xex
+is_enabled = true
