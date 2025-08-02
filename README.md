@@ -20,10 +20,11 @@ To run CoDxe, you will need one of the following:
 
 | Game                                        | Version                                                      | Singleplayer       | Multiplayer        | Supported Region                                |
 | ------------------------------------------- | ------------------------------------------------------------ | ------------------ | ------------------ | ----------------------------------------------- |
-| Call of Duty 2 (2005) (IW2)                 | [TU3](resources/iw2/TU_10LC1UH_0000000000000.0000000000181)  | :white_check_mark: | :x:                | `Call of Duty 2 (USA, Europe)`                  |
+| Call of Duty 2 (2005) (IW2)                 | [TU3](resources/iw2/TU_10LC1UH_0000000000000.0000000000181)  | :white_check_mark: | :white_check_mark: | `Call of Duty 2 (USA, Europe)`                  |
 | Call of Duty 4: Modern Warfare (2007) (IW3) | [TU4](resources/iw3/TU_10LC1V6_0000004000000.0000000000101)  | :white_check_mark: | :white_check_mark: | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
+| 007: Quantum of Solace (2008)               | [TU2](resources/qos/TU_10LC1VV_000000S000000.00000000000G7)  | :white_check_mark: | :white_check_mark: | `007 - Quantum of Solace (USA, Europe) (En,Fr)` |
 | Call of Duty 5: World at War (2008) (T4)    | [TU7](resources/t4/TU_10LC20S_0000010000000.00000000001O8)   | :white_check_mark: | :white_check_mark: | `Call of Duty - World at War (USA, Europe)`     |
-| Call of Duty: Modern Warfare 2 (2009) (IW4) | [TU9](/resources/iw4/TU_10LC20N_0000018000000.000000000028A) | :white_check_mark: | :x:                | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
+| Call of Duty: Modern Warfare 2 (2009) (IW4) | [TU9](/resources/iw4/TU_10LC20N_0000018000000.000000000028A) | :white_check_mark: | :x:                | `Call of Duty - Modern Warfare 2 (USA, Europe)` |
 
 ## Feature Matrix
 

@@ -122,6 +122,13 @@
       <ClCompile Include="src\game\t4\sp\components\ui.cpp" />
       <ClCompile Include="src\game\t4\sp\main.cpp" />
 
+      <ClCompile Include="src\game\qos\sp\main.cpp" />
+      <ClCompile Include="src\game\qos\sp\components\scr_parser.cpp" />
+
+      <ClCompile Include="src\game\qos\mp\main.cpp" />
+      <ClCompile Include="src\game\qos\mp\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />
+
       <ClCompile Include="src\dllmain.cpp" />
       <ClCompile Include="src\detour.cpp" />
       <ClCompile Include="src\filesystem.cpp" />
@@ -193,6 +200,17 @@
       <ClInclude Include="src\game\t4\sp\main.h" />
       <ClInclude Include="src\game\t4\sp\structs.h" />
       <ClInclude Include="src\game\t4\sp\symbols.h" />
+
+      <ClInclude Include="src\game\qos\sp\main.h" />
+      <ClInclude Include="src\game\qos\sp\components\scr_parser.h" />
+      <ClInclude Include="src\game\qos\sp\structs.h" />
+      <ClInclude Include="src\game\qos\sp\symbols.h" />
+
+      <ClInclude Include="src\game\qos\mp\main.h" />
+      <ClInclude Include="src\game\qos\mp\components\g_scr_main.h" />
+      <ClInclude Include="src\game\qos\mp\components\scr_parser.h" />
+      <ClInclude Include="src\game\qos\mp\structs.h" />
+      <ClInclude Include="src\game\qos\mp\symbols.h" />
 
       <ClInclude Include="src\detour.h" />
       <ClInclude Include="src\filesystem.h" />
