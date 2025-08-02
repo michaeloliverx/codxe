@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw3xe", "iw3xe.vcxproj", "{9B1700C7-D20C-4489-A47E-60D639F18F89}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "codxe", "codxe.vcxproj", "{9B1700C7-D20C-4489-A47E-60D639F18F89}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

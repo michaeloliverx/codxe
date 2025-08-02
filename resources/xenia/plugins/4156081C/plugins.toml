@@ -5,14 +5,14 @@ title_id = "4156081C"
 # TU7
 [[plugin]]
 author = "mo"
-name = "iw3xe"
-file = "iw3xe.xex"
+name = "codxe"
+file = "codxe.xex"
 hash = "A9B2C3C903AF90EE" # default.xex
 is_enabled = true
 
 [[plugin]]
 author = "mo"
-name = "iw3xe"
-file = "iw3xe.xex"
+name = "codxe"
+file = "codxe.xex"
 hash = "56E69D05A9F15D2B" # default_mp.xex
 is_enabled = true

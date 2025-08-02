@@ -6,14 +6,14 @@ title_id = "415607D1"         # AV-2001
 
 [[plugin]]
 author = "mo"
-name = "iw3xe"
-file = "iw3xe.xex"
+name = "codxe"
+file = "codxe.xex"
 hash = "3BABBD4061D5D56F" # default.xex
 is_enabled = true
 
 [[plugin]]
 author = "mo"
-name = "iw3xe"
-file = "iw3xe.xex"
+name = "codxe"
+file = "codxe.xex"
 hash = "B0BD32F2F0F42467" # default_mp.xex
 is_enabled = true

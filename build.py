@@ -3,9 +3,9 @@ import subprocess
 import shutil
 
 # Configuration
-SOLUTION_FILE = "iw3xe.sln"
+SOLUTION_FILE = "codxe.sln"
 MSBUILD_PATH = r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
-BINARY_PATH = r"build\Release\bin\iw3xe.xex"
+BINARY_PATH = r"build\Release\bin\codxe.xex"
 STAGING_DIR = r"build\staging"
 RESOURCES_PATH = r"resources\xenia"
 GAME_TITLE_ID = "415607E6"
@@ -68,7 +68,7 @@ else:
 print("Copying binary to staging directory...")
 shutil.copy2(
     BINARY_PATH,
-    os.path.join(STAGING_DIR, "xenia", "plugins", GAME_TITLE_ID, "iw3xe.xex"),
+    os.path.join(STAGING_DIR, "xenia", "plugins", GAME_TITLE_ID, "codxe.xex"),
 )
 
 
@@ -84,7 +84,7 @@ else:
     exit(1)
 
 
-PROJECT_NAME = "iw3xe"
+PROJECT_NAME = "codxe"
 ZIP_FILE_NAME = f"{PROJECT_NAME}-r{BUILD_NUMBER}.zip"
 STAGING_ZIP_PATH = os.path.join("build", ZIP_FILE_NAME)
 
