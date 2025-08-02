@@ -51,14 +51,6 @@ namespace iw3
         // Variables
         auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82DDEFCC);
 
-        Detour CL_ConsolePrint_Detour;
-
-        void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)
-        {
-            CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth, flags);
-            DbgPrint("CL_ConsolePrint txt=%s \n", txt);
-        }
-
         Detour CL_GamepadButtonEvent_Detour;
 
         void CL_GamepadButtonEvent_Hook(int localClientNum, int controllerIndex, int key, int down, unsigned int time)
@@ -206,9 +198,6 @@ namespace iw3
         void init()
         {
             RegisterComponent(new scr_parser());
-
-            CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
-            CL_ConsolePrint_Detour.Install();
 
             CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
             CL_GamepadButtonEvent_Detour.Install();
