@@ -320,15 +320,6 @@ namespace iw3
 {
     namespace mp
     {
-
-        Detour CL_ConsolePrint_Detour;
-
-        void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, int duration, int pixelWidth, int flags)
-        {
-            CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth, flags);
-            DbgPrint("CL_ConsolePrint txt=%s \n", txt);
-        }
-
         void Cmd_cmdinput_f()
         {
             bool success = ShowKeyboardAsync(
@@ -1607,9 +1598,6 @@ namespace iw3
             CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
             CG_DrawActive_Detour.Install();
 
-            CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
-            CL_ConsolePrint_Detour.Install();
-
             CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
             CL_GamepadButtonEvent_Detour.Install();
 
@@ -1655,7 +1643,6 @@ namespace iw3
             DbgPrint("Shutting down MP\n");
 
             CG_DrawActive_Detour.Remove();
-            CL_ConsolePrint_Detour.Remove();
             CL_GamepadButtonEvent_Detour.Remove();
             Load_MapEntsPtr_Detour.Remove();
             R_StreamLoadFileSynchronously_Detour.Remove();
