@@ -61,6 +61,15 @@
 #include "game/t4/sp/structs.h"
 #include "game/t4/sp/symbols.h"
 
+// T5-specific includes
+#include "game/t5/mp/main.h"
+#include "game/t5/mp/structs.h"
+#include "game/t5/mp/symbols.h"
+
+#include "game/t5/sp/main.h"
+#include "game/t5/sp/structs.h"
+#include "game/t5/sp/symbols.h"
+
 // QOS-specific includes
 #include "game/qos/sp/main.h"
 #include "game/qos/sp/structs.h"
