@@ -1518,18 +1518,6 @@ namespace iw3
             Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 262144) != 0);
         }
 
-        void PatchViewpos()
-        {
-            // viewpos patches
-            // Force the viewpos output to be printed to the obituary channel
-            *(volatile uint32_t *)0x82320D2C = 0x38600005;
-
-            // Update viewpos output format to display float values with 6 decimal places
-            // Original format: "(%.0f %.0f %.0f) : %.0f %.0f\n"
-            const char *newFormat = "%.6f, %.6f, %.6f ,%.6f, %.6f\n";
-            memcpy((void *)0x8204F7DC, newFormat, strlen(newFormat) + 1); // Include null terminator
-        }
-
         Detour Pmove_Detour;
 
         // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L11
@@ -1627,8 +1615,6 @@ namespace iw3
 
             SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
             SV_ClientThinkDetour.Install();
-
-            PatchViewpos();
 
             Dvar_RegisterBool("pm_fixed_fps_enable", false, 0, "Enable fixed FPS mode");
             Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
