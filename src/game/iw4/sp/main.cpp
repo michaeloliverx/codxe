@@ -38,6 +38,11 @@ namespace iw4
             RegisterComponent(new g_client_fields());
             RegisterComponent(new pm());
             RegisterComponent(new scr_parser());
+
+            Sleep(3000);
+
+            Dvar_SetBoolByName("loc_warnings", false);
+            Dvar_SetBoolByName("fx_draw", false);
         }
 
         void shutdown()
