@@ -5,114 +5,18 @@ namespace iw4
 {
     namespace sp
     {
-
-        // Bitmask for client flags
-        namespace ClientFlags
-        {
-            const int CF_BIT_NOCLIP = (1 << 0);
-            const int CF_BIT_UFO = (1 << 1);
-            // CF_BIT_NOCLIP = (1 << 0),
-            // CF_BIT_UFO = (1 << 1),
-            // CF_BIT_FROZEN = (1 << 2),
-            // CF_BIT_DISABLE_USABILITY = (1 << 3),
-            // CF_BIT_NO_KNOCKBACK = (1 << 4),
-        }
-
-        // Bitmask for entity flags
-        namespace EntityFlags
-        {
-            const int FL_GODMODE = 1 << 0;
-            // FL_DEMI_GODMODE = 1 << 1,
-            // FL_NOTARGET = 1 << 2,
-            // FL_NO_KNOCKBACK = 1 << 3,
-            // FL_NO_RADIUS_DAMAGE = 1 << 4,
-            // FL_SUPPORTS_LINKTO = 1 << 12,
-            // FL_NO_AUTO_ANIM_UPDATE = 1 << 13,
-            // FL_GRENADE_TOUCH_DAMAGE = 1 << 14,
-            // FL_STABLE_MISSILES = 1 << 17,
-            // FL_REPEAT_ANIM_UPDATE = 1 << 18,
-            // FL_VEHICLE_TARGET = 1 << 19,
-            // FL_GROUND_ENT = 1 << 20,
-            // FL_CURSOR_HINT = 1 << 21,
-            // FL_MISSILE_ATTRACTOR = 1 << 23,
-            // FL_WEAPON_BEING_GRABBED = 1 << 24,
-            // FL_DELETE = 1 << 25,
-            // FL_BOUNCE = 1 << 26,
-            // FL_MOVER_SLIDE = 1 << 27
-        }
-
         const unsigned short CLIENT_FIELD_MASK = 0x6000;
 
-        void ClientScr_SetGod(gclient_s *pSelf, const client_fields_s *field)
+        void ClientScr_SetEntityFlags(gclient_s *pSelf, const client_fields_s *pField)
         {
-            auto ent = &g_entities[pSelf - level->clients];
-            auto p_flags = &ent->flags;
-
-            const auto value = Scr_GetInt(0);
-            if (value)
-            {
-                *p_flags |= EntityFlags::FL_GODMODE;
-            }
-            else
-            {
-                *p_flags &= ~EntityFlags::FL_GODMODE;
-            }
+            gentity_s *ent = &g_entities[pSelf - level->clients];
+            ent->flags = Scr_GetInt(0);
         }
 
-        void ClientScr_GetGod(gclient_s *client, const client_fields_s *field)
+        void ClientScr_GetEntityFlags(gclient_s *pSelf, const client_fields_s *field)
         {
-            const auto ent = &g_entities[client - level->clients];
-            const auto p_flags = &ent->flags;
-            const int value = (*p_flags & EntityFlags::FL_GODMODE) ? 1 : 0;
-            Scr_AddInt(value);
-        }
-
-        void ClientScr_SetNoclip(gclient_s *pSelf, const client_fields_s *field)
-        {
-            auto ent = &g_entities[pSelf - level->clients];
-            auto p_flags = &ent->client->flags;
-
-            const auto value = Scr_GetInt(0);
-            if (value)
-            {
-                *p_flags |= ClientFlags::CF_BIT_NOCLIP;
-            }
-            else
-            {
-                *p_flags &= ~ClientFlags::CF_BIT_NOCLIP;
-            }
-        }
-
-        void ClientScr_GetNoclip(gclient_s *client, const client_fields_s *field)
-        {
-            const auto ent = &g_entities[client - level->clients];
-            const auto p_flags = &ent->client->flags;
-            const int value = (*p_flags & ClientFlags::CF_BIT_NOCLIP) ? 1 : 0;
-            Scr_AddInt(value);
-        }
-
-        void ClientScr_SetUFO(gclient_s *pSelf, const client_fields_s *field)
-        {
-            auto ent = &g_entities[pSelf - level->clients];
-            auto p_flags = &ent->client->flags;
-
-            const auto value = Scr_GetInt(0);
-            if (value)
-            {
-                *p_flags |= ClientFlags::CF_BIT_UFO;
-            }
-            else
-            {
-                *p_flags &= ~ClientFlags::CF_BIT_UFO;
-            }
-        }
-
-        void ClientScr_GetUFO(gclient_s *client, const client_fields_s *field)
-        {
-            const auto ent = &g_entities[client - level->clients];
-            const auto p_flags = &ent->client->flags;
-            const int value = (*p_flags & ClientFlags::CF_BIT_UFO) ? 1 : 0;
-            Scr_AddInt(value);
+            const gentity_s *ent = &g_entities[pSelf - level->clients];
+            Scr_AddInt(ent->flags);
         }
 
         const client_fields_s fields_extended[] =
@@ -125,10 +29,11 @@ namespace iw4
                 {"damagemultiplier", 44584, F_FLOAT, NULL, NULL},
                 {"laststand", 44996, F_INT, NULL, NULL},
                 {"motiontrackerenabled", 44336, F_INT, NULL, NULL},
-                // Added fields
-                {"god", 0, F_INT, ClientScr_SetGod, ClientScr_GetGod},
-                {"noclip", 0, F_INT, ClientScr_SetNoclip, ClientScr_GetNoclip},
-                {"ufo", 0, F_INT, ClientScr_SetUFO, ClientScr_GetUFO},
+
+                // // Added fields
+                {"clientflags", offsetof(gclient_s, flags), F_INT, NULL, NULL},
+                {"entityflags", NULL, F_INT, ClientScr_SetEntityFlags, ClientScr_GetEntityFlags},
+
                 {NULL, 0, F_INT, NULL, NULL}};
 
         Detour GScr_AddFieldsForClient_Detour;

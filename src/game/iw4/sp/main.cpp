@@ -10,6 +10,15 @@ namespace iw4
 {
     namespace sp
     {
+        void RemoveIdleGunSway()
+        {
+            // BG_CalculateViewMovement_Angles_Idle
+            *(volatile uint32_t *)0x82336C9C = 0x60000000;
+
+            // BG_ComputeAndApplyWeaponMovement_IdleAngles
+            *(volatile uint32_t *)0x823362A8 = 0x60000000;
+        }
+
         std::vector<Module *> components;
 
         void RegisterComponent(Module *module)
@@ -22,11 +31,18 @@ namespace iw4
         {
             DbgPrint("IW4 SP: Registering modules\n");
 
+            RemoveIdleGunSway();
+
             RegisterComponent(new cg());
             RegisterComponent(new clipmap());
             RegisterComponent(new g_client_fields());
             RegisterComponent(new pm());
             RegisterComponent(new scr_parser());
+
+            Sleep(3000);
+
+            Dvar_SetBoolByName("loc_warnings", false);
+            Dvar_SetBoolByName("fx_draw", false);
         }
 
         void shutdown()
