@@ -3,12 +3,11 @@ import subprocess
 import shutil
 
 # Configuration
-SOLUTION_FILE = "iw3xe.sln"
+SOLUTION_FILE = "codxe.sln"
 MSBUILD_PATH = r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
-BINARY_PATH = r"build\Release\bin\iw3xe.xex"
+BINARY_PATH = r"build\Release\bin\codxe.xex"
 STAGING_DIR = r"build\staging"
-RESOURCES_PATH = r"resources\xenia"
-GAME_TITLE_ID = "415607E6"
+RESOURCES_PATH = r"resources"
 
 
 def count_commits():
@@ -58,33 +57,36 @@ os.makedirs(STAGING_DIR, exist_ok=True)
 
 
 if os.path.exists(RESOURCES_PATH):
-    # Copy the entire xenia directory and its contents to the staging directory
-    shutil.copytree(RESOURCES_PATH, os.path.join(STAGING_DIR, "xenia"))
-    print("Resources copied successfully")
+    # Copy the contents of resources directory directly to the staging directory
+    shutil.copytree(RESOURCES_PATH, STAGING_DIR, dirs_exist_ok=True)
+    print("Resources directory copied successfully")
 else:
     print(f"Resources directory not found at {RESOURCES_PATH}")
     exit(1)
 
-print("Copying binary to staging directory...")
-shutil.copy2(
-    BINARY_PATH,
-    os.path.join(STAGING_DIR, "xenia", "plugins", GAME_TITLE_ID, "iw3xe.xex"),
-)
+print("Copying binary to all title ID directories...")
+plugins_dir = os.path.join(STAGING_DIR, "xenia", "plugins")
+if os.path.exists(plugins_dir):
+    # Get all subdirectories in the plugins folder (these are the title IDs)
+    title_ids = [
+        d
+        for d in os.listdir(plugins_dir)
+        if os.path.isdir(os.path.join(plugins_dir, d))
+    ]
 
-
-print("Copying mods/codjumper to staging/raw directory...")
-MODS_PATH = r"mods\codjumper"
-RAW_DIR = os.path.join(STAGING_DIR, "raw")
-if os.path.exists(MODS_PATH):
-    os.makedirs(RAW_DIR, exist_ok=True)
-    shutil.copytree(MODS_PATH, RAW_DIR, dirs_exist_ok=True)
-    print("Mods copied successfully to staging/raw")
+    for title_id in title_ids:
+        plugin_dir = os.path.join(plugins_dir, title_id)
+        shutil.copy2(
+            BINARY_PATH,
+            os.path.join(plugin_dir, "codxe.xex"),
+        )
+        print(f"Binary copied to {title_id}")
 else:
-    print(f"Mods directory not found at {MODS_PATH}")
+    print(f"ERROR: Plugins directory not found at {plugins_dir}")
     exit(1)
 
 
-PROJECT_NAME = "iw3xe"
+PROJECT_NAME = "codxe"
 ZIP_FILE_NAME = f"{PROJECT_NAME}-r{BUILD_NUMBER}.zip"
 STAGING_ZIP_PATH = os.path.join("build", ZIP_FILE_NAME)
 

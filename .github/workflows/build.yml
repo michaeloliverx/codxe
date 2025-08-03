@@ -82,7 +82,7 @@ jobs:
           # Build using build.py which will use the same commit count
           python build.py
 
-          echo "ZIP_FILE=iw3xe-r${commitCount}.zip" >> $env:GITHUB_OUTPUT
+          echo "ZIP_FILE=codxe-r${commitCount}.zip" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
       - name: Create Release
