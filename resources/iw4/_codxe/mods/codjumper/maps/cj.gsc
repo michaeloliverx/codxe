@@ -3,10 +3,8 @@
 init()
 {
 
-	level.start_point = "no_game";		  // Starts what appears to be a dev mode game with no objectives/AI
-	SetSavedDvar("ufoHitsTriggers", "0"); // ? Investigate side effects of this
-
-	setdvar("jump_slowdownEnable", 0);
+	level.start_point = "no_game"; // Starts what appears to be a dev mode game with no objectives/AI
+	// SetSavedDvar("ufoHitsTriggers", "0"); // ? Investigate side effects of this
 
 	level.player thread setup_player();
 }
@@ -22,9 +20,6 @@ setup_player()
 	wait 3;
 
 	self hud_hide_all();
-
-	// Print mapname
-	IPrintLn("level.script: " + level.script);
 
 	self unlock_all_missions();
 
@@ -93,20 +88,6 @@ setup_dvars()
 	SetSavedDvar("cg_fov", 70);
 
 	SetSavedDvar("loc_warnings", 0);
-
-	SetSavedDvar("fx_enable", 0); // Disable FX (RPG smoke etc)
-	SetSavedDvar("fx_marks", 0);  // Disable FX (RPG smoke etc)
-	SetSavedDvar("fx_draw", 0);	  // Disable FX (RPG smoke etc)
-
-	setdvar("fx_enable", 0);
-	setdvar("fx_marks_ents", 0);
-	setdvar("fx_marks_smodels", 0);
-	setdvar("fx_draw", 0);					 // Disable FX (RPG smoke etc)
-	setdvar("nightVisionDisableEffects", 1); // Remove nightvision fx
-
-	SetSavedDvar("jump_slowdownEnable", 0);
-
-	SetSavedDvar("mis_cheat", 1);
 }
 
 watch_player_commands()
