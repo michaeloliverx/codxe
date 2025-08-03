@@ -7,7 +7,7 @@ SOLUTION_FILE = "codxe.sln"
 MSBUILD_PATH = r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
 BINARY_PATH = r"build\Release\bin\codxe.xex"
 STAGING_DIR = r"build\staging"
-GAMES_PATH = r"games"
+RESOURCES_PATH = r"resources"
 
 
 def count_commits():
@@ -56,16 +56,16 @@ if os.path.exists(STAGING_DIR):
 os.makedirs(STAGING_DIR, exist_ok=True)
 
 
-if os.path.exists(GAMES_PATH):
-    # Copy the entire games directory to the staging directory, preserving the 'games' folder
-    shutil.copytree(GAMES_PATH, os.path.join(STAGING_DIR, "games"))
-    print("Games directory copied successfully")
+if os.path.exists(RESOURCES_PATH):
+    # Copy the contents of resources directory directly to the staging directory
+    shutil.copytree(RESOURCES_PATH, STAGING_DIR, dirs_exist_ok=True)
+    print("Resources directory copied successfully")
 else:
-    print(f"Games directory not found at {GAMES_PATH}")
+    print(f"Resources directory not found at {RESOURCES_PATH}")
     exit(1)
 
 print("Copying binary to all title ID directories...")
-plugins_dir = os.path.join(STAGING_DIR, "games", "xenia", "plugins")
+plugins_dir = os.path.join(STAGING_DIR, "xenia", "plugins")
 if os.path.exists(plugins_dir):
     # Get all subdirectories in the plugins folder (these are the title IDs)
     title_ids = [
