@@ -3,8 +3,13 @@
 init()
 {
 
-	level.start_point = "no_game"; // Starts what appears to be a dev mode game with no objectives/AI
-	// SetSavedDvar("ufoHitsTriggers", "0"); // ? Investigate side effects of this
+	exec("set loc_warnings 0;");			  // Disable localization warnings
+	exec("set fx_enable 0;");				  // Disable FX
+	exec("set bg_fallDamageMinHeight 9998;"); // Disable fall damage
+	exec("set bg_fallDamageMaxHeight 9999;"); // Disable fall damage
+
+	level.start_point = "no_game";		  // Starts what appears to be a dev mode game with no objectives/AI
+	SetSavedDvar("ufoHitsTriggers", "0"); // ? Investigate side effects of this
 
 	level.player thread setup_player();
 }
@@ -87,8 +92,6 @@ setup_dvars()
 	SetSavedDvar("actionSlotsHide", 1);
 
 	SetSavedDvar("cg_fov", 70);
-
-	SetSavedDvar("loc_warnings", 0);
 }
 
 watch_player_commands()

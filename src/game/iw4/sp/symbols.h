@@ -28,7 +28,7 @@ namespace iw4
         static auto ClientScr_GetName = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821E7720);
 
         static auto Scr_AddString = reinterpret_cast<void (*)(const char *value)>(0x822ACF48);
-        static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index)>(0x822B230);
+        static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index)>(0x822B2300);
         static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x822ACC70);
         static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index)>(0x822B1CC8);
         static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x822E8568);
@@ -38,7 +38,12 @@ namespace iw4
 
         static auto Player_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName)>(0x821EEC20);
 
+        static auto Scr_RegisterFunction = reinterpret_cast<void (*)(int func, const char *name)>(0x822953D0);
+
+        static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x82225090);
         static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x822252A0);
+
+        static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x822ACBE0);
 
         static auto Weapon_RocketLauncher_Fire = reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp, weaponParms *gunVel, struct lockonFireParms *lockParms, lockonFireParms *magicBullet)>(0x82231AE8);
         static auto PM_StepSlideMove = reinterpret_cast<void (*)(struct pmove_t *pm, struct pml_t *pml, int gravity)>(0x8232AF08);
