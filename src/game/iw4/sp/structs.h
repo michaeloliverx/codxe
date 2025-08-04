@@ -83,7 +83,15 @@ namespace iw4
             unsigned __int16 classnum;
         };
 
+        typedef void (*BuiltinFunction)();
         typedef void (*BuiltinMethod)(scr_entref_t);
+
+        struct BuiltinFunctionDef
+        {
+            const char *actionString;
+            void (*actionFunc)();
+            int type;
+        };
 
         struct BuiltinMethodDef
         {

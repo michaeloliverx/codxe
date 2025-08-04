@@ -1,6 +1,7 @@
 #include "components/cg.h"
 #include "components/clipmap.h"
 #include "components/g_client_fields.h"
+#include "components/g_scr_main.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "main.h"
@@ -36,13 +37,9 @@ namespace iw4
             RegisterComponent(new cg());
             RegisterComponent(new clipmap());
             RegisterComponent(new g_client_fields());
+            RegisterComponent(new g_scr_main());
             RegisterComponent(new pm());
             RegisterComponent(new scr_parser());
-
-            Sleep(3000);
-
-            Dvar_SetBoolByName("loc_warnings", false);
-            Dvar_SetBoolByName("fx_draw", false);
         }
 
         void shutdown()
