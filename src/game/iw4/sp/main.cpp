@@ -32,6 +32,14 @@ namespace iw4
         {
             DbgPrint("IW4 SP: Registering modules\n");
 
+            // GScr_SetSavedDvar
+            // Patches SetSavedDvar SAVED flag check
+            *(volatile uint32_t *)0x8221F688 = 0x60000000; // NOP replaces bl Scr_Error
+
+            // GScr_SetDvar_Internal
+            *(volatile uint32_t *)0x8220F664 = 0x60000000; // NOP replaces bl Scr_Error
+            *(volatile uint32_t *)0x8220F690 = 0x60000000; // NOP replaces bl Scr_Error
+
             RemoveIdleGunSway();
 
             RegisterComponent(new cg());

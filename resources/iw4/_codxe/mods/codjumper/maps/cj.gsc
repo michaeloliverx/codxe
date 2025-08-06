@@ -1,18 +1,20 @@
 #include maps\codxe_utility;
+#include maps\_utility;
 
 init()
 {
+	level.start_point = "no_game";		// Starts what appears to be a dev mode game with no objectives/AI
+	SetSavedDvar("ufoHitsTriggers", 0); // ? Investigate side effects of this
 
-	exec("set loc_warnings 0;");			  // Disable localization warnings
-	exec("set fx_enable 0;");				  // Disable FX
-	exec("set bg_fallDamageMinHeight 9998;"); // Disable fall damage
-	exec("set bg_fallDamageMaxHeight 9999;"); // Disable fall damage
-
-	level.start_point = "no_game";		  // Starts what appears to be a dev mode game with no objectives/AI
-	SetSavedDvar("ufoHitsTriggers", "0"); // ? Investigate side effects of this
+	// The default no game start point is `_load::start_nogame()` which deletes all the AI and spawners.
+	// We want to keep spawners for spawning blockers.
+	// calling it again overrides the default no game start point.
+	add_start("no_game", ::nop);
 
 	level.player thread setup_player();
 }
+
+nop() {}
 
 setup_player()
 {
@@ -36,6 +38,7 @@ setup_player()
 
 	self setup_dvars();
 
+	self thread watch_buttons();
 	self thread watch_player_commands();
 	self thread replenish_ammo();
 	self thread rpg_switch();
@@ -82,19 +85,59 @@ setup_loadout()
 
 setup_dvars()
 {
-	// HUD
-	SetSavedDvar("compass", 0);
-	SetSavedDvar("ammoCounterHide", 1);
-	SetSavedDvar("hud_showStance", 0);
-	SetSavedDvar("hud_drawHUD", 0);
-	SetSavedDvar("hud_dpad_arrow", 0);
-	SetSavedDvar("cg_drawCrosshair", 0);
-	SetSavedDvar("actionSlotsHide", 1);
+	// Hide various HUD elements
+	setdvar("compass", 0);
+	setdvar("ammoCounterHide", 1);
+	setdvar("hud_showStance", 0);
+	setdvar("hud_drawHUD", 0);
+	setdvar("cg_drawCrosshair", 0);
+	setdvar("actionSlotsHide", 1);
 
-	SetSavedDvar("cg_fov", 70);
+	// Disable aim assist of any kind
+	setdvar("aim_lockon_enabled", 0);
+	setdvar("aim_automelee_enabled", 0);
+	setdvar("aim_autoaim_enabled", 0);
+	setdvar("aim_slowdown_enabled", 0);
+
+	setdvar("cg_fov", 70);
+
+	setdvar("loc_warnings", 0);				 // Disable localization warnings
+	setdvar("fx_enable", 0);				 // Disable FX
+	setdvar("bg_fallDamageMinHeight", 9998); // Disable fall damage
+	setdvar("bg_fallDamageMaxHeight", 9999); // Disable fall damage
+	setdvar("r_dof_enable", 0);				 // Disable depth of field
+
+	// Hide enemy names
+	setdvar("hostileNameFontColor", "0 0 0 0");
+	setdvar("hostileNameFontGlowColor", "0 0 0 0");
+
+	// make on screen messages have a shorter duration
+	for (i = 0; i < 4; i++)
+	{
+		setdvar("con_gameMsgWindow" + i + "MsgTime", 0.75);
+	}
 }
 
 watch_player_commands()
+{
+	self endon("death");
+	self endon("disconnect");
+
+	self notifyOnPlayerCommand("dpad_up", "+actionslot 1");
+
+	for (;;)
+	{
+		button = self common_scripts\utility::waittill_any_return("dpad_up");
+		switch (button)
+		{
+		case "dpad_up":
+			self spawn_blocker();
+			break;
+		}
+	}
+}
+
+watch_buttons()
 {
 	self endon("death");
 	self endon("disconnect");
@@ -120,6 +163,72 @@ watch_player_commands()
 	}
 }
 
+force_teleport(origin, angles)
+{
+	linker = spawn("script_model", origin);
+	linker setmodel("tag_origin");
+	self linkto(linker);
+	self teleport(origin, angles);
+	self unlink();
+	linker delete ();
+}
+
+spawn_blocker()
+{
+	if (self isufo())
+	{
+		iprintln("^1Cannot spawn blocker in UFO mode");
+		return;
+	}
+	if (!self isonground())
+	{
+		iprintln("^1Must be on ground to spawn blocker");
+		return;
+	}
+
+	origin = self.origin;
+	yaw = self getplayerangles()[1];
+
+	if (!isdefined(self.blocker))
+	{
+
+		spawners = GetSpawnerArray();
+		if (spawners.size == 0)
+		{
+			iprintln("^1No AI spawner found");
+			return;
+		}
+		// Randomly select a spawner from the array for variety
+		spawner = spawners[randomint(spawners.size)];
+
+		spawner.origin = origin;
+		spawner.angles = (0, yaw, 0);
+
+		// Make the spawned guy stationary and invincible
+		// TODO: Some of these are unnecessary
+		self.blocker = spawner StalingradSpawn(true);
+		self.blocker.allowdeath = false;
+		self.blocker.ignoreall = true;
+		self.blocker.ignoreme = true;
+		self.blocker.goalradius = 8;
+		self.blocker.fixednode = true;
+		self.blocker thread magic_bullet_shield();
+		self.blocker.team = "axis";
+		self.blocker.attackeraccuracy = 0;
+		self.blocker.IgnoreRandomBulletDamage = true;
+		self.blocker.disableBulletWhizbyReaction = true;
+		self.blocker.disableFriendlyFireReaction = true;
+		self.blocker.noDodgeMove = true;
+		self.blocker.allowPain = false;
+		self.blocker allowedStances("stand");
+	}
+
+	self.blocker force_teleport(origin, (0, yaw, 0));
+	self.blocker setgoalpos(origin);
+
+	iprintln("^2Blocker spawned at " + origin);
+}
+
 /**
  * Check if a button is pressed.
  */
@@ -127,6 +236,8 @@ button_pressed(button)
 {
 	switch (ToLower(button))
 	{
+	case "ads":
+		return self adsbuttonpressed();
 	case "smoke":
 		return self secondaryoffhandbuttonpressed();
 	case "frag":
