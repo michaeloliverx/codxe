@@ -220,6 +220,19 @@ watch_buttons()
 		if (button_pressed("smoke"))
 		{
 			self load_position();
+			position_number = get_latest_position_number();
+			while (self button_pressed("smoke"))
+			{
+				if (self button_pressed("use"))
+				{
+					position_number -= 1;
+					if (position_number < 1)
+						position_number = get_latest_position_number();
+					self load_position(position_number);
+					wait 0.2;
+				}
+				wait 0.05;
+			}
 			wait 0.2;
 		}
 		else if (button_pressed("frag"))
@@ -377,21 +390,65 @@ save_position()
 	if (!self isonground())
 		return;
 
+	// Initialize position history array if it doesn't exist
+	if (!isDefined(self.position_history))
+		self.position_history = [];
+
+	// Create save struct
 	save = spawnstruct();
 	save.origin = self.origin;
 	save.angles = self getplayerangles();
 
-	self.saved_pos = save;
+	// Add to history array
+	self.position_history[self.position_history.size] = save;
 
-	IPrintLn("Position saved");
+	// Optional: Limit history size to prevent memory issues
+	max_history = 50;
+	if (self.position_history.size > max_history)
+	{
+		// Remove oldest entry
+		new_array = [];
+		for (i = 1; i < self.position_history.size; i++)
+			new_array[new_array.size] = self.position_history[i];
+		self.position_history = new_array;
+	}
+
+	IPrintLn("Position saved (#" + self.position_history.size + ")");
 }
 
-load_position()
+load_position(position_num)
 {
+	// Check if position history exists
+	if (!isDefined(self.position_history) || self.position_history.size == 0)
+	{
+		IPrintLn("^1Error: No saved positions found");
+		return;
+	}
+
+	position_num_provided = isDefined(position_num);
+
+	// Default to latest position if no specific number provided
+	if (!isDefined(position_num))
+		position_num = self.position_history.size;
+
+	// Bounds checking
+	if (position_num < 1 || position_num > self.position_history.size)
+	{
+		IPrintLn("^1Error: Invalid position number. Valid range: 1-" + self.position_history.size);
+		return;
+	}
+
+	// Load the specified position (convert to 0-based index)
+	save = self.position_history[position_num - 1];
+
+	if (!isDefined(save))
+	{
+		IPrintLn("^1Error: Position data corrupted");
+		return;
+	}
+
+	// Apply the saved position
 	self SetVelocity((0, 0, 0));
-
-	save = self.saved_pos;
-
 	self setplayerangles(save.angles);
 	self setorigin(save.origin);
 
@@ -400,6 +457,18 @@ load_position()
 		self switchToWeapon(level.rpg);
 		self.rpg_switched = false;
 	}
+
+	// If position_num_provided, print the position number
+	if (position_num_provided)
+		IPrintLn("Position loaded (#" + position_num + "/" + self.position_history.size + ")");
+}
+
+get_latest_position_number()
+{
+	if (!isDefined(self.position_history) || self.position_history.size == 0)
+		return 0; // No positions saved
+
+	return self.position_history.size;
 }
 
 /**
