@@ -23,10 +23,10 @@ setup_player()
 		level waittill("loadout complete");
 
 	// Prevents multiple calls to this function
-	if (isdefined(self.cj_setup_player))
+	if (isdefined(self.cj))
 		return;
 
-	self.cj_setup_player = true;
+	self.cj = spawnstruct();
 
 	self hud_hide_all();
 
@@ -42,6 +42,73 @@ setup_player()
 	self thread watch_player_commands();
 	self thread replenish_ammo();
 	self thread rpg_switch();
+	self thread start_cj_hud();
+}
+
+GetSpeed2D()
+{
+	velocity = self getVelocity();
+	horizontalSpeed = int(sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1]));
+	return horizontalSpeed;
+}
+
+CH_HUD_ALPHA = 0.4; // Default alpha for CJ HUD elements
+
+start_cj_hud()
+{
+	z_origin_hudelem = maps\_hud_util::createFontString("default", 1.4);
+	z_origin_hudelem.alignX = "left";
+	z_origin_hudelem.alignY = "top";
+	z_origin_hudelem.horzAlign = "fullscreen";
+	z_origin_hudelem.vertAlign = "fullscreen";
+	z_origin_hudelem.foreground = 1;
+	z_origin_hudelem.alpha = CH_HUD_ALPHA;
+	z_origin_hudelem.x = 0;
+	z_origin_hudelem.y = 453;
+	z_origin_hudelem.color = (1, 1, 1);
+	self.cj.z_origin_hudelem = z_origin_hudelem;
+
+	speed_hudelem = maps\_hud_util::createFontString("default", 1.4);
+	speed_hudelem.alignX = "left";
+	speed_hudelem.alignY = "top";
+	speed_hudelem.horzAlign = "fullscreen";
+	speed_hudelem.vertAlign = "fullscreen";
+	speed_hudelem.foreground = 1;
+	speed_hudelem.alpha = CH_HUD_ALPHA;
+	speed_hudelem.x = 0;
+	speed_hudelem.y = 465;
+	speed_hudelem.color = (1, 1, 1);
+	self.cj.speed_hudelem = speed_hudelem;
+
+	for (;;)
+	{
+		speed_hudelem setValue(self GetSpeed2D());
+		z_origin_hudelem setValue(self.origin[2]);
+		wait 0.05;
+	}
+}
+
+toggle_cj_hud()
+{
+
+	if (!isdefined(self.cj) || !isdefined(self.cj.speed_hudelem) || !isdefined(self.cj.z_origin_hudelem))
+	{
+		iprintln("^1CJ HUD not initialized");
+		return;
+	}
+
+	if (self.cj.speed_hudelem.alpha == CH_HUD_ALPHA)
+	{
+		self.cj.speed_hudelem.alpha = 0;
+		self.cj.z_origin_hudelem.alpha = 0;
+		iprintln("CJ HUD [^1OFF^7]");
+	}
+	else
+	{
+		self.cj.speed_hudelem.alpha = CH_HUD_ALPHA;
+		self.cj.z_origin_hudelem.alpha = CH_HUD_ALPHA;
+		iprintln("CJ HUD [^2ON^7]");
+	}
 }
 
 setup_loadout()
@@ -124,15 +191,21 @@ watch_player_commands()
 	self endon("disconnect");
 
 	self notifyOnPlayerCommand("dpad_up", "+actionslot 1");
+	self notifyOnPlayerCommand("dpad_right", "+actionslot 4");
 
 	for (;;)
 	{
-		button = self common_scripts\utility::waittill_any_return("dpad_up");
+		button = self common_scripts\utility::waittill_any_return("dpad_up", "dpad_right");
 		switch (button)
 		{
 		case "dpad_up":
 			self spawn_blocker();
 			break;
+		case "dpad_right":
+			self toggle_cj_hud();
+			break;
+		default:
+			iprintln("^1Unknown button " + button);
 		}
 	}
 }
@@ -159,7 +232,7 @@ watch_buttons()
 			self save_position();
 			wait 0.2;
 		}
-		wait 0.1;
+		wait 0.05;
 	}
 }
 
