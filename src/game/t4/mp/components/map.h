@@ -4,15 +4,18 @@
 
 namespace t4
 {
-    namespace mp
-    {
-        class Map : public Module
-        {
-        public:
-            Map();
-            ~Map();
+namespace mp
+{
+class Map : public Module
+{
+  public:
+    Map();
+    ~Map();
 
-            const char *get_name() override { return "Map"; };
-        };
-    }
-}
+    const char *get_name() override
+    {
+        return "Map";
+    };
+};
+} // namespace mp
+} // namespace t4

@@ -71,22 +71,26 @@ struct DDSImage
 
 namespace t4
 {
-    namespace mp
+namespace mp
+{
+
+class ImageLoader : public Module
+{
+
+  public:
+    ImageLoader();
+    ~ImageLoader();
+    const char *get_name() override
     {
+        return "ImageLoader";
+    };
 
-        class ImageLoader : public Module
-        {
-
-        public:
-            ImageLoader();
-            ~ImageLoader();
-            const char *get_name() override { return "ImageLoader"; };
-
-        private:
-            void DumpGfxImage(const GfxImage *image);
-            void ImageLoader::ReplaceGfxImage(GfxImage *image);
-            void ImageLoader::ReplaceGfxImage2d(GfxImage *image, const DDSImage &ddsImage);
-            unsigned int ImageLoader::CalculateMipLevelSize(unsigned int width, unsigned int height, unsigned int mipLevel, GPUTEXTUREFORMAT format);
-        };
-    }
-}
+  private:
+    void DumpGfxImage(const GfxImage *image);
+    void ImageLoader::ReplaceGfxImage(GfxImage *image);
+    void ImageLoader::ReplaceGfxImage2d(GfxImage *image, const DDSImage &ddsImage);
+    unsigned int ImageLoader::CalculateMipLevelSize(unsigned int width, unsigned int height, unsigned int mipLevel,
+                                                    GPUTEXTUREFORMAT format);
+};
+} // namespace mp
+} // namespace t4

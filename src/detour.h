@@ -60,16 +60,25 @@
 // SPR - Special purpose register.
 // UIMM/SIMM - Unsigned/signed immediate.
 //
-#define POWERPC_ADDI(rD, rA, SIMM) (UINT32)(POWERPC_OPCODE_ADDI | (rD << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | SIMM)
-#define POWERPC_ADDIS(rD, rA, SIMM) (UINT32)(POWERPC_OPCODE_ADDIS | (rD << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | SIMM)
+#define POWERPC_ADDI(rD, rA, SIMM)                                                                                     \
+    (UINT32)(POWERPC_OPCODE_ADDI | (rD << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | SIMM)
+#define POWERPC_ADDIS(rD, rA, SIMM)                                                                                    \
+    (UINT32)(POWERPC_OPCODE_ADDIS | (rD << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | SIMM)
 #define POWERPC_LIS(rD, SIMM) POWERPC_ADDIS(rD, 0, SIMM) // Mnemonic for addis %rD, 0, SIMM
 #define POWERPC_LI(rD, SIMM) POWERPC_ADDI(rD, 0, SIMM)   // Mnemonic for addi %rD, 0, SIMM
-#define POWERPC_MTSPR(SPR, rS) (UINT32)(POWERPC_OPCODE_EXTENDED | (rS << POWERPC_BIT32(10)) | (POWERPC_SPR(SPR) << POWERPC_BIT32(20)) | POWERPC_EXOPCODE_MTSPR)
+#define POWERPC_MTSPR(SPR, rS)                                                                                         \
+    (UINT32)(POWERPC_OPCODE_EXTENDED | (rS << POWERPC_BIT32(10)) | (POWERPC_SPR(SPR) << POWERPC_BIT32(20)) |           \
+             POWERPC_EXOPCODE_MTSPR)
 #define POWERPC_MTCTR(rS) POWERPC_MTSPR(9, rS) // Mnemonic for mtspr 9, rS
-#define POWERPC_ORI(rS, rA, UIMM) (UINT32)(POWERPC_OPCODE_ORI | (rS << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | UIMM)
-#define POWERPC_BCCTR(BO, BI, LK) (UINT32)(POWERPC_OPCODE_BCCTR | (BO << POWERPC_BIT32(10)) | (BI << POWERPC_BIT32(15)) | (LK & 1) | POWERPC_EXOPCODE_BCCTR)
-#define POWERPC_STD(rS, DS, rA) (UINT32)(POWERPC_OPCODE_STD | (rS << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | ((INT16)DS & 0xFFFF))
-#define POWERPC_LD(rS, DS, rA) (UINT32)(POWERPC_OPCODE_LD | (rS << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | ((INT16)DS & 0xFFFF))
+#define POWERPC_ORI(rS, rA, UIMM)                                                                                      \
+    (UINT32)(POWERPC_OPCODE_ORI | (rS << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | UIMM)
+#define POWERPC_BCCTR(BO, BI, LK)                                                                                      \
+    (UINT32)(POWERPC_OPCODE_BCCTR | (BO << POWERPC_BIT32(10)) | (BI << POWERPC_BIT32(15)) | (LK & 1) |                 \
+             POWERPC_EXOPCODE_BCCTR)
+#define POWERPC_STD(rS, DS, rA)                                                                                        \
+    (UINT32)(POWERPC_OPCODE_STD | (rS << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | ((INT16)DS & 0xFFFF))
+#define POWERPC_LD(rS, DS, rA)                                                                                         \
+    (UINT32)(POWERPC_OPCODE_LD | (rS << POWERPC_BIT32(10)) | (rA << POWERPC_BIT32(15)) | ((INT16)DS & 0xFFFF))
 
 //
 // Branch related fields.
@@ -82,20 +91,17 @@
 
 class Detour
 {
-public:
-    Detour() {}
+  public:
+    Detour()
+    {
+    }
 
     //
     // HookSource - The function that will be hooked.
     // HookTarget - The function that the hook will be redirected to.
     //
-    Detour(
-        _Inout_ void *HookSource,
-        _In_ const void *HookTarget)
-        : HookSource(HookSource),
-          HookTarget(HookTarget),
-          TrampolineAddress(NULL),
-          OriginalLength(0)
+    Detour(_Inout_ void *HookSource, _In_ const void *HookTarget)
+        : HookSource(HookSource), HookTarget(HookTarget), TrampolineAddress(NULL), OriginalLength(0)
     {
     }
 
@@ -112,17 +118,15 @@ public:
     // Linked - Branch is a call or a jump? aka bl or b
     // PreserveRegister - Preserve the register clobbered after loading the branch address.
     //
-    static SIZE_T WriteFarBranch(
-        _Out_ void *Destination,
-        _In_ const void *BranchTarget,
-        _In_ bool Linked = true,
-        _In_ bool PreserveRegister = false)
+    static SIZE_T WriteFarBranch(_Out_ void *Destination, _In_ const void *BranchTarget, _In_ bool Linked = true,
+                                 _In_ bool PreserveRegister = false)
     {
         return Detour::WriteFarBranchEx(Destination, BranchTarget, Linked, PreserveRegister);
     }
 
     //
-    // Writes both conditional and unconditional branches using the count register to the destination address that will branch to the target address.
+    // Writes both conditional and unconditional branches using the count register to the destination address that will
+    // branch to the target address.
     //
     // Destination - Where the branch will be written to.
     // BranchTarget - The address the branch will jump to.
@@ -132,29 +136,27 @@ public:
     // ConditionRegisterBit - The bit of the condition register to compare.
     // RegisterIndex - Register to use when loading the destination address into the count register.
     //
-    static SIZE_T WriteFarBranchEx(
-        _Out_ void *Destination,
-        _In_ const void *BranchTarget,
-        _In_ bool Linked = false,
-        _In_ bool PreserveRegister = false,
-        _In_ UINT32 BranchOptions = POWERPC_BRANCH_OPTIONS_ALWAYS,
-        _In_ BYTE ConditionRegisterBit = 0,
-        _In_ BYTE RegisterIndex = 0)
+    static SIZE_T WriteFarBranchEx(_Out_ void *Destination, _In_ const void *BranchTarget, _In_ bool Linked = false,
+                                   _In_ bool PreserveRegister = false,
+                                   _In_ UINT32 BranchOptions = POWERPC_BRANCH_OPTIONS_ALWAYS,
+                                   _In_ BYTE ConditionRegisterBit = 0, _In_ BYTE RegisterIndex = 0)
     {
         const UINT32 BranchFarAsm[] = {
-            POWERPC_LIS(RegisterIndex, POWERPC_HI((UINT32)BranchTarget)),                // lis   %rX, BranchTarget@hi
-            POWERPC_ORI(RegisterIndex, RegisterIndex, POWERPC_LO((UINT32)BranchTarget)), // ori   %rX, %rX, BranchTarget@lo
-            POWERPC_MTCTR(RegisterIndex),                                                // mtctr %rX
-            POWERPC_BCCTR(BranchOptions, ConditionRegisterBit, Linked)                   // bcctr (bcctr 20, 0 == bctr)
+            POWERPC_LIS(RegisterIndex, POWERPC_HI((UINT32)BranchTarget)), // lis   %rX, BranchTarget@hi
+            POWERPC_ORI(RegisterIndex, RegisterIndex,
+                        POWERPC_LO((UINT32)BranchTarget)),             // ori   %rX, %rX, BranchTarget@lo
+            POWERPC_MTCTR(RegisterIndex),                              // mtctr %rX
+            POWERPC_BCCTR(BranchOptions, ConditionRegisterBit, Linked) // bcctr (bcctr 20, 0 == bctr)
         };
 
         const UINT32 BranchFarAsmPreserve[] = {
-            POWERPC_STD(RegisterIndex, -0x30, 1),                                        // std   %rX, -0x30(%r1)
-            POWERPC_LIS(RegisterIndex, POWERPC_HI((UINT32)BranchTarget)),                // lis   %rX, BranchTarget@hi
-            POWERPC_ORI(RegisterIndex, RegisterIndex, POWERPC_LO((UINT32)BranchTarget)), // ori   %rX, %rX, BranchTarget@lo
-            POWERPC_MTCTR(RegisterIndex),                                                // mtctr %rX
-            POWERPC_LD(RegisterIndex, -0x30, 1),                                         // lwz   %rX, -0x30(%r1)
-            POWERPC_BCCTR(BranchOptions, ConditionRegisterBit, Linked)                   // bcctr (bcctr 20, 0 == bctr)
+            POWERPC_STD(RegisterIndex, -0x30, 1),                         // std   %rX, -0x30(%r1)
+            POWERPC_LIS(RegisterIndex, POWERPC_HI((UINT32)BranchTarget)), // lis   %rX, BranchTarget@hi
+            POWERPC_ORI(RegisterIndex, RegisterIndex,
+                        POWERPC_LO((UINT32)BranchTarget)),             // ori   %rX, %rX, BranchTarget@lo
+            POWERPC_MTCTR(RegisterIndex),                              // mtctr %rX
+            POWERPC_LD(RegisterIndex, -0x30, 1),                       // lwz   %rX, -0x30(%r1)
+            POWERPC_BCCTR(BranchOptions, ConditionRegisterBit, Linked) // bcctr (bcctr 20, 0 == bctr)
         };
 
         const auto BranchAsm = PreserveRegister ? BranchFarAsmPreserve : BranchFarAsm;
@@ -172,9 +174,7 @@ public:
     // Destination - Where to write the new branch.
     // Source - Address to the instruction that is being relocated.
     //
-    static SIZE_T RelocateBranch(
-        _Out_ UINT32 *Destination,
-        _In_ const UINT32 *Source)
+    static SIZE_T RelocateBranch(_Out_ UINT32 *Destination, _In_ const UINT32 *Source)
     {
         const auto Instruction = *Source;
         const auto InstructionAddress = (UINT32)Source;
@@ -248,7 +248,8 @@ public:
 
         const auto BranchAddress = (void *)(INT32)(InstructionAddress + BranchOffset);
 
-        return Detour::WriteFarBranchEx(Destination, BranchAddress, Instruction & POWERPC_BRANCH_LINKED, true, BranchOptions, ConditionRegisterBit);
+        return Detour::WriteFarBranchEx(Destination, BranchAddress, Instruction & POWERPC_BRANCH_LINKED, true,
+                                        BranchOptions, ConditionRegisterBit);
     }
 
     //
@@ -257,9 +258,7 @@ public:
     // Destination - Where to write the new instruction(s).
     // Source - Address to the instruction that is being copied.
     //
-    static SIZE_T CopyInstruction(
-        _Out_ UINT32 *Destination,
-        _In_ const UINT32 *Source)
+    static SIZE_T CopyInstruction(_Out_ UINT32 *Destination, _In_ const UINT32 *Source)
     {
         const auto Instruction = *Source;
         const auto InstructionAddress = (UINT32)Source;
@@ -301,7 +300,8 @@ public:
         {
             const auto InstructionPtr = (UINT32 *)((UINT32)this->HookSource + (i * 4));
 
-            Detour::TrampolineSize += Detour::CopyInstruction((UINT32 *)&Detour::TrampolineBuffer[Detour::TrampolineSize], InstructionPtr);
+            Detour::TrampolineSize +=
+                Detour::CopyInstruction((UINT32 *)&Detour::TrampolineBuffer[Detour::TrampolineSize], InstructionPtr);
         }
 
         //
@@ -309,7 +309,8 @@ public:
         //
         const auto AfterBranchAddress = (void *)((UINT32)this->HookSource + HookSize);
 
-        Detour::TrampolineSize += Detour::WriteFarBranch(&Detour::TrampolineBuffer[Detour::TrampolineSize], AfterBranchAddress, false, true);
+        Detour::TrampolineSize +=
+            Detour::WriteFarBranch(&Detour::TrampolineBuffer[Detour::TrampolineSize], AfterBranchAddress, false, true);
 
         //
         // Finally write the branch to the function that we are hooking.
@@ -334,13 +335,12 @@ public:
         return false;
     }
 
-    template <typename T>
-    T GetOriginal() const
+    template <typename T> T GetOriginal() const
     {
         return T(this->TrampolineAddress);
     }
 
-private:
+  private:
     const void *HookTarget;        // The funtion we are pointing the hook to.
     void *HookSource;              // The function we are hooking.
     BYTE *TrampolineAddress;       // Pointer to the trampoline for this detour.

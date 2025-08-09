@@ -3,16 +3,16 @@
 
 namespace t4
 {
-    namespace mp
-    {
-        TestModule::TestModule()
-        {
-            DbgPrint("TestModule initialized\n");
-        }
-
-        TestModule::~TestModule()
-        {
-            DbgPrint("TestModule shutdown\n");
-        }
-    }
+namespace mp
+{
+TestModule::TestModule()
+{
+    DbgPrint("TestModule initialized\n");
 }
+
+TestModule::~TestModule()
+{
+    DbgPrint("TestModule shutdown\n");
+}
+} // namespace mp
+} // namespace t4

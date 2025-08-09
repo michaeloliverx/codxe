@@ -4,19 +4,22 @@
 
 namespace t4
 {
-    namespace mp
+namespace mp
+{
+class Branding : public Module
+{
+  public:
+    Branding();
+    ~Branding();
+
+    const char *get_name() override
     {
-        class Branding : public Module
-        {
-        public:
-            Branding();
-            ~Branding();
+        return "Branding";
+    };
 
-            const char *get_name() override { return "Branding"; };
-
-        private:
-            static void DrawBranding();
-            static void UI_DrawBuildNumber_Hook(const int localClientNum);
-        };
-    }
-}
+  private:
+    static void DrawBranding();
+    static void UI_DrawBuildNumber_Hook(const int localClientNum);
+};
+} // namespace mp
+} // namespace t4

@@ -4,14 +4,17 @@
 
 namespace t4
 {
-    namespace mp
+namespace mp
+{
+class GSCFunctions : public Module
+{
+  public:
+    GSCFunctions();
+    ~GSCFunctions();
+    const char *get_name() override
     {
-        class GSCFunctions : public Module
-        {
-        public:
-            GSCFunctions();
-            ~GSCFunctions();
-            const char *get_name() override { return "GSCFunctions"; };
-        };
-    }
-}
+        return "GSCFunctions";
+    };
+};
+} // namespace mp
+} // namespace t4
