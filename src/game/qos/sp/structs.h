@@ -2,8 +2,8 @@
 
 namespace qos
 {
-    namespace sp
-    {
+namespace sp
+{
 
-    }
 }
+} // namespace qos

@@ -4,15 +4,18 @@
 
 namespace t4
 {
-    namespace mp
-    {
-        class GSCClientFields : public Module
-        {
-        public:
-            GSCClientFields();
-            ~GSCClientFields();
+namespace mp
+{
+class GSCClientFields : public Module
+{
+  public:
+    GSCClientFields();
+    ~GSCClientFields();
 
-            const char *get_name() override { return "GSCClientFields"; };
-        };
-    }
-}
+    const char *get_name() override
+    {
+        return "GSCClientFields";
+    };
+};
+} // namespace mp
+} // namespace t4

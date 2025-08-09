@@ -2,8 +2,8 @@
 
 namespace iw2
 {
-    namespace sp
-    {
+namespace sp
+{
 
-    }
 }
+} // namespace iw2

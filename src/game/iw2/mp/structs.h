@@ -2,8 +2,8 @@
 
 namespace iw2
 {
-    namespace mp
-    {
+namespace mp
+{
 
-    }
 }
+} // namespace iw2
