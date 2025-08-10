@@ -89,6 +89,11 @@
 
 #define POWERPC_BRANCH_OPTIONS_ALWAYS (20)
 
+extern "C"
+{
+    NTSYSAPI BOOL NTAPI MmIsAddressValid(IN PVOID Address);
+}
+
 class Detour
 {
   public:
@@ -324,7 +329,13 @@ class Detour
     {
         if (this->HookSource && this->OriginalLength)
         {
-            memcpy(this->HookSource, this->OriginalInstructions, this->OriginalLength);
+            // Prevent crash when going back to the dashboard or when the function is unloaded.
+            // https://gist.github.com/iMoD1998/4aa48d5c990535767a3fc3251efc0348?permalink_comment_id=4143548#gistcomment-4143548
+            //
+            // Only restore the original instructions if the function is still loaded in memory.
+            //
+            if (MmIsAddressValid(this->HookSource))
+                memcpy(this->HookSource, this->OriginalInstructions, this->OriginalLength);
 
             this->OriginalLength = 0;
             this->HookSource = NULL;

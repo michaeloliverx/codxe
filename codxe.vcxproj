@@ -234,6 +234,7 @@
       <ClInclude Include="src\detour.h" />
       <ClInclude Include="src\filesystem.h" />
       <ClInclude Include="src\plugin_manager.h" />
+      <ClInclude Include="src\plugin.h" />
       <ClInclude Include="src\xboxkrnl.h" />
   </ItemGroup>
 </Project>

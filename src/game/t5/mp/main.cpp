@@ -6,27 +6,17 @@ namespace t5
 {
 namespace mp
 {
-std::vector<Module *> components;
 
-void RegisterComponent(Module *module)
+T5_MP_Plugin::T5_MP_Plugin()
 {
-    DbgPrint("T4 SP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
+    DbgPrint("T5 MP: Registering modules\n");
+    RegisterModule(new scr_parser());
 }
 
-void init()
+bool T5_MP_Plugin::ShouldLoad()
 {
-    DbgPrint("t5 SP: Registering modules\n");
-    RegisterComponent(new scr_parser());
+    return strncmp((char *)0x82001998, "multiplayer", 11) == 0;
 }
 
-void shutdown()
-{
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-        delete *it;
-
-    components.clear();
-}
 } // namespace mp
 } // namespace t5

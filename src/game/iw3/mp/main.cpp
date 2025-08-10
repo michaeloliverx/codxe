@@ -1534,27 +1534,19 @@ void Pmove_Hook(pmove_t *pm)
     }
 }
 
-std::vector<Module *> components;
-
-void RegisterComponent(Module *module)
-{
-    DbgPrint("T4 MP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
-}
-
-void init()
+IW3_MP_Plugin::IW3_MP_Plugin()
 {
     DbgPrint("Initializing MP\n");
 
-    RegisterComponent(new cg());
-    RegisterComponent(new cj_tas());
-    RegisterComponent(new clipmap());
-    RegisterComponent(new cmds());
-    RegisterComponent(new g_client_fields());
-    RegisterComponent(new g_scr_main());
-    RegisterComponent(new pm());
-    RegisterComponent(new scr_parser());
-    RegisterComponent(new scr_vm_functions());
+    RegisterModule(new cg());
+    RegisterModule(new cj_tas());
+    RegisterModule(new clipmap());
+    RegisterModule(new cmds());
+    RegisterModule(new g_client_fields());
+    RegisterModule(new g_scr_main());
+    RegisterModule(new pm());
+    RegisterModule(new scr_parser());
+    RegisterModule(new scr_vm_functions());
 
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
@@ -1601,7 +1593,7 @@ void init()
         Dvar_RegisterBool("cg_draw_player_info", false, 0, "Draw player info (origin, viewangles, speed) on screen");
 }
 
-void shutdown()
+IW3_MP_Plugin::~IW3_MP_Plugin()
 {
     DbgPrint("Shutting down MP\n");
 
@@ -1612,14 +1604,11 @@ void shutdown()
 
     SV_ClientThinkDetour.Remove();
     Pmove_Detour.Remove();
+}
 
-    // TODO: move module loader/unloader logic to a self contained class
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-    {
-        delete *it;
-    }
-    components.clear();
+bool IW3_MP_Plugin::ShouldLoad()
+{
+    return (strncmp((char *)0x82032AC4, "multiplayer", 11) == 0);
 }
 
 } // namespace mp

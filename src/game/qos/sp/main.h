@@ -2,20 +2,13 @@
 
 namespace qos
 {
-class Module
-{
-  public:
-    Module() {};
-    virtual ~Module() {};
-    virtual const char *get_name()
-    {
-        return "unknown";
-    }
-};
-
 namespace sp
 {
-void init();
-void shutdown();
+class QOS_SP_Plugin : public Plugin
+{
+  public:
+    QOS_SP_Plugin();
+    static bool ShouldLoad();
+};
 } // namespace sp
 } // namespace qos

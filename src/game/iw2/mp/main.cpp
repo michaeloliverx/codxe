@@ -6,27 +6,20 @@ namespace iw2
 {
 namespace mp
 {
-std::vector<Module *> components;
 
-void RegisterComponent(Module *module)
+IW2_MP_Plugin::IW2_MP_Plugin()
 {
-    DbgPrint("T4 SP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
+    DbgPrint("IW2 MP Plugin initialized\n");
+    RegisterModule(new scr_parser());
 }
 
-void init()
+IW2_MP_Plugin::~IW2_MP_Plugin()
 {
-    DbgPrint("IW2 SP: Registering modules\n");
-    RegisterComponent(new scr_parser());
 }
 
-void shutdown()
+bool IW2_MP_Plugin::ShouldLoad()
 {
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-        delete *it;
-
-    components.clear();
+    return (strncmp((char *)0x820410E4, "multiplayer", 11) == 0);
 }
 } // namespace mp
 } // namespace iw2

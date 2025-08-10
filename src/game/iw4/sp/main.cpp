@@ -20,17 +20,8 @@ void RemoveIdleGunSway()
     *(volatile uint32_t *)0x823362A8 = 0x60000000;
 }
 
-std::vector<Module *> components;
-
-void RegisterComponent(Module *module)
+IW4_SP_Plugin::IW4_SP_Plugin()
 {
-    DbgPrint("IW4 SP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
-}
-
-void init()
-{
-    DbgPrint("IW4 SP: Registering modules\n");
 
     // GScr_SetSavedDvar
     // Patches SetSavedDvar SAVED flag check
@@ -42,21 +33,20 @@ void init()
 
     RemoveIdleGunSway();
 
-    RegisterComponent(new cg());
-    RegisterComponent(new clipmap());
-    RegisterComponent(new g_client_fields());
-    RegisterComponent(new g_scr_main());
-    RegisterComponent(new pm());
-    RegisterComponent(new scr_parser());
+    DbgPrint("IW4 SP: Registering modules\n");
+    RegisterModule(new cg());
+    RegisterModule(new clipmap());
+    RegisterModule(new g_client_fields());
+    RegisterModule(new g_scr_main());
+    RegisterModule(new pm());
+    RegisterModule(new scr_parser());
 }
 
-void shutdown()
+bool IW4_SP_Plugin::ShouldLoad()
 {
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-        delete *it;
-
-    components.clear();
+    DbgPrint("IW4 SP: Checking if plugin should load\n");
+    return (strncmp((char *)0x8203C924, "startSingleplayer", 17) == 0);
 }
+
 } // namespace sp
 } // namespace iw4

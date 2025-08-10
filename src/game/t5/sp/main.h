@@ -2,20 +2,16 @@
 
 namespace t5
 {
-class Module
-{
-  public:
-    Module() {};
-    virtual ~Module() {};
-    virtual const char *get_name()
-    {
-        return "unknown";
-    }
-};
-
 namespace sp
 {
-void init();
-void shutdown();
+
+class T5_SP_Plugin : public Plugin
+{
+
+  public:
+    T5_SP_Plugin();
+    static bool ShouldLoad();
+};
+
 } // namespace sp
 } // namespace t5

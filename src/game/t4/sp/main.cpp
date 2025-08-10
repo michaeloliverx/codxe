@@ -12,33 +12,24 @@ namespace t4
 {
 namespace sp
 {
-std::vector<Module *> components;
 
-void RegisterComponent(Module *module)
+T4_SP_Plugin::T4_SP_Plugin()
 {
-    DbgPrint("T4 SP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
+    DbgPrint("T4 SP: Plugin loaded\n");
+
+    RegisterModule(new clipmap());
+    RegisterModule(new g_scr_main()); // Needs to be registered before g_client_script_cmd
+    RegisterModule(new g_client_fields());
+    RegisterModule(new g_client_script_cmd());
+    RegisterModule(new g_scr_mover());
+    RegisterModule(new scr_parser());
+    RegisterModule(new ui());
 }
 
-void init()
+bool T4_SP_Plugin::ShouldLoad()
 {
-    DbgPrint("T4 SP: Registering modules\n");
-    RegisterComponent(new clipmap());
-    RegisterComponent(new g_scr_main()); // Needs to be registered before g_client_script_cmd
-    RegisterComponent(new g_client_fields());
-    RegisterComponent(new g_client_script_cmd());
-    RegisterComponent(new g_scr_mover());
-    RegisterComponent(new scr_parser());
-    RegisterComponent(new ui());
+    return (strncmp((char *)0x82035A94, "startSingleplayer", 17) == 0);
 }
 
-void shutdown()
-{
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-        delete *it;
-
-    components.clear();
-}
 } // namespace sp
 } // namespace t4

@@ -139,17 +139,10 @@ void Cmd_Dumpraw_f()
     }
 }
 
-std::vector<Module *> components;
-
-void RegisterComponent(Module *module)
+IW3_SP_Plugin::IW3_SP_Plugin()
 {
-    DbgPrint("T4 MP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
-}
-
-void init()
-{
-    RegisterComponent(new scr_parser());
+    DbgPrint("IW3 SP: Plugin loaded\n");
+    RegisterModule(new scr_parser());
 
     CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
     CL_GamepadButtonEvent_Detour.Install();
@@ -160,18 +153,16 @@ void init()
     Cmd_AddCommandInternal("dumpraw", Cmd_Dumpraw_f, &Cmd_Dumpraw_f_VAR);
 }
 
-void shutdown()
+IW3_SP_Plugin::~IW3_SP_Plugin()
 {
     CL_GamepadButtonEvent_Detour.Remove();
     Load_MapEntsPtr_Detour.Remove();
-
-    // TODO: move module loader/unloader logic to a self contained class
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-    {
-        delete *it;
-    }
-    components.clear();
 }
+
+bool IW3_SP_Plugin::ShouldLoad()
+{
+    return (strncmp((char *)0x82065E48, "startSingleplayer", 17) == 0);
+}
+
 } // namespace sp
 } // namespace iw3

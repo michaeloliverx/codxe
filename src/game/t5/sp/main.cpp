@@ -6,27 +6,17 @@ namespace t5
 {
 namespace sp
 {
-std::vector<Module *> components;
 
-void RegisterComponent(Module *module)
+T5_SP_Plugin::T5_SP_Plugin()
 {
-    DbgPrint("T4 SP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
+    DbgPrint("T5 SP: Registering modules\n");
+    RegisterModule(new scr_parser());
 }
 
-void init()
+bool T5_SP_Plugin::ShouldLoad()
 {
-    DbgPrint("t5 SP: Registering modules\n");
-    RegisterComponent(new scr_parser());
+    return strncmp((char *)0x82018364, "startSingleplayer", 17) == 0;
 }
 
-void shutdown()
-{
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-        delete *it;
-
-    components.clear();
-}
 } // namespace sp
 } // namespace t5
