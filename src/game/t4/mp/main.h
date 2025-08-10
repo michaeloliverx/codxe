@@ -2,20 +2,17 @@
 
 namespace t4
 {
-class Module
-{
-  public:
-    Module() {};
-    virtual ~Module() {};
-    virtual const char *get_name()
-    {
-        return "unknown";
-    }
-};
 
 namespace mp
 {
-void init();
-void shutdown();
+
+class T4_MP_Plugin : public Plugin
+{
+  public:
+    T4_MP_Plugin();
+    ~T4_MP_Plugin();
+    static bool ShouldLoad();
+};
+
 } // namespace mp
 } // namespace t4

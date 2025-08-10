@@ -139,6 +139,7 @@
       <ClCompile Include="src\dllmain.cpp" />
       <ClCompile Include="src\detour.cpp" />
       <ClCompile Include="src\filesystem.cpp" />
+      <ClCompile Include="src\plugin_manager.cpp" />
       <ClCompile Include="src\xboxkrnl.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +233,8 @@
 
       <ClInclude Include="src\detour.h" />
       <ClInclude Include="src\filesystem.h" />
+      <ClInclude Include="src\plugin_manager.h" />
+      <ClInclude Include="src\plugin.h" />
       <ClInclude Include="src\xboxkrnl.h" />
   </ItemGroup>
 </Project>

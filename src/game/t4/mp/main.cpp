@@ -16,28 +16,21 @@ namespace t4
 {
 namespace mp
 {
-std::vector<Module *> components;
 
-void RegisterComponent(Module *module)
+T4_MP_Plugin::T4_MP_Plugin()
 {
-    DbgPrint("T4 MP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
-}
-
-void init()
-{
-    DbgPrint("T4 MP: Registering modules\n");
-    RegisterComponent(new Branding());
-    RegisterComponent(new BrushCollision());
-    RegisterComponent(new cg());
-    RegisterComponent(new GSCClientFields());
-    RegisterComponent(new GSCClientMethods());
-    RegisterComponent(new GSCFunctions());
-    RegisterComponent(new GSCLoader());
-    // RegisterComponent(new ImageLoader());
-    RegisterComponent(new Map());
-    RegisterComponent(new TestModule());
-    RegisterComponent(new ui());
+    DbgPrint("T4 MP: Plugin loaded\n");
+    RegisterModule(new Branding());
+    RegisterModule(new BrushCollision());
+    RegisterModule(new cg());
+    RegisterModule(new GSCClientFields());
+    RegisterModule(new GSCClientMethods());
+    RegisterModule(new GSCFunctions());
+    RegisterModule(new GSCLoader());
+    // RegisterModule(new ImageLoader());
+    RegisterModule(new Map());
+    RegisterModule(new TestModule());
+    RegisterModule(new ui());
 
     // Patches
     // sub_8220D2D0
@@ -49,14 +42,14 @@ void init()
     *(volatile uint32_t *)0x8225F990 = 0x60000000;
 }
 
-void shutdown()
+T4_MP_Plugin::~T4_MP_Plugin()
 {
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-    {
-        delete *it;
-    }
-    components.clear();
+    DbgPrint("T4 MP: Plugin unloaded\n");
+}
+
+bool T4_MP_Plugin::ShouldLoad()
+{
+    return (strncmp((char *)0x820024CC, "multiplayer", 11) == 0);
 }
 } // namespace mp
 } // namespace t4

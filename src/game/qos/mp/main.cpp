@@ -7,28 +7,18 @@ namespace qos
 {
 namespace mp
 {
-std::vector<Module *> components;
 
-void RegisterComponent(Module *module)
-{
-    DbgPrint("QOS SP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
-}
-
-void init()
+QOS_MP_Plugin::QOS_MP_Plugin()
 {
     DbgPrint("QOS SP: Registering modules\n");
-    RegisterComponent(new g_scr_main());
-    RegisterComponent(new scr_parser());
+    RegisterModule(new g_scr_main());
+    RegisterModule(new scr_parser());
 }
 
-void shutdown()
+bool QOS_MP_Plugin::ShouldLoad()
 {
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-        delete *it;
-
-    components.clear();
+    return strncmp((char *)0x8200236C, "multiplayer", 11) == 0;
 }
+
 } // namespace mp
 } // namespace qos

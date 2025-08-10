@@ -2,20 +2,15 @@
 
 namespace iw2
 {
-class Module
-{
-  public:
-    Module() {};
-    virtual ~Module() {};
-    virtual const char *get_name()
-    {
-        return "unknown";
-    }
-};
-
 namespace sp
 {
-void init();
-void shutdown();
+class IW2_SP_Plugin : public Plugin
+{
+
+  public:
+    IW2_SP_Plugin();
+    ~IW2_SP_Plugin();
+    static bool ShouldLoad();
+};
 } // namespace sp
 } // namespace iw2

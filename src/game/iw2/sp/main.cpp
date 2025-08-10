@@ -6,27 +6,22 @@ namespace iw2
 {
 namespace sp
 {
-std::vector<Module *> components;
 
-void RegisterComponent(Module *module)
+IW2_SP_Plugin::IW2_SP_Plugin()
 {
-    DbgPrint("T4 SP: Component registered: %s\n", module->get_name());
-    components.push_back(module);
+    DbgPrint("IW2 SP Plugin initialized\n");
+    this->RegisterModule(new scr_parser());
 }
 
-void init()
+IW2_SP_Plugin::~IW2_SP_Plugin()
 {
-    DbgPrint("IW2 SP: Registering modules\n");
-    RegisterComponent(new scr_parser());
 }
 
-void shutdown()
+bool IW2_SP_Plugin::ShouldLoad()
 {
-    // Clean up in reverse order
-    for (auto it = components.rbegin(); it != components.rend(); ++it)
-        delete *it;
-
-    components.clear();
+    // Check if the game is in single player mode
+    return (strncmp((char *)0x82059FE0, "startSingleplayer", 17) == 0);
 }
+
 } // namespace sp
 } // namespace iw2

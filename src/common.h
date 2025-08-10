@@ -18,12 +18,14 @@
 #include <xgraphics.h>
 #include <io.h>
 #include <xjson.h>
+using namespace std::tr1;
 
 // Project-specific includes
 #include "detour.h"
 #include "filesystem.h"
 #include "version.h"
 #include "xboxkrnl.h"
+#include "plugin.h"
 
 // Common includes
 #include "common/branding.h"
