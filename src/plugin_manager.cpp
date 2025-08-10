@@ -5,6 +5,14 @@ PluginManager::PluginManager()
     : m_should_run(false), m_monitor_thread(nullptr), m_current_title_id(0), m_current_plugin(nullptr)
 {
     this->InitConfig();
+
+    if (xbox::InXenia())
+    {
+        DbgPrint("[PluginManager] Running in Xenia environment, skipping plugin manager initialization.\n");
+        OnTitleIDChanged(xbox::XamGetCurrentTitleId());
+        return;
+    }
+
     // Start the monitoring thread
     xbox::ExCreateThread(&m_monitor_thread,          // out: thread handle
                          0,                          // stack size (0 = default)
@@ -110,7 +118,7 @@ DWORD WINAPI PluginManager::ThreadProc(LPVOID param)
             manager->OnTitleIDChanged(current_title_id);
         }
 
-        Sleep(50); // Sleep for a while to avoid busy waiting
+        Sleep(100); // Sleep for a while to avoid busy waiting
     }
 
     return 0;
@@ -141,7 +149,11 @@ void PluginManager::OnTitleIDChanged(uint32_t title_id)
     // Update the current title ID
     m_current_title_id = title_id;
 
-    Sleep(1000); // Allow some time for the game to load
+    // If running in Xenia, we might not need to wait long for the game to load
+    if (!xbox::InXenia())
+    {
+        Sleep(2000); // Allow some time for the game to load
+    }
 
     // Special case for Dashboard
     if (title_id == NONE || title_id == DASHBOARD)
