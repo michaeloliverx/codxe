@@ -8,7 +8,7 @@ PluginManager::PluginManager()
 
     if (xbox::InXenia())
     {
-        DbgPrint("[PluginManager] Running in Xenia environment, skipping plugin manager initialization.\n");
+        DbgPrint("[codxe][PluginManager] Running in Xenia environment, skipping plugin manager initialization.\n");
         OnTitleIDChanged(xbox::XamGetCurrentTitleId());
         return;
     }
@@ -136,12 +136,12 @@ PluginManager::TitleConfig *PluginManager::GetTitleConfig(TitleID title_id)
 
 void PluginManager::OnTitleIDChanged(uint32_t title_id)
 {
-    DbgPrint("[PluginManager] Title ID changed to: 0x%08X\n", title_id);
+    DbgPrint("[codxe][PluginManager] Title ID changed to: 0x%08X\n", title_id);
 
     // If there is a current plugin, clean it up
     if (m_current_plugin)
     {
-        DbgPrint("[PluginManager] Cleaning up current plugin for title ID: 0x%08X\n", m_current_title_id);
+        DbgPrint("[codxe][PluginManager] Cleaning up current plugin for title ID: 0x%08X\n", m_current_title_id);
         delete m_current_plugin;
         m_current_plugin = nullptr;
     }
@@ -164,29 +164,30 @@ void PluginManager::OnTitleIDChanged(uint32_t title_id)
     PluginManager::TitleConfig *config = GetTitleConfig(static_cast<TitleID>(title_id));
     if (!config)
     {
-        DbgPrint("[PluginManager] No configuration found for title ID: 0x%08X\n", title_id);
+        DbgPrint("[codxe][PluginManager] No configuration found for title ID: 0x%08X\n", title_id);
         return;
     }
 
-    DbgPrint("[PluginManager] Found configuration for title ID: 0x%08X, name: %s\n", title_id, config->name.c_str());
+    DbgPrint("[codxe][PluginManager] Found configuration for title ID: 0x%08X, name: %s\n", title_id,
+             config->name.c_str());
 
     if (!config->create_plugin)
     {
-        DbgPrint("[PluginManager] No plugin factory defined for title ID: 0x%08X\n", title_id);
+        DbgPrint("[codxe][PluginManager] No plugin factory defined for title ID: 0x%08X\n", title_id);
         return;
     }
 
     // If the title has a plugin factory, create the plugin
-    DbgPrint("[PluginManager] Creating plugin for title ID: 0x%08X\n", title_id);
+    DbgPrint("[codxe][PluginManager] Creating plugin for title ID: 0x%08X\n", title_id);
     const Plugin *plugin = config->create_plugin();
     if (!plugin)
     {
-        DbgPrint("[PluginManager] Failed to create plugin for title ID: 0x%08X\n", title_id);
+        DbgPrint("[codxe][PluginManager] Failed to create plugin for title ID: 0x%08X\n", title_id);
         return;
     }
 
     // Store the created plugin
     m_current_plugin = plugin;
 
-    DbgPrint("[PluginManager] Plugin created for title ID: 0x%08X\n", title_id);
+    DbgPrint("[codxe][PluginManager] Plugin created for title ID: 0x%08X\n", title_id);
 }
