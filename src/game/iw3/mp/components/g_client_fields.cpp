@@ -7,6 +7,19 @@ namespace iw3
 {
 namespace mp
 {
+
+void ClientScr_SetEntityFlags(gclient_s *pSelf, const client_fields_s *pField)
+{
+    gentity_s *ent = &g_entities[g_clients - pSelf];
+    ent->flags = Scr_GetInt(0);
+}
+
+void ClientScr_GetEntityFlags(gclient_s *pSelf, const client_fields_s *field)
+{
+    const gentity_s *ent = &g_entities[g_clients - pSelf];
+    Scr_AddInt(ent->flags);
+}
+
 client_fields_s client_fields_extended[] = {
     // Original fields
     {"name", 0, F_LSTRING, ClientScr_ReadOnly, ClientScr_GetName},
@@ -30,7 +43,7 @@ client_fields_s client_fields_extended[] = {
     // Custom fields
     {"noclip", 12456, F_INT, nullptr, nullptr},
     {"ufo", 12460, F_INT, nullptr, nullptr},
-    {"buttons", 12472, F_INT, nullptr, nullptr},
+    {"entityflags", NULL, F_INT, ClientScr_SetEntityFlags, ClientScr_GetEntityFlags},
 
     {nullptr, 0, F_INT, nullptr, nullptr}};
 

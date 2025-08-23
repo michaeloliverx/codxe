@@ -209,6 +209,7 @@ static auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
 static auto client_fields = reinterpret_cast<client_fields_s *>(0x82047A18);
 static auto dx = reinterpret_cast<DxGlobals *>(0x84CD7A80);
 static auto entity_fields = reinterpret_cast<ent_field_t *>(0x82046E00);
+static auto g_clients = reinterpret_cast<gclient_s *>(0x829BCD70);
 static auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
 static ScreenPlacement &scrPlaceFullUnsafe = *reinterpret_cast<ScreenPlacement *>(0x8246F468);
 static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x849F1580);
