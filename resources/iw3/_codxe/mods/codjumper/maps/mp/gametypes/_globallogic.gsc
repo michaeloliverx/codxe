@@ -4472,9 +4472,357 @@ isHeadShot( sWeapon, sHitLoc, sMeansOfDeath )
 
 Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime )
 {
-	// [CJ] Return to prevent any damage
-	return;
+	// [CJ] Allow knockback from C4
+	if(sWeapon == "c4_mp" && iDFlags & level.iDFLAGS_NO_KNOCKBACK)
+		iDFlags &= ~level.iDFLAGS_NO_KNOCKBACK;
+
+	// create a class specialty checks; CAC:bulletdamage, CAC:armorvest
+	iDamage = maps\mp\gametypes\_class::cac_modified_damage( self, eAttacker, iDamage, sMeansOfDeath );
+	self.iDFlags = iDFlags;
+	self.iDFlagsTime = getTime();
+	
+	if ( game["state"] == "postgame" )
+		return;
+	
+	if ( self.sessionteam == "spectator" )
+		return;
+	
+	if ( isDefined( self.canDoCombat ) && !self.canDoCombat )
+		return;
+	
+	if ( isDefined( eAttacker ) && isPlayer( eAttacker ) && isDefined( eAttacker.canDoCombat ) && !eAttacker.canDoCombat )
+		return;
+	
+	prof_begin( "Callback_PlayerDamage flags/tweaks" );
+	
+	// Don't do knockback if the damage direction was not specified
+	if( !isDefined( vDir ) )
+		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
+	
+	friendly = false;
+
+	if ( (level.teamBased && (self.health == self.maxhealth)) || !isDefined( self.attackers ) )
+	{
+		self.attackers = [];
+		self.attackerData = [];
+	}
+
+	if ( isHeadShot( sWeapon, sHitLoc, sMeansOfDeath ) )
+		sMeansOfDeath = "MOD_HEAD_SHOT";
+	
+	if ( maps\mp\gametypes\_tweakables::getTweakableValue( "game", "onlyheadshots" ) )
+	{
+		if ( sMeansOfDeath == "MOD_PISTOL_BULLET" || sMeansOfDeath == "MOD_RIFLE_BULLET" )
+			return;
+		else if ( sMeansOfDeath == "MOD_HEAD_SHOT" )
+			iDamage = 150;
+	}
+
+	// explosive barrel/car detection
+	if ( sWeapon == "none" && isDefined( eInflictor ) )
+	{
+		if ( isDefined( eInflictor.targetname ) && eInflictor.targetname == "explodable_barrel" )
+			sWeapon = "explodable_barrel";
+		else if ( isDefined( eInflictor.destructible_type ) && isSubStr( eInflictor.destructible_type, "vehicle_" ) )
+			sWeapon = "destructible_car";
+	}
+
+	prof_end( "Callback_PlayerDamage flags/tweaks" );
+
+	// check for completely getting out of the damage
+	if( !(iDFlags & level.iDFLAGS_NO_PROTECTION) )
+	{
+		// return if helicopter friendly fire is on
+		if ( level.teamBased && isdefined( level.chopper ) && isdefined( eAttacker ) && eAttacker == level.chopper && eAttacker.team == self.pers["team"] )
+		{
+//			if( level.friendlyfire == 0 )
+//			{
+				prof_end( "Callback_PlayerDamage player" );
+				return;
+//			}
+		}
+		
+		if ( (isSubStr( sMeansOfDeath, "MOD_GRENADE" ) || isSubStr( sMeansOfDeath, "MOD_EXPLOSIVE" ) || isSubStr( sMeansOfDeath, "MOD_PROJECTILE" )) && isDefined( eInflictor ) )
+		{
+			// protect players from spawnkill grenades
+			if ( eInflictor.classname == "grenade" && (self.lastSpawnTime + 3500) > getTime() && distance( eInflictor.origin, self.lastSpawnPoint.origin ) < 250 )
+			{
+				prof_end( "Callback_PlayerDamage player" );
+				return;
+			}
+			
+			self.explosiveInfo = [];
+			self.explosiveInfo["damageTime"] = getTime();
+			self.explosiveInfo["damageId"] = eInflictor getEntityNumber();
+			self.explosiveInfo["returnToSender"] = false;
+			self.explosiveInfo["counterKill"] = false;
+			self.explosiveInfo["chainKill"] = false;
+			self.explosiveInfo["cookedKill"] = false;
+			self.explosiveInfo["weapon"] = sWeapon;
+			
+			isFrag = isSubStr( sWeapon, "frag_" );
+
+			if ( eAttacker != self )
+			{
+				if ( (isSubStr( sWeapon, "c4_" ) || isSubStr( sWeapon, "claymore_" )) && isDefined( eAttacker ) && isDefined( eInflictor.owner ) )
+				{
+					self.explosiveInfo["returnToSender"] = (eInflictor.owner == self);
+					self.explosiveInfo["counterKill"] = isDefined( eInflictor.wasDamaged );
+					self.explosiveInfo["chainKill"] = isDefined( eInflictor.wasChained );
+					self.explosiveInfo["bulletPenetrationKill"] = isDefined( eInflictor.wasDamagedFromBulletPenetration );
+					self.explosiveInfo["cookedKill"] = false;
+				}
+				if ( isDefined( eAttacker.lastGrenadeSuicideTime ) && eAttacker.lastGrenadeSuicideTime >= gettime() - 50 && isFrag )
+				{
+					self.explosiveInfo["suicideGrenadeKill"] = true;
+				}
+				else
+				{
+					self.explosiveInfo["suicideGrenadeKill"] = false;
+				}
+			}
+			
+			if ( isFrag )
+			{
+				self.explosiveInfo["cookedKill"] = isDefined( eInflictor.isCooked );
+				self.explosiveInfo["throwbackKill"] = isDefined( eInflictor.threwBack );
+			}
+		}
+
+		if ( isPlayer( eAttacker ) )
+			eAttacker.pers["participation"]++;
+		
+		prevHealthRatio = self.health / self.maxhealth;
+		
+		if ( level.teamBased && isPlayer( eAttacker ) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]) )
+		{
+			prof_begin( "Callback_PlayerDamage player" ); // profs automatically end when the function returns
+			if ( level.friendlyfire == 0 ) // no one takes damage
+			{
+				if ( sWeapon == "artillery_mp" )
+					self damageShellshockAndRumble( eInflictor, sWeapon, sMeansOfDeath, iDamage );
+				return;
+			}
+			else if ( level.friendlyfire == 1 ) // the friendly takes damage
+			{
+				// Make sure at least one point of damage is done
+				if ( iDamage < 1 )
+					iDamage = 1;
+				
+				self.lastDamageWasFromEnemy = false;
+				
+				self finishPlayerDamageWrapper(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
+			}
+			else if ( level.friendlyfire == 2 && isAlive( eAttacker ) ) // only the attacker takes damage
+			{
+				iDamage = int(iDamage * .5);
+
+				// Make sure at least one point of damage is done
+				if(iDamage < 1)
+					iDamage = 1;
+				
+				eAttacker.lastDamageWasFromEnemy = false;
+				
+				eAttacker.friendlydamage = true;
+				eAttacker finishPlayerDamageWrapper(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
+				eAttacker.friendlydamage = undefined;
+			}
+			else if ( level.friendlyfire == 3 && isAlive( eAttacker ) ) // both friendly and attacker take damage
+			{
+				iDamage = int(iDamage * .5);
+
+				// Make sure at least one point of damage is done
+				if ( iDamage < 1 )
+					iDamage = 1;
+				
+				self.lastDamageWasFromEnemy = false;
+				eAttacker.lastDamageWasFromEnemy = false;
+				
+				self finishPlayerDamageWrapper(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
+				eAttacker.friendlydamage = true;
+				eAttacker finishPlayerDamageWrapper(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
+				eAttacker.friendlydamage = undefined;
+			}
+			
+			friendly = true;
+		}
+		else
+		{
+			prof_begin( "Callback_PlayerDamage world" );
+			// Make sure at least one point of damage is done
+			if(iDamage < 1)
+				iDamage = 1;
+
+			if ( level.teamBased && isDefined( eAttacker ) && isPlayer( eAttacker ) )
+			{
+				if ( !isdefined( self.attackerData[eAttacker.clientid] ) )
+				{
+					self.attackers[ self.attackers.size ] = eAttacker;
+					// we keep an array of attackers by their client ID so we can easily tell
+					// if they're already one of the existing attackers in the above if().
+					// we store in this array data that is useful for other things, like challenges
+					self.attackerData[eAttacker.clientid] = false;
+				}
+				if ( maps\mp\gametypes\_weapons::isPrimaryWeapon( sWeapon ) )
+					self.attackerData[eAttacker.clientid] = true;
+			}
+			
+			if ( isdefined( eAttacker ) )
+				level.lastLegitimateAttacker = eAttacker;
+
+			if ( isdefined( eAttacker ) && isPlayer( eAttacker ) && isDefined( sWeapon ) )
+				eAttacker maps\mp\gametypes\_weapons::checkHit( sWeapon );
+
+			/*			
+			if ( isPlayer( eInflictor ) )
+				eInflictor maps\mp\gametypes\_persistence::statAdd( "hits", 1 );
+			*/
+
+			if ( issubstr( sMeansOfDeath, "MOD_GRENADE" ) && isDefined( eInflictor.isCooked ) )
+				self.wasCooked = getTime();
+			else
+				self.wasCooked = undefined;
+			
+			self.lastDamageWasFromEnemy = (isDefined( eAttacker ) && (eAttacker != self));
+			
+			self finishPlayerDamageWrapper(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
+
+			self thread maps\mp\gametypes\_missions::playerDamaged(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, sHitLoc );
+
+			prof_end( "Callback_PlayerDamage world" );
+		}
+
+		if ( isdefined(eAttacker) && eAttacker != self )
+		{
+			hasBodyArmor = false;
+			if ( self hasPerk( "specialty_armorvest" ) )
+			{
+				hasBodyArmor = true;
+				/*
+				damageScalar = level.cac_armorvest_data / 100;
+				if ( prevHealthRatio > damageScalar )
+					hasBodyArmor = true;
+				*/
+			}
+			if ( iDamage > 0 )
+				eAttacker thread maps\mp\gametypes\_damagefeedback::updateDamageFeedback( hasBodyArmor );
+		}
+		
+		self.hasDoneCombat = true;
+	}
+
+	if ( isdefined( eAttacker ) && eAttacker != self && !friendly )
+		level.useStartSpawns = false;
+
+	prof_begin( "Callback_PlayerDamage log" );
+
+	// Do debug print if it's enabled
+	if(getDvarInt("g_debugDamage"))
+		println("client:" + self getEntityNumber() + " health:" + self.health + " attacker:" + eAttacker.clientid + " inflictor is player:" + isPlayer(eInflictor) + " damage:" + iDamage + " hitLoc:" + sHitLoc);
+
+	if(self.sessionstate != "dead")
+	{
+		lpselfnum = self getEntityNumber();
+		lpselfname = self.name;
+		lpselfteam = self.pers["team"];
+		lpselfGuid = self getGuid();
+		lpattackerteam = "";
+
+		if(isPlayer(eAttacker))
+		{
+			lpattacknum = eAttacker getEntityNumber();
+			lpattackGuid = eAttacker getGuid();
+			lpattackname = eAttacker.name;
+			lpattackerteam = eAttacker.pers["team"];
+		}
+		else
+		{
+			lpattacknum = -1;
+			lpattackGuid = "";
+			lpattackname = "";
+			lpattackerteam = "world";
+		}
+
+		logPrint("D;" + lpselfGuid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackGuid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
+	}
+	
+	if ( getdvarint("scr_hitloc_debug") )
+	{
+		if ( !isdefined( eAttacker.hitlocInited ) )
+		{
+			for ( i = 0; i < 6; i++ )
+			{
+				eAttacker setClientDvar( "ui_hitloc_" + i, "" );
+			}
+			eAttacker.hitlocInited = true;
+		}
+		
+		if ( isPlayer( eAttacker ) && !level.splitscreen )
+		{
+			colors = [];
+			colors[0] = 2;
+			colors[1] = 3;
+			colors[2] = 5;
+			colors[3] = 7;
+			
+			elemcount = 6;
+			if ( !isdefined( eAttacker.damageInfo ) )
+			{
+				eAttacker.damageInfo = [];
+				for ( i = 0; i < elemcount; i++ )
+				{
+					eAttacker.damageInfo[i] = spawnstruct();
+					eAttacker.damageInfo[i].damage = 0;
+					eAttacker.damageInfo[i].hitloc = "";
+					eAttacker.damageInfo[i].bp = false;
+					eAttacker.damageInfo[i].jugg = false;
+					eAttacker.damageInfo[i].colorIndex = 0;
+				}
+				eAttacker.damageInfoColorIndex = 0;
+				eAttacker.damageInfoVictim = undefined;
+			}
+			
+			for ( i = elemcount-1; i > 0; i-- )
+			{
+				eAttacker.damageInfo[i].damage = eAttacker.damageInfo[i - 1].damage;
+				eAttacker.damageInfo[i].hitloc = eAttacker.damageInfo[i - 1].hitloc;
+				eAttacker.damageInfo[i].bp = eAttacker.damageInfo[i - 1].bp;
+				eAttacker.damageInfo[i].jugg = eAttacker.damageInfo[i - 1].jugg;
+				eAttacker.damageInfo[i].colorIndex = eAttacker.damageInfo[i - 1].colorIndex;
+			}
+			eAttacker.damageInfo[0].damage = iDamage;
+			eAttacker.damageInfo[0].hitloc = sHitLoc;
+			eAttacker.damageInfo[0].bp = (iDFlags & level.iDFLAGS_PENETRATION);
+			eAttacker.damageInfo[0].jugg = self hasPerk( "specialty_armorvest" );
+			if ( isdefined( eAttacker.damageInfoVictim ) && eAttacker.damageInfoVictim != self )
+			{ 
+				eAttacker.damageInfoColorIndex++;
+				if ( eAttacker.damageInfoColorIndex == colors.size )
+					eAttacker.damageInfoColorIndex = 0;
+			}
+			eAttacker.damageInfoVictim = self;
+			eAttacker.damageInfo[0].colorIndex = eAttacker.damageInfoColorIndex;
+			
+			for ( i = 0; i < elemcount; i++ )
+			{
+				color = "^" + colors[ eAttacker.damageInfo[i].colorIndex ];
+				if ( eAttacker.damageInfo[i].hitloc != "" )
+				{
+					val = color + eAttacker.damageInfo[i].hitloc;
+					if ( eAttacker.damageInfo[i].bp )
+						val += " (BP)";
+					if ( eAttacker.damageInfo[i].jugg  )
+						val += " (Jugg)";
+					eAttacker setClientDvar( "ui_hitloc_" + i, val );
+				}
+				eAttacker setClientDvar( "ui_hitloc_damage_" + i, color + eAttacker.damageInfo[i].damage );
+			}
+		}
+	}
+	
+	prof_end( "Callback_PlayerDamage log" );
 }
+
 
 finishPlayerDamageWrapper( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime )
 {
