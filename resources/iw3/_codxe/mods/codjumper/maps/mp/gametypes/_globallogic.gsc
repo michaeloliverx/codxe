@@ -4472,6 +4472,10 @@ isHeadShot( sWeapon, sHitLoc, sMeansOfDeath )
 
 Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime )
 {
+	// [CJ] Only allow self inflicted damage
+	if ( eAttacker != self )
+		return;
+
 	// [CJ] Allow knockback from C4
 	if(sWeapon == "c4_mp" && iDFlags & level.iDFLAGS_NO_KNOCKBACK)
 		iDFlags &= ~level.iDFLAGS_NO_KNOCKBACK;
