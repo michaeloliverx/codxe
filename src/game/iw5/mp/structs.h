@@ -874,6 +874,49 @@ static_assert(offsetof(gclient_s, sess.sessionState) == 13056, "");
 static_assert(offsetof(gclient_s, sess.spectateDefaultAngles) == 13808, "");
 static_assert(offsetof(gclient_s, flags) == 13820, "");
 
+enum netadrtype_t : __int32
+{
+    NA_BOT = 0x0,
+    NA_BAD = 0x1,
+    NA_LOOPBACK = 0x2,
+    NA_BROADCAST = 0x3,
+    NA_IP = 0x4,
+};
+
+enum netsrc_t : __int32
+{
+    NS_CLIENT1 = 0x0,
+    NS_CLIENT2 = 0x1,
+    NS_CLIENT3 = 0x2,
+    NS_CLIENT4 = 0x3,
+    NS_MAXCLIENTS = 0x4,
+    NS_SERVER = 0x4,
+    NS_PACKET = 0x5,
+    NS_INVALID_NETSRC = 0x6,
+};
+
+struct netadr_t
+{
+    netadrtype_t type;
+    unsigned __int8 ip[4];
+    unsigned __int16 port;
+    netsrc_t localNetID;
+};
+
+struct client_t
+{
+    char pad0[136220];
+    gentity_s *gentity;
+    char pad1[67772];
+    int bIsSplitscreenClient;
+    char pad2[224928];
+};
+static_assert(sizeof(client_t) == 428928, "");
+static_assert(offsetof(client_t, gentity) == 136220, "");
+static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
+
+// 34055
+
 enum trType_t : __int32
 {
     TR_STATIONARY = 0x0,

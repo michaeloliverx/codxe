@@ -15,6 +15,8 @@ static auto g_entities = reinterpret_cast<gentity_s *>(0x82DCCC80);
 
 static auto level = reinterpret_cast<level_locals_t *>(0x82FDA080);
 
+static auto svs_clients = reinterpret_cast<client_t *>(0x836C6310);
+
 static auto CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x82127BF8);
 
 static auto DB_FindXAssetEntry = reinterpret_cast<DB_FindXAssetEntry_t>(0x821EE920);
