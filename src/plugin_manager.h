@@ -12,6 +12,7 @@ class PluginManager
         DASHBOARD = 0xFFFE07D1,
         IW2 = 0x415607D1,
         IW3 = 0x415607E6,
+        IW5 = 0x415608CB,
         T4 = 0x4156081C,
         IW4 = 0x41560817,
         QOS = 0x415607FF,

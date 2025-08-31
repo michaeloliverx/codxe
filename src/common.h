@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard library includes
+#include <array>
 #include <cstddef>
 #include <vector>
 #include <string>
@@ -53,6 +54,11 @@ using namespace std::tr1;
 #include "game/iw4/sp/main.h"
 #include "game/iw4/sp/structs.h"
 #include "game/iw4/sp/symbols.h"
+
+// IW5-specific includes
+#include "game/iw5/mp/main.h"
+#include "game/iw5/mp/structs.h"
+#include "game/iw5/mp/symbols.h"
 
 // T4-specific includes
 #include "game/t4/mp/main.h"

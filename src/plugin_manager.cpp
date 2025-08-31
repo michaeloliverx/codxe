@@ -62,6 +62,17 @@ void PluginManager::InitConfig()
                                                   return nullptr;
                                           });
 
+    m_title_id_configs[IW5] = TitleConfig("Call of Duty: Modern Warfare 3",
+                                          []() -> Plugin *
+                                          {
+                                              //   if (iw3::sp::IW3_SP_Plugin::ShouldLoad())
+                                              //       return new iw3::sp::IW3_SP_Plugin();
+                                              if (iw5::mp::IW5_MP_Plugin::ShouldLoad())
+                                                  return new iw5::mp::IW5_MP_Plugin();
+                                              else
+                                                  return nullptr;
+                                          });
+
     m_title_id_configs[T4] = TitleConfig("Call of Duty: World at War",
                                          []() -> Plugin *
                                          {

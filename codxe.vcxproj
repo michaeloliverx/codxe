@@ -101,6 +101,11 @@
       <ClCompile Include="src\game\iw4\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw4\sp\main.cpp" />
 
+      <ClCompile Include="src\game\iw5\mp\main.cpp" />
+      <ClCompile Include="src\game\iw5\mp\patches.cpp" />
+      <ClCompile Include="src\game\iw5\mp\pm.cpp" />
+      <ClCompile Include="src\game\iw5\mp\script.cpp" />
+
       <ClCompile Include="src\game\t4\mp\main.cpp" />
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />

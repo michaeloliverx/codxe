@@ -1,0 +1,14 @@
+title_name = "Call of Duty: Modern Warfare 3"
+title_id = "415608CB"
+#media_id = "30775D59" # Disc (USA, Europe): http://redump.org/disc/37074/
+
+# TU24
+[[plugin]]
+file = "codxe.xex"
+hash = "55003ED04B59301A" # default.xex
+is_enabled = true
+
+[[plugin]]
+file = "codxe.xex"
+hash = "3AC94A2E70D1FECB" # default_mp.xex
+is_enabled = true
