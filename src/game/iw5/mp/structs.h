@@ -915,8 +915,6 @@ static_assert(sizeof(client_t) == 428928, "");
 static_assert(offsetof(client_t, gentity) == 136220, "");
 static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
 
-// 34055
-
 enum trType_t : __int32
 {
     TR_STATIONARY = 0x0,
