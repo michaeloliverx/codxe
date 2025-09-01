@@ -109,12 +109,14 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
                 scriptfile->len = gscbin.len;
                 scriptfile->bytecodeLen = gscbin.bytecodeLen;
 
-                char *buffer = (char *)PMem_AllocFromSource_NoDebug(gscbin.buffer.size(), 4, 2, PMEM_SOURCE_SCRIPT);
+                char *buffer = (char *)PMem_AllocFromSource_NoDebug(gscbin.buffer.size(), 4, 0, PMEM_SOURCE_SCRIPT);
                 memcpy(buffer, gscbin.buffer.data(), gscbin.buffer.size());
                 scriptfile->buffer = buffer;
 
-                unsigned __int8 *bytecode =
-                    PMem_AllocFromSource_NoDebug(gscbin.bytecode.size(), 4, 2, PMEM_SOURCE_SCRIPT);
+                unsigned __int8 *bytecode = PMem_AllocFromSource_NoDebug(gscbin.bytecode.size(), 4,
+                                                                         // 0 Crashes on hardware, 2 crashes on Xenia
+                                                                         // Don't know why, but this works around it
+                                                                         xbox::InXenia() ? 0 : 2, PMEM_SOURCE_SCRIPT);
                 memcpy(bytecode, gscbin.bytecode.data(), gscbin.bytecode.size());
                 scriptfile->bytecode = bytecode;
 
@@ -135,11 +137,9 @@ Detour DB_IsXAssetDefault_Detour;
 
 bool DB_IsXAssetDefault_Hook(XAssetType type, const char *name)
 {
+    // Custom ScriptFile must return 0 to be loaded properly
     if (type == ASSET_TYPE_SCRIPTFILE && ContainsScript(name))
-    {
-        DbgPrint("Asset %s is a loaded script, not default.\n", name);
         return false;
-    }
 
     return DB_IsXAssetDefault_Detour.GetOriginal<DB_IsXAssetDefault_t>()(type, name);
 }
