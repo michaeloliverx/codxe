@@ -130,51 +130,6 @@ Detour PlayerCmd_GetViewmodel_Detour;
 
 void PlayerCmd_GetViewmodel_Hook(scr_entref_t entref)
 {
-    // DbgPrint("PlayerCmd_GetViewmodel_Hook called!\n");
-    // DbgPrint("entref->entnum=%d entref->classnum=%d\n", entref.entnum, entref.classnum);
-
-    // const char *s1 = Scr_GetString(0);
-    // const std::string arg1 = (s1 ? std::string(s1) : std::string());
-    // if (arg1 == "togglefo")
-    // {
-    //     DbgPrint("UFO command detected, calling original function\n");
-    //     // gentity_s *ent = &g_entities[entref.entnum];
-
-    //     gentity_s *ent = GetEntity(entref);
-    //     if (ent->client == nullptr)
-    //     {
-    //         DbgPrint("ent->client is null\n");
-    //         return;
-    //     }
-    //     // if (!(ent->client->flags & 2))
-    //     // {
-    //     //     DbgPrint("Enabling noclip\n");
-    //     // }
-    //     // else
-    //     // {
-    //     //     DbgPrint("Disabling noclip\n");
-    //     // }
-
-    //     ent->flags ^= FL_GODMODE;
-
-    //     // ent->client->flags ^= 3; // PM_UFO
-
-    //     unsigned char *clientPtr = (unsigned char *)(ent->client);
-    //     *(int *)(clientPtr + 13820) ^= 2;
-
-    //     // const int clientflags = ent->client->flags;
-    //     // DbgPrint("ent->client->flags before UFO: %d\n", clientflags);
-
-    //     // ent->client->flags ^= 2;
-
-    //     return;
-    // }
-
-    // DbgPrint("cm->name %s\n", cm->name);
-    // RemoveBrushCollisions();
-
-    DbgPrint("PlayerCmd_GetViewmodel_Hook called!\n");
-
     const char *s1 = Scr_GetString(0);
     const std::string arg1 = (s1 ? std::string(s1) : std::string());
     DbgPrint("arg1=%s\n", arg1.c_str());

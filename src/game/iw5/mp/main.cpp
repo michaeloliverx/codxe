@@ -9,6 +9,13 @@ namespace iw5
 namespace mp
 {
 
+std::set<std::string> g_loaded_scripts;
+
+bool ContainsScript(const std::string &name)
+{
+    return g_loaded_scripts.find(name) != g_loaded_scripts.end();
+}
+
 // Swap byte order for 32-bit integers
 uint32_t SwapEndian(uint32_t value)
 {
@@ -77,36 +84,44 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
 {
     if (type == ASSET_TYPE_SCRIPTFILE)
     {
-        std::string modBasePath = "game:\\_codxe\\mods\\codjumper"; // Hardcoded for now
+        Config config;
+        LoadConfigFromFile(CONFIG_PATH, config);
+        std::string modBasePath = config.GetModBasePath();
         std::string overridePath = modBasePath + "\\" + name + ".gscbin";
         std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
 
-        GSCBin gscbin;
-        if (!LoadGSCBin(overridePath.c_str(), gscbin))
+        if (!modBasePath.empty())
         {
-            DbgPrint("Failed to load GSC file.\n");
-        }
-        else
-        {
-            // Create a new
-            ScriptFile *scriptfile =
-                (ScriptFile *)PMem_AllocFromSource_NoDebug(sizeof(ScriptFile), 4, 0, PMEM_SOURCE_SCRIPT);
-            memset(scriptfile, 0, sizeof(ScriptFile));
+            GSCBin gscbin;
+            if (!LoadGSCBin(overridePath.c_str(), gscbin))
+            {
+                DbgPrint("Failed to load GSC file.\n");
+            }
+            else
+            {
+                // Create a new
+                ScriptFile *scriptfile =
+                    (ScriptFile *)PMem_AllocFromSource_NoDebug(sizeof(ScriptFile), 4, 0, PMEM_SOURCE_SCRIPT);
+                memset(scriptfile, 0, sizeof(ScriptFile));
 
-            scriptfile->name = name;
-            scriptfile->compressedLen = gscbin.compressedLen;
-            scriptfile->len = gscbin.len;
-            scriptfile->bytecodeLen = gscbin.bytecodeLen;
+                scriptfile->name = name;
+                scriptfile->compressedLen = gscbin.compressedLen;
+                scriptfile->len = gscbin.len;
+                scriptfile->bytecodeLen = gscbin.bytecodeLen;
 
-            char *buffer = (char *)PMem_AllocFromSource_NoDebug(gscbin.buffer.size(), 4, 0, PMEM_SOURCE_SCRIPT);
-            memcpy(buffer, gscbin.buffer.data(), gscbin.buffer.size());
-            scriptfile->buffer = buffer;
+                char *buffer = (char *)PMem_AllocFromSource_NoDebug(gscbin.buffer.size(), 4, 2, PMEM_SOURCE_SCRIPT);
+                memcpy(buffer, gscbin.buffer.data(), gscbin.buffer.size());
+                scriptfile->buffer = buffer;
 
-            unsigned __int8 *bytecode = PMem_AllocFromSource_NoDebug(gscbin.bytecode.size(), 4, 0, PMEM_SOURCE_SCRIPT);
-            memcpy(bytecode, gscbin.bytecode.data(), gscbin.bytecode.size());
-            scriptfile->bytecode = bytecode;
+                unsigned __int8 *bytecode =
+                    PMem_AllocFromSource_NoDebug(gscbin.bytecode.size(), 4, 2, PMEM_SOURCE_SCRIPT);
+                memcpy(bytecode, gscbin.bytecode.data(), gscbin.bytecode.size());
+                scriptfile->bytecode = bytecode;
 
-            return (XAssetHeader *)scriptfile;
+                g_loaded_scripts.insert(name);
+
+                return (XAssetHeader *)scriptfile;
+            }
         }
     }
 
@@ -120,10 +135,11 @@ Detour DB_IsXAssetDefault_Detour;
 
 bool DB_IsXAssetDefault_Hook(XAssetType type, const char *name)
 {
-    // Hardcoded for now
-    // Prevent "maps/mp/gametypes/cj" from being treated as a default asset
-    if (type == ASSET_TYPE_SCRIPTFILE && strcmp(name, "maps/mp/gametypes/cj") == 0)
-        return 0;
+    if (type == ASSET_TYPE_SCRIPTFILE && ContainsScript(name))
+    {
+        DbgPrint("Asset %s is a loaded script, not default.\n", name);
+        return false;
+    }
 
     return DB_IsXAssetDefault_Detour.GetOriginal<DB_IsXAssetDefault_t>()(type, name);
 }

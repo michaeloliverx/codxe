@@ -903,15 +903,80 @@ struct netadr_t
     netsrc_t localNetID;
 };
 
+struct netProfilePacket_t
+{
+    int iTime;
+    int iSize;
+    int bFragment;
+};
+
+struct netProfileStream_t
+{
+    netProfilePacket_t packets[60];
+    int iCurrPacket;
+    int iBytesPerSecond;
+    int iLastBPSCalcTime;
+    int iCountedPackets;
+    int iCountedFragments;
+    int iFragmentPercentage;
+    int iLargestPacket;
+    int iSmallestPacket;
+};
+
+struct netProfileInfo_t
+{
+    netProfileStream_t send;
+    netProfileStream_t recieve;
+};
+
+struct netchan_t
+{
+    int outgoingSequence;
+    netsrc_t sock;
+    int dropped;
+    int incomingSequence;
+    netadr_t remoteAddress;
+    int fragmentSequence;
+    int fragmentLength;
+    unsigned __int8 *fragmentBuffer;
+    int fragmentBufferSize;
+    int unsentFragments;
+    int unsentFragmentStart;
+    int unsentLength;
+    unsigned __int8 *unsentBuffer;
+    int unsentBufferSize;
+    netProfileInfo_t prof;
+};
+
+struct clientHeader_t
+{
+    int state;
+    int sendAsActive;
+    int deltaMessage;
+    int rateDelayed;
+    int hasAckedBaselineData;
+    int hugeSnapshotSent;
+    netchan_t netchan;
+    float predictedOrigin[3];
+    int predictedOriginServerTime;
+    int migrationState;
+    float predictedVehicleOrigin[3];
+    int predictedVehicleServerTime;
+};
+
 struct client_t
 {
-    char pad0[136220];
+    clientHeader_t header;
+    const char *dropReason;
+    char *userinfo;
+    char pad01[134580];
     gentity_s *gentity;
     char pad1[67772];
     int bIsSplitscreenClient;
     char pad2[224928];
 };
 static_assert(sizeof(client_t) == 428928, "");
+static_assert(offsetof(client_t, userinfo) == 1636, "");
 static_assert(offsetof(client_t, gentity) == 136220, "");
 static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
 
