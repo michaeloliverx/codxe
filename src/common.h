@@ -2,7 +2,10 @@
 
 // Standard library includes
 #include <array>
+#include <cassert>
 #include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <vector>
 #include <string>
 #include <memory>
@@ -10,8 +13,6 @@
 #include <set>
 #include <algorithm>
 #include <functional>
-#include <cstdint>
-#include <cstring>
 #include <direct.h>
 #include <fstream>
 #include <sstream>

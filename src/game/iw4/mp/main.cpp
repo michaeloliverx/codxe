@@ -1,5 +1,5 @@
 #include "components/cg.h"
-// #include "components/clipmap.h"
+#include "components/clipmap.h"
 #include "components/g_client_fields.h"
 #include "components/g_scr_main.h"
 #include "components/patches.h"
@@ -17,11 +17,10 @@ IW4_MP_Plugin::IW4_MP_Plugin()
 
     DbgPrint("IW4 MP: Registering modules\n");
     RegisterModule(new cg());
-    // RegisterModule(new clipmap());
+    RegisterModule(new clipmap());
     RegisterModule(new g_client_fields());
     RegisterModule(new g_scr_main());
     RegisterModule(new patches());
-    // RegisterModule(new pm());
     RegisterModule(new scr_parser());
 }
 

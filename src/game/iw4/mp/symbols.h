@@ -11,6 +11,11 @@ static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82275C60);
 
+static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8213DE38);
+
+static auto DB_LinkXAssetEntry1 =
+    reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
+
 // static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822E2148);
 
 static auto Scr_AddSourceBuffer =
@@ -26,16 +31,11 @@ static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, 
 static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs)>(0x8225A7B8);
 static auto Scr_GetObjectField = reinterpret_cast<void (*)(unsigned int classnum, int entnum, int offset)>(0x8225ABF0);
 
-// static auto ClientScr_ReadOnly =
-//     reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821E7730);
-// static auto ClientScr_GetName = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s
-// *pField)>(0x821E7720);
-
 // static auto Scr_AddString = reinterpret_cast<void (*)(const char *value)>(0x822ACF48);
 static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index)>(0x822B33A8);
 static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x822ADD18);
 static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index)>(0x822B2D70);
-// static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x822E8568);
+static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue)>(0x822B35B8);
 static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x822AE470);
 // static auto Scr_ParamError = reinterpret_cast<void (*)(unsigned int index, const char *error)>(0x822AD558);
 // static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x822AD5C0);
@@ -68,7 +68,11 @@ static auto UI_DrawText =
                               double y, int horzAlign, int vertAlign, double scale, const float *color, int style)>(
         0x822DA678);
 // static auto UI_RefreshViewport = reinterpret_cast<void (*)(int localClientNum)>(0x822E4100);
-// // Data
+
+static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x823160A8);
+
+// Data
+static auto cm = reinterpret_cast<clipMap_t *>(0x83052680);
 static auto fields = reinterpret_cast<client_fields_s *>(0x82027518);
 // static auto g_clients = reinterpret_cast<gclient_s *>(0x82EAC5E8);
 static auto g_entities = reinterpret_cast<gentity_s *>(0x82E2A580);

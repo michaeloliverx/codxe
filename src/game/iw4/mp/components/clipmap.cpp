@@ -1,71 +1,106 @@
 #include "clipmap.h"
 #include "common.h"
+#include "g_scr_main.h"
 
 namespace iw4
 {
 namespace mp
 {
+std::vector<int> brush_contents;
 
-Detour Load_clipMap_t_Detour;
-void Load_clipMap_t_Hook(bool atStreamStart)
+Detour DB_LinkXAssetEntry1_Detour;
+
+XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(XAssetType type, XAssetHeader *header)
 {
-    // Call the original function to load the clip map
-    Load_clipMap_t_Detour.GetOriginal<decltype(Load_clipMap_t)>()(atStreamStart);
+    XAssetEntryPoolEntry *entry = DB_LinkXAssetEntry1_Detour.GetOriginal<decltype(DB_LinkXAssetEntry1)>()(type, header);
 
-    if (!varclipMap_t || !*varclipMap_t || !(*varclipMap_t)->name || !(*varclipMap_t)->mapEnts)
-        return;
-
-    Config config;
-    LoadConfigFromFile(CONFIG_PATH, config);
-
-    auto mapEnts = (*varclipMap_t)->mapEnts;
-
-    // Dump map entities if enabled
-    if (config.dump_map_ents)
+    if (type == ASSET_TYPE_CLIPMAP_MP)
     {
-        std::string dumpPath = va("%s\\%s.ents", DUMP_DIR, mapEnts->name); // IW4x naming convention
-        std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
-        filesystem::write_file_to_disk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
-        DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
+        // Resize the vector to match the number of brushes
+        brush_contents.resize(header->clipMap->numBrushes);
+
+        // Save original contents
+        for (int i = 0; i < header->clipMap->numBrushes; ++i)
+        {
+            brush_contents[i] = header->clipMap->brushContents[i]; // Assuming this is the field you want to save
+        }
     }
 
-    // Check for mod override
-    std::string modBasePath = config.GetModBasePath();
-    if (modBasePath.empty())
+    return entry;
+}
+
+bool IsPointInBounds(float point[3], Bounds bounds)
+{
+    return (point[0] >= bounds.midPoint[0] - bounds.halfSize[0] &&
+            point[0] <= bounds.midPoint[0] + bounds.halfSize[0]) &&
+           (point[1] >= bounds.midPoint[1] - bounds.halfSize[1] &&
+            point[1] <= bounds.midPoint[1] + bounds.halfSize[1]) &&
+           (point[2] >= bounds.midPoint[2] - bounds.halfSize[2] && point[2] <= bounds.midPoint[2] + bounds.halfSize[2]);
+}
+
+void GScr_DisableBrushCollisionAtPoint()
+{
+    if (Scr_GetNumParam() != 1)
+    {
+        Scr_Error("DisableBrushCollisionAtPoint: Expected 1 argument (vector3 point)\n");
         return;
+    }
 
-    // Build path to override file
-    std::string overridePath = va("%s\\%s.ents", modBasePath.c_str(), mapEnts->name);
-    std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
+    float point[3] = {0};
+    Scr_GetVector(0, point);
 
-    // Try to load override file
-    std::string fileContent = filesystem::read_file_to_string(overridePath);
-    if (fileContent.empty())
+    std::vector<int> modified_brushes;
+    for (int i = 0; i < cm->numBrushes; ++i)
+    {
+        if ((cm->brushContents[i] & CONTENTS_PLAYERCLIP) && IsPointInBounds(point, cm->brushBounds[i]))
+        {
+            // Disable collision for this brush
+            cm->brushContents[i] &= ~CONTENTS_PLAYERCLIP;
+            modified_brushes.push_back(i);
+        }
+    }
+
+    if (modified_brushes.empty())
+    {
+        CG_GameMessage(0, "^1No brushes with collision found at this point");
         return;
+    }
 
-    // Allocate new buffer and copy content
-    char *buffer = new char[fileContent.size() + 1];
-    memcpy(buffer, fileContent.c_str(), fileContent.size());
-    buffer[fileContent.size()] = '\0';
+    // Create message
+    std::string message = "^2Disabled collision for brushes: ";
+    for (size_t i = 0; i < modified_brushes.size(); ++i)
+    {
+        message += std::to_string(static_cast<unsigned long long>(modified_brushes[i]));
+        if (i < modified_brushes.size() - 1)
+            message += ", ";
+    }
+    CG_GameMessage(0, message.c_str());
+}
 
-    // TODO: free old entity string if necessary?
+void GScr_RestoreBrushCollision()
+{
+    assert(cm->isInUse);
+    assert(brush_contents.size() == static_cast<size_t>(cm->numBrushes));
 
-    // Replace map entities
-    mapEnts->entityString = buffer;
-    mapEnts->numEntityChars = fileContent.size() + 1;
-
-    DbgPrint("Loaded map ents override from: %s\n", overridePath.c_str());
+    // Restore original contents
+    for (int i = 0; i < cm->numBrushes; ++i)
+    {
+        cm->brushContents[i] = brush_contents[i];
+    }
 }
 
 clipmap::clipmap()
 {
-    Load_clipMap_t_Detour = Detour(Load_clipMap_t, Load_clipMap_t_Hook);
-    Load_clipMap_t_Detour.Install();
+    DB_LinkXAssetEntry1_Detour = Detour(DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
+    DB_LinkXAssetEntry1_Detour.Install();
+
+    Scr_AddFunction("disablebrushcollisionatpoint", GScr_DisableBrushCollisionAtPoint, 0);
+    Scr_AddFunction("restorebrushcollision", GScr_RestoreBrushCollision, 0);
 }
 
 clipmap::~clipmap()
 {
-    Load_clipMap_t_Detour.Remove();
+    DB_LinkXAssetEntry1_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw4
