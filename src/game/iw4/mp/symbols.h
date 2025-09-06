@@ -48,10 +48,10 @@ static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pNam
 
 static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x822ADC88);
 
-// static auto Weapon_RocketLauncher_Fire =
-//     reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp,
-//                                     weaponParms *gunVel, struct lockonFireParms *lockParms,
-//                                     lockonFireParms *magicBullet)>(0x82231AE8);
+static auto Weapon_RocketLauncher_Fire =
+    reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp,
+                                    weaponParms *gunVel, struct lockonFireParms *lockParms,
+                                    lockonFireParms *magicBullet)>(0x82260C90);
 // static auto PM_StepSlideMove =
 //     reinterpret_cast<void (*)(struct pmove_t *pm, struct pml_t *pml, int gravity)>(0x8232AF08);
 
