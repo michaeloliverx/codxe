@@ -37,51 +37,56 @@ struct playerState_s
     float velocity[3];
     char padding3[0xD8];
     float viewAngles[3];
+    char padding4[0x3068];
 };
-
+static_assert(sizeof(playerState_s) == 12672, "");
 static_assert(offsetof(playerState_s, velocity) == 40, "");
 
 struct gclient_s
 {
     playerState_s ps;
     char padding1[0x2A0];
-    int mFlags;
+    int flags;
     char padding2[0x2DC];
 };
-
+static_assert(sizeof(gclient_s) == 14080, "");
 static_assert(offsetof(gclient_s, ps) == 0x0, "");
+static_assert(offsetof(gclient_s, flags) == 13344, "");
 
 struct gentity_s
 {
     char padding1[344];
     gclient_s *client;
+    char padding2[0x28];
+    int flags;
+    char padding3[0xF8];
 };
-
+static_assert(sizeof(gentity_s) == 640, "");
 static_assert(offsetof(gentity_s, client) == 344, "");
 
-// struct sentient_s;
-// struct actor_s;
-// struct Vehicle;
-// struct Turret;
+struct sentient_s;
+struct actor_s;
+struct Vehicle;
+struct Turret;
 
-// struct level_locals_t
-// {
-//     gclient_s *clients;
-//     gentity_s *gentities;
-//     int num_entities;
-//     gentity_s *firstFreeEnt;
-//     gentity_s *lastFreeEnt;
-//     sentient_s *sentients;
-//     actor_s *actors;
-//     Vehicle *vehicles;
-//     Turret *turrets;
-//     int initializing;
-//     int clientIsSpawning;
-//     int maxclients;
-// };
-// static_assert(offsetof(level_locals_t, clients) == 0x0, "");
-// static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
-// static_assert(offsetof(level_locals_t, maxclients) == 44, "");
+struct level_locals_t
+{
+    gclient_s *clients;
+    gentity_s *gentities;
+    int num_entities;
+    gentity_s *firstFreeEnt;
+    gentity_s *lastFreeEnt;
+    sentient_s *sentients;
+    actor_s *actors;
+    Vehicle *vehicles;
+    Turret *turrets;
+    int initializing;
+    int clientIsSpawning;
+    int maxclients;
+};
+static_assert(offsetof(level_locals_t, clients) == 0x0, "");
+static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
+static_assert(offsetof(level_locals_t, maxclients) == 44, "");
 
 struct weaponParms
 {
@@ -119,35 +124,30 @@ struct BuiltinMethodDef
     int type;
 };
 
-// enum fieldtype_t : __int32
-// {
-//     F_INT = 0x0,
-//     F_SHORT = 0x1,
-//     F_BYTE = 0x2,
-//     F_FLOAT = 0x3,
-//     F_STRING = 0x4,
-//     F_CSTRING = 0x5,
-//     F_VECTOR = 0x6,
-//     F_ENTITY = 0x7,
-//     F_ENTHANDLE = 0x8,
-//     F_ACTOR = 0x9,
-//     F_SENTIENT = 0xA,
-//     F_SENTIENTHANDLE = 0xB,
-//     F_CLIENT = 0xC,
-//     F_PATHNODE = 0xD,
-//     F_ANGLES_YAW = 0xE,
-//     F_MODEL = 0xF,
-//     F_ACTORGROUP = 0x10,
-// };
+enum fieldtype_t : __int32
+{
+    F_INT = 0x0,
+    F_SHORT = 0x1,
+    F_BYTE = 0x2,
+    F_FLOAT = 0x3,
+    F_CSTRING = 0x4,
+    F_STRING = 0x5,
+    F_VECTOR = 0x6,
+    F_ENTITY = 0x7,
+    F_ENTHANDLE = 0x8,
+    F_ANGLES_YAW = 0x9,
+    F_OBJECT = 0xA,
+    F_MODEL = 0xB,
+};
 
-// struct client_fields_s
-// {
-//     const char *name;
-//     int ofs;
-//     fieldtype_t type;
-//     void (*setter)(gclient_s *, const client_fields_s *);
-//     void (*getter)(gclient_s *, const client_fields_s *);
-// };
+struct client_fields_s
+{
+    const char *name;
+    int ofs;
+    fieldtype_t type;
+    void (*setter)(gclient_s *, const client_fields_s *);
+    void (*getter)(gclient_s *, const client_fields_s *);
+};
 
 // struct Bounds
 // {

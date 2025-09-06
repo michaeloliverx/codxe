@@ -19,17 +19,32 @@ void ClientScr_GetEntityFlags(gclient_s *pSelf, const client_fields_s *field)
     Scr_AddInt(ent->flags);
 }
 
-const client_fields_s fields_extended[] = {
-    // Original fields
-    {"playername", 0, F_CSTRING, ClientScr_ReadOnly, ClientScr_GetName},
-    {"deathinvulnerabletime", 44564, F_INT, NULL, NULL},
-    {"criticalbulletdamagedist", 44560, F_FLOAT, NULL, NULL},
-    {"attackercount", 44575, F_BYTE, NULL, NULL},
-    {"damagemultiplier", 44584, F_FLOAT, NULL, NULL},
-    {"laststand", 44996, F_INT, NULL, NULL},
-    {"motiontrackerenabled", 44336, F_INT, NULL, NULL},
+typedef void (*ClientFieldFunc)(gclient_s *, const client_fields_s *);
 
-    // // Added fields
+const client_fields_s fields_extended[] = {
+    // Built-in fields
+    {"name", 0, F_CSTRING, (ClientFieldFunc)0x8221B208, (ClientFieldFunc)0x8221B1A0},
+    {"sessionteam", 0, F_STRING, (ClientFieldFunc)0x8221A8C0, (ClientFieldFunc)0x8221A9E0},
+    {"sessionstate", 0, F_STRING, (ClientFieldFunc)0x8221AA48, (ClientFieldFunc)0x8221AB50},
+    {"maxhealth", 12840, F_INT, (ClientFieldFunc)0x8221ABB8, NULL},
+    {"score", 12696, F_INT, (ClientFieldFunc)0x8221AC50, NULL},
+    {"deaths", 12700, F_INT, NULL, NULL},
+    {"statusicon", 0, F_STRING, (ClientFieldFunc)0x8221ADA8, (ClientFieldFunc)0x8221ADE0},
+    {"headicon", 0, F_STRING, (ClientFieldFunc)0x8221AE40, (ClientFieldFunc)0x8221AEA0},
+    {"headiconteam", 0, F_STRING, (ClientFieldFunc)0x8221AF30, (ClientFieldFunc)0x8221B050},
+    {"kills", 12704, F_INT, NULL, NULL},
+    {"assists", 12708, F_INT, NULL, NULL},
+    {"hasradar", 13028, F_INT, NULL, NULL},
+    {"isradarblocked", 13032, F_INT, NULL, NULL},
+    {"radarmode", 0, F_STRING, (ClientFieldFunc)0x8221A7D0, (ClientFieldFunc)0x8221A888},
+    {"forcespectatorclient", 12676, F_INT, (ClientFieldFunc)0x8221AC88, NULL},
+    {"killcamentity", 12680, F_INT, (ClientFieldFunc)0x8221ACE8, NULL},
+    {"killcamentitylookat", 12684, F_INT, (ClientFieldFunc)0x8221AD48, NULL},
+    {"archivetime", 12692, F_FLOAT, (ClientFieldFunc)0x8221B0D0, (ClientFieldFunc)0x8221B118},
+    {"psoffsettime", 13024, F_INT, (ClientFieldFunc)0x8221B160, (ClientFieldFunc)0x8221B198},
+    {"pers", 12712, F_OBJECT, (ClientFieldFunc)0x8221B208, NULL},
+
+    // Added fields
     {"clientflags", offsetof(gclient_s, flags), F_INT, NULL, NULL},
     {"entityflags", NULL, F_INT, ClientScr_SetEntityFlags, ClientScr_GetEntityFlags},
 
@@ -66,7 +81,7 @@ void Scr_GetClientField(gclient_s *client, unsigned int offset)
         Scr_GetGenericField(reinterpret_cast<unsigned char *>(client), field->type, field->ofs);
 }
 
-// Retail TU9 SP has Scr_GetClientField and Scr_GetEntityField inlined, so we need to hook Scr_GetObjectField
+// Retail TU MP has Scr_GetClientField and Scr_GetEntityField inlined, so we need to hook further up Scr_GetObjectField
 // to handle client fields.
 Detour Scr_GetObjectField_Detour;
 
@@ -76,7 +91,7 @@ void Scr_GetObjectField_Hook(unsigned int classnum, int entnum, int offset)
     if (classnum == 0 && (offset & CLIENT_FIELD_MASK) == CLIENT_FIELD_MASK)
     {
         // This is a client field
-        Scr_GetClientField(&g_clients[entnum], offset & ~CLIENT_FIELD_MASK);
+        Scr_GetClientField(&level->clients[entnum], offset & ~CLIENT_FIELD_MASK);
         return;
     }
     else
