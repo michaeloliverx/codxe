@@ -56,6 +56,10 @@ using namespace std::tr1;
 #include "game/iw4/sp/structs.h"
 #include "game/iw4/sp/symbols.h"
 
+#include "game/iw4/mp/main.h"
+#include "game/iw4/mp/structs.h"
+#include "game/iw4/mp/symbols.h"
+
 // IW5-specific includes
 #include "game/iw5/mp/main.h"
 #include "game/iw5/mp/structs.h"

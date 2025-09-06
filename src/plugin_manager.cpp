@@ -89,6 +89,8 @@ void PluginManager::InitConfig()
                                           {
                                               if (iw4::sp::IW4_SP_Plugin::ShouldLoad())
                                                   return new iw4::sp::IW4_SP_Plugin();
+                                              else if (iw4::mp::IW4_MP_Plugin::ShouldLoad())
+                                                  return new iw4::mp::IW4_MP_Plugin();
                                               else
                                                   return nullptr;
                                           });
