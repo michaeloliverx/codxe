@@ -31,7 +31,7 @@ DeleteUnwantedEntities()
     foreach (ent in ents)
     {
         if (ent.classname == "trigger_hurt")
-            ent delete();
+            ent delete ();
     }
 }
 
@@ -111,6 +111,13 @@ InitClientDvars()
     self SetClientDvars("aim_slowdown_enabled", 0, "aim_lockon_enabled", 0); // Remove aim assist on enemy players
     self SetClientDvars("cg_overheadNamesSize", 0, "cg_overheadRankSize",
                         0); // Remove overhead names and ranks on enemy players
+
+    // make on screen messages have a shorter duration
+    for (i = 0; i < 4; i++)
+    {
+        self setClientDvars("con_gameMsgWindow" + i + "FadeInTime", 0.15, "con_gameMsgWindow" + i + "FadeOutTime", 0.15,
+                            "con_gameMsgWindow" + i + "MsgTime", .85);
+    }
 }
 
 SetupLoadout()
