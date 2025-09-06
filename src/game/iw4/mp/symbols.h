@@ -9,7 +9,7 @@ namespace mp
 // Functions
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822FDF08);
 
-// static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8227CF90);
+static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82275C60);
 
 // static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822E2148);
 
@@ -33,22 +33,20 @@ static auto Scr_AddSourceBuffer =
 // *pField)>(0x821E7720);
 
 // static auto Scr_AddString = reinterpret_cast<void (*)(const char *value)>(0x822ACF48);
-// static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index)>(0x822B2300);
-// static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x822ACC70);
+static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index)>(0x822B33A8);
+static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x822ADD18);
 // static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index)>(0x822B1CC8);
 // static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x822E8568);
-// static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x822AD3C8);
+static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x822AE470);
 // static auto Scr_ParamError = reinterpret_cast<void (*)(unsigned int index, const char *error)>(0x822AD558);
 // static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x822AD5C0);
 
-// static auto Player_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName)>(0x821EEC20);
+static auto Scr_RegisterFunction = reinterpret_cast<void (*)(int func, const char *name)>(0x822963C0);
 
-// static auto Scr_RegisterFunction = reinterpret_cast<void (*)(int func, const char *name)>(0x822953D0);
+static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x82254C38);
+static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x82254D88);
 
-// static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x82225090);
-// static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x822252A0);
-
-// static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x822ACBE0);
+static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x822ADC88);
 
 // static auto Weapon_RocketLauncher_Fire =
 //     reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp,

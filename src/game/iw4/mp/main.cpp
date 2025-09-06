@@ -1,7 +1,7 @@
 #include "components/cg.h"
 // #include "components/clipmap.h"
 // #include "components/g_client_fields.h"
-// #include "components/g_scr_main.h"
+#include "components/g_scr_main.h"
 // #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "main.h"
@@ -37,7 +37,7 @@ IW4_MP_Plugin::IW4_MP_Plugin()
     RegisterModule(new cg());
     // RegisterModule(new clipmap());
     // RegisterModule(new g_client_fields());
-    // RegisterModule(new g_scr_main());
+    RegisterModule(new g_scr_main());
     // RegisterModule(new pm());
     RegisterModule(new scr_parser());
 }

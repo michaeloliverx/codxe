@@ -82,9 +82,8 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 void GScr_CbufAddText()
 {
     if (Scr_GetNumParam() != 1)
-    {
         Scr_Error("Usage: exec(<string>)\n");
-    }
+
     // VM strings are null-terminated, so no need to manually terminate
     // the string here.
     const char *text = Scr_GetString(0);
