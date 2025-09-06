@@ -126,26 +126,6 @@ onStartGameType()
 	allowed[10] = "blocker";
 	allowed[11] = "dom";
 
-	// allowed[allowed.size] = "airdrop_trap";
-
-	// allowed[allowed.size] = "dd";
-	// allowed[allowed.size] = "dd_bombzone";
-
-	// allowed[allowed.size] = "gtnw";
-	// allowed[allowed.size] = "gtnw_zone";
-
-	// allowed[allowed.size] = "hq";
-
-	// allowed[allowed.size] = "sab";
-
-	// allowed[allowed.size] = "sd";
-	// allowed[allowed.size] = "bombzone";
-	// allowed[allowed.size] = "blocker";
-
-	// allowed[allowed.size] = "dom";
-
-	// allowed[allowed.size] = "war";
-
 	maps\mp\gametypes\_gameobjects::main(allowed);	
 }
 
