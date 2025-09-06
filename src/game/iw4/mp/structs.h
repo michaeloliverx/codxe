@@ -588,7 +588,56 @@ struct Bounds
     float halfSize[3];
 };
 
-struct MapEnts;
+struct TriggerModel
+{
+    int contents;
+    unsigned __int16 hullCount;
+    unsigned __int16 firstHull;
+};
+
+struct TriggerHull
+{
+    Bounds bounds;
+    int contents;
+    unsigned __int16 slabCount;
+    unsigned __int16 firstSlab;
+};
+
+struct TriggerSlab
+{
+    float dir[3];
+    float midPoint;
+    float halfSize;
+};
+
+struct MapTriggers
+{
+    unsigned int count;
+    TriggerModel *models;
+    unsigned int hullCount;
+    TriggerHull *hulls;
+    unsigned int slabCount;
+    TriggerSlab *slabs;
+};
+
+struct __declspec(align(2)) Stage
+{
+    const char *name;
+    float origin[3];
+    unsigned __int16 triggerIndex;
+    unsigned __int8 sunPrimaryLightIndex;
+};
+
+struct __declspec(align(4)) MapEnts
+{
+    const char *name;
+    char *entityString;
+    int numEntityChars;
+    MapTriggers trigger;
+    Stage *stages;
+    unsigned __int8 stageCount;
+};
+
 struct SModelAabbNode;
 struct DynEntityDef;
 struct DynEntityPose;

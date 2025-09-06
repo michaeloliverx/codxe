@@ -3,6 +3,9 @@
 
 init()
 {
+
+    DeleteUnwantedEntities();
+
     SetDvar("scr_war_timelimit", 0);
 
     SetDvar("g_hardcore", 1);        // Hardcore HUD
@@ -20,6 +23,16 @@ init()
     SetDvar("testClients_doMove", 0);
 
     level thread onPlayerConnect();
+}
+
+DeleteUnwantedEntities()
+{
+    ents = getentarray();
+    foreach (ent in ents)
+    {
+        if (ent.classname == "trigger_hurt")
+            ent delete();
+    }
 }
 
 onPlayerConnect()
