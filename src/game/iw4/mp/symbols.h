@@ -37,8 +37,9 @@ static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x822ADD18);
 static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index)>(0x822B2D70);
 static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue)>(0x822B35B8);
 static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x822AE470);
+static auto GetEntity = reinterpret_cast<gentity_s *(*)(scr_entref_t entref)>(0x8223F4D0);
 // static auto Scr_ParamError = reinterpret_cast<void (*)(unsigned int index, const char *error)>(0x822AD558);
-// static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x822AD5C0);
+static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x822AE668);
 
 static auto Scr_RegisterFunction = reinterpret_cast<void (*)(int func, const char *name)>(0x822963C0);
 
