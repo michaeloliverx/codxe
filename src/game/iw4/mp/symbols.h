@@ -7,14 +7,14 @@ namespace iw4
 namespace mp
 {
 // Functions
-// static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822DB330);
+static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822FDF08);
 
 // static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8227CF90);
 
 // static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822E2148);
 
-// static auto Scr_AddSourceBuffer =
-//     reinterpret_cast<char *(*)(const char *filename, const char *extFilename)>(0x8229E2D0);
+static auto Scr_AddSourceBuffer =
+    reinterpret_cast<char *(*)(const char *filename, const char *extFilename)>(0x8229F2C8);
 
 // static auto GScr_AddFieldsForEntity = reinterpret_cast<void (*)()>(0x82229B08);
 
