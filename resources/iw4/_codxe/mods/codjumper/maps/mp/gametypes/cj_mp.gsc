@@ -43,10 +43,7 @@ onPlayerConnect()
 
         // Special handling for bots
         if (IsDefined(player.pers["isBot"]))
-        {
-            player thread onBotSpawned();
             continue;
-        }
 
         player InitPlayerOnce();
 
@@ -68,18 +65,7 @@ onPlayerSpawned()
         self thread ReplenishAmmo();
         self thread RPGSwitch();
         self thread MonitorButtons();
-    }
-}
-
-onBotSpawned()
-{
-    self endon("disconnect");
-    for (;;)
-    {
-        self waittill("spawned_player");
-
-        self God();
-        self SetupLoadout();
+        self thread MonitorPlayerCommands();
     }
 }
 
@@ -88,7 +74,7 @@ InitPlayerOnce()
     self endon("disconnect");
     self endon("death");
 
-    if (isDefined(self.cj))
+    if (IsDefined(self.cj))
         return;
 
     self iprintlnbold("Initializing CodJumper for " + self.name);
@@ -162,7 +148,7 @@ ReplenishAmmo()
     for (;;)
     {
         currentWeapon = self getCurrentWeapon(); // undefined if the player is mantling or on a ladder
-        if (isdefined(currentWeapon))
+        if (IsDefined(currentWeapon))
             self giveMaxAmmo(currentWeapon);
         wait 1;
     }
@@ -248,6 +234,31 @@ MonitorButtons()
     }
 }
 
+MonitorPlayerCommands()
+{
+    self endon("disconnect");
+    self endon("death");
+
+    if (!IsDefined(self.cj_commands_initialized) || self.cj_commands_initialized != true)
+    {
+        self NotifyOnPlayerCommand("dpad_up", "+actionslot 1");
+        self.cj_commands_initialized = true;
+    }
+
+    for (;;)
+    {
+        button = self common_scripts\utility::waittill_any_return("dpad_up", "dpad_right");
+        switch (button)
+        {
+        case "dpad_up":
+            self SpawnBot();
+            break;
+        default:
+            iprintln("^1Unknown button " + button);
+        }
+    }
+}
+
 DisableBrushCollisionAtOrigin()
 {
     point = self.origin;
@@ -265,7 +276,7 @@ SavePosition()
     // Create save struct
     save = spawnstruct();
     save.origin = self.origin;
-    save.angles = self getplayerangles();
+    save.angles = self GetPlayerAngles();
 
     // Add to history array
     self.cj.saves[self.cj.saves.size] = save;
@@ -286,16 +297,16 @@ SavePosition()
 LoadPosition(savenum)
 {
     // Check if position history exists
-    if (!isDefined(self.cj.saves) || self.cj.saves.size == 0)
+    if (!IsDefined(self.cj.saves) || self.cj.saves.size == 0)
     {
         self IPrintLn("^1Error: No saved positions found");
         return;
     }
 
-    savenum_provided = isDefined(savenum);
+    savenum_provided = IsDefined(savenum);
 
     // Default to latest position if no specific number provided
-    if (!isDefined(savenum))
+    if (!IsDefined(savenum))
         savenum = self.cj.saves.size;
 
     // Bounds checking
@@ -308,7 +319,7 @@ LoadPosition(savenum)
     // Load the specified position (convert to 0-based index)
     save = self.cj.saves[savenum - 1];
 
-    if (!isDefined(save))
+    if (!IsDefined(save))
     {
         self IPrintLn("^1Error: Position data corrupted");
         return;
@@ -328,4 +339,57 @@ LoadPosition(savenum)
     // If savenum_provided, print the position number
     if (savenum_provided)
         self IPrintLn("Position loaded (#" + savenum + ")");
+}
+
+SpawnBot()
+{
+    origin = self.origin;
+    playerAngles = self GetPlayerAngles();
+
+    if (!IsDefined(self.cj.bot))
+    {
+        bot = AddTestClient();
+        if (!IsDefined(bot))
+        {
+            self iprintln("Could not add bot");
+            wait 1;
+            return;
+        }
+
+        bot.pers["isBot"] = true;
+
+        bot thread TestClient("axis");
+        wait 0.10;
+        self.cj.bot = bot;
+    }
+
+    wait 0.5;
+    for (i = 3; i > 0; i--)
+    {
+        self iPrintLn("Bot updates in ^2" + i);
+        wait 1;
+    }
+    self.cj.bot SetOrigin(origin);
+    // Only set the yaw angle
+    self.cj.bot SetPlayerAngles((0, playerAngles[1], 0));
+}
+
+TestClient(team)
+{
+    self endon("disconnect");
+
+    while (!IsDefined(self.pers["team"]))
+        wait.05;
+
+    self notify("menuresponse", game["menu_team"], team);
+    wait 0.5;
+
+    while (1)
+    {
+        self notify("menuresponse", "changeclass", "class1");
+        self waittill("spawned_player");
+        wait(0.10);
+    }
+
+    self FreezeControls(true);
 }
