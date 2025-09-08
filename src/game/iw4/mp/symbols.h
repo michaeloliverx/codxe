@@ -13,6 +13,9 @@ static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const c
 
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8213DE38);
 
+static auto Cmd_AddCommandInternal =
+    reinterpret_cast<void (*)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd)>(0x82276758);
+
 static auto DB_LinkXAssetEntry1 =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
 
@@ -73,6 +76,13 @@ static auto UI_DrawText =
 static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x823160A8);
 
 // Data
+static auto cgArray = reinterpret_cast<cg_s **>(0x824C5B64);
+static auto clients = reinterpret_cast<clientActive_t **>(0x825A8B6C);
+static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x825A5918);
+
+static auto CG_GetPredictedPlayerState = reinterpret_cast<playerState_s *(*)(int localClientNum)>(0x8213DE18);
+static auto CL_CreateNewCommands = reinterpret_cast<void (*)(int localClientNum)>(0x8217E540);
+
 static auto cm = reinterpret_cast<clipMap_t *>(0x83052680);
 static auto fields = reinterpret_cast<client_fields_s *>(0x82027518);
 // static auto g_clients = reinterpret_cast<gclient_s *>(0x82EAC5E8);

@@ -105,6 +105,7 @@
       <ClCompile Include="src\game\iw4\mp\components\clipmap.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\g_client_fields.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\iw4\mp\components\mr.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\patches.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw4\mp\main.cpp" />

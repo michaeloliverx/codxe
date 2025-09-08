@@ -2,6 +2,7 @@
 #include "components/clipmap.h"
 #include "components/g_client_fields.h"
 #include "components/g_scr_main.h"
+#include "components/mr.h"
 #include "components/patches.h"
 #include "components/scr_parser.h"
 #include "main.h"
@@ -20,6 +21,7 @@ IW4_MP_Plugin::IW4_MP_Plugin()
     RegisterModule(new clipmap());
     RegisterModule(new g_client_fields());
     RegisterModule(new g_scr_main());
+    RegisterModule(new MovementRecorder());
     RegisterModule(new patches());
     RegisterModule(new scr_parser());
 }
