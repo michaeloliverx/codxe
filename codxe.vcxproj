@@ -103,6 +103,7 @@
 
       <ClCompile Include="src\game\iw4\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\clipmap.cpp" />
+      <ClCompile Include="src\game\iw4\mp\components\console.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\g_client_fields.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\mr.cpp" />

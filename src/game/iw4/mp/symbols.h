@@ -51,6 +51,8 @@ static auto Weapon_RocketLauncher_Fire =
                                     lockonFireParms *magicBullet)>(0x82260C90);
 static auto ScrPlace_GetUnsafeFullPlacement = reinterpret_cast<const ScreenPlacement *(*)()>(0x821AB7A0);
 
+static auto SCR_DrawScreenField = reinterpret_cast<void (*)(int localClientNum, int refreshedUI)>(0x8218E800);
+
 static auto UI_DrawBuildNumber = reinterpret_cast<void (*)(int localClientNum)>(0x822DAC70);
 static auto UI_DrawText =
     reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x,
