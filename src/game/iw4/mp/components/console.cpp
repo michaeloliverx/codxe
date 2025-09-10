@@ -252,10 +252,14 @@ void Console::RenderConsole()
     R_AddCmdDrawStretchPic(CONSOLE_X, CONSOLE_Y + CONSOLE_HEIGHT - 2.0f, CONSOLE_WIDTH, 2.0f, 0.0f, 0.0f, 1.0f, 1.0f,
                            borderColor, iw4::mp::sharedUiInfo->assets.whiteMaterial);
 
-    float yPos = CONSOLE_Y + TEXT_MARGIN;
+    // The text anchor is at the bottom left of the first line, not top left
+    // So we need to add the line height to position the first line correctly
+    int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+    float scaledFontHeight = fontHeight * 0.8f; // Account for the 0.8f scale we use when drawing
+    float yPos = CONSOLE_Y + TEXT_MARGIN + scaledFontHeight;
 
     // Draw history (from bottom up, leaving space for input)
-    int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
+    int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / scaledFontHeight);
 
     // Calculate the starting line based on scroll position
     int startLine = 0;
@@ -287,7 +291,7 @@ void Console::RenderConsole()
         {
             R_AddCmdDrawText(line, MAX_INPUT_LENGTH, iw4::mp::sharedUiInfo->assets.consoleFont, CONSOLE_X + TEXT_MARGIN,
                              yPos, 0.8f, 0.8f, 0.0f, settings.text_color, 0);
-            yPos += LINE_HEIGHT;
+            yPos += scaledFontHeight;
         }
     }
 
@@ -380,7 +384,9 @@ void Console::HandleInput()
     // Handle Page Up - scroll history up
     if (keystroke.VirtualKey == VK_PRIOR) // VK_PRIOR is Page Up
     {
-        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
+        int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+        float scaledFontHeight = fontHeight * 0.8f;
+        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / scaledFontHeight);
         int maxScroll = consoleState.lineCount - maxVisibleLines;
 
         if (maxScroll > 0)
@@ -398,7 +404,9 @@ void Console::HandleInput()
     // Handle Page Down - scroll history down
     if (keystroke.VirtualKey == VK_NEXT) // VK_NEXT is Page Down
     {
-        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
+        int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+        float scaledFontHeight = fontHeight * 0.8f;
+        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / scaledFontHeight);
 
         // Scroll down by half a page
         consoleState.historyScroll -= maxVisibleLines / 2;
@@ -413,7 +421,9 @@ void Console::HandleInput()
     // Handle Home key - jump to top of history
     if (keystroke.VirtualKey == VK_HOME)
     {
-        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
+        int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+        float scaledFontHeight = fontHeight * 0.8f;
+        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / scaledFontHeight);
         int maxScroll = consoleState.lineCount - maxVisibleLines;
 
         if (maxScroll > 0)
