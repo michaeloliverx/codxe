@@ -7,6 +7,64 @@ namespace iw4
 {
 namespace mp
 {
+
+union DvarValue
+{
+    bool enabled;
+    int integer;
+    unsigned int unsignedInt;
+    float value;
+    float vector[4];
+    const char *string;
+    unsigned __int8 color[4];
+};
+
+struct DvarLimits_enumeration
+{
+    int stringCount;
+    const char **strings;
+};
+
+struct DvarLimits_integer
+{
+    int min;
+    int max;
+};
+
+struct DvarLimits_value
+{
+    float min;
+    float max;
+};
+
+struct DvarLimits_vector
+{
+    float min;
+    float max;
+};
+
+union DvarLimits
+{
+    DvarLimits_enumeration enumeration;
+    DvarLimits_integer integer;
+    DvarLimits_value value;
+    DvarLimits_vector vector;
+};
+
+struct dvar_t
+{
+    const char *name;
+    const char *description;
+    unsigned __int16 flags;
+    unsigned __int8 type;
+    bool modified;
+    DvarValue current;
+    DvarValue latched;
+    DvarValue reset;
+    DvarLimits domain;
+    dvar_t *hashNext;
+};
+
 struct playerState_s
 {
     char padding1[0xC];

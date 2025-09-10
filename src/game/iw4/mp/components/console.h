@@ -25,6 +25,11 @@ class Console : public Module
   private:
     static Detour SCR_DrawScreenField_Detour;
     static void SCR_DrawScreenField_Hook(int localClientNum, int refreshedUI);
+
+    static Detour CL_ConsolePrint_Detour;
+    static void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, unsigned int duration,
+                                     unsigned int pixelWidth, int flags);
+
     static void RenderConsole();
     static void HandleInput();
 

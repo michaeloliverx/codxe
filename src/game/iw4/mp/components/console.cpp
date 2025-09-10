@@ -21,6 +21,16 @@ R_TextHeight_t R_TextHeight = reinterpret_cast<R_TextHeight_t>(0x823C28F8);
 typedef unsigned int (*Sys_Milliseconds_t)();
 Sys_Milliseconds_t Sys_Milliseconds = reinterpret_cast<Sys_Milliseconds_t>(0x823401C8);
 
+typedef void (*Com_PrintMessage_t)(int channel, const char *msg, int error);
+Com_PrintMessage_t Com_PrintMessage = reinterpret_cast<Com_PrintMessage_t>(0x8227F370);
+
+typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
+Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x8227F448);
+
+typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, unsigned int duration,
+                                  unsigned int pixelWidth, int flags);
+CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x821754B8);
+
 // Screen dimensions
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
@@ -333,24 +343,31 @@ void Console::SCR_DrawScreenField_Hook(int localClientNum, int refreshedUI)
     Console::SCR_DrawScreenField_Detour.GetOriginal<decltype(iw4::mp::SCR_DrawScreenField)>()(localClientNum,
                                                                                               refreshedUI);
 
-    // Render the console on top of everything else
-    // RenderConsole();
-
     // TODO: Remove this hack once we figure out why the game crashes when rendering the console too early (text
     // rendering)
-
     // Track the start time (initialized only once)
     static DWORD startTime = GetTickCount();
-
-    // Check if at least 5 seconds (5000 milliseconds) have passed
     DWORD currentTime = GetTickCount();
     DWORD elapsedMs = currentTime - startTime;
 
-    // Only render the console after 5 seconds
-    if (elapsedMs >= 5000)
+    // Only render the console after x seconds have passed
+    if (elapsedMs >= 2000)
     {
         HandleInput();
         RenderConsole();
+    }
+}
+
+Detour Console::CL_ConsolePrint_Detour;
+void Console::CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, unsigned int duration,
+                                   unsigned int pixelWidth, int flags)
+{
+    CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth,
+                                                                    flags);
+    // Add the message to the console history
+    if (consoleState.historyCount < MAX_HISTORY_LINES)
+    {
+        consoleState.AddToHistory(txt);
     }
 }
 
@@ -358,9 +375,15 @@ Console::Console()
 {
     SCR_DrawScreenField_Detour = Detour(iw4::mp::SCR_DrawScreenField, SCR_DrawScreenField_Hook);
     SCR_DrawScreenField_Detour.Install();
+
+    // Redirect the games internal console print to ours
+    CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
+    CL_ConsolePrint_Detour.Install();
 }
 
 Console::~Console()
 {
     SCR_DrawScreenField_Detour.Remove();
+
+    CL_ConsolePrint_Detour.Remove();
 }
