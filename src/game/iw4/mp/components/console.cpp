@@ -45,8 +45,8 @@ CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x821754
 #define TEXT_MARGIN 10.0f
 #define LINE_HEIGHT 20.0f
 #define MAX_INPUT_LENGTH 256
-#define MAX_HISTORY_LINES 20
-#define CURSOR_BLINK_TIME 500 // milliseconds
+#define HISTORY_BUFFER_SIZE 0x8000 // Circular buffer size
+#define CURSOR_BLINK_TIME 500      // milliseconds
 
 const Console::Settings settings = {
     {1.0f, 1.0f, 1.0f, 1.0f},  // text_color
@@ -61,17 +61,20 @@ struct ConsoleState
     bool isOpen;
     char inputBuffer[MAX_INPUT_LENGTH];
     int inputCursor;
-    char history[MAX_HISTORY_LINES][MAX_INPUT_LENGTH];
-    int historyCount;
+    char historyBuffer[HISTORY_BUFFER_SIZE]; // Circular buffer for history
+    int writePos;                            // Position where next line will be written
+    int readPos;                             // Position where we start reading from
+    int lineCount;                           // Number of lines in the buffer
     int historyScroll;
     unsigned int lastCursorBlink;
     bool cursorVisible;
 
     ConsoleState()
-        : isOpen(false), inputCursor(0), historyCount(0), historyScroll(0), lastCursorBlink(0), cursorVisible(true)
+        : isOpen(false), inputCursor(0), writePos(0), readPos(0), lineCount(0), historyScroll(0), lastCursorBlink(0),
+          cursorVisible(true)
     {
         memset(inputBuffer, 0, sizeof(inputBuffer));
-        memset(history, 0, sizeof(history));
+        memset(historyBuffer, 0, sizeof(historyBuffer));
 
         // Add welcome message
         AddToHistory("Console initialized. Type 'help' for commands.");
@@ -79,20 +82,93 @@ struct ConsoleState
 
     void AddToHistory(const char *text)
     {
-        if (historyCount < MAX_HISTORY_LINES)
+        int textLen = strlen(text);
+        if (textLen == 0 || textLen >= HISTORY_BUFFER_SIZE - 1)
+            return;
+
+        // Add null terminator to the length
+        int requiredSpace = textLen + 1;
+
+        // Check if we need to wrap around
+        if (writePos + requiredSpace > HISTORY_BUFFER_SIZE)
         {
-            strncpy(history[historyCount], text, MAX_INPUT_LENGTH - 1);
-            historyCount++;
+            // Mark end of buffer and wrap to beginning
+            historyBuffer[writePos] = '\0';
+            writePos = 0;
         }
-        else
+
+        // Check if we're about to overwrite old data
+        if (lineCount > 0 && writePos <= readPos && writePos + requiredSpace > readPos)
         {
-            // Shift history up
-            for (int i = 0; i < MAX_HISTORY_LINES - 1; i++)
+            // We need to move the read position forward to the next line
+            while (readPos < HISTORY_BUFFER_SIZE && historyBuffer[readPos] != '\0')
+                readPos++;
+            readPos++; // Skip the null terminator
+
+            // If we hit the end, wrap to beginning
+            if (readPos >= HISTORY_BUFFER_SIZE)
+                readPos = 0;
+
+            // Skip any lines that will be overwritten
+            while (readPos < writePos + requiredSpace && readPos < HISTORY_BUFFER_SIZE)
             {
-                strncpy(history[i], history[i + 1], MAX_INPUT_LENGTH - 1);
+                if (historyBuffer[readPos] == '\0')
+                {
+                    readPos++;
+                    if (lineCount > 0)
+                        lineCount--;
+                }
+                else
+                {
+                    // Find the end of this line
+                    while (readPos < HISTORY_BUFFER_SIZE && historyBuffer[readPos] != '\0')
+                        readPos++;
+                    readPos++; // Skip the null terminator
+                    if (lineCount > 0)
+                        lineCount--;
+                }
             }
-            strncpy(history[MAX_HISTORY_LINES - 1], text, MAX_INPUT_LENGTH - 1);
+
+            if (readPos >= HISTORY_BUFFER_SIZE)
+                readPos = 0;
         }
+
+        // Copy the text to the buffer
+        strcpy(&historyBuffer[writePos], text);
+        writePos += requiredSpace;
+        lineCount++;
+
+        // Wrap write position if needed
+        if (writePos >= HISTORY_BUFFER_SIZE)
+            writePos = 0;
+    }
+
+    // Get a line from history by index (0 = oldest visible line)
+    const char *GetHistoryLine(int index)
+    {
+        if (index < 0 || index >= lineCount)
+            return NULL;
+
+        int currentPos = readPos;
+        int currentIndex = 0;
+
+        while (currentIndex < index && currentIndex < lineCount)
+        {
+            // Skip to next line
+            while (currentPos < HISTORY_BUFFER_SIZE && historyBuffer[currentPos] != '\0')
+                currentPos++;
+            currentPos++; // Skip null terminator
+
+            if (currentPos >= HISTORY_BUFFER_SIZE)
+                currentPos = 0;
+
+            currentIndex++;
+        }
+
+        if (historyBuffer[currentPos] == '\0')
+            return NULL;
+
+        return &historyBuffer[currentPos];
     }
 };
 
@@ -123,7 +199,11 @@ void ProcessCommand(const char *command)
     }
     else if (strcmp(cmd, "clear") == 0)
     {
-        consoleState.historyCount = 0;
+        // Reset the circular buffer
+        consoleState.writePos = 0;
+        consoleState.readPos = 0;
+        consoleState.lineCount = 0;
+        memset(consoleState.historyBuffer, 0, sizeof(consoleState.historyBuffer));
         consoleState.AddToHistory("Console cleared.");
     }
     else if (strcmp(cmd, "echo") == 0)
@@ -175,19 +255,50 @@ void Console::RenderConsole()
     float yPos = CONSOLE_Y + TEXT_MARGIN;
 
     // Draw history (from bottom up, leaving space for input)
-    int startLine = 0;
     int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
 
-    if (consoleState.historyCount > maxVisibleLines)
+    // Calculate the starting line based on scroll position
+    int startLine = 0;
+    int endLine = consoleState.lineCount;
+
+    if (consoleState.lineCount > maxVisibleLines)
     {
-        startLine = consoleState.historyCount - maxVisibleLines;
+        // Default to showing the bottom (most recent) lines
+        startLine = consoleState.lineCount - maxVisibleLines;
+
+        // Apply scroll offset (negative scroll moves view up, showing older messages)
+        startLine -= consoleState.historyScroll;
+
+        // Clamp to valid range
+        if (startLine < 0)
+            startLine = 0;
+        if (startLine > consoleState.lineCount - maxVisibleLines)
+            startLine = consoleState.lineCount - maxVisibleLines;
+
+        endLine = startLine + maxVisibleLines;
+        if (endLine > consoleState.lineCount)
+            endLine = consoleState.lineCount;
     }
 
-    for (int i = startLine; i < consoleState.historyCount; i++)
+    for (int i = startLine; i < endLine; i++)
     {
-        R_AddCmdDrawText(consoleState.history[i], MAX_INPUT_LENGTH, iw4::mp::sharedUiInfo->assets.consoleFont,
-                         CONSOLE_X + TEXT_MARGIN, yPos, 0.8f, 0.8f, 0.0f, settings.text_color, 0);
-        yPos += LINE_HEIGHT;
+        const char *line = consoleState.GetHistoryLine(i);
+        if (line)
+        {
+            R_AddCmdDrawText(line, MAX_INPUT_LENGTH, iw4::mp::sharedUiInfo->assets.consoleFont, CONSOLE_X + TEXT_MARGIN,
+                             yPos, 0.8f, 0.8f, 0.0f, settings.text_color, 0);
+            yPos += LINE_HEIGHT;
+        }
+    }
+
+    // Draw scroll indicator if scrolled
+    if (consoleState.historyScroll > 0)
+    {
+        const float scrollIndColor[4] = {1.0f, 1.0f, 0.0f, 0.8f};
+        char scrollText[64];
+        _snprintf(scrollText, sizeof(scrollText), "[Scrolled up %d lines]", consoleState.historyScroll);
+        R_AddCmdDrawText(scrollText, 64, iw4::mp::sharedUiInfo->assets.consoleFont, CONSOLE_X + CONSOLE_WIDTH - 200.0f,
+                         CONSOLE_Y + 20.0f, 0.7f, 0.7f, 0.0f, scrollIndColor, 0);
     }
 
     // Draw input line separator
@@ -266,6 +377,58 @@ void Console::HandleInput()
         return;
     }
 
+    // Handle Page Up - scroll history up
+    if (keystroke.VirtualKey == VK_PRIOR) // VK_PRIOR is Page Up
+    {
+        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
+        int maxScroll = consoleState.lineCount - maxVisibleLines;
+
+        if (maxScroll > 0)
+        {
+            // Scroll up by half a page
+            consoleState.historyScroll += maxVisibleLines / 2;
+
+            // Clamp to maximum scroll
+            if (consoleState.historyScroll > maxScroll)
+                consoleState.historyScroll = maxScroll;
+        }
+        return;
+    }
+
+    // Handle Page Down - scroll history down
+    if (keystroke.VirtualKey == VK_NEXT) // VK_NEXT is Page Down
+    {
+        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
+
+        // Scroll down by half a page
+        consoleState.historyScroll -= maxVisibleLines / 2;
+
+        // Clamp to minimum (0 = bottom of history)
+        if (consoleState.historyScroll < 0)
+            consoleState.historyScroll = 0;
+
+        return;
+    }
+
+    // Handle Home key - jump to top of history
+    if (keystroke.VirtualKey == VK_HOME)
+    {
+        int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / LINE_HEIGHT);
+        int maxScroll = consoleState.lineCount - maxVisibleLines;
+
+        if (maxScroll > 0)
+            consoleState.historyScroll = maxScroll;
+
+        return;
+    }
+
+    // Handle End key - jump to bottom of history
+    if (keystroke.VirtualKey == VK_END)
+    {
+        consoleState.historyScroll = 0;
+        return;
+    }
+
     if (keystroke.VirtualKey == VK_BACK)
     {
         if (consoleState.inputCursor > 0)
@@ -282,6 +445,7 @@ void Console::HandleInput()
             ProcessCommand(consoleState.inputBuffer);
             memset(consoleState.inputBuffer, 0, sizeof(consoleState.inputBuffer));
             consoleState.inputCursor = 0;
+            consoleState.historyScroll = 0; // Reset scroll to bottom after command
         }
     }
 
@@ -364,11 +528,8 @@ void Console::CL_ConsolePrint_Hook(int localClientNum, int channel, const char *
 {
     CL_ConsolePrint_Detour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth,
                                                                     flags);
-    // Add the message to the console history
-    if (consoleState.historyCount < MAX_HISTORY_LINES)
-    {
-        consoleState.AddToHistory(txt);
-    }
+    // Add the message to the console history (circular buffer handles overflow)
+    consoleState.AddToHistory(txt);
 }
 
 Console::Console()
