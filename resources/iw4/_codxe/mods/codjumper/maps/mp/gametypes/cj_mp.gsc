@@ -24,6 +24,8 @@ init()
     SetDvar("testClients_doCrouch", 0);
     SetDvar("testClients_doMove", 0);
 
+    maps\mp\gametypes\menu::init();
+
     level thread onPlayerConnect();
 }
 
@@ -184,6 +186,31 @@ MeleeButtonPressedTwice()
     return false;
 }
 
+UseButtonPressedTwice()
+{
+    if (self UseButtonPressed())
+    {
+        // Wait for the button to be released after the first press
+        while (self UseButtonPressed())
+        {
+            wait 0.05;
+        }
+
+        // Now, wait for a second press within 500ms
+        for (elapsed_time = 0; elapsed_time < 0.5; elapsed_time += 0.05)
+        {
+            if (self UseButtonPressed())
+            {
+                // Ensure it was released before this second press
+                return true;
+            }
+
+            wait 0.05;
+        }
+    }
+    return false;
+}
+
 MonitorButtons()
 {
     self endon("disconnect");
@@ -191,45 +218,76 @@ MonitorButtons()
 
     for (;;)
     {
-        if (self IsUFO() && self UseButtonPressed())
+        if (!(self maps\mp\gametypes\menu::isMenuOpen()))
         {
-            self DisableBrushCollisionAtOrigin();
-            wait 0.2;
-        }
-        else if (self FragButtonPressed())
-        {
-            self UFO();
-            wait 0.2;
-        }
-        else if (self MeleeButtonPressedTwice())
-        {
-            self SavePosition();
-            wait 0.2;
-        }
-        else if (!self IsUFO() && self SecondaryOffhandButtonPressed())
-        {
-            if (self.cj.saves.size == 0)
-                self IPrintLn("No positions saved yet.");
-            else
+            if (self IsUFO() && self UseButtonPressed())
             {
-                // Load last position immediately
-                self LoadPosition();
-                savenum = self.cj.saves.size;
-                // If user holds the button, load previous positions when pressing use
-                while (self SecondaryOffhandButtonPressed())
-                {
-                    if (self UseButtonPressed())
-                    {
-                        savenum = savenum - 1;
-                        if (savenum < 1)
-                            savenum = self.cj.savenum;
-                        self LoadPosition(savenum);
-                    }
-                    wait.1;
-                }
+                self DisablePlayerClipOnIntersectingBrushes();
+                wait 0.2;
             }
+            else if (self UseButtonPressedTwice())
+            {
+                self maps\mp\gametypes\menu::menuAction("OPEN");
+                wait 0.2;
+            }
+            else if (self FragButtonPressed())
+            {
+                self UFO();
+                wait 0.2;
+            }
+            else if (self MeleeButtonPressedTwice())
+            {
+                self SavePosition();
+                wait 0.2;
+            }
+            else if (!self IsUFO() && self SecondaryOffhandButtonPressed())
+            {
+                if (self.cj.saves.size == 0)
+                    self IPrintLn("No positions saved yet.");
+                else
+                {
+                    // Load last position immediately
+                    self LoadPosition();
+                    savenum = self.cj.saves.size;
+                    // If user holds the button, load previous positions when pressing use
+                    while (self SecondaryOffhandButtonPressed())
+                    {
+                        if (self UseButtonPressed())
+                        {
+                            savenum = savenum - 1;
+                            if (savenum < 1)
+                                savenum = self.cj.savenum;
+                            self LoadPosition(savenum);
+                        }
+                        wait.1;
+                    }
+                }
 
-            wait.2;
+                wait.2;
+            }
+        }
+        else
+        {
+            if (self UseButtonPressed())
+            {
+                self maps\mp\gametypes\menu::menuAction("SELECT");
+                wait.2;
+            }
+            else if (self MeleeButtonPressed())
+            {
+                self maps\mp\gametypes\menu::menuAction("BACK");
+                wait.2;
+            }
+            else if (self ADSButtonPressed())
+            {
+                self maps\mp\gametypes\menu::menuAction("UP");
+                wait.2;
+            }
+            else if (self AttackButtonPressed())
+            {
+                self maps\mp\gametypes\menu::menuAction("DOWN");
+                wait.2;
+            }
         }
 
         wait 0.05;
@@ -269,13 +327,6 @@ MonitorPlayerCommands()
             iprintln("^1Unknown button " + button);
         }
     }
-}
-
-DisableBrushCollisionAtOrigin()
-{
-    point = self.origin;
-    point = point - (0, 0, 1); // Move point down 1 unit to ensure we're inside the ground
-    DisableBrushCollisionAtPoint(point);
 }
 
 MAX_SAVES = 100;

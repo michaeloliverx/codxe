@@ -97,7 +97,7 @@ bool BoundsIntersect(const iw4::mp::Bounds &a, const iw4::mp::Bounds &b)
     return true;
 }
 
-void NoclipBrushTouching(iw4::mp::scr_entref_t entref)
+void DisablePlayerClipOnIntersectingBrushes(iw4::mp::scr_entref_t entref)
 {
     const iw4::mp::gentity_s *ent = iw4::mp::GetEntity(entref);
 
@@ -135,7 +135,9 @@ clipmap::clipmap()
     DB_LinkXAssetEntry1_Detour = Detour(iw4::mp::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
     DB_LinkXAssetEntry1_Detour.Install();
 
-    iw4::mp::Scr_AddMethod("noclipbrushtouching", NoclipBrushTouching, 0);
+    iw4::mp::Scr_AddMethod("disableplayercliponintersectingbrushes", DisablePlayerClipOnIntersectingBrushes, 0);
+
+    // RemovePlayerClipOnTouchingBrushes
 
     Events::OnCG_DrawActive(
         []()
