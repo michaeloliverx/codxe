@@ -1,5 +1,6 @@
 #include "mr.h"
 #include "common.h"
+#include "events.h"
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
 #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
@@ -162,13 +163,22 @@ void UpdateCommand(usercmd_s *const cmd)
         playback_start_time = cmd->serverTime;
     }
 
+    const int movement_threshold = 35;
+
+    if (std::abs(cmd->forwardmove) >= movement_threshold || std::abs(cmd->rightmove) >= movement_threshold)
+    {
+        Cmd_Stopplayback_f();
+        return;
+    }
+
     // Calculate the relative time offset from the start of the recording
     int recording_time_offset = data.serverTime - recording_start_time;
 
     // Apply this offset to the current playback time
     cmd->serverTime = playback_start_time + recording_time_offset;
 
-    cmd->buttons = data.buttons;
+    // Merge buttons
+    cmd->buttons |= data.buttons;
 
     // Set the command angles to the recorded angles
     const auto pitch = data.angles[PITCH] - ANGLE2SHORT(ps->delta_angles[PITCH]);
@@ -219,6 +229,8 @@ void CL_CreateNewCommands_Hook(int localClientNum)
     }
 }
 
+const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
 MovementRecorder::MovementRecorder()
 {
     CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
@@ -229,6 +241,16 @@ MovementRecorder::MovementRecorder()
     Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
     Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
     Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
+
+    Events::OnCG_DrawActive(
+        []()
+        {
+            if (is_playing)
+            {
+                static auto bigDevFont = iw4::mp::R_RegisterFont("fonts/bigDevFont");
+                iw4::mp::R_AddCmdDrawText("TAS", 4, bigDevFont, 10.f, 20.f, 1.0f, 1.0f, 0.0f, color_white_rgba, 0);
+            }
+        });
 }
 
 MovementRecorder::~MovementRecorder()

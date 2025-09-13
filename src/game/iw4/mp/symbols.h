@@ -11,6 +11,7 @@ static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82275C60);
 
+static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82129270);
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8213DE38);
 
 static auto Cmd_AddCommandInternal =
@@ -18,6 +19,12 @@ static auto Cmd_AddCommandInternal =
 
 static auto DB_LinkXAssetEntry1 =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
+
+typedef void (*R_AddCmdDrawText_t)(const char *text, int maxChars, iw4::mp::Font_s *font, float x, float y,
+                                   float xScale, float yScale, float rotation, const float *color, int style);
+static R_AddCmdDrawText_t R_AddCmdDrawText = reinterpret_cast<R_AddCmdDrawText_t>(0x823C7690);
+
+static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name)>(0x823C2798);
 
 static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(const char *filename, const char *extFilename)>(0x8229F2C8);
