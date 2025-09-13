@@ -17,9 +17,18 @@ static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const
 static auto Cmd_AddCommandInternal =
     reinterpret_cast<void (*)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd)>(0x82276758);
 
+static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x822804F8);
+
 static auto DB_LinkXAssetEntry1 =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
 
+static auto Dvar_RegisterString =
+    reinterpret_cast<dvar_t *(*)(const char *dvarName, const char *value, unsigned __int16 flags,
+                                 const char *description)>(0x8230F010);
+
+static auto Dvar_SetString = reinterpret_cast<void (*)(const dvar_t *dvar, const char *value)>(0x8230F7D8);
+
+static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_t *dvar)>(0x823DDD78);
 typedef void (*R_AddCmdDrawText_t)(const char *text, int maxChars, iw4::mp::Font_s *font, float x, float y,
                                    float xScale, float yScale, float rotation, const float *color, int style);
 static R_AddCmdDrawText_t R_AddCmdDrawText = reinterpret_cast<R_AddCmdDrawText_t>(0x823C7690);

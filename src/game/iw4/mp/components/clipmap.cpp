@@ -1,106 +1,180 @@
 #include "clipmap.h"
 #include "common.h"
 #include "g_scr_main.h"
+#include "events.h"
 
-namespace iw4
-{
-namespace mp
-{
-std::vector<int> brush_contents;
+iw4::mp::dvar_t *noclip_brushes = nullptr;
+std::vector<int> original_brush_contents;
 
 Detour DB_LinkXAssetEntry1_Detour;
 
-XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(XAssetType type, XAssetHeader *header)
+iw4::mp::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp::XAssetType type, iw4::mp::XAssetHeader *header)
 {
-    XAssetEntryPoolEntry *entry = DB_LinkXAssetEntry1_Detour.GetOriginal<decltype(DB_LinkXAssetEntry1)>()(type, header);
+    // Register once
+    // TODO: Move to dvar init event
+    if (!noclip_brushes)
+    {
+        noclip_brushes = iw4::mp::Dvar_RegisterString(
+            "noclip_brushes", "", 0x10, "Brush indices to disable playerclip. Use '*' for all, '' to restore");
+    }
 
-    if (type == ASSET_TYPE_CLIPMAP_MP)
+    iw4::mp::XAssetEntryPoolEntry *entry =
+        DB_LinkXAssetEntry1_Detour.GetOriginal<decltype(iw4::mp::DB_LinkXAssetEntry1)>()(type, header);
+
+    if (type == iw4::mp::ASSET_TYPE_CLIPMAP_MP)
     {
         // Resize the vector to match the number of brushes
-        brush_contents.resize(header->clipMap->numBrushes);
+        original_brush_contents.resize(header->clipMap->numBrushes);
 
         // Save original contents
         for (int i = 0; i < header->clipMap->numBrushes; ++i)
         {
-            brush_contents[i] = header->clipMap->brushContents[i]; // Assuming this is the field you want to save
+            original_brush_contents[i] =
+                header->clipMap->brushContents[i]; // Assuming this is the field you want to save
         }
     }
 
     return entry;
 }
 
-bool IsPointInBounds(float point[3], Bounds bounds)
+void RestoreBrushContents()
 {
-    return (point[0] >= bounds.midPoint[0] - bounds.halfSize[0] &&
-            point[0] <= bounds.midPoint[0] + bounds.halfSize[0]) &&
-           (point[1] >= bounds.midPoint[1] - bounds.halfSize[1] &&
-            point[1] <= bounds.midPoint[1] + bounds.halfSize[1]) &&
-           (point[2] >= bounds.midPoint[2] - bounds.halfSize[2] && point[2] <= bounds.midPoint[2] + bounds.halfSize[2]);
+    assert(iw4::mp::cm->isInUse);
+    assert(original_brush_contents.size() == static_cast<size_t>(iw4::mp::cm->numBrushes));
+
+    // Restore original contents
+    for (int i = 0; i < iw4::mp::cm->numBrushes; ++i)
+    {
+        iw4::mp::cm->brushContents[i] = original_brush_contents[i];
+    }
 }
 
-void GScr_DisableBrushCollisionAtPoint()
+void RemoveAllBrushCollision()
 {
-    if (Scr_GetNumParam() != 1)
+    assert(iw4::mp::cm->isInUse);
+    assert(original_brush_contents.size() == static_cast<size_t>(iw4::mp::cm->numBrushes));
+
+    for (int i = 0; i < iw4::mp::cm->numBrushes; ++i)
     {
-        Scr_Error("DisableBrushCollisionAtPoint: Expected 1 argument (vector3 point)\n");
-        return;
+        iw4::mp::cm->brushContents[i] &= ~CONTENTS_PLAYERCLIP; // Disable player collision
+    }
+}
+
+std::vector<int> ParseSpaceSeparatedInts(const std::string &str)
+{
+    std::vector<int> result;
+    std::istringstream iss(str);
+    int value;
+
+    while (iss >> value)
+    {
+        result.push_back(value);
     }
 
-    float point[3] = {0};
-    Scr_GetVector(0, point);
+    return result;
+}
 
-    std::vector<int> modified_brushes;
-    for (int i = 0; i < cm->numBrushes; ++i)
+bool BoundsIntersect(const iw4::mp::Bounds &a, const iw4::mp::Bounds &b)
+{
+    // Check intersection in all three dimensions
+    for (int i = 0; i < 3; i++)
     {
-        if ((cm->brushContents[i] & CONTENTS_PLAYERCLIP) && IsPointInBounds(point, cm->brushBounds[i]))
+        // Distance between centers
+        float centerDistance = std::abs(a.midPoint[i] - b.midPoint[i]);
+
+        // Sum of half sizes
+        float combinedHalfSize = a.halfSize[i] + b.halfSize[i];
+
+        // If distance between centers is greater than combined half sizes,
+        // they don't intersect in this dimension
+        if (centerDistance > combinedHalfSize)
         {
-            // Disable collision for this brush
-            cm->brushContents[i] &= ~CONTENTS_PLAYERCLIP;
-            modified_brushes.push_back(i);
+            return false;
         }
     }
 
-    if (modified_brushes.empty())
+    // If we get here, they intersect in all dimensions
+    return true;
+}
+
+void NoclipBrushTouching(iw4::mp::scr_entref_t entref)
+{
+    const iw4::mp::gentity_s *ent = iw4::mp::GetEntity(entref);
+
+    std::vector<int> intersecting_brushes;
+    for (int i = 0; i < iw4::mp::cm->numBrushes; ++i)
     {
-        CG_GameMessage(0, "^1No brushes with collision found at this point");
+        if ((iw4::mp::cm->brushContents[i] & CONTENTS_PLAYERCLIP) &&
+            BoundsIntersect(ent->r.absBox, iw4::mp::cm->brushBounds[i]))
+        {
+            intersecting_brushes.push_back(i);
+        }
+    }
+
+    if (intersecting_brushes.empty())
+    {
+        iw4::mp::CG_GameMessage(0, "^1No brushes with collision found at this point");
         return;
     }
 
-    // Create message
-    std::string message = "^2Disabled collision for brushes: ";
-    for (size_t i = 0; i < modified_brushes.size(); ++i)
+    std::string new_value = noclip_brushes->current.string;
+    for (size_t i = 0; i < intersecting_brushes.size(); ++i)
     {
-        message += std::to_string(static_cast<unsigned long long>(modified_brushes[i]));
-        if (i < modified_brushes.size() - 1)
-            message += ", ";
+        if (!new_value.empty())
+            new_value += " ";
+        new_value += std::to_string(static_cast<unsigned long long>(intersecting_brushes[i]));
     }
-    CG_GameMessage(0, message.c_str());
-}
 
-void GScr_RestoreBrushCollision()
-{
-    assert(cm->isInUse);
-    assert(brush_contents.size() == static_cast<size_t>(cm->numBrushes));
+    iw4::mp::Dvar_SetString(noclip_brushes, new_value.c_str());
 
-    // Restore original contents
-    for (int i = 0; i < cm->numBrushes; ++i)
-    {
-        cm->brushContents[i] = brush_contents[i];
-    }
+    iw4::mp::CG_GameMessage(0, iw4::mp::va("^2Disabled collision for brushes: %s", new_value.c_str()));
 }
 
 clipmap::clipmap()
 {
-    DB_LinkXAssetEntry1_Detour = Detour(DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
+    DB_LinkXAssetEntry1_Detour = Detour(iw4::mp::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
     DB_LinkXAssetEntry1_Detour.Install();
 
-    Scr_AddFunction("disablebrushcollisionatpoint", GScr_DisableBrushCollisionAtPoint, 0);
-    Scr_AddFunction("restorebrushcollision", GScr_RestoreBrushCollision, 0);
+    iw4::mp::Scr_AddMethod("noclipbrushtouching", NoclipBrushTouching, 0);
+
+    Events::OnCG_DrawActive(
+        []()
+        {
+            if (iw4::mp::R_CheckDvarModified(noclip_brushes))
+            {
+                assert(iw4::mp::cm->isInUse);
+                assert(original_brush_contents.size() == static_cast<size_t>(iw4::mp::cm->numBrushes));
+
+                std::string value = noclip_brushes->current.string;
+
+                if (value == "")
+                {
+                    RestoreBrushContents();
+                }
+                else if (value == "*")
+                {
+                    RemoveAllBrushCollision();
+                }
+                else
+                {
+                    RestoreBrushContents();
+                    const auto brush_indices = ParseSpaceSeparatedInts(value);
+                    for (size_t i = 0; i < brush_indices.size(); ++i)
+                    {
+                        const int idx = brush_indices[i];
+                        if (idx < 0 || idx >= iw4::mp::cm->numBrushes)
+                        {
+                            iw4::mp::CG_GameMessage(0, iw4::mp::va("^1Error: Invalid brush index %d for map", idx));
+                            continue;
+                        }
+                        iw4::mp::cm->brushContents[idx] &= ~CONTENTS_PLAYERCLIP;
+                    }
+                }
+            }
+        });
 }
 
 clipmap::~clipmap()
 {
     DB_LinkXAssetEntry1_Detour.Remove();
 }
-} // namespace mp
-} // namespace iw4

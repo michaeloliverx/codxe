@@ -93,126 +93,6 @@ static_assert(sizeof(gclient_s) == 14080, "");
 static_assert(offsetof(gclient_s, ps) == 0x0, "");
 static_assert(offsetof(gclient_s, flags) == 13344, "");
 
-struct gentity_s
-{
-    char padding1[344];
-    gclient_s *client;
-    char padding2[0x28];
-    int flags;
-    char padding3[0xF8];
-};
-static_assert(sizeof(gentity_s) == 640, "");
-static_assert(offsetof(gentity_s, client) == 344, "");
-
-struct sentient_s;
-struct actor_s;
-struct Vehicle;
-struct Turret;
-
-struct level_locals_t
-{
-    gclient_s *clients;
-    gentity_s *gentities;
-    int num_entities;
-    gentity_s *firstFreeEnt;
-    gentity_s *lastFreeEnt;
-    sentient_s *sentients;
-    actor_s *actors;
-    Vehicle *vehicles;
-    Turret *turrets;
-    int initializing;
-    int clientIsSpawning;
-    int maxclients;
-};
-static_assert(offsetof(level_locals_t, clients) == 0x0, "");
-static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
-static_assert(offsetof(level_locals_t, maxclients) == 44, "");
-
-struct weaponParms
-{
-    float forward[3];
-    float right[3];
-    float up[3];
-    float muzzleTrace[3];
-    float gunForward[3];
-    unsigned int weaponIndex;
-    const struct WeaponDef *weapDef;
-    const struct WeaponCompleteDef *weapCompleteDef;
-};
-static_assert(sizeof(weaponParms) == 0x48, "");
-
-struct scr_entref_t
-{
-    unsigned __int16 entnum;
-    unsigned __int16 classnum;
-};
-
-struct cmd_function_s
-{
-    cmd_function_s *next;
-    const char *name;
-    const char *autoCompleteDir;
-    const char *autoCompleteExt;
-    void (*function)();
-};
-
-struct __declspec(align(4)) usercmd_s
-{
-    int serverTime;
-    int buttons;
-    int angles[3];
-    unsigned __int16 weapon;
-    unsigned __int16 primaryWeaponForAltMode;
-    unsigned __int16 offHandIndex;
-    char forwardmove;
-    char rightmove;
-    float meleeChargeYaw;
-    unsigned __int8 meleeChargeDist;
-    char selectedLoc[2];
-    unsigned __int8 selectedLocAngle;
-    char remoteControlAngles[2];
-};
-
-struct __declspec(align(128)) clSnapshot_t
-{
-    playerState_s ps;
-    int valid;
-    int snapFlags;
-    int serverTime;
-    int messageNum;
-    int deltaNum;
-    int ping;
-    int cmdNum;
-    int numEntities;
-    int numClients;
-    int parseEntitiesIndex;
-    int parseClientsIndex;
-    int serverCommandNum;
-};
-
-enum StanceState : __int32
-{
-    CL_STANCE_STAND = 0x0,
-    CL_STANCE_CROUCH = 0x1,
-    CL_STANCE_PRONE = 0x2,
-};
-
-struct ClientArchiveData
-{
-    int serverTime;
-    float origin[3];
-    float velocity[3];
-    int bobCycle;
-    int movementDir;
-};
-
-struct outPacket_t
-{
-    int p_cmdNumber;
-    int p_serverTime;
-    int p_realtime;
-};
-
 enum trType_t : __int32
 {
     TR_STATIONARY = 0x0,
@@ -473,6 +353,154 @@ struct entityState_s
     unsigned int partBits[5];
     int clientMask[1];
     unsigned int pad[1];
+};
+
+struct EntHandle
+{
+    unsigned __int16 number;
+    unsigned __int16 infoIndex;
+};
+
+struct Bounds
+{
+    float midPoint[3];
+    float halfSize[3];
+};
+
+struct entityShared_t
+{
+    unsigned __int8 isLinked;
+    unsigned __int8 modelType;
+    unsigned __int8 svFlags;
+    unsigned __int8 isInUse;
+    Bounds box;
+    int contents;
+    Bounds absBox;
+    float currentOrigin[3];
+    float currentAngles[3];
+    EntHandle ownerNum;
+    int eventTime;
+};
+
+struct gentity_s
+{
+    entityState_s s;
+    entityShared_t r;
+    gclient_s *client;
+    char padding2[0x28];
+    int flags;
+    char padding3[0xF8];
+};
+static_assert(sizeof(gentity_s) == 640, "");
+static_assert(offsetof(gentity_s, client) == 344, "");
+
+struct sentient_s;
+struct actor_s;
+struct Vehicle;
+struct Turret;
+
+struct level_locals_t
+{
+    gclient_s *clients;
+    gentity_s *gentities;
+    int num_entities;
+    gentity_s *firstFreeEnt;
+    gentity_s *lastFreeEnt;
+    sentient_s *sentients;
+    actor_s *actors;
+    Vehicle *vehicles;
+    Turret *turrets;
+    int initializing;
+    int clientIsSpawning;
+    int maxclients;
+};
+static_assert(offsetof(level_locals_t, clients) == 0x0, "");
+static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
+static_assert(offsetof(level_locals_t, maxclients) == 44, "");
+
+struct weaponParms
+{
+    float forward[3];
+    float right[3];
+    float up[3];
+    float muzzleTrace[3];
+    float gunForward[3];
+    unsigned int weaponIndex;
+    const struct WeaponDef *weapDef;
+    const struct WeaponCompleteDef *weapCompleteDef;
+};
+static_assert(sizeof(weaponParms) == 0x48, "");
+
+struct scr_entref_t
+{
+    unsigned __int16 entnum;
+    unsigned __int16 classnum;
+};
+
+struct cmd_function_s
+{
+    cmd_function_s *next;
+    const char *name;
+    const char *autoCompleteDir;
+    const char *autoCompleteExt;
+    void (*function)();
+};
+
+struct __declspec(align(4)) usercmd_s
+{
+    int serverTime;
+    int buttons;
+    int angles[3];
+    unsigned __int16 weapon;
+    unsigned __int16 primaryWeaponForAltMode;
+    unsigned __int16 offHandIndex;
+    char forwardmove;
+    char rightmove;
+    float meleeChargeYaw;
+    unsigned __int8 meleeChargeDist;
+    char selectedLoc[2];
+    unsigned __int8 selectedLocAngle;
+    char remoteControlAngles[2];
+};
+
+struct __declspec(align(128)) clSnapshot_t
+{
+    playerState_s ps;
+    int valid;
+    int snapFlags;
+    int serverTime;
+    int messageNum;
+    int deltaNum;
+    int ping;
+    int cmdNum;
+    int numEntities;
+    int numClients;
+    int parseEntitiesIndex;
+    int parseClientsIndex;
+    int serverCommandNum;
+};
+
+enum StanceState : __int32
+{
+    CL_STANCE_STAND = 0x0,
+    CL_STANCE_CROUCH = 0x1,
+    CL_STANCE_PRONE = 0x2,
+};
+
+struct ClientArchiveData
+{
+    int serverTime;
+    float origin[3];
+    float velocity[3];
+    int bobCycle;
+    int movementDir;
+};
+
+struct outPacket_t
+{
+    int p_cmdNumber;
+    int p_serverTime;
+    int p_realtime;
 };
 
 enum team_t : __int32
@@ -749,12 +777,6 @@ struct CollisionPartition;
 struct CollisionAabbTree;
 struct cmodel_t;
 struct cbrush_t;
-
-struct Bounds
-{
-    float midPoint[3];
-    float halfSize[3];
-};
 
 struct TriggerModel
 {

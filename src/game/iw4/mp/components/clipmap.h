@@ -2,10 +2,6 @@
 
 #include "common.h"
 
-namespace iw4
-{
-namespace mp
-{
 class clipmap : public Module
 {
   public:
@@ -17,5 +13,3 @@ class clipmap : public Module
         return "clipmap";
     };
 };
-} // namespace mp
-} // namespace iw4
