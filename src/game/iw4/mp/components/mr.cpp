@@ -19,12 +19,19 @@ struct RecordedCmd
     char forwardmove;
     char rightmove;
 };
+
+struct RecordingSession
+{
+    float startOrigin[3];
+    float startAngles[3];
+    std::vector<RecordedCmd> commands;
+};
 size_t play_frame = 0;
 bool is_recording = false;
 bool is_playing = false;
 int playback_start_time = 0;
 int recording_start_time = 0;
-std::vector<RecordedCmd> current_recording;
+RecordingSession current_session;
 
 static cmd_function_s Cmd_Startrecord_VAR;
 static cmd_function_s Cmd_Stoprecord_VAR;
@@ -40,8 +47,20 @@ void Cmd_Startrecord_f()
         return;
     }
 
+    const playerState_s *ps = CG_GetPredictedPlayerState(0);
+    auto ca = &(*clients)[0];
+
+    // Store initial position and angles
+    current_session.startOrigin[0] = ps->origin[0];
+    current_session.startOrigin[1] = ps->origin[1];
+    current_session.startOrigin[2] = ps->origin[2];
+
+    current_session.startAngles[0] = ca->viewangles[0];
+    current_session.startAngles[1] = ca->viewangles[1];
+    current_session.startAngles[2] = ca->viewangles[2];
+
+    current_session.commands.clear();
     is_recording = true;
-    current_recording.clear();
     CG_GameMessage(0, "Recording ^2started");
 }
 
@@ -83,16 +102,29 @@ void Cmd_Startplayback_f()
         return;
     }
 
-    if (current_recording.empty())
+    if (current_session.commands.empty())
     {
         CG_GameMessage(0, "^1No recording available to play.\n");
         return;
     }
 
+    // Issue setviewpos command to restore player position
+    // char setviewpos_cmd[256];
+    // sprintf(setviewpos_cmd, "setviewpos %.2f %.2f %.2f %.2f %.2f %.2f\n",
+    //     current_session.startOrigin[0], current_session.startOrigin[1], current_session.startOrigin[2],
+    //     current_session.startAngles[0], current_session.startAngles[1], current_session.startAngles[2]);
+
+    // Cbuf_AddText(0, setviewpos_cmd);
+
+    // void  TeleportPlayer(gentity_s *player, const float *origin, const float *angles) 82234408
+    static auto TeleportPlayer =
+        reinterpret_cast<void (*)(gentity_s *player, const float *origin, const float *angles)>(0x82234408);
+    TeleportPlayer(&g_entities[0], current_session.startOrigin, current_session.startAngles);
+
     play_frame = 0;
     is_playing = true;
     playback_start_time = 0; // Will be set on first UpdateCommand
-    recording_start_time = current_recording[0].serverTime;
+    recording_start_time = current_session.commands[0].serverTime;
     CG_GameMessage(0, "Playback ^2started\n");
 }
 
@@ -139,15 +171,15 @@ void CaptureCommand(usercmd_s *const cmd)
     recorded_cmd.forwardmove = cmd->forwardmove;
     recorded_cmd.rightmove = cmd->rightmove;
 
-    current_recording.push_back(recorded_cmd);
+    current_session.commands.push_back(recorded_cmd);
 }
 
 void UpdateCommand(usercmd_s *const cmd)
 {
-    if (current_recording.empty())
+    if (current_session.commands.empty())
         return;
 
-    if (play_frame >= current_recording.size())
+    if (play_frame >= current_session.commands.size())
     {
         Cmd_Stopplayback_f();
         return;
@@ -155,7 +187,7 @@ void UpdateCommand(usercmd_s *const cmd)
 
     const playerState_s *ps = CG_GetPredictedPlayerState(0);
     auto ca = &(*clients)[0];
-    const auto &data = current_recording[play_frame];
+    const auto &data = current_session.commands[play_frame];
 
     // Initialize playback start time on first frame
     if (playback_start_time == 0)
