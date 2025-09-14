@@ -9,6 +9,11 @@ namespace iw4
 {
 namespace mp
 {
+
+// ============================================================================
+// Data Structures and State
+// ============================================================================
+
 struct RecordedCmd
 {
     int serverTime;
@@ -26,6 +31,8 @@ struct RecordingSession
     float startAngles[3];
     std::vector<RecordedCmd> commands;
 };
+
+// Global state variables
 size_t play_frame = 0;
 bool is_recording = false;
 bool is_playing = false;
@@ -33,11 +40,102 @@ int playback_start_time = 0;
 int recording_start_time = 0;
 RecordingSession current_session;
 
+// Command function variables
 static cmd_function_s Cmd_Startrecord_VAR;
 static cmd_function_s Cmd_Stoprecord_VAR;
 static cmd_function_s Cmd_Togglerecord_VAR;
 static cmd_function_s Cmd_Startplayback_VAR;
 static cmd_function_s Cmd_Stopplayback_VAR;
+static cmd_function_s Cmd_Saverecord_VAR;
+static cmd_function_s Cmd_Loadrecord_VAR;
+
+static auto Cmd_Argv = reinterpret_cast<const char *(*)(int argIndex)>(0x821235F8);
+static auto TeleportPlayer =
+    reinterpret_cast<void (*)(gentity_s *player, const float *origin, const float *angles)>(0x82234408);
+
+// ============================================================================
+// Serialization Functions
+// ============================================================================
+
+bool SerializeRecordingSession(const RecordingSession &session, std::vector<char> &buffer)
+{
+    buffer.clear();
+
+    // Calculate total size needed
+    size_t total_size = sizeof(session.startOrigin) + sizeof(session.startAngles) + sizeof(size_t) +
+                        (session.commands.size() * sizeof(RecordedCmd));
+
+    buffer.reserve(total_size);
+
+    // Write start origin
+    const char *origin_ptr = reinterpret_cast<const char *>(session.startOrigin);
+    buffer.insert(buffer.end(), origin_ptr, origin_ptr + sizeof(session.startOrigin));
+
+    // Write start angles
+    const char *angles_ptr = reinterpret_cast<const char *>(session.startAngles);
+    buffer.insert(buffer.end(), angles_ptr, angles_ptr + sizeof(session.startAngles));
+
+    // Write command count
+    size_t command_count = session.commands.size();
+    const char *count_ptr = reinterpret_cast<const char *>(&command_count);
+    buffer.insert(buffer.end(), count_ptr, count_ptr + sizeof(size_t));
+
+    // Write commands
+    for (auto it = session.commands.begin(); it != session.commands.end(); ++it)
+    {
+        const char *cmd_ptr = reinterpret_cast<const char *>(&(*it));
+        buffer.insert(buffer.end(), cmd_ptr, cmd_ptr + sizeof(RecordedCmd));
+    }
+
+    return true;
+}
+
+bool DeserializeRecordingSession(const std::vector<char> &buffer, RecordingSession &session)
+{
+    if (buffer.size() < sizeof(session.startOrigin) + sizeof(session.startAngles) + sizeof(size_t))
+    {
+        return false;
+    }
+
+    size_t offset = 0;
+
+    // Read start origin
+    memcpy(session.startOrigin, &buffer[offset], sizeof(session.startOrigin));
+    offset += sizeof(session.startOrigin);
+
+    // Read start angles
+    memcpy(session.startAngles, &buffer[offset], sizeof(session.startAngles));
+    offset += sizeof(session.startAngles);
+
+    // Read command count
+    size_t command_count;
+    memcpy(&command_count, &buffer[offset], sizeof(size_t));
+    offset += sizeof(size_t);
+
+    // Validate buffer size
+    if (buffer.size() < offset + (command_count * sizeof(RecordedCmd)))
+    {
+        return false;
+    }
+
+    // Read commands
+    session.commands.clear();
+    session.commands.reserve(command_count);
+
+    for (size_t i = 0; i < command_count; ++i)
+    {
+        RecordedCmd cmd;
+        memcpy(&cmd, &buffer[offset], sizeof(RecordedCmd));
+        session.commands.push_back(cmd);
+        offset += sizeof(RecordedCmd);
+    }
+
+    return true;
+}
+
+// ============================================================================
+// Recording Control Commands
+// ============================================================================
 
 void Cmd_Startrecord_f()
 {
@@ -88,6 +186,10 @@ void Cmd_Togglerecord_f()
     }
 }
 
+// ============================================================================
+// Playback Control Commands
+// ============================================================================
+
 void Cmd_Startplayback_f()
 {
     if (is_recording)
@@ -108,17 +210,7 @@ void Cmd_Startplayback_f()
         return;
     }
 
-    // Issue setviewpos command to restore player position
-    // char setviewpos_cmd[256];
-    // sprintf(setviewpos_cmd, "setviewpos %.2f %.2f %.2f %.2f %.2f %.2f\n",
-    //     current_session.startOrigin[0], current_session.startOrigin[1], current_session.startOrigin[2],
-    //     current_session.startAngles[0], current_session.startAngles[1], current_session.startAngles[2]);
-
-    // Cbuf_AddText(0, setviewpos_cmd);
-
-    // void  TeleportPlayer(gentity_s *player, const float *origin, const float *angles) 82234408
-    static auto TeleportPlayer =
-        reinterpret_cast<void (*)(gentity_s *player, const float *origin, const float *angles)>(0x82234408);
+    // Teleport player to starting position
     TeleportPlayer(&g_entities[0], current_session.startOrigin, current_session.startAngles);
 
     play_frame = 0;
@@ -140,6 +232,114 @@ void Cmd_Stopplayback_f()
     is_playing = false;
     CG_GameMessage(0, "Playback ^1stopped\n");
 }
+
+// ============================================================================
+// File I/O Commands
+// ============================================================================
+
+void Cmd_Saverecord_f()
+{
+    // if (Cmd_Argc() < 2)
+    // {
+    //     CG_GameMessage(0, "^1Usage: saverecord <filename>");
+    //     return;
+    // }
+
+    if (current_session.commands.empty())
+    {
+        CG_GameMessage(0, "^1No recording to save");
+        return;
+    }
+
+    const char *filename = Cmd_Argv(1);
+
+    // Create full path in game directory
+    char full_path[256];
+    sprintf(full_path, "game:\\recordings\\%s.rec", filename);
+
+    // Serialize the recording session
+    std::vector<char> buffer;
+    if (!SerializeRecordingSession(current_session, buffer))
+    {
+        CG_GameMessage(0, "^1Failed to serialize recording");
+        return;
+    }
+
+    // Write to disk
+    if (filesystem::write_file_to_disk(full_path, buffer.data(), buffer.size()))
+    {
+        CG_GameMessage(0, "^2Recording saved successfully");
+    }
+    else
+    {
+        CG_GameMessage(0, "^1Failed to save recording");
+    }
+}
+
+void Cmd_Loadrecord_f()
+{
+    // if (Cmd_Argc() < 2)
+    // {
+    //     CG_GameMessage(0, "^1Usage: loadrecord <filename>");
+    //     return;
+    // }
+
+    if (is_recording)
+    {
+        CG_GameMessage(0, "^1Stop recording before loading");
+        return;
+    }
+
+    if (is_playing)
+    {
+        CG_GameMessage(0, "^1Stop playback before loading");
+        return;
+    }
+
+    const char *filename = Cmd_Argv(1);
+
+    // Create full path in game directory
+    char full_path[256];
+    sprintf(full_path, "game:\\recordings\\%s.rec", filename);
+
+    // Check if file exists
+    if (!filesystem::file_exists(full_path))
+    {
+        CG_GameMessage(0, "^1Recording file not found");
+        return;
+    }
+
+    // Read file contents
+    std::string file_contents = filesystem::read_file_to_string(full_path);
+    if (file_contents.empty())
+    {
+        CG_GameMessage(0, "^1Failed to read recording file");
+        return;
+    }
+
+    // Convert to buffer
+    std::vector<char> buffer(file_contents.begin(), file_contents.end());
+
+    // Deserialize the recording session
+    RecordingSession loaded_session;
+    if (!DeserializeRecordingSession(buffer, loaded_session))
+    {
+        CG_GameMessage(0, "^1Failed to load recording - invalid format");
+        return;
+    }
+
+    // Replace current session
+    current_session = loaded_session;
+
+    CG_GameMessage(0, "^2Recording loaded successfully");
+
+    // Automatically start playback
+    Cmd_Startplayback_f();
+}
+
+// ============================================================================
+// Core Recording/Playback Logic
+// ============================================================================
 
 bool IsPlayback()
 {
@@ -240,6 +440,10 @@ bool MovementRecorder::TAS_Enabled()
     return tas_enabled;
 }
 
+// ============================================================================
+// Hook and Module Implementation
+// ============================================================================
+
 Detour CL_CreateNewCommands_Detour;
 
 void CL_CreateNewCommands_Hook(int localClientNum)
@@ -268,12 +472,16 @@ MovementRecorder::MovementRecorder()
     CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
     CL_CreateNewCommands_Detour.Install();
 
+    // Register all commands
     Cmd_AddCommandInternal("startrecord", Cmd_Startrecord_f, &Cmd_Startrecord_VAR);
     Cmd_AddCommandInternal("stoprecord", Cmd_Stoprecord_f, &Cmd_Stoprecord_VAR);
     Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
     Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
     Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
+    Cmd_AddCommandInternal("saverecord", Cmd_Saverecord_f, &Cmd_Saverecord_VAR);
+    Cmd_AddCommandInternal("loadrecord", Cmd_Loadrecord_f, &Cmd_Loadrecord_VAR);
 
+    // Register TAS indicator overlay
     Events::OnCG_DrawActive(
         []()
         {
