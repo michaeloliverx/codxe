@@ -12,10 +12,10 @@ gentity_s *Weapon_RocketLauncher_Fire_Hook(gentity_s *ent, const Weapon *weapon,
                                            weaponParms *gunVel, missileFireParms *fireParms,
                                            missileFireParms *magicBullet, bool a8)
 {
-
-    // Call the original function
-    gentity_s *result = Weapon_RocketLauncher_Fire_Detour.GetOriginal<Weapon_RocketLauncher_Fire_t>()(
-        ent, weapon, spread, wp, gunVel, fireParms, magicBullet, a8);
+    // NOTE: remove this hack and remove shellshock another way
+    // // Call the original function
+    // gentity_s *result = Weapon_RocketLauncher_Fire_Detour.GetOriginal<Weapon_RocketLauncher_Fire_t>()(
+    //     ent, weapon, spread, wp, gunVel, fireParms, magicBullet, a8);
 
     // Reimplement COD4 logic for RPG knockback
     // Apply at the end which matches the original game behavior
@@ -26,7 +26,7 @@ gentity_s *Weapon_RocketLauncher_Fire_Hook(gentity_s *ent, const Weapon *weapon,
         ent->client->ps.velocity[2] = ent->client->ps.velocity[2] - wp->forward[2] * 64.0f;
     }
 
-    return result;
+    return 0;
 }
 
 PlayerMovement::PlayerMovement()
