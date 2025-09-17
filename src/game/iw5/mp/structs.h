@@ -1679,6 +1679,65 @@ struct __declspec(align(32)) clipMap_t
     //   unsigned int checksum;
 };
 
+struct pmove_t;
+struct pml_t;
+
+struct DvarLimits_enumeration
+{
+    int stringCount;
+    const char **strings;
+};
+
+struct DvarLimits_integer
+{
+    int min;
+    int max;
+};
+
+struct DvarLimits_value
+{
+    float min;
+    float max;
+};
+
+struct DvarLimits_vector
+{
+    float min;
+    float max;
+};
+
+union DvarLimits
+{
+    DvarLimits_enumeration enumeration;
+    DvarLimits_integer integer;
+    DvarLimits_value value;
+    DvarLimits_vector vector;
+};
+
+union DvarValue
+{
+    bool enabled;
+    int integer;
+    unsigned int unsignedInt;
+    float value;
+    float vector[4];
+    const char *string;
+    unsigned __int8 color[4];
+};
+
+struct dvar_t
+{
+    const char *name;
+    unsigned __int16 flags;
+    unsigned __int8 type;
+    bool modified;
+    DvarValue current;
+    DvarValue latched;
+    DvarValue reset;
+    DvarLimits domain;
+    dvar_t *hashNext;
+};
+
 // Function typedefs
 
 typedef void (*CG_GameMessage_t)(LocalClientNum_t localClientNum, const char *msg);
@@ -1688,6 +1747,10 @@ typedef XAssetHeader *(*DB_FindXAssetHeader_t)(XAssetType type, const char *name
 typedef XAssetEntry *(*DB_LinkXAssetEntry_t)(XAssetType type, XAssetHeader *header);
 typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
 typedef bool (*DB_IsXAssetDefault_t)(XAssetType type, const char *name);
+
+typedef dvar_t *(*Dvar_FindMalleableVar_t)(const char *dvarName);
+
+typedef void (*Jump_Start_t)(pmove_t *pm, pml_t *pml, double height);
 
 typedef unsigned __int8 *(*PMem_AllocFromSource_NoDebug_t)(unsigned int size, unsigned int alignment, unsigned int type,
                                                            PMem_Source source);

@@ -45,16 +45,27 @@ void DisableDvarWriteChecks()
     *(volatile uint32_t *)0x8232DE2C = 0x60000000;
 }
 
+Detour Jump_Start_Detour;
+
+void Jump_Start_Hook(pmove_t *pm, pml_t *pml, double height)
+{
+    static const dvar_t *jump_height = Dvar_FindMalleableVar("jump_height");
+    Jump_Start_Detour.GetOriginal<Jump_Start_t>()(pm, pml, jump_height->current.value);
+}
+
 patches::patches()
 {
     EnableBouncing();
     DisableIdleGunSway();
     DisableJumpSlowdown();
-    DisableDvarWriteChecks();
+
+    Jump_Start_Detour = Detour(Jump_Start, Jump_Start_Hook);
+    Jump_Start_Detour.Install();
 }
 
 patches::~patches()
 {
+    Jump_Start_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw5

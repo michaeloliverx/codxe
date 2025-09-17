@@ -25,6 +25,10 @@ static auto DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x821AB560);
 static auto DB_LinkXAssetEntry = reinterpret_cast<DB_LinkXAssetEntry_t>(0x821EF3F0);
 static auto DB_IsXAssetDefault = reinterpret_cast<DB_IsXAssetDefault_t>(0x821EEEB0);
 
+static auto Dvar_FindMalleableVar = reinterpret_cast<Dvar_FindMalleableVar_t>(0x8232E100);
+
+static auto Jump_Start = reinterpret_cast<Jump_Start_t>(0x820DAF00);
+
 static auto PMem_AllocFromSource_NoDebug = reinterpret_cast<PMem_AllocFromSource_NoDebug_t>(0x823335F0);
 
 static auto Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x822BFAB8);
