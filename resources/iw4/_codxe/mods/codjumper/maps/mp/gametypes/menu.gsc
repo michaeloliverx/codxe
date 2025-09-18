@@ -367,7 +367,7 @@ generateMenuOptions()
     self addMenuOption("main", "Maps", ::menuAction, "CHANGE_MENU", "host_menu_maps");
     self addMenu("host_menu_maps", "main");
     maps = getarraykeys(level.MAPS);
-    for (i = maps.size - 1; i >= 0; i--) // loop in reverse to display the maps in the order they are defined
+    for (i = 0; i < maps.size; i++)
     {
         mapname = maps[i];
         label = level.MAPS[mapname];
@@ -390,7 +390,8 @@ generateMenuOptions()
     self addMenuOption("main", "Barrier Menu", ::menuAction, "CHANGE_MENU", "barrier_menu");
     self addMenu("barrier_menu", "main");
     self addMenuOption("barrier_menu", "Restore Barriers", ::RestoreBrushCollision);
-    self addMenuOption("barrier_menu", "Disable Collision at player position", ::DisablePlayerClipOnIntersectingBrushes);
+    self addMenuOption("barrier_menu", "Disable Collision at player position",
+                       ::DisablePlayerClipOnIntersectingBrushes);
 }
 
 changeMap(mapname)
@@ -433,6 +434,6 @@ RemoveAllClones()
 
 RestoreBrushCollision()
 {
-	SetDvar("noclip_brushes", "");
-	IPrintLn("^2Collision restored for all brushes.");
+    SetDvar("noclip_brushes", "");
+    IPrintLn("^2Collision restored for all brushes.");
 }
