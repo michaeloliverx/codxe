@@ -1846,9 +1846,63 @@ struct dvar_t
     dvar_t *hashNext;
 };
 
+struct Material;
+struct Font_s;
+
+struct CachedAssets_t
+{
+    Material *scrollBarArrowUp;
+    Material *scrollBarArrowDown;
+    Material *scrollBarArrowLeft;
+    Material *scrollBarArrowRight;
+    Material *scrollBar;
+    Material *scrollBarThumb;
+    Material *sliderBar;
+    Material *sliderThumb;
+    Material *whiteMaterial;
+    Material *cursor;
+    Material *textDecodeCharacters;
+    Material *textDecodeCharactersGlow;
+    Font_s *bigFont;
+    Font_s *smallFont;
+    Font_s *consoleFont;
+    Font_s *boldFont;
+    Font_s *textFont;
+    Font_s *extraBigFont;
+    Font_s *objectiveFont;
+    Font_s *hudBigFont;
+    Font_s *hudSmallFont;
+};
+
+struct __declspec(align(8)) sharedUiInfo_t
+{
+    CachedAssets_t assets;
+    // ...more
+};
+
+struct ScreenPlacement
+{
+    float scaleVirtualToReal[2];
+    float scaleVirtualToFull[2];
+    float scaleRealToVirtual[2];
+    float realViewportPosition[2];
+    float realViewportSize[2];
+    float virtualViewableMin[2];
+    float virtualViewableMax[2];
+    float realViewableMin[2];
+    float realViewableMax[2];
+    float virtualAdjustableMin[2];
+    float virtualAdjustableMax[2];
+    float realAdjustableMin[2];
+    float realAdjustableMax[2];
+    float subScreenLeft;
+};
+
 // Function typedefs
 
 typedef void (*CG_GameMessage_t)(LocalClientNum_t localClientNum, const char *msg);
+
+typedef Font_s *(*CL_RegisterFont_t)(const char *fontName, int imageTrack);
 
 typedef XAssetEntry *(*DB_FindXAssetEntry_t)(XAssetType type, const char *name);
 typedef XAssetHeader *(*DB_FindXAssetHeader_t)(XAssetType type, const char *name, int allowCreateDefault);
@@ -1870,8 +1924,15 @@ typedef int (*Scr_GetInt_t)(unsigned int index);
 typedef unsigned int (*Scr_GetMethod_t)(const char **pName, int *type);
 typedef const char *(*Scr_GetString_t)(unsigned int index);
 
+typedef const ScreenPlacement *(*ScrPlace_GetActivePlacement_t)(const LocalClientNum_t localClientNum);
+
 typedef void (*PlayerCmd_GetViewmodel_t)(scr_entref_t entref);
 typedef void (*PlayerCmd_UFO_t)(scr_entref_t *entref);
+
+typedef void (*UI_DrawBuildNumber_t)(LocalClientNum_t localClientNum);
+
+typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x,
+                              double y, int horzAlign, int vertAlign, double scale, const float *color, int style);
 
 typedef gentity_s *(*Weapon_RocketLauncher_Fire_t)(gentity_s *ent, const Weapon *weapon, double spread, weaponParms *wp,
                                                    weaponParms *gunVel, missileFireParms *fireParms,

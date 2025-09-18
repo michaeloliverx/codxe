@@ -113,6 +113,7 @@
       <ClCompile Include="src\game\iw4\mp\main.cpp" />
 
       <ClCompile Include="src\game\iw5\mp\main.cpp" />
+      <ClCompile Include="src\game\iw5\mp\branding.cpp" />
       <ClCompile Include="src\game\iw5\mp\patches.cpp" />
       <ClCompile Include="src\game\iw5\mp\pm.cpp" />
       <ClCompile Include="src\game\iw5\mp\script.cpp" />

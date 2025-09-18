@@ -9,6 +9,7 @@ enum Game
 {
     GAME_IW3,
     GAME_IW4,
+    GAME_IW5,
     GAME_T4
 };
 
@@ -33,6 +34,9 @@ inline const char *GetBrandingString(Game game, Mode mode)
     case GAME_IW4:
         gameName = "IW4";
         break;
+    case GAME_IW5:
+        gameName = "IW5";
+        break;
     case GAME_T4:
         gameName = "T4";
         break;
@@ -48,7 +52,7 @@ inline const char *GetBrandingString(Game game, Mode mode)
         break;
     }
 
-    _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CODXE - %s %s " __DATE__ " " __TIME__, gameName, modeName);
+    _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoDxe - %s %s " __DATE__ " " __TIME__, gameName, modeName);
 
     return brandingBuffer;
 }

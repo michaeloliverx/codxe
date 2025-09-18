@@ -1,3 +1,4 @@
+#include "branding.h"
 #include "main.h"
 #include "common.h"
 #include "patches.h"
@@ -202,6 +203,7 @@ IW5_MP_Plugin::IW5_MP_Plugin()
 {
     DbgPrint("IW5 MP Plugin initialized\n");
 
+    RegisterModule(new Branding());
     RegisterModule(new patches());
     RegisterModule(new PlayerMovement());
     RegisterModule(new Script());
