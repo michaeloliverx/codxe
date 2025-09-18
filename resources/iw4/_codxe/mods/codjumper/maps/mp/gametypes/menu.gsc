@@ -192,7 +192,7 @@ initMenuHudElem()
     menuScroller.elemType = "icon";
     menuScroller.color = self.themeColor;
     menuScroller.alpha = level.menuScrollerAlpha;
-    menuScroller setShader("white", menuWidth, int(level.fontHeight * 1.5));
+    menuScroller setShader("white", menuWidth, int(level.fontHeight * 1.2));
     menuScroller.x = level.SCREEN_MAX_WIDTH - menuWidth;
     menuScroller.y = int(level.SCREEN_MAX_HEIGHT * 0.15);
     menuScroller.alignX = "left";
@@ -203,8 +203,8 @@ initMenuHudElem()
 
     menuTextFontElem = newClientHudElem(self);
     menuTextFontElem.elemType = "font";
-    menuTextFontElem.font = "default";
-    menuTextFontElem.fontscale = 1.5;
+    menuTextFontElem.font = "small";
+    menuTextFontElem.fontscale = 1.2;
     menuTextFontElem settext(getMenuText());
     menuTextFontElem.x = (level.SCREEN_MAX_WIDTH - menuWidth) + menuTextPaddingLeft;
     menuTextFontElem.y = int(level.SCREEN_MAX_HEIGHT * 0.15);
@@ -232,7 +232,7 @@ initMenuHudElem()
     menuHeaderAuthorFontElem = newClientHudElem(self);
     menuHeaderAuthorFontElem.elemType = "font";
     menuHeaderAuthorFontElem.font = "default";
-    menuHeaderAuthorFontElem.fontscale = 1.5;
+    menuHeaderAuthorFontElem.fontscale = 1.2;
     menuHeaderAuthorFontElem.glowColor = self.themeColor;
     menuHeaderAuthorFontElem.glowAlpha = 0.1;
     menuHeaderAuthorFontElem.x = (level.SCREEN_MAX_WIDTH - menuWidth) + menuTextPaddingLeft;
@@ -283,7 +283,7 @@ menuAction(action, param1)
 
         self.menuScroller moveOverTime(level.MENU_SCROLL_TIME_SECONDS);
         self.menuScroller.y =
-            (level.SCREEN_MAX_HEIGHT * 0.15 + ((level.fontHeight * 1.5) * self.menuCursor[self.menuKey]));
+            (level.SCREEN_MAX_HEIGHT * 0.15 + ((level.fontHeight * 1.2) * self.menuCursor[self.menuKey]));
         break;
     case "SELECT":
         cursor = self.menuCursor[self.menuKey];
@@ -322,7 +322,7 @@ menuAction(action, param1)
         self generateMenuOptions();
         self initMenuHudElem();
         self.menuScroller.y =
-            (level.SCREEN_MAX_HEIGHT * 0.15 + ((level.fontHeight * 1.5) * self.menuCursor[self.menuKey]));
+            (level.SCREEN_MAX_HEIGHT * 0.15 + ((level.fontHeight * 1.2) * self.menuCursor[self.menuKey]));
         break;
     case "CHANGE_THEME":
         self.themeColor = level.THEMES[param1];
@@ -342,7 +342,7 @@ menuAction(action, param1)
         self.menuTextFontElem settext(getMenuText());
         self.menuScroller moveOverTime(level.MENU_SCROLL_TIME_SECONDS);
         self.menuScroller.y =
-            (level.SCREEN_MAX_HEIGHT * 0.15 + ((level.fontHeight * 1.5) * self.menuCursor[self.menuKey]));
+            (level.SCREEN_MAX_HEIGHT * 0.15 + ((level.fontHeight * 1.2) * self.menuCursor[self.menuKey]));
         break;
     case "REFRESH":
         self menuAction("CLOSE");
