@@ -4472,13 +4472,15 @@ isHeadShot( sWeapon, sHitLoc, sMeansOfDeath )
 
 Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime )
 {
-	// [CJ] Only allow self inflicted damage
-	if ( eAttacker != self )
-		return;
-
-	// [CJ] Allow knockback from C4
-	if(sWeapon == "c4_mp" && iDFlags & level.iDFLAGS_NO_KNOCKBACK)
+	// [CJ] Only allow self-inflicted C4 damage and allow knockback
+	if ( eAttacker == self && sWeapon == "c4_mp" )
+	{
 		iDFlags &= ~level.iDFLAGS_NO_KNOCKBACK;
+	}
+	else
+	{
+		return;
+	}
 
 	// create a class specialty checks; CAC:bulletdamage, CAC:armorvest
 	iDamage = maps\mp\gametypes\_class::cac_modified_damage( self, eAttacker, iDamage, sMeansOfDeath );
