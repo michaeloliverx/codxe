@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   install:
-    runs-on: windows-latest
+    runs-on: windows-2022 # windows-latest fails, pinning for now
 
     steps:
       - name: Checkout repository
