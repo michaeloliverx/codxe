@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "components/cg.h"
 #include "components/clipmap.h"
 #include "components/g_client_fields.h"
@@ -5,7 +6,6 @@
 #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "main.h"
-#include "common.h"
 
 namespace iw4
 {

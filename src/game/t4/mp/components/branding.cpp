@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "branding.h"
-#include "common.h"
 
 namespace t4
 {

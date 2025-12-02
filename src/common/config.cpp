@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "config.h"
 
 #ifndef INVALID_FILE_ATTRIBUTES

@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "patches.h"
-#include "common.h"
 
 namespace iw5
 {

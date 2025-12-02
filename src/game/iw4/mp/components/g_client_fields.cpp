@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "g_client_fields.h"
-#include "common.h"
 
 namespace iw4
 {

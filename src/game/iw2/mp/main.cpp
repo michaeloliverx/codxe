@@ -1,6 +1,6 @@
+#include "pch.h"
 #include "components/scr_parser.h"
 #include "main.h"
-#include "common.h"
 
 namespace iw2
 {

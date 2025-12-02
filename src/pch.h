@@ -23,6 +23,10 @@
 #include <xjson.h>
 #include <rtcapi.h>
 
+#pragma comment(lib, "d3d9ltcg.lib")
+#pragma comment(lib, "xgraphics.lib")
+#pragma comment(lib, "xjson.lib")
+
 // Project-specific includes
 #include "detour.h"
 #include "filesystem.h"
@@ -93,14 +97,3 @@
 #include "game/qos/mp/main.h"
 #include "game/qos/mp/structs.h"
 #include "game/qos/mp/symbols.h"
-
-/*
- * Usage:
- * Simply include this file in your source files:
- *
- * #include "common.h"
- *
- * This will include all commonly used headers for the project.
- */
-
-#include "compat.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "pch.h"
 
 extern const char *CONFIG_PATH;
 extern const char *MOD_DIR;

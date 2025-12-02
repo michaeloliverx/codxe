@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "components/clipmap.h"
 #include "components/g_client_fields.h"
 #include "components/g_client_script_cmd.h"
@@ -6,7 +7,6 @@
 #include "components/scr_parser.h"
 #include "components/ui.h"
 #include "main.h"
-#include "common.h"
 
 namespace t4
 {

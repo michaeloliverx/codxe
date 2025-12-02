@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "mr.h"
-#include "common.h"
 #include "events.h"
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)

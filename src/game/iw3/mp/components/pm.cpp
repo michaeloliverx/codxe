@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "pm.h"
-#include "common.h"
 
 namespace iw3
 {

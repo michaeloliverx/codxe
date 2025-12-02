@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "cj_tas.h"
-#include "common.h"
-#include <algorithm>
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
 #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))

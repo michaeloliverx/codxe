@@ -1,6 +1,6 @@
+#include "pch.h"
 #include "g_scr_mover.h"
 #include "g_scr_main.h"
-#include "common.h"
 
 namespace t4
 {

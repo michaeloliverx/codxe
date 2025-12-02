@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "g_scr_main.h"
-#include "common.h"
-#include <cstdio>
 
 namespace iw4
 {

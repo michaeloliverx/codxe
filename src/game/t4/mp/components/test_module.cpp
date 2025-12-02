@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "test_module.h"
-#include "common.h"
 
 namespace t4
 {

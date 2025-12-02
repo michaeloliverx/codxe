@@ -1,7 +1,7 @@
+#include "pch.h"
 #include "components/g_scr_main.h"
 #include "components/scr_parser.h"
 #include "main.h"
-#include "common.h"
 
 namespace qos
 {

@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "brush_collision.h"
-#include "common.h"
 
 namespace t4
 {

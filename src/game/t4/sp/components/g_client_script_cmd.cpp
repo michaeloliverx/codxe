@@ -1,6 +1,6 @@
+#include "pch.h"
 #include "g_client_script_cmd.h"
 #include "g_scr_main.h"
-#include "common.h"
 
 namespace t4
 {

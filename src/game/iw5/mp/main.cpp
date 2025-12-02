@@ -1,6 +1,6 @@
+#include "pch.h"
 #include "branding.h"
 #include "main.h"
-#include "common.h"
 #include "patches.h"
 #include "pm.h"
 #include "script.h"

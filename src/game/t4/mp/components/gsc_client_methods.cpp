@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "gsc_client_methods.h"
-#include "common.h"
 
 namespace t4
 {

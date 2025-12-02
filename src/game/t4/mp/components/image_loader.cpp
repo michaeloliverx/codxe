@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "image_loader.h"
-#include "common.h"
 
 namespace
 {

@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "console.h"
-#include "common.h"
 
 typedef void (*R_AddCmdDrawStretchPic_t)(float x, float y, float w, float h, float s0, float t0, float s1, float t1,
                                          const float *color, iw4::mp::Material *material);

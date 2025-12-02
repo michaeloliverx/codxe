@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "scr_vm_functions.h"
-#include "common.h"
 #include "g_scr_main.h"
 
 namespace iw3

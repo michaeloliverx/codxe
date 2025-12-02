@@ -40,6 +40,9 @@
       <ObjectFileName>$(IntDir)$(ProjectName)\%(RelativeDir)</ObjectFileName>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)\pch.pch</PrecompiledHeaderOutputFile>
       <!-- Disable warning C4481: nonstandard extension used: override specifier 'override'
            This allows use of the C++11 'override' keyword with the Xbox 360 compiler (pre-C++11) -->
       <AdditionalOptions>/wd4481 %(AdditionalOptions)</AdditionalOptions>
@@ -58,7 +61,6 @@
       <ProgramDatabaseFile Condition="'$(Configuration)'=='Debug'">$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <OptimizeReferences Condition="'$(Configuration)'=='Release'">true</OptimizeReferences>
       <SetChecksum Condition="'$(Configuration)'=='Release'">true</SetChecksum>
-      <AdditionalDependencies>d3d9ltcg.lib;xgraphics.lib;xjson.lib</AdditionalDependencies>
       <AdditionalOptions>/DLL /ENTRY:"_DllMainCRTStartup" /ALIGN:128,4096 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Deploy>
@@ -71,6 +73,11 @@
     </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
+      <!-- Precompiled header -->
+      <ClCompile Include="src\pch.cpp">
+        <PrecompiledHeader>Create</PrecompiledHeader>
+      </ClCompile>
+
       <ClCompile Include="src\common\config.cpp" />
 
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
@@ -160,6 +167,9 @@
       <ClCompile Include="src\xbox360.cpp" />
   </ItemGroup>
   <ItemGroup>
+      <!-- Precompiled header -->
+      <ClInclude Include="src\pch.h" />
+
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
 

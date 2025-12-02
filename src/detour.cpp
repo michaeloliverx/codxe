@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "detour.h"
 
 #pragma section(".text")

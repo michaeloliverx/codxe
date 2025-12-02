@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "events.h"
-#include "common.h"
 
 std::vector<std::function<void()>> Events::cg_drawactive_callbacks;
 

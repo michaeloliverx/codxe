@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "main.h"
 #include "components/cg.h"
 #include "components/cj_tas.h"

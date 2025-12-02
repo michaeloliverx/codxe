@@ -1,4 +1,4 @@
-#include "common.h"
+#include "pch.h"
 #include "plugin_manager.h"
 
 PluginManager::PluginManager()

@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "g_client_fields.h"
-#include "common.h"
 
 const unsigned int CLIENT_FIELD_MASK = 0xC000;
 

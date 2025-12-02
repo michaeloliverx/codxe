@@ -1,6 +1,6 @@
+#include "pch.h"
 #include "cg.h"
 #include "cj_tas.h"
-#include "common.h"
 
 namespace iw3
 {

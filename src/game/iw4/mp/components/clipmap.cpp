@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "clipmap.h"
-#include "common.h"
 #include "g_scr_main.h"
 #include "events.h"
 

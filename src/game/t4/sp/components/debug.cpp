@@ -3,7 +3,7 @@ This module is not used anywhere in the project.
 It contains useful code snippets for debugging and development purposes.
 */
 
-#include "common.h"
+#include "pch.h"
 
 namespace t4
 {

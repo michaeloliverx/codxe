@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "gsc_loader.h"
-#include "common.h"
 
 namespace t4
 {

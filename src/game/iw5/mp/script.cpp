@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "script.h"
-#include "common.h"
 
 namespace iw5
 {
