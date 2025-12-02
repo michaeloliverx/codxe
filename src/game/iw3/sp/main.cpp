@@ -159,10 +159,5 @@ IW3_SP_Plugin::~IW3_SP_Plugin()
     Load_MapEntsPtr_Detour.Remove();
 }
 
-bool IW3_SP_Plugin::ShouldLoad()
-{
-    return (strncmp((char *)0x82065E48, "startSingleplayer", 17) == 0);
-}
-
 } // namespace sp
 } // namespace iw3

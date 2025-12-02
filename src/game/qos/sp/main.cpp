@@ -12,10 +12,5 @@ QOS_SP_Plugin::QOS_SP_Plugin()
     RegisterModule(new scr_parser());
 }
 
-bool QOS_SP_Plugin::ShouldLoad()
-{
-    return strncmp((char *)0x82047EC4, "startSingleplayer", 17) == 0;
-}
-
 } // namespace sp
 } // namespace qos

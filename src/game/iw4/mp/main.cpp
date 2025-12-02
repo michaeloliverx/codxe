@@ -30,11 +30,5 @@ IW4_MP_Plugin::IW4_MP_Plugin()
     RegisterModule(new scr_parser());
 }
 
-bool IW4_MP_Plugin::ShouldLoad()
-{
-    DbgPrint("IW4 MP: Checking if plugin should load\n");
-    return (strncmp((char *)0x82001F44, "multiplayer", 11) == 0);
-}
-
 } // namespace mp
 } // namespace iw4

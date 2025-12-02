@@ -42,11 +42,5 @@ IW4_SP_Plugin::IW4_SP_Plugin()
     RegisterModule(new scr_parser());
 }
 
-bool IW4_SP_Plugin::ShouldLoad()
-{
-    DbgPrint("IW4 SP: Checking if plugin should load\n");
-    return (strncmp((char *)0x8203C924, "startSingleplayer", 17) == 0);
-}
-
 } // namespace sp
 } // namespace iw4

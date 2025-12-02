@@ -23,9 +23,6 @@ class Plugin
         DbgPrint("Plugin::~Plugin\n");
     };
 
-    /* Determines if this plugin should load. */
-    static bool ShouldLoad();
-
     void RegisterModule(Module *module)
     {
         if (module)

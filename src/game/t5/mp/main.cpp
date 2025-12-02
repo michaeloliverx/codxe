@@ -13,10 +13,5 @@ T5_MP_Plugin::T5_MP_Plugin()
     RegisterModule(new scr_parser());
 }
 
-bool T5_MP_Plugin::ShouldLoad()
-{
-    return strncmp((char *)0x82001998, "multiplayer", 11) == 0;
-}
-
 } // namespace mp
 } // namespace t5

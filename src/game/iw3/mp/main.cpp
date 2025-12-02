@@ -1607,10 +1607,5 @@ IW3_MP_Plugin::~IW3_MP_Plugin()
     Pmove_Detour.Remove();
 }
 
-bool IW3_MP_Plugin::ShouldLoad()
-{
-    return (strncmp((char *)0x82032AC4, "multiplayer", 11) == 0);
-}
-
 } // namespace mp
 } // namespace iw3

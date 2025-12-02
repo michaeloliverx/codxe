@@ -12,7 +12,6 @@ class IW5_MP_Plugin : public Plugin
   public:
     IW5_MP_Plugin();
     ~IW5_MP_Plugin();
-    static bool ShouldLoad();
 };
 } // namespace mp
 } // namespace iw5

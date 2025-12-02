@@ -17,11 +17,5 @@ IW2_SP_Plugin::~IW2_SP_Plugin()
 {
 }
 
-bool IW2_SP_Plugin::ShouldLoad()
-{
-    // Check if the game is in single player mode
-    return (strncmp((char *)0x82059FE0, "startSingleplayer", 17) == 0);
-}
-
 } // namespace sp
 } // namespace iw2

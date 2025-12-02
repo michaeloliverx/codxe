@@ -10,7 +10,6 @@ class IW4_SP_Plugin : public Plugin
 
   public:
     IW4_SP_Plugin();
-    static bool ShouldLoad();
 };
 } // namespace sp
 } // namespace iw4

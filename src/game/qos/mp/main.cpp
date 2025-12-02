@@ -15,10 +15,5 @@ QOS_MP_Plugin::QOS_MP_Plugin()
     RegisterModule(new scr_parser());
 }
 
-bool QOS_MP_Plugin::ShouldLoad()
-{
-    return strncmp((char *)0x8200236C, "multiplayer", 11) == 0;
-}
-
 } // namespace mp
 } // namespace qos

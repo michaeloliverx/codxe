@@ -47,9 +47,5 @@ T4_MP_Plugin::~T4_MP_Plugin()
     DbgPrint("T4 MP: Plugin unloaded\n");
 }
 
-bool T4_MP_Plugin::ShouldLoad()
-{
-    return (strncmp((char *)0x820024CC, "multiplayer", 11) == 0);
-}
 } // namespace mp
 } // namespace t4

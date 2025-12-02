@@ -34,6 +34,7 @@
 #include "xkelib.h"
 #include "xbox360.h"
 #include "plugin.h"
+#include "compat.h"
 
 // Common includes
 #include "common/branding.h"

@@ -26,10 +26,5 @@ T4_SP_Plugin::T4_SP_Plugin()
     RegisterModule(new ui());
 }
 
-bool T4_SP_Plugin::ShouldLoad()
-{
-    return (strncmp((char *)0x82035A94, "startSingleplayer", 17) == 0);
-}
-
 } // namespace sp
 } // namespace t4

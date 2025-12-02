@@ -17,9 +17,5 @@ IW2_MP_Plugin::~IW2_MP_Plugin()
 {
 }
 
-bool IW2_MP_Plugin::ShouldLoad()
-{
-    return (strncmp((char *)0x820410E4, "multiplayer", 11) == 0);
-}
 } // namespace mp
 } // namespace iw2

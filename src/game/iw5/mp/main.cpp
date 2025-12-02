@@ -222,9 +222,5 @@ IW5_MP_Plugin::~IW5_MP_Plugin()
     DB_IsXAssetDefault_Detour.Remove();
 }
 
-bool IW5_MP_Plugin::ShouldLoad()
-{
-    return (strncmp((char *)0x82001458, "multiplayer", 11) == 0);
-}
 } // namespace mp
 } // namespace iw5
