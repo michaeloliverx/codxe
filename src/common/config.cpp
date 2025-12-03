@@ -9,6 +9,11 @@ const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
 const char *MOD_DIR = "game:\\_codxe\\mods";
 const char *DUMP_DIR = "game:\\_codxe\\dump";
 
+// Default values
+std::string Config::active_mod = "";
+bool Config::dump_rawfile = false;
+bool Config::dump_map_ents = false;
+
 bool DirectoryExists(const char *path)
 {
     DWORD attrs = GetFileAttributesA(path);
@@ -37,15 +42,26 @@ bool ReadFileToString(const char *path, std::string &outString)
     return file.read(&outString[0], size).good();
 }
 
-void DbgPrintConfig(const Config &config)
+Config::Config()
 {
-    DbgPrint("Configuration:\n");
-    DbgPrint("Active Mod: %s\n", config.active_mod.c_str());
-    DbgPrint("Dump Raw Scripts: %s\n", config.dump_raw ? "true" : "false");
-    DbgPrint("Dump Map Entities: %s\n", config.dump_map_ents ? "true" : "false");
+    DbgPrint("[codxe][Config] Loading configuration from: %s\n", CONFIG_PATH);
+
+    if (!LoadFromFile(CONFIG_PATH))
+    {
+        DbgPrint("[codxe][Config] Failed to load config file, using defaults\n");
+    }
 }
 
-bool LoadConfigFromJson(const char *jsonBuffer, DWORD bufferSize, Config &outConfig)
+Config::~Config()
+{
+    // Reset to defaults on cleanup
+    active_mod = "";
+    dump_rawfile = false;
+    dump_map_ents = false;
+    DbgPrint("[codxe][Config] Configuration unloaded\n");
+}
+
+bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
 {
     HJSONREADER hJsonReader = XJSONCreateReader();
     if (!hJsonReader)
@@ -78,35 +94,55 @@ bool LoadConfigFromJson(const char *jsonBuffer, DWORD bufferSize, Config &outCon
                 XJSONGetTokenValue(hJsonReader, valueBuffer, ARRAYSIZE(valueBuffer));
                 char narrowValue[256];
                 wcstombs(narrowValue, valueBuffer, sizeof(narrowValue));
-                outConfig.active_mod = narrowValue;
+                active_mod = narrowValue;
             }
-            else if (wcscmp(propertyName, L"dump_raw") == 0)
+            else if (wcscmp(propertyName, L"dump_rawfile") == 0)
             {
-                outConfig.dump_raw = (jsonTokenType == Json_True);
+                dump_rawfile = (jsonTokenType == Json_True);
             }
             else if (wcscmp(propertyName, L"dump_map_ents") == 0)
             {
-                outConfig.dump_map_ents = (jsonTokenType == Json_True);
+                dump_map_ents = (jsonTokenType == Json_True);
             }
             else
             {
-                DbgPrint("WARNING: Ignoring unknown property in config: %ls\n", propertyName);
+                DbgPrint("[codxe][Config] WARNING: Ignoring unknown property: %ls\n", propertyName);
             }
         }
     }
 
     XJSONCloseReader(hJsonReader);
 
-    DbgPrintConfig(outConfig);
+    DbgPrint("[codxe][Config] Configuration loaded:\n");
+    DbgPrint("  Active Mod: %s\n", active_mod.c_str());
+    DbgPrint("  Dump Raw Scripts: %s\n", dump_rawfile ? "true" : "false");
+    DbgPrint("  Dump Map Entities: %s\n", dump_map_ents ? "true" : "false");
 
     return true;
 }
 
-bool LoadConfigFromFile(const char *path, Config &outConfig)
+bool Config::LoadFromFile(const char *path)
 {
     std::string jsonContent;
     if (!ReadFileToString(path, jsonContent))
         return false;
 
-    return LoadConfigFromJson(jsonContent.c_str(), static_cast<DWORD>(jsonContent.size()), outConfig);
+    return LoadFromJson(jsonContent.c_str(), static_cast<DWORD>(jsonContent.size()));
+}
+
+// Helper method - requires logic beyond simple field access
+std::string Config::GetModBasePath()
+{
+    if (active_mod.empty())
+    {
+        return "";
+    }
+
+    std::string mod_base_path = std::string(MOD_DIR) + "\\" + active_mod;
+    if (!DirectoryExists(mod_base_path.c_str()))
+    {
+        DbgPrint("[codxe][Config] Active mod directory does not exist: %s\n", mod_base_path.c_str());
+        return "";
+    }
+    return mod_base_path;
 }

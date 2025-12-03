@@ -139,9 +139,7 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
 {
     if (type == ASSET_TYPE_SCRIPTFILE)
     {
-        Config config;
-        LoadConfigFromFile(CONFIG_PATH, config);
-        std::string modBasePath = config.GetModBasePath();
+        std::string modBasePath = Config::GetModBasePath();
         std::string overridePath = modBasePath + "\\" + name + ".gscbin";
         std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
 
@@ -203,6 +201,7 @@ IW5_MP_Plugin::IW5_MP_Plugin()
 {
     DbgPrint("IW5 MP Plugin initialized\n");
 
+    RegisterModule(new Config());
     RegisterModule(new Branding());
     RegisterModule(new patches());
     RegisterModule(new PlayerMovement());

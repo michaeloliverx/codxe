@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cstdio>
-#include "version.h"
-
+#include "config.h"
 namespace branding
 {
 enum Game
@@ -52,7 +50,17 @@ inline const char *GetBrandingString(Game game, Mode mode)
         break;
     }
 
-    _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoDxe - %s %s " __DATE__ " " __TIME__, gameName, modeName);
+    if (Config::active_mod.empty())
+    {
+        _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoDxe - %s %s\nBuild: " __DATE__ " " __TIME__, gameName,
+                    modeName);
+    }
+    else
+    {
+        _snprintf_s(brandingBuffer, sizeof(brandingBuffer),
+                    "CoDxe - %s %s\nBuild: " __DATE__ " " __TIME__ "\nActive mod: %s", gameName, modeName,
+                    Config::active_mod.c_str());
+    }
 
     return brandingBuffer;
 }

@@ -12,10 +12,7 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
     auto callOriginal = [&]()
     { return Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(filename, extFilename); };
 
-    Config config;
-    LoadConfigFromFile(CONFIG_PATH, config);
-
-    if (config.dump_raw)
+    if (Config::dump_rawfile)
     {
         auto contents = callOriginal();
         // Dump the script to a file
@@ -27,7 +24,7 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
     }
 
     // Check if mod is active
-    std::string modBasePath = config.GetModBasePath();
+    std::string modBasePath = Config::GetModBasePath();
     if (modBasePath.empty())
         return callOriginal();
 

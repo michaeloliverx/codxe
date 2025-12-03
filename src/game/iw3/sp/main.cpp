@@ -142,6 +142,7 @@ void Cmd_Dumpraw_f()
 IW3_SP_Plugin::IW3_SP_Plugin()
 {
     DbgPrint("IW3 SP: Plugin loaded\n");
+    RegisterModule(new Config());
     RegisterModule(new scr_parser());
 
     CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);

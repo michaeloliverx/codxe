@@ -16,11 +16,8 @@ void Load_clipMap_t_Hook(bool atStreamStart)
 
     auto mapEnts = (*varclipMap_t)->mapEnts;
 
-    Config config;
-    LoadConfigFromFile(CONFIG_PATH, config);
-
     // Dump map entities if enabled
-    if (config.dump_map_ents)
+    if (Config::dump_map_ents)
     {
         std::string dumpPath = va("%s\\%s.ents", DUMP_DIR, mapEnts->name); // IW4x naming convention
         std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
@@ -29,7 +26,7 @@ void Load_clipMap_t_Hook(bool atStreamStart)
     }
 
     // Check for mod override
-    std::string modBasePath = config.GetModBasePath();
+    std::string modBasePath = Config::GetModBasePath();
     if (modBasePath.empty())
         return;
 

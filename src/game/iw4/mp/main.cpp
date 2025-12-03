@@ -19,6 +19,7 @@ IW4_MP_Plugin::IW4_MP_Plugin()
 {
 
     DbgPrint("IW4 MP: Registering modules\n");
+    RegisterModule(new Config());
     RegisterModule(new Events()); // Must be registered first to ensure hooks are in place
     RegisterModule(new cg());
     RegisterModule(new clipmap());

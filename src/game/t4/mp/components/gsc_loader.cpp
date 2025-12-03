@@ -16,10 +16,7 @@ char *GSCLoader::Scr_AddSourceBuffer_Hook(scriptInstance_t a1, const char *filen
                                                                                        codePos, archive);
     };
 
-    Config config;
-    LoadConfigFromFile(CONFIG_PATH, config);
-
-    if (config.dump_raw)
+    if (Config::dump_rawfile)
     {
         auto contents = callOriginal();
         // Dump the script to a file
@@ -31,7 +28,7 @@ char *GSCLoader::Scr_AddSourceBuffer_Hook(scriptInstance_t a1, const char *filen
     }
 
     // Check if mod is active
-    std::string modBasePath = config.GetModBasePath();
+    std::string modBasePath = Config::GetModBasePath();
     if (modBasePath.empty())
         return callOriginal();
 

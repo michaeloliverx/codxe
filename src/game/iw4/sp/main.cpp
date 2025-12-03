@@ -34,6 +34,7 @@ IW4_SP_Plugin::IW4_SP_Plugin()
     RemoveIdleGunSway();
 
     DbgPrint("IW4 SP: Registering modules\n");
+    RegisterModule(new Config());
     RegisterModule(new cg());
     RegisterModule(new clipmap());
     RegisterModule(new g_client_fields());

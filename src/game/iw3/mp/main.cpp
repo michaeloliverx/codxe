@@ -9,6 +9,7 @@
 #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "components/scr_vm_functions.h"
+#include "common/config.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest
@@ -391,12 +392,10 @@ void Load_MapEntsPtr_Hook()
         std::replace(file_path.begin(), file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
         filesystem::write_file_to_disk(file_path.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
 
-        Config config;
-        LoadConfigFromFile(CONFIG_PATH, config);
-
+        // Use new ConfigModule API
         // Load map ents from file
         // Path to check for existing entity file
-        std::string raw_file_path = config.GetModBasePath();
+        std::string raw_file_path = Config::GetModBasePath();
 
         raw_file_path += std::string("\\") + mapEnts->name;
         raw_file_path += ".ents";                                            // IW4x naming convention
@@ -465,10 +464,8 @@ bool R_StreamLoadHighMipReplacement(const char *filename, unsigned int bytesToRe
 
     auto image = asset->entry.asset.header.image;
 
-    Config config;
-    LoadConfigFromFile(CONFIG_PATH, config);
-
-    std::string replacement_path = config.GetModBasePath() + "\\highmip" + "\\" + asset_name + ".dds";
+    // Use new ConfigModule API
+    std::string replacement_path = Config::GetModBasePath() + "\\highmip" + "\\" + asset_name + ".dds";
     std::ifstream file(replacement_path, std::ios::binary | std::ios::ate);
     if (!file)
     {
@@ -1202,10 +1199,7 @@ void Image_Replace_Cube(GfxImage *image, const DDSImage &ddsImage)
 
 void Image_Replace(GfxImage *image)
 {
-    Config config;
-    LoadConfigFromFile(CONFIG_PATH, config);
-
-    const std::string replacement_base_dir = config.GetModBasePath() + "\\images";
+    const std::string replacement_base_dir = Config::GetModBasePath() + "\\images";
     const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
 
     if (!filesystem::file_exists(replacement_path))
@@ -1538,6 +1532,8 @@ void Pmove_Hook(pmove_t *pm)
 IW3_MP_Plugin::IW3_MP_Plugin()
 {
     DbgPrint("Initializing MP\n");
+
+    RegisterModule(new Config());
 
     RegisterModule(new cg());
     RegisterModule(new cj_tas());

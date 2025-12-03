@@ -10,30 +10,24 @@ bool DirectoryExists(const char *path);
 bool FileExists(const char *path);
 bool ReadFileToString(const char *path, std::string &outString);
 
-struct Config
+class Config : public Module
 {
-    std::string active_mod;
-    bool dump_raw;
-    bool dump_map_ents;
+  public:
+    Config();
+    ~Config();
 
-    Config()
+    const char *get_name() override
     {
-        active_mod = "";
-        dump_raw = false;
-        dump_map_ents = false;
+        return "Config";
     }
 
-    std::string GetModBasePath()
-    {
-        std::string mod_base_path = std::string(MOD_DIR) + "\\" + active_mod;
-        if (!DirectoryExists(mod_base_path.c_str()))
-        {
-            DbgPrint("Config: Active mod directory does not exist: %s\n", mod_base_path.c_str());
-            return "";
-        }
-        return mod_base_path;
-    }
+    static std::string active_mod;
+    static bool dump_rawfile;
+    static bool dump_map_ents;
+
+    static std::string GetModBasePath();
+
+  private:
+    bool LoadFromJson(const char *jsonBuffer, DWORD bufferSize);
+    bool LoadFromFile(const char *path);
 };
-
-bool LoadConfigFromJson(const char *jsonBuffer, DWORD bufferSize, Config &outConfig);
-bool LoadConfigFromFile(const char *path, Config &outConfig);

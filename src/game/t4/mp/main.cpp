@@ -20,6 +20,7 @@ namespace mp
 T4_MP_Plugin::T4_MP_Plugin()
 {
     DbgPrint("T4 MP: Plugin loaded\n");
+    RegisterModule(new Config());
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());
     RegisterModule(new cg());
