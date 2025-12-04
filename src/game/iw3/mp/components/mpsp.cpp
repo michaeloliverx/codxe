@@ -1,6 +1,6 @@
 
 /**
- * This module has everything necessary to load Singleplayer maps in Multiplayer.
+ * Load Singleplayer maps in Multiplayer.
  *  Inspiration
  * https://github.com/xoxor4d/iw3xo-dev/blob/4eeba0bf63fbf991f44be6eae105ea9e60df0c3f/src/components/modules/_map.cpp
  */
@@ -196,8 +196,71 @@ void override_(RawFile *asset)
 
 } // namespace Asset
 
+enum XBlockType : __int32
+{
+    XFILE_BLOCK_TEMP = 0x0,
+    XFILE_BLOCK_RUNTIME_BEGIN = 0x1,
+    XFILE_BLOCK_RUNTIME = 0x1,
+    XFILE_BLOCK_LARGE_RUNTIME = 0x2,
+    XFILE_BLOCK_PHYSICAL_RUNTIME = 0x3,
+    XFILE_BLOCK_RUNTIME_END = 0x4,
+    XFILE_BLOCK_VIRTUAL = 0x4,
+    XFILE_BLOCK_LARGE = 0x5,
+    XFILE_BLOCK_PHYSICAL = 0x6,
+    MAX_XFILE_COUNT = 0x7,
+};
+
+struct XBlock
+{
+    unsigned __int8 *data;
+    unsigned int size;
+};
+
+struct internal_state;
+
+struct _OVERLAPPED
+{
+    unsigned int Internal;
+    unsigned int InternalHigh;
+    unsigned int Offset;
+    unsigned int OffsetHigh;
+    void *hEvent;
+};
+
+struct z_stream_s
+{
+    unsigned __int8 *next_in;
+    unsigned int avail_in;
+    unsigned int total_in;
+    unsigned __int8 *next_out;
+    unsigned int avail_out;
+    unsigned int total_out;
+    char *msg;
+    internal_state *state;
+    unsigned __int8 *(__fastcall *zalloc)(unsigned __int8 *, unsigned int, unsigned int);
+    void(__fastcall *zfree)(unsigned __int8 *, unsigned __int8 *);
+    unsigned __int8 *opaque;
+    int data_type;
+};
+
+struct DB_LoadData
+{
+    void *f;
+    const char *filename;
+    XBlock *blocks;
+    int outstandingReads;
+    _OVERLAPPED overlapped;
+    z_stream_s stream;
+    unsigned __int8 *compressBufferStart;
+    unsigned __int8 *compressBufferEnd;
+    void(__fastcall *interrupt)();
+    int allocType;
+};
+
 // data pointers
 
+const DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82475508);
+const char **g_block_mem_name = reinterpret_cast<const char **>(0x823A42AC);
 const char **g_defaultAssetName = reinterpret_cast<const char **>(0x823A40F8);
 
 // function pointers
@@ -211,11 +274,54 @@ DB_SetXAssetName_t DB_SetXAssetName = reinterpret_cast<DB_SetXAssetName_t>(0x822
 typedef XAssetEntry *(*DB_LinkXAssetEntry_t)(XAssetEntry *newEntry, int allowOverride);
 DB_LinkXAssetEntry_t DB_LinkXAssetEntry = reinterpret_cast<DB_LinkXAssetEntry_t>(0x8229FC50);
 
+typedef void (*DB_LoadXFileData_t)(unsigned __int8 *pos, unsigned int size);
+DB_LoadXFileData_t DB_LoadXFileData = reinterpret_cast<DB_LoadXFileData_t>(0x822B1FC8);
+
+typedef void (*DB_AllocXBlocks_t)(const unsigned int *blockSize, const char *filename, XBlock *blocks,
+                                  unsigned int allocType);
+DB_AllocXBlocks_t DB_AllocXBlocks = reinterpret_cast<DB_AllocXBlocks_t>(0x822A1DF0);
+
+typedef void (*Load_XAssetArrayCustom_t)(int count);
+Load_XAssetArrayCustom_t Load_XAssetArrayCustom = reinterpret_cast<Load_XAssetArrayCustom_t>(0x822B2140);
+
+typedef void (*Load_Stream_t)(bool atStreamStart, void *ptr, size_t size);
+Load_Stream_t Load_Stream = reinterpret_cast<Load_Stream_t>(0x8229D148);
+
+typedef void (*Load_DelayStream_t)();
+Load_DelayStream_t Load_DelayStream = reinterpret_cast<Load_DelayStream_t>(0x8229D0F8);
+
 struct snapshotEntityNumbers_t;
 
 typedef void (*SV_AddEntitiesVisibleFromPoint_t)(const float *org, int clientNum, snapshotEntityNumbers_t *eNums);
 SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint =
     reinterpret_cast<SV_AddEntitiesVisibleFromPoint_t>(0x821FB898);
+
+struct ZoneOverride
+{
+    std::string name;
+    unsigned int delayStreamStart;
+    unsigned int assetCountOverride;   // 0 means no override
+    unsigned int blockSizeOverride[7]; // 0 means no override
+};
+
+// This data was obtained semi-manually by dumping info at different intervals during asset loading
+const ZoneOverride ZONE_OVERRIDES[] = {
+    // meminfo 207.1 -> 158.5
+    {"cargoship",
+     78836333,
+     630,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 97931264,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 56533667,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 364488,
+     }},
+};
+
+int g_zoneOverrideIndex = -1;
 
 Detour DB_LinkXAssetEntry_Detour;
 XAssetEntry *DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride)
@@ -249,6 +355,12 @@ XAssetEntry *DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride)
             static const std::string weapon_default_reference_name =
                 std::string(",") + g_defaultAssetName[ASSET_TYPE_WEAPON];
             DB_SetXAssetName(&xasset, weapon_default_reference_name.c_str());
+            break;
+        }
+        case ASSET_TYPE_FX:
+        {
+            static const std::string fx_default_reference_name = std::string(",") + g_defaultAssetName[ASSET_TYPE_FX];
+            DB_SetXAssetName(&xasset, fx_default_reference_name.c_str());
             break;
         }
         }
@@ -297,6 +409,10 @@ int Com_sprintf_Hook(char *dest, unsigned int size, const char *fmt...)
 
             mpsp::is_sp_map = true;
         }
+        else
+        {
+            mpsp::is_sp_map = false;
+        }
     }
 
     // [mpsp]
@@ -320,6 +436,113 @@ int Com_sprintf_Hook(char *dest, unsigned int size, const char *fmt...)
     return result;
 }
 
+Detour DB_AllocXBlocks_Detour;
+void DB_AllocXBlocks_Hook(unsigned int *blockSize, const char *filename, XBlock *blocks, unsigned int allocType)
+{
+    // Reset any previous override
+    g_zoneOverrideIndex = -1;
+    // See if we have overrides
+    for (size_t i = 0; i < ARRAYSIZE(ZONE_OVERRIDES); i++)
+    {
+        if (ZONE_OVERRIDES[i].name == filename)
+        {
+            g_zoneOverrideIndex = i;
+            break;
+        }
+    }
+
+#ifndef NDEBUG
+    DbgPrint("blockSize before\n");
+    for (int i = 0; i < MAX_XFILE_COUNT; i++)
+    {
+        DbgPrint("blockSize[%d] (%s) = %d\n", i, g_block_mem_name[i], blockSize[i]);
+    }
+#endif
+
+    if (g_zoneOverrideIndex != -1)
+    {
+        for (int i = 0; i < MAX_XFILE_COUNT; i++)
+        {
+            const int blockSizeOverride = ZONE_OVERRIDES[g_zoneOverrideIndex].blockSizeOverride[i];
+            if (blockSizeOverride)
+                blockSize[i] = blockSizeOverride;
+        }
+    }
+
+#ifndef NDEBUG
+    DbgPrint("blockSize after\n");
+    for (int i = 0; i < MAX_XFILE_COUNT; i++)
+    {
+        DbgPrint("blockSize[%d] (%s) = %d\n", i, g_block_mem_name[i], blockSize[i]);
+    }
+#endif
+
+    DB_AllocXBlocks_Detour.GetOriginal<DB_AllocXBlocks_t>()(blockSize, filename, blocks, allocType);
+}
+
+XAsset **varXAsset = reinterpret_cast<XAsset **>(0x82475658);
+XAssetHeader **varXAssetHeader = reinterpret_cast<XAssetHeader **>(0x824756E0);
+
+typedef void (*Load_XAssetHeader_t)(bool atStreamStart);
+Load_XAssetHeader_t Load_XAssetHeader = reinterpret_cast<Load_XAssetHeader_t>(0x822B1838);
+
+Detour Load_XAssetArrayCustom_Detour;
+void Load_XAssetArrayCustom_Hook(int count)
+{
+    // Load the entire XAsset array
+    Load_Stream(1, *varXAsset, 8 * count);
+
+    // Override the count if needed AFTER progressing the stream correctly on asset list
+    if (g_zoneOverrideIndex != -1)
+    {
+        count = ZONE_OVERRIDES[g_zoneOverrideIndex].assetCountOverride;
+    }
+
+    XAsset *assetArray = *varXAsset;
+
+    // Load each asset's header data
+    for (int i = 0; i < count; i++)
+    {
+        XAsset *asset = &assetArray[i];
+        *varXAsset = asset;
+        Load_Stream(0, asset, 8);
+
+        *varXAssetHeader = &asset->header;
+        Load_XAssetHeader(0);
+    }
+}
+
+void DB_SkipXFileData(unsigned int bytesToSkip)
+{
+    // Small scratch buffer so we don't need to allocate huge blocks
+    static unsigned char scratch[0x4000];
+
+    while (bytesToSkip > 0)
+    {
+        unsigned int chunk = bytesToSkip;
+        if (chunk > sizeof(scratch))
+            chunk = sizeof(scratch);
+
+        // This will decompress `chunk` bytes and advance the zlib stream
+        DB_LoadXFileData(scratch, chunk);
+
+        bytesToSkip -= chunk;
+    }
+}
+
+Detour Load_DelayStream_Detour;
+void Load_DelayStream_Hook()
+{
+    // Skipforward the stream so the delayed data is loaded from the correct offset
+    if (g_zoneOverrideIndex != -1)
+    {
+        const int delayStreamStart = ZONE_OVERRIDES[g_zoneOverrideIndex].delayStreamStart;
+        DB_SkipXFileData(delayStreamStart - g_load->stream.total_out);
+    }
+
+    Load_DelayStream_Detour.GetOriginal<Load_DelayStream_t>()();
+}
+
 Detour SV_AddEntitiesVisibleFromPoint_Detour;
 void SV_AddEntitiesVisibleFromPoint_Hook(const float *org, int clientNum, snapshotEntityNumbers_t *eNums)
 {
@@ -333,12 +556,20 @@ void SV_AddEntitiesVisibleFromPoint_Hook(const float *org, int clientNum, snapsh
 
 mpsp::mpsp()
 {
-
     Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
     Com_sprintf_Detour.Install();
 
+    DB_AllocXBlocks_Detour = Detour(DB_AllocXBlocks, DB_AllocXBlocks_Hook);
+    DB_AllocXBlocks_Detour.Install();
+
     DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
     DB_LinkXAssetEntry_Detour.Install();
+
+    Load_XAssetArrayCustom_Detour = Detour(Load_XAssetArrayCustom, Load_XAssetArrayCustom_Hook);
+    Load_XAssetArrayCustom_Detour.Install();
+
+    Load_DelayStream_Detour = Detour(Load_DelayStream, Load_DelayStream_Hook);
+    Load_DelayStream_Detour.Install();
 
     SV_AddEntitiesVisibleFromPoint_Detour = Detour(SV_AddEntitiesVisibleFromPoint, SV_AddEntitiesVisibleFromPoint_Hook);
     SV_AddEntitiesVisibleFromPoint_Detour.Install();
@@ -348,6 +579,8 @@ mpsp::~mpsp()
 {
 
     Com_sprintf_Detour.Remove();
+
+    DB_AllocXBlocks_Detour.Remove();
 
     DB_LinkXAssetEntry_Detour.Remove();
 
