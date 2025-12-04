@@ -1296,7 +1296,7 @@ union XAssetHeader
     // ComWorld *comWorld;
     // GameWorldSp *gameWorldSp;
     // GameWorldMp *gameWorldMp;
-    // MapEnts *mapEnts;
+    MapEnts *mapEnts;
     // GfxWorld *gfxWorld;
     // GfxLightDef *lightDef;
     Font_s *font;

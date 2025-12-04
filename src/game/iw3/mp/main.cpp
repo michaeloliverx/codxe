@@ -6,6 +6,7 @@
 #include "components/cmds.h"
 #include "components/g_client_fields.h"
 #include "components/g_scr_main.h"
+#include "components/mpsp.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "components/scr_vm_functions.h"
@@ -1529,9 +1530,26 @@ void Pmove_Hook(pmove_t *pm)
     }
 }
 
+/**
+ * Patch out the signature checks used during fastfile authentication.
+ * Signature data must still be present in the fastfile structure, but the values themselves may be zeroed.
+ */
+void DisableFastfileAuth()
+{
+    // DBX_AuthLoad_ValidateHash
+    *(volatile uint32_t *)0x822B2994 = 0x60000000;
+    *(volatile uint32_t *)0x822B2A34 = 0x60000000;
+    *(volatile uint32_t *)0x822B2D2C = 0x60000000;
+
+    // DBX_AuthLoad_ValidateSignature
+    *(volatile uint32_t *)0x822B2D44 = 0x60000000;
+}
+
 IW3_MP_Plugin::IW3_MP_Plugin()
 {
     DbgPrint("Initializing MP\n");
+
+    DisableFastfileAuth();
 
     RegisterModule(new Config());
 
@@ -1542,6 +1560,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new g_client_fields());
     RegisterModule(new g_scr_main());
     RegisterModule(new pm());
+    RegisterModule(new mpsp());
     RegisterModule(new scr_parser());
     RegisterModule(new scr_vm_functions());
 

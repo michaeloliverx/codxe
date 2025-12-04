@@ -93,6 +93,7 @@
       <ClCompile Include="src\game\iw3\mp\components\g_client_fields.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_vm_functions.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
