@@ -196,6 +196,8 @@ void override_(RawFile *asset)
 
 } // namespace Asset
 
+// Structs
+
 enum XBlockType : __int32
 {
     XFILE_BLOCK_TEMP = 0x0,
@@ -258,11 +260,58 @@ struct DB_LoadData
     int allocType;
 };
 
+struct XAsset;
+
+struct ScriptStringList
+{
+    int count;
+    const char **strings;
+};
+
+struct XAssetList
+{
+    ScriptStringList stringList;
+    int assetCount;
+    XAsset *assets;
+};
+
+enum errorParm_t : __int32
+{
+    ERR_FATAL = 0x0,
+    ERR_DROP = 0x1,
+    ERR_SERVERDISCONNECT = 0x2,
+    ERR_DISCONNECT = 0x3,
+    ERR_SCRIPT = 0x4,
+    ERR_SCRIPT_DROP = 0x5,
+    ERR_LOCALIZATION = 0x6,
+    ERR_MAPLOADERRORSUMMARY = 0x7,
+};
+
+struct XFile
+{
+    unsigned int size;
+    unsigned int externalSize;
+    unsigned int blockSize[7];
+};
+
 // data pointers
+
+unsigned __int8 **g_streamPos = reinterpret_cast<unsigned __int8 **>(0x826B91F4);
+// unsigned __int8 **g_streamPosArray = reinterpret_cast<unsigned __int8 **>(0x82708C04);
+// XBlock **g_streamBlocks = reinterpret_cast<XBlock **>(0x826AD1EC);
+// unsigned __int8 *g_streamPosIndex = reinterpret_cast<unsigned __int8 *>(0x826BA3FC);
+// unsigned __int8 *g_streamDelayIndex = reinterpret_cast<unsigned __int8 *>(0x82668D5C);
+// unsigned __int8 *g_streamPosStackIndex = reinterpret_cast<unsigned __int8 *>(0x82668A34);
+
+unsigned int *g_loadingAssets = reinterpret_cast<unsigned int *>(0x824754F4);
+bool *g_anyFastFileLoaded = reinterpret_cast<bool *>(0x82435AB5);
 
 DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82475508);
 const char **g_block_mem_name = reinterpret_cast<const char **>(0x823A42AC);
 const char **g_defaultAssetName = reinterpret_cast<const char **>(0x823A40F8);
+XAsset **varXAsset = reinterpret_cast<XAsset **>(0x82475658);
+XAssetHeader **varXAssetHeader = reinterpret_cast<XAssetHeader **>(0x824756E0);
+XAssetList **varXAssetList = reinterpret_cast<XAssetList **>(0x824756F4);
 
 // function pointers
 
@@ -291,12 +340,56 @@ Load_Stream_t Load_Stream = reinterpret_cast<Load_Stream_t>(0x8229D148);
 typedef void (*Load_DelayStream_t)();
 Load_DelayStream_t Load_DelayStream = reinterpret_cast<Load_DelayStream_t>(0x8229D0F8);
 
+typedef void (*Load_XAssetHeader_t)(bool atStreamStart);
+Load_XAssetHeader_t Load_XAssetHeader = reinterpret_cast<Load_XAssetHeader_t>(0x822B1838);
+
 struct snapshotEntityNumbers_t;
 
 typedef void (*SV_AddEntitiesVisibleFromPoint_t)(const float *org, int clientNum, snapshotEntityNumbers_t *eNums);
 SV_AddEntitiesVisibleFromPoint_t SV_AddEntitiesVisibleFromPoint =
     reinterpret_cast<SV_AddEntitiesVisibleFromPoint_t>(0x821FB898);
 
+typedef void (*DB_LoadXFileInternal_t)();
+DB_LoadXFileInternal_t DB_LoadXFileInternal = reinterpret_cast<DB_LoadXFileInternal_t>(0x822B21B8);
+
+typedef void (*DB_ReadXFileStage_t)();
+DB_ReadXFileStage_t DB_ReadXFileStage = reinterpret_cast<DB_ReadXFileStage_t>(0x822B1F60);
+
+typedef void (*DB_WaitXFileStage_t)();
+DB_WaitXFileStage_t DB_WaitXFileStage = reinterpret_cast<DB_WaitXFileStage_t>(0x822B1DA0);
+
+typedef void (*Com_Error_t)(errorParm_t code, const char *fmt, ...);
+Com_Error_t Com_Error = reinterpret_cast<Com_Error_t>(0x82202B50);
+
+typedef void (*R_ShowDirtyDiscError_t)();
+R_ShowDirtyDiscError_t R_ShowDirtyDiscError = reinterpret_cast<R_ShowDirtyDiscError_t>(0x82155218);
+
+typedef int (*DB_AuthLoad_InflateInit_t)(z_stream_s *stream, bool isSecure, const char *filename);
+DB_AuthLoad_InflateInit_t DB_AuthLoad_InflateInit = reinterpret_cast<DB_AuthLoad_InflateInit_t>(0x822B2B90);
+
+typedef void (*Load_XAssetListCustom_t)();
+Load_XAssetListCustom_t Load_XAssetListCustom = reinterpret_cast<Load_XAssetListCustom_t>(0x822B20E0);
+
+typedef void (*DB_PushStreamPos_t)(unsigned int index);
+DB_PushStreamPos_t DB_PushStreamPos = reinterpret_cast<DB_PushStreamPos_t>(0x8229D410);
+
+typedef void (*DB_InitStreams_t)(XBlock *blocks);
+DB_InitStreams_t DB_InitStreams = reinterpret_cast<DB_InitStreams_t>(0x8229D310);
+
+typedef void (*DB_PopStreamPos_t)();
+DB_PopStreamPos_t DB_PopStreamPos = reinterpret_cast<DB_PopStreamPos_t>(0x8229D390);
+
+typedef void (*DB_CancelLoadXFile_t)();
+DB_CancelLoadXFile_t DB_CancelLoadXFile = reinterpret_cast<DB_CancelLoadXFile_t>(0x822B1EC0);
+
+typedef int (*inflateInit2__t)(z_stream_s *z, int w, const char *version, int stream_size);
+inflateInit2__t inflateInit2_ = reinterpret_cast<inflateInit2__t>(0x823527B8);
+
+typedef int (*DB_AuthLoad_Inflate_t)(z_stream_s *stream, int flush);
+DB_AuthLoad_Inflate_t DB_AuthLoad_Inflate = reinterpret_cast<DB_AuthLoad_Inflate_t>(0x822B2F70);
+
+typedef int (*inflate_t)(z_stream_s *stream, int flush);
+inflate_t inflate = reinterpret_cast<inflate_t>(0x82352198);
 struct ZoneOverride
 {
     std::string name;
@@ -307,7 +400,20 @@ struct ZoneOverride
 
 // This data was obtained semi-manually by dumping info at different intervals during asset loading
 const ZoneOverride ZONE_OVERRIDES[] = {
-    // meminfo 207.1 -> 158.5
+
+    {"airlift",
+     83609292,
+     672,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 149794816,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+
     {"cargoship",
      78836333,
      630,
@@ -320,6 +426,20 @@ const ZoneOverride ZONE_OVERRIDES[] = {
          /* LARGE            */ 0,
          /* PHYSICAL         */ 364488,
      }},
+
+    {"jeepride",
+     77336509,
+     586,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 140935168,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+
 };
 
 int g_zoneOverrideIndex = -1;
@@ -437,72 +557,6 @@ int Com_sprintf_Hook(char *dest, unsigned int size, const char *fmt...)
     return result;
 }
 
-Detour DB_AllocXBlocks_Detour;
-void DB_AllocXBlocks_Hook(unsigned int *blockSize, const char *filename, XBlock *blocks, unsigned int allocType)
-{
-    // Reset any previous override
-    g_zoneOverrideIndex = -1;
-    // See if we have overrides
-    for (size_t i = 0; i < ARRAYSIZE(ZONE_OVERRIDES); i++)
-    {
-        if (ZONE_OVERRIDES[i].name == filename)
-        {
-            g_zoneOverrideIndex = i;
-            break;
-        }
-    }
-
-#ifndef NDEBUG
-    DbgPrint("blockSize before\n");
-    for (int i = 0; i < MAX_XFILE_COUNT; i++)
-    {
-        DbgPrint("blockSize[%d] (%s) = %d\n", i, g_block_mem_name[i], blockSize[i]);
-    }
-#endif
-
-    if (g_zoneOverrideIndex != -1)
-    {
-        for (int i = 0; i < MAX_XFILE_COUNT; i++)
-        {
-            const int blockSizeOverride = ZONE_OVERRIDES[g_zoneOverrideIndex].blockSizeOverride[i];
-            if (blockSizeOverride)
-                blockSize[i] = blockSizeOverride;
-        }
-    }
-
-#ifndef NDEBUG
-    DbgPrint("blockSize after\n");
-    for (int i = 0; i < MAX_XFILE_COUNT; i++)
-    {
-        DbgPrint("blockSize[%d] (%s) = %d\n", i, g_block_mem_name[i], blockSize[i]);
-    }
-#endif
-
-    DB_AllocXBlocks_Detour.GetOriginal<DB_AllocXBlocks_t>()(blockSize, filename, blocks, allocType);
-}
-
-struct XAsset;
-
-struct ScriptStringList
-{
-    int count;
-    const char **strings;
-};
-
-struct XAssetList
-{
-    ScriptStringList stringList;
-    int assetCount;
-    XAsset *assets;
-};
-
-XAsset **varXAsset = reinterpret_cast<XAsset **>(0x82475658);
-XAssetHeader **varXAssetHeader = reinterpret_cast<XAssetHeader **>(0x824756E0);
-XAssetList **varXAssetList = reinterpret_cast<XAssetList **>(0x824756F4);
-
-typedef void (*Load_XAssetHeader_t)(bool atStreamStart);
-Load_XAssetHeader_t Load_XAssetHeader = reinterpret_cast<Load_XAssetHeader_t>(0x822B1838);
-
 Detour Load_XAssetArrayCustom_Detour;
 void Load_XAssetArrayCustom_Stub(int count)
 {
@@ -547,19 +601,6 @@ void DB_SkipXFileData(unsigned int bytesToSkip)
     }
 }
 
-Detour Load_DelayStream_Detour;
-void Load_DelayStream_Hook()
-{
-    // Skipforward the stream so the delayed data is loaded from the correct offset
-    if (g_zoneOverrideIndex != -1)
-    {
-        const int delayStreamStart = ZONE_OVERRIDES[g_zoneOverrideIndex].delayStreamStart;
-        DB_SkipXFileData(delayStreamStart - g_load->stream.total_out);
-    }
-
-    Load_DelayStream_Detour.GetOriginal<Load_DelayStream_t>()();
-}
-
 Detour SV_AddEntitiesVisibleFromPoint_Detour;
 void SV_AddEntitiesVisibleFromPoint_Hook(const float *org, int clientNum, snapshotEntityNumbers_t *eNums)
 {
@@ -570,71 +611,6 @@ void SV_AddEntitiesVisibleFromPoint_Hook(const float *org, int clientNum, snapsh
 
     SV_AddEntitiesVisibleFromPoint_Detour.GetOriginal<SV_AddEntitiesVisibleFromPoint_t>()(org, clientNum, eNums);
 }
-
-enum errorParm_t : __int32
-{
-    ERR_FATAL = 0x0,
-    ERR_DROP = 0x1,
-    ERR_SERVERDISCONNECT = 0x2,
-    ERR_DISCONNECT = 0x3,
-    ERR_SCRIPT = 0x4,
-    ERR_SCRIPT_DROP = 0x5,
-    ERR_LOCALIZATION = 0x6,
-    ERR_MAPLOADERRORSUMMARY = 0x7,
-};
-
-struct XFile
-{
-    unsigned int size;
-    unsigned int externalSize;
-    unsigned int blockSize[7];
-};
-
-unsigned __int8 **g_streamPos = reinterpret_cast<unsigned __int8 **>(0x826B91F4);
-// unsigned __int8 **g_streamPosArray = reinterpret_cast<unsigned __int8 **>(0x82708C04);
-// XBlock **g_streamBlocks = reinterpret_cast<XBlock **>(0x826AD1EC);
-// unsigned __int8 *g_streamPosIndex = reinterpret_cast<unsigned __int8 *>(0x826BA3FC);
-// unsigned __int8 *g_streamDelayIndex = reinterpret_cast<unsigned __int8 *>(0x82668D5C);
-// unsigned __int8 *g_streamPosStackIndex = reinterpret_cast<unsigned __int8 *>(0x82668A34);
-
-unsigned int *g_loadingAssets = reinterpret_cast<unsigned int *>(0x824754F4);
-bool *g_anyFastFileLoaded = reinterpret_cast<bool *>(0x82435AB5);
-
-typedef void (*DB_LoadXFileInternal_t)();
-DB_LoadXFileInternal_t DB_LoadXFileInternal = reinterpret_cast<DB_LoadXFileInternal_t>(0x822B21B8);
-
-typedef void (*DB_ReadXFileStage_t)();
-DB_ReadXFileStage_t DB_ReadXFileStage = reinterpret_cast<DB_ReadXFileStage_t>(0x822B1F60);
-
-typedef void (*DB_WaitXFileStage_t)();
-DB_WaitXFileStage_t DB_WaitXFileStage = reinterpret_cast<DB_WaitXFileStage_t>(0x822B1DA0);
-
-typedef void (*Com_Error_t)(errorParm_t code, const char *fmt, ...);
-Com_Error_t Com_Error = reinterpret_cast<Com_Error_t>(0x82202B50);
-
-typedef void (*R_ShowDirtyDiscError_t)();
-R_ShowDirtyDiscError_t R_ShowDirtyDiscError = reinterpret_cast<R_ShowDirtyDiscError_t>(0x82155218);
-
-typedef int (*DB_AuthLoad_InflateInit_t)(z_stream_s *stream, bool isSecure, const char *filename);
-DB_AuthLoad_InflateInit_t DB_AuthLoad_InflateInit = reinterpret_cast<DB_AuthLoad_InflateInit_t>(0x822B2B90);
-
-typedef void (*Load_XAssetListCustom_t)();
-Load_XAssetListCustom_t Load_XAssetListCustom = reinterpret_cast<Load_XAssetListCustom_t>(0x822B20E0);
-
-typedef void (*DB_PushStreamPos_t)(unsigned int index);
-DB_PushStreamPos_t DB_PushStreamPos = reinterpret_cast<DB_PushStreamPos_t>(0x8229D410);
-
-typedef void (*DB_InitStreams_t)(XBlock *blocks);
-DB_InitStreams_t DB_InitStreams = reinterpret_cast<DB_InitStreams_t>(0x8229D310);
-
-typedef void (*DB_PopStreamPos_t)();
-DB_PopStreamPos_t DB_PopStreamPos = reinterpret_cast<DB_PopStreamPos_t>(0x8229D390);
-
-typedef void (*DB_CancelLoadXFile_t)();
-DB_CancelLoadXFile_t DB_CancelLoadXFile = reinterpret_cast<DB_CancelLoadXFile_t>(0x822B1EC0);
-
-typedef int (*inflateInit2__t)(z_stream_s *z, int w, const char *version, int stream_size);
-inflateInit2__t inflateInit2_ = reinterpret_cast<inflateInit2__t>(0x823527B8);
 
 bool g_isSecure = true;
 
@@ -663,7 +639,6 @@ void DbgPrintXFile(const XFile *xf)
 Detour DB_LoadXFileInternal_Detour;
 void DB_LoadXFileInternal_Stub()
 {
-    DbgPrint("[DB_LoadXFileInternal]\n");
 
     DB_ReadXFileStage();
     if (!g_load->outstandingReads)
@@ -671,14 +646,22 @@ void DB_LoadXFileInternal_Stub()
     DB_WaitXFileStage();
     DB_ReadXFileStage();
 
-    DbgPrint("[DB_LoadXFileInternal] DB_ReadXFileStage\n");
+    // [mpsp] Reset any previous override
+    g_zoneOverrideIndex = -1;
+    for (size_t i = 0; i < ARRAYSIZE(ZONE_OVERRIDES); i++)
+    {
+        if (ZONE_OVERRIDES[i].name == g_load->filename)
+        {
+            g_zoneOverrideIndex = i;
+            break;
+        }
+    }
 
+    // Read magic
     char magic[8];
     std::memcpy(magic, g_load->stream.next_in, sizeof(magic));
     g_load->stream.next_in += sizeof(magic);
     g_load->stream.avail_in -= sizeof(magic);
-
-    DbgPrint("magic: %.8s\n", magic);
 
     const bool isSignedMagic = (std::memcmp(magic, kFastfileMagicSigned, sizeof(magic)) == 0);
     const bool isUnsignedMagic = (std::memcmp(magic, kFastfileMagicUnsigned, sizeof(magic)) == 0);
@@ -736,6 +719,17 @@ void DB_LoadXFileInternal_Stub()
     DB_LoadXFileData(reinterpret_cast<unsigned char *>(&xfile), sizeof(XFile));
     // TODO: g_trackLoadProgress logic
 
+    // [mpsp] Override blocksize if we have any
+    if (g_zoneOverrideIndex != -1)
+    {
+        for (int i = 0; i < MAX_XFILE_COUNT; i++)
+        {
+            const int blockSizeOverride = ZONE_OVERRIDES[g_zoneOverrideIndex].blockSizeOverride[i];
+            if (blockSizeOverride)
+                xfile.blockSize[i] = blockSizeOverride;
+        }
+    }
+
     DB_AllocXBlocks(xfile.blockSize, g_load->filename, g_load->blocks, g_load->allocType);
     DB_InitStreams(g_load->blocks);
     Load_XAssetListCustom();
@@ -745,14 +739,11 @@ void DB_LoadXFileInternal_Stub()
     {
         const int assetCount = (*varXAssetList)->assetCount;
 
-        // Align stream position to 4 bytes.
-        auto alignedPos = (reinterpret_cast<std::uintptr_t>(*g_streamPos) + 3u) & ~std::uintptr_t(3u);
+        unsigned int alignedPos = (reinterpret_cast<std::uintptr_t>(*g_streamPos) + 3u) & ~std::uintptr_t(3u);
         *g_streamPos = reinterpret_cast<std::uint8_t *>(alignedPos);
 
-        // varXAsset = (XAsset *)g_streamPos;  (retail)
         *varXAsset = reinterpret_cast<XAsset *>(*g_streamPos);
 
-        // varXAssetList->assets = varXAsset;  (retail)
         (*varXAssetList)->assets = *varXAsset;
 
         Load_XAssetArrayCustom(assetCount);
@@ -760,17 +751,20 @@ void DB_LoadXFileInternal_Stub()
 
     DB_PopStreamPos();
     --*g_loadingAssets;
+
+    // [mpsp]
+    // Skipforward the stream so the delay load stream is loaded from the correct offset
+    if (g_zoneOverrideIndex != -1)
+    {
+        const int delayStreamStart = ZONE_OVERRIDES[g_zoneOverrideIndex].delayStreamStart;
+        DB_SkipXFileData(delayStreamStart - g_load->stream.total_out);
+    }
+
     Load_DelayStream();
     Com_Printf(CON_CHANNEL_FILES, "Loaded zone '%s'\n", g_load->filename);
     *g_anyFastFileLoaded = 1;
     DB_CancelLoadXFile();
 }
-
-typedef int (*DB_AuthLoad_Inflate_t)(z_stream_s *stream, int flush);
-DB_AuthLoad_Inflate_t DB_AuthLoad_Inflate = reinterpret_cast<DB_AuthLoad_Inflate_t>(0x822B2F70);
-
-typedef int (*inflate_t)(z_stream_s *stream, int flush);
-inflate_t inflate = reinterpret_cast<inflate_t>(0x82352198);
 
 Detour DB_AuthLoad_Inflate_Detour;
 int DB_AuthLoad_Inflate_Hook(z_stream_s *stream, int flush)
@@ -792,41 +786,37 @@ mpsp::mpsp()
     Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
     Com_sprintf_Detour.Install();
 
+    // Rewritten to support loading unsigned zones and other patches
     DB_LoadXFileInternal_Detour = Detour(DB_LoadXFileInternal, DB_LoadXFileInternal_Stub);
     DB_LoadXFileInternal_Detour.Install();
-
-    // DB_AuthLoad_InflateInit_Detour = Detour(DB_AuthLoad_InflateInit, DB_AuthLoad_InflateInit_Hook);
-    // DB_AuthLoad_InflateInit_Detour.Install();
 
     DB_AuthLoad_Inflate_Detour = Detour(DB_AuthLoad_Inflate, DB_AuthLoad_Inflate_Hook);
     DB_AuthLoad_Inflate_Detour.Install();
 
-    // DB_AllocXBlocks_Detour = Detour(DB_AllocXBlocks, DB_AllocXBlocks_Hook);
-    // DB_AllocXBlocks_Detour.Install();
-
+    // Rewrite some assets before linking
     DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
     DB_LinkXAssetEntry_Detour.Install();
 
-    // Load_XAssetArrayCustom_Detour = Detour(Load_XAssetArrayCustom, Load_XAssetArrayCustom_Stub);
-    // Load_XAssetArrayCustom_Detour.Install();
+    Load_XAssetArrayCustom_Detour = Detour(Load_XAssetArrayCustom, Load_XAssetArrayCustom_Stub);
+    Load_XAssetArrayCustom_Detour.Install();
 
-    // Load_DelayStream_Detour = Detour(Load_DelayStream, Load_DelayStream_Hook);
-    // Load_DelayStream_Detour.Install();
-
-    // SV_AddEntitiesVisibleFromPoint_Detour = Detour(SV_AddEntitiesVisibleFromPoint,
-    // SV_AddEntitiesVisibleFromPoint_Hook); SV_AddEntitiesVisibleFromPoint_Detour.Install();
+    // Without this it crashes when knifing the game world? TODO: investigate a less invasive patch
+    // This prevents players from seeing other players.
+    SV_AddEntitiesVisibleFromPoint_Detour = Detour(SV_AddEntitiesVisibleFromPoint, SV_AddEntitiesVisibleFromPoint_Hook);
+    SV_AddEntitiesVisibleFromPoint_Detour.Install();
 }
 
 mpsp::~mpsp()
 {
-
     Com_sprintf_Detour.Remove();
 
     DB_LoadXFileInternal_Detour.Remove();
 
-    DB_AllocXBlocks_Detour.Remove();
+    DB_AuthLoad_Inflate_Detour.Remove();
 
     DB_LinkXAssetEntry_Detour.Remove();
+
+    Load_XAssetArrayCustom_Detour.Remove();
 
     SV_AddEntitiesVisibleFromPoint_Detour.Remove();
 }
