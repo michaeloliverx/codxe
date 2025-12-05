@@ -242,6 +242,7 @@ struct z_stream_s
     unsigned __int8 *opaque;
     int data_type;
 };
+static_assert(sizeof(z_stream_s) == 48, "");
 
 struct DB_LoadData
 {
@@ -632,6 +633,11 @@ DB_PopStreamPos_t DB_PopStreamPos = reinterpret_cast<DB_PopStreamPos_t>(0x8229D3
 typedef void (*DB_CancelLoadXFile_t)();
 DB_CancelLoadXFile_t DB_CancelLoadXFile = reinterpret_cast<DB_CancelLoadXFile_t>(0x822B1EC0);
 
+typedef int (*inflateInit2__t)(z_stream_s *z, int w, const char *version, int stream_size);
+inflateInit2__t inflateInit2_ = reinterpret_cast<inflateInit2__t>(0x823527B8);
+
+bool g_isSecure = true;
+
 const char kFastfileMagicSigned[] = "IWff0100";
 const char kFastfileMagicUnsigned[] = "IWffu100";
 const std::uint32_t kExpectedFastfileVersion = 1;
@@ -708,11 +714,19 @@ void DB_LoadXFileInternal_Stub()
     const bool isUnsignedFastfile = isUnsignedMagic;
     const bool isSecure = !isUnsignedFastfile;
 
-    const int inflateResult = DB_AuthLoad_InflateInit(&g_load->stream, isSecure, g_load->filename);
+    int err;
+    if (isSecure)
+    {
+        g_isSecure = true;
+        err = DB_AuthLoad_InflateInit(&g_load->stream, isSecure, g_load->filename);
+    }
+    else
+    {
+        g_isSecure = false;
+        err = inflateInit2_(&g_load->stream, 15, "1.1.4", sizeof(z_stream_s));
+    }
 
-    const bool fileSupported = !isUnsignedFastfile;
-
-    if (inflateResult != 0 || !fileSupported)
+    if (err != 0)
     {
         R_ShowDirtyDiscError();
         return;
@@ -726,8 +740,6 @@ void DB_LoadXFileInternal_Stub()
     DB_InitStreams(g_load->blocks);
     Load_XAssetListCustom();
     DB_PushStreamPos(4);
-
-    DbgPrint("    DB_PushStreamPos();!...!\n");
 
     if ((*varXAssetList)->assets)
     {
@@ -752,23 +764,48 @@ void DB_LoadXFileInternal_Stub()
     Com_Printf(CON_CHANNEL_FILES, "Loaded zone '%s'\n", g_load->filename);
     *g_anyFastFileLoaded = 1;
     DB_CancelLoadXFile();
+}
 
-    DbgPrint("here!...!\n");
+typedef int (*DB_AuthLoad_Inflate_t)(z_stream_s *stream, int flush);
+DB_AuthLoad_Inflate_t DB_AuthLoad_Inflate = reinterpret_cast<DB_AuthLoad_Inflate_t>(0x822B2F70);
+
+typedef int (*inflate_t)(z_stream_s *stream, int flush);
+inflate_t inflate = reinterpret_cast<inflate_t>(0x82352198);
+
+Detour DB_AuthLoad_Inflate_Detour;
+int DB_AuthLoad_Inflate_Hook(z_stream_s *stream, int flush)
+{
+    if (g_isSecure)
+    {
+        return DB_AuthLoad_Inflate_Detour.GetOriginal<DB_AuthLoad_Inflate_t>()(stream, flush);
+    }
+    else
+    {
+        return inflate(stream, flush);
+    }
 }
 
 mpsp::mpsp()
 {
-    // Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
-    // Com_sprintf_Detour.Install();
+
+    // BSP resolving
+    Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
+    Com_sprintf_Detour.Install();
 
     DB_LoadXFileInternal_Detour = Detour(DB_LoadXFileInternal, DB_LoadXFileInternal_Stub);
     DB_LoadXFileInternal_Detour.Install();
 
+    // DB_AuthLoad_InflateInit_Detour = Detour(DB_AuthLoad_InflateInit, DB_AuthLoad_InflateInit_Hook);
+    // DB_AuthLoad_InflateInit_Detour.Install();
+
+    DB_AuthLoad_Inflate_Detour = Detour(DB_AuthLoad_Inflate, DB_AuthLoad_Inflate_Hook);
+    DB_AuthLoad_Inflate_Detour.Install();
+
     // DB_AllocXBlocks_Detour = Detour(DB_AllocXBlocks, DB_AllocXBlocks_Hook);
     // DB_AllocXBlocks_Detour.Install();
 
-    // DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
-    // DB_LinkXAssetEntry_Detour.Install();
+    DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
+    DB_LinkXAssetEntry_Detour.Install();
 
     // Load_XAssetArrayCustom_Detour = Detour(Load_XAssetArrayCustom, Load_XAssetArrayCustom_Stub);
     // Load_XAssetArrayCustom_Detour.Install();
