@@ -29,11 +29,11 @@ value = 0x0000       # 2 -> 0
 # PMem_Init - Updates memory allocation size for initialization
 [[patch.be16]]
 address = 0x821CFD1A
-value = 0x1E00       # Change 0x1970 → 0x1E00 (main allocation call)
+value = 0x1ECA       # Change 0x1970 → 0x1E00 (main allocation call)
 
 [[patch.be16]]
 address = 0x821CFD2A
-value = 0x1E00       # Change 0x1970 → 0x1E00 (secondary reference)
+value = 0x1ECA       # Change 0x1970 → 0x1E00 (secondary reference)
 
 # https://github.com/AdrianCassar/Xenia-WebServices/blob/f0f74f24d47ed7f8370a940bf1c5b2f1617fb8af/patches/415607E6%20-%20Call%20of%20Duty%204%20Modern%20Warfare%20(TU%204).patch.toml
 [[patch]]

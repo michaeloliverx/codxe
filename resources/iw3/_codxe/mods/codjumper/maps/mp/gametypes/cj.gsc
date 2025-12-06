@@ -19,6 +19,7 @@ init()
 	level.THEMES = get_themes();
 	level.PLAYER_MODELS = get_player_models();
 	level.MAPS = get_maps();
+	level.MAPS_SP = get_maps_sp();
 
 	level.SELECTED_PREFIX = "^2-->^7 ";
 
@@ -1735,6 +1736,35 @@ get_maps()
 	return maps;
 }
 
+get_maps_sp()
+{
+	maps = [];
+	// Alphabetically sorted by value
+	maps["ac130"] = "ac130";
+	maps["aftermath"] = "aftermath";
+	maps["airlift"] = "airlift";
+	maps["airplane"] = "airplane";
+	maps["ambush"] = "ambush";
+	// maps["armada"] = "armada";
+	maps["blackout"] = "blackout";
+	maps["bog_a"] = "bog_a";
+	maps["bog_b"] = "bog_b";
+	maps["cargoship"] = "cargoship";
+	maps["coup"] = "coup";
+	maps["hunted"] = "hunted";
+	maps["icbm"] = "icbm";
+	maps["jeepride"] = "jeepride";
+	maps["killhouse"] = "killhouse";
+	maps["launchfacility_a"] = "launchfacility_a";
+	maps["launchfacility_b"] = "launchfacility_b";
+	maps["scoutsniper"] = "scoutsniper";
+	maps["sniperescape"] = "sniperescape";
+	maps["village_assault"] = "village_assault";
+	maps["village_defend"] = "village_defend";
+
+	return maps;
+}
+
 get_player_models()
 {
 	mapname = getDvar("mapname");
@@ -2468,6 +2498,19 @@ generateMenuOptions()
 				mapname = maps[i];
 				label = level.MAPS[mapname];
 				self addMenuOption("host_menu_maps", label, ::changeMap, mapname);
+			}
+
+			// Single player map selector
+			// Map selector
+			self addMenuOption("main", "Select map (SP)", ::menuAction, "CHANGE_MENU", "host_menu_maps_sp");
+			self addMenu("host_menu_maps_sp", "main");
+			maps_sp = getarraykeys(level.MAPS_SP);
+			// loop in reverse to display the maps in the order they are defined
+			for (i = maps_sp.size - 1; i >= 0; i--)
+			{
+				mapname = maps_sp[i];
+				label = level.MAPS_sp[mapname];
+				self addMenuOption("host_menu_maps_sp", label, ::changeMap, mapname);
 			}
 		}
 

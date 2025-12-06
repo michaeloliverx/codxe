@@ -294,24 +294,40 @@ struct XFile
     unsigned int blockSize[7];
 };
 
+struct XZoneName
+{
+    char name[64];
+    int flags;
+};
+
+struct StreamDelayInfo
+{
+    const void *ptr;
+    int size;
+};
+
 // data pointers
 
 unsigned __int8 **g_streamPos = reinterpret_cast<unsigned __int8 **>(0x826B91F4);
-// unsigned __int8 **g_streamPosArray = reinterpret_cast<unsigned __int8 **>(0x82708C04);
+unsigned __int8 **g_streamPosArray = reinterpret_cast<unsigned __int8 **>(0x82708C04);
 // XBlock **g_streamBlocks = reinterpret_cast<XBlock **>(0x826AD1EC);
 // unsigned __int8 *g_streamPosIndex = reinterpret_cast<unsigned __int8 *>(0x826BA3FC);
-// unsigned __int8 *g_streamDelayIndex = reinterpret_cast<unsigned __int8 *>(0x82668D5C);
+unsigned *g_streamDelayIndex = reinterpret_cast<unsigned *>(0x82668D5C);
+StreamDelayInfo *g_streamDelayArray = reinterpret_cast<StreamDelayInfo *>(0x8270C4F0);
 // unsigned __int8 *g_streamPosStackIndex = reinterpret_cast<unsigned __int8 *>(0x82668A34);
-
 unsigned int *g_loadingAssets = reinterpret_cast<unsigned int *>(0x824754F4);
 bool *g_anyFastFileLoaded = reinterpret_cast<bool *>(0x82435AB5);
-
 DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82475508);
 const char **g_block_mem_name = reinterpret_cast<const char **>(0x823A42AC);
+const char **g_assetNames = reinterpret_cast<const char **>(0x823A42C8);
 const char **g_defaultAssetName = reinterpret_cast<const char **>(0x823A40F8);
+const XZoneName *g_zoneNames = reinterpret_cast<XZoneName *>(0x8270BC28);
+const unsigned int *g_zoneIndex = reinterpret_cast<const unsigned int *>(0x82536C4C);
 XAsset **varXAsset = reinterpret_cast<XAsset **>(0x82475658);
 XAssetHeader **varXAssetHeader = reinterpret_cast<XAssetHeader **>(0x824756E0);
 XAssetList **varXAssetList = reinterpret_cast<XAssetList **>(0x824756F4);
+void **DB_XAssetPool = reinterpret_cast<void **>(0x823A4070);
+int *g_poolSize = reinterpret_cast<int *>(0x823A3E50);
 
 // function pointers
 
@@ -320,6 +336,9 @@ Com_sprintf_t Com_sprintf = reinterpret_cast<Com_sprintf_t>(0x821CCED8);
 
 typedef void (*DB_SetXAssetName_t)(XAsset *asset, const char *name);
 DB_SetXAssetName_t DB_SetXAssetName = reinterpret_cast<DB_SetXAssetName_t>(0x822B30D0);
+
+typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
+DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x822B3490);
 
 typedef XAssetEntry *(*DB_LinkXAssetEntry_t)(XAssetEntry *newEntry, int allowOverride);
 DB_LinkXAssetEntry_t DB_LinkXAssetEntry = reinterpret_cast<DB_LinkXAssetEntry_t>(0x8229FC50);
@@ -390,17 +409,20 @@ DB_AuthLoad_Inflate_t DB_AuthLoad_Inflate = reinterpret_cast<DB_AuthLoad_Inflate
 
 typedef int (*inflate_t)(z_stream_s *stream, int flush);
 inflate_t inflate = reinterpret_cast<inflate_t>(0x82352198);
+
+typedef int (*DB_GetXAssetTypeSize_t)(XAssetType type);
+DB_GetXAssetTypeSize_t DB_GetXAssetTypeSize = reinterpret_cast<DB_GetXAssetTypeSize_t>(0x822B30B8);
+
 struct ZoneOverride
 {
     std::string name;
-    unsigned int delayStreamStart;
-    unsigned int assetCountOverride;   // 0 means no override
-    unsigned int blockSizeOverride[7]; // 0 means no override
+    unsigned int delayStreamStart; // = xfile.size - xfile.blockSize[2] + sizeof(XFile)
+    int assetCountOverride;
+    unsigned int blockSizeOverride[7];
 };
 
 // This data was obtained semi-manually by dumping info at different intervals during asset loading
 const ZoneOverride ZONE_OVERRIDES[] = {
-
     {"airlift",
      83609292,
      672,
@@ -410,10 +432,70 @@ const ZoneOverride ZONE_OVERRIDES[] = {
          /* LARGE_RUNTIME    */ 149794816,
          /* PHYSICAL_RUNTIME */ 0,
          /* VIRTUAL          */ 0,
+         /* LARGE            */ 0, // -+1024 calc
+         /* PHYSICAL         */ 0,
+     }},
+    {"ambush",
+     78799549,
+     918,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 174501888,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 65000000,
          /* LARGE            */ 0,
          /* PHYSICAL         */ 0,
      }},
-
+    // Still too large
+    // {"armada",
+    //  88246690,
+    //  876,
+    //  {
+    //      /* TEMP             */ 0,
+    //      /* RUNTIME          */ 0,
+    //      /* LARGE_RUNTIME    */ 175124480,
+    //      /* PHYSICAL_RUNTIME */ 0,
+    //      /* VIRTUAL          */ 0,
+    //      /* LARGE            */ 0,
+    //      /* PHYSICAL         */ 0,
+    //  }},
+    {"blackout",
+     80876054,
+     868,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 174112768,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+    {"bog_a",
+     76407093,
+     837,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 162222080,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 850344,
+     }},
+    {"bog_b",
+     73772025,
+     847,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 0,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
     {"cargoship",
      78836333,
      630,
@@ -426,7 +508,18 @@ const ZoneOverride ZONE_OVERRIDES[] = {
          /* LARGE            */ 0,
          /* PHYSICAL         */ 364488,
      }},
-
+    {"coup",
+     79849985,
+     530,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 155185152,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
     {"jeepride",
      77336509,
      586,
@@ -439,7 +532,91 @@ const ZoneOverride ZONE_OVERRIDES[] = {
          /* LARGE            */ 0,
          /* PHYSICAL         */ 0,
      }},
+    {"hunted",
+     82247981,
+     739,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 160907264,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+    {"icbm",
+     86973506,
+     783,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 168857600,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+    {"killhouse",
+     74240661,
+     641,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 170491904,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+    {"scoutsniper",
+     88016466,
+     617,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 173142016,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+    {"sniperescape",
+     87072605,
+     698,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 169299968,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
+    {"village_assault",
+     74069735,
+     901,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 176791552,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
 
+    {"village_defend",
+     74943765,
+     894,
+     {
+         /* TEMP             */ 0,
+         /* RUNTIME          */ 0,
+         /* LARGE_RUNTIME    */ 172601344,
+         /* PHYSICAL_RUNTIME */ 0,
+         /* VIRTUAL          */ 0,
+         /* LARGE            */ 0,
+         /* PHYSICAL         */ 0,
+     }},
 };
 
 int g_zoneOverrideIndex = -1;
@@ -612,29 +789,14 @@ void SV_AddEntitiesVisibleFromPoint_Hook(const float *org, int clientNum, snapsh
     SV_AddEntitiesVisibleFromPoint_Detour.GetOriginal<SV_AddEntitiesVisibleFromPoint_t>()(org, clientNum, eNums);
 }
 
+/**
+ * Tracks if the currently loading fastfile has auth or not.
+ */
 bool g_isSecure = true;
 
 const char kFastfileMagicSigned[] = "IWff0100";
 const char kFastfileMagicUnsigned[] = "IWffu100";
 const std::uint32_t kExpectedFastfileVersion = 1;
-
-void DbgPrintXFile(const XFile *xf)
-{
-    if (!xf)
-    {
-        DbgPrint("XFile: <null>");
-        return;
-    }
-
-    DbgPrint("XFile:");
-    DbgPrint("  size          = %u", xf->size);
-    DbgPrint("  externalSize  = %u", xf->externalSize);
-
-    for (int i = 0; i < 7; ++i)
-    {
-        DbgPrint("  blockSize[%d] = %u", i, xf->blockSize[i]);
-    }
-}
 
 Detour DB_LoadXFileInternal_Detour;
 void DB_LoadXFileInternal_Stub()
@@ -717,7 +879,7 @@ void DB_LoadXFileInternal_Stub()
 
     XFile xfile;
     DB_LoadXFileData(reinterpret_cast<unsigned char *>(&xfile), sizeof(XFile));
-    // TODO: g_trackLoadProgress logic
+    // TODO: g_trackLoadProgress logic for map loading bar
 
     // [mpsp] Override blocksize if we have any
     if (g_zoneOverrideIndex != -1)
@@ -779,8 +941,21 @@ int DB_AuthLoad_Inflate_Hook(z_stream_s *stream, int flush)
     }
 }
 
+void DB_ReallocXAssetPool(XAssetType type, unsigned int newSize)
+{
+    void *pool_entry = malloc(newSize * DB_GetXAssetTypeSize(type));
+    DB_XAssetPool[type] = pool_entry;
+    g_poolSize[type] = newSize;
+}
+
 mpsp::mpsp()
 {
+    // The larger maps only load on xenia anyway
+    if (xbox::IsXenia())
+    {
+        DB_ReallocXAssetPool(ASSET_TYPE_XMODEL, 10250);
+        DB_ReallocXAssetPool(ASSET_TYPE_MATERIAL, 2600);
+    }
 
     // BSP resolving
     Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
