@@ -741,8 +741,6 @@ int Com_sprintf_Hook(char *dest, unsigned int size, const char *fmt...)
             char *dst = dest + 5;       // after "maps/"
             const char *src = dest + 8; // after "maps/mp/"
             memmove(dst, src, strlen(src) + 1);
-
-            DbgPrint("Rewrote BSP path to %s\n", dest);
         }
     }
 
@@ -759,9 +757,6 @@ int Com_sprintf_Hook(char *dest, unsigned int size, const char *fmt...)
             const char *src = dest + 8; // after "maps/mp/"
             memmove(dst, src, strlen(src) + 1);
         }
-
-        DbgPrint("Com_sprintf_Hook <- GScr_LoadLevelScript\n");
-        DbgPrint("%s\n", dest);
     }
 
     return result;
@@ -771,6 +766,7 @@ Detour Load_XAssetArrayCustom_Detour;
 void Load_XAssetArrayCustom_Stub(int count)
 {
     // Load the entire XAsset array
+    // This ensures that the stream position is correct even if we are loading less assets later.
     Load_Stream(1, *varXAsset, 8 * count);
 
     // Override the count if needed AFTER progressing the stream correctly on asset list
@@ -877,8 +873,6 @@ void DB_LoadXFileInternal_Stub()
     g_load->stream.next_in += sizeof(fileVersion);
     g_load->stream.avail_in -= sizeof(fileVersion);
 
-    DbgPrint("fileVersion: %d\n", fileVersion);
-
     const std::uint32_t expectedFastfileVersion = 1;
 
     if (fileVersion != expectedFastfileVersion)
@@ -951,11 +945,8 @@ void DB_LoadXFileInternal_Stub()
 
         unsigned int alignedPos = (reinterpret_cast<std::uintptr_t>(*g_streamPos) + 3u) & ~std::uintptr_t(3u);
         *g_streamPos = reinterpret_cast<std::uint8_t *>(alignedPos);
-
         *varXAsset = reinterpret_cast<XAsset *>(*g_streamPos);
-
         (*varXAssetList)->assets = *varXAsset;
-
         Load_XAssetArrayCustom(assetCount);
     }
 
