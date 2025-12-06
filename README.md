@@ -35,6 +35,37 @@ To run CoDxe, you will need one of the following:
 | Raw map ents loader       | :x:                | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Raw `.dds` texture loader | :x:                | :x:                | :x:                | :white_check_mark: | :x:                | :x:                | :x:                |
 
+## Call of Duty 4
+
+Loading single player maps is not stable so things may or may not work.
+
+| Name                | Xbox 360 | Xenia |
+| ------------------- | :------: | :---: |
+| ac130.ff            |    🟢    |  🟢   |
+| aftermath.ff        |    🟢    |  🟢   |
+| airlift.ff          |    ❌    |  🟢   |
+| airplane.ff         |    🟢    |  🟢   |
+| ambush.ff           |    ❌    |  🟢   |
+| armada.ff           |    ❌    |  ❌   |
+| blackout.ff         |    ❌    |  🟢   |
+| bog_a.ff            |    ❌    |  🟢   |
+| bog_b.ff            |    ❌    |  🟢   |
+| cargoship.ff        |    🟢    |  🟢   |
+| coup.ff             |    ❌    |  🟢   |
+| hunted.ff           |    ❌    |  🟢   |
+| icbm.ff             |    ❌    |  🟢   |
+| jeepride.ff         |    ❌    |  🟢   |
+| killhouse.ff        |    ❌    |  🟢   |
+| launchfacility_a.ff |    ❌    |  🟢   |
+| launchfacility_b.ff |    ❌    |  🟢   |
+| scoutsniper.ff      |    ❌    |  🟢   |
+| simplecredits.ff    |    ❌    |  ❌   |
+| sniperescape.ff     |    ❌    |  🟢   |
+| village_assault.ff  |    ❌    |  🟢   |
+| village_defend.ff   |    ❌    |  🟢   |
+
+NOTE: Xenia requires the patch [patch](<resources/xenia/patches/415607E6 - Call of Duty 4 Modern Warfare MP (TU4).patch.toml>) to increase memory installed.
+
 ## Features
 
 ### GSC Loader
