@@ -329,6 +329,12 @@ XAssetList **varXAssetList = reinterpret_cast<XAssetList **>(0x824756F4);
 void **DB_XAssetPool = reinterpret_cast<void **>(0x823A4070);
 int *g_poolSize = reinterpret_cast<int *>(0x823A3E50);
 
+int *g_trackLoadProgress = reinterpret_cast<int *>(0x824754FC);
+int *g_totalSize = reinterpret_cast<int *>(0x824754F8);
+int *g_loadedSize = reinterpret_cast<int *>(0x82475500);
+int *g_totalExternalBytes = reinterpret_cast<int *>(0x82475504);
+int *g_loadedExternalBytes = reinterpret_cast<int *>(0x8246F4AC);
+
 // function pointers
 
 typedef int (*Com_sprintf_t)(char *dest, unsigned int size, const char *fmt, ...);
@@ -909,7 +915,19 @@ void DB_LoadXFileInternal_Stub()
 
     XFile xfile;
     DB_LoadXFileData(reinterpret_cast<unsigned char *>(&xfile), sizeof(XFile));
-    // TODO: g_trackLoadProgress logic for map loading bar
+
+    // Handles the loading bar during map load
+    if (*g_trackLoadProgress)
+    {
+        int fileSize = GetFileSize(g_load->f, 0);
+        if (xfile.externalSize + fileSize >= 0x100000)
+        {
+            *g_totalSize = (fileSize + 0x3FFFF) / 0x40000 - *g_loadedSize;
+            *g_loadedSize = 0;
+            *g_totalExternalBytes = xfile.externalSize - *g_loadedExternalBytes;
+            *g_loadedExternalBytes = 0;
+        }
+    }
 
     // [mpsp] Override blocksize if we have any
     if (g_zoneOverrideIndex != -1)
