@@ -16,6 +16,7 @@ class mpsp : public Module
         return "mpsp";
     };
     static bool is_sp_map;
+    static bool is_sp_mapname(const std::string &name);
 };
 } // namespace mp
 } // namespace iw3

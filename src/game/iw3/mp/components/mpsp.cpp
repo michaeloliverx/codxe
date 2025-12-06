@@ -378,7 +378,7 @@ typedef void (*DB_WaitXFileStage_t)();
 DB_WaitXFileStage_t DB_WaitXFileStage = reinterpret_cast<DB_WaitXFileStage_t>(0x822B1DA0);
 
 typedef void (*Com_Error_t)(errorParm_t code, const char *fmt, ...);
-Com_Error_t Com_Error = reinterpret_cast<Com_Error_t>(0x82202B50);
+Com_Error_t Com_Error = reinterpret_cast<Com_Error_t>(0x82236640);
 
 typedef void (*R_ShowDirtyDiscError_t)();
 R_ShowDirtyDiscError_t R_ShowDirtyDiscError = reinterpret_cast<R_ShowDirtyDiscError_t>(0x82155218);
@@ -412,6 +412,40 @@ inflate_t inflate = reinterpret_cast<inflate_t>(0x82352198);
 
 typedef int (*DB_GetXAssetTypeSize_t)(XAssetType type);
 DB_GetXAssetTypeSize_t DB_GetXAssetTypeSize = reinterpret_cast<DB_GetXAssetTypeSize_t>(0x822B30B8);
+
+bool mpsp::is_sp_mapname(const std::string &name)
+{
+    static const char *kSpMaps[] = {"ac130",
+                                    "aftermath",
+                                    "airlift",
+                                    "airplane",
+                                    "ambush",
+                                    "armada",
+                                    "blackout",
+                                    "bog_a",
+                                    "bog_b",
+                                    "cargoship",
+                                    "coup",
+                                    "hunted",
+                                    "icbm",
+                                    "jeepride",
+                                    "killhouse",
+                                    "launchfacility_a",
+                                    "launchfacility_b",
+                                    "scoutsniper",
+                                    "simplecredits",
+                                    "sniperescape",
+                                    "village_assault",
+                                    "village_defend"};
+
+    for (size_t i = 0; i < ARRAYSIZE(kSpMaps); ++i)
+    {
+        if (name == kSpMaps[i])
+            return true;
+    }
+
+    return false;
+}
 
 struct ZoneOverride
 {
@@ -698,18 +732,11 @@ int Com_sprintf_Hook(char *dest, unsigned int size, const char *fmt...)
 
         if (!isMp)
         {
-
             char *dst = dest + 5;       // after "maps/"
             const char *src = dest + 8; // after "maps/mp/"
             memmove(dst, src, strlen(src) + 1);
 
             DbgPrint("Rewrote BSP path to %s\n", dest);
-
-            mpsp::is_sp_map = true;
-        }
-        else
-        {
-            mpsp::is_sp_map = false;
         }
     }
 
@@ -794,19 +821,16 @@ void SV_AddEntitiesVisibleFromPoint_Hook(const float *org, int clientNum, snapsh
  */
 bool g_isSecure = true;
 
-const char kFastfileMagicSigned[] = "IWff0100";
-const char kFastfileMagicUnsigned[] = "IWffu100";
-const std::uint32_t kExpectedFastfileVersion = 1;
-
 Detour DB_LoadXFileInternal_Detour;
 void DB_LoadXFileInternal_Stub()
 {
-
     DB_ReadXFileStage();
     if (!g_load->outstandingReads)
         Com_Error(ERR_DROP, "Fastfile for zone '%s' is empty.", g_load->filename);
     DB_WaitXFileStage();
     DB_ReadXFileStage();
+
+    mpsp::is_sp_map = mpsp::is_sp_mapname(g_load->filename);
 
     // [mpsp] Reset any previous override
     g_zoneOverrideIndex = -1;
@@ -825,10 +849,17 @@ void DB_LoadXFileInternal_Stub()
     g_load->stream.next_in += sizeof(magic);
     g_load->stream.avail_in -= sizeof(magic);
 
-    const bool isSignedMagic = (std::memcmp(magic, kFastfileMagicSigned, sizeof(magic)) == 0);
-    const bool isUnsignedMagic = (std::memcmp(magic, kFastfileMagicUnsigned, sizeof(magic)) == 0);
+    bool isSecure;
 
-    if (!isSignedMagic && !isUnsignedMagic)
+    if (std::memcmp(magic, "IWff0100", sizeof(magic)) == 0)
+    {
+        isSecure = true;
+    }
+    else if (std::memcmp(magic, "IWffu100", sizeof(magic)) == 0)
+    {
+        isSecure = false;
+    }
+    else
     {
         // Magic is neither the signed nor the unsigned form: treat as bad disc.
         R_ShowDirtyDiscError();
@@ -842,22 +873,21 @@ void DB_LoadXFileInternal_Stub()
 
     DbgPrint("fileVersion: %d\n", fileVersion);
 
-    if (fileVersion != kExpectedFastfileVersion)
+    const std::uint32_t expectedFastfileVersion = 1;
+
+    if (fileVersion != expectedFastfileVersion)
     {
-        if (fileVersion < kExpectedFastfileVersion)
+        if (fileVersion < expectedFastfileVersion)
         {
             Com_Error(ERR_DROP, "Fastfile for zone '%s' is out of date (version %u, expecting %u)", g_load->filename,
-                      fileVersion, kExpectedFastfileVersion);
+                      fileVersion, expectedFastfileVersion);
         }
         else
         {
             Com_Error(ERR_DROP, "Fastfile for zone '%s' is newer than client executable (version %u, expecting %u)",
-                      g_load->filename, fileVersion, kExpectedFastfileVersion);
+                      g_load->filename, fileVersion, expectedFastfileVersion);
         }
     }
-
-    const bool isUnsignedFastfile = isUnsignedMagic;
-    const bool isSecure = !isUnsignedFastfile;
 
     int err;
     if (isSecure)
@@ -937,7 +967,7 @@ int DB_AuthLoad_Inflate_Hook(z_stream_s *stream, int flush)
     }
     else
     {
-        return inflate(stream, flush);
+        return inflate(stream, 2);
     }
 }
 
