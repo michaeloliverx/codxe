@@ -1,0 +1,23 @@
+{
+"classname" "worldspawn"
+}
+{
+"origin" "-2589.9 5206.3 -23.1"
+"angles" "0 30 0"
+"classname" "mp_global_intermission"
+}
+{
+"origin" "-2589.9 5206.3 -23.1"
+"angles" "0 30 0"
+"classname" "mp_tdm_spawn_allies_start"
+}
+{
+"origin" "-2589.9 5206.3 -23.1"
+"angles" "0 30 0"
+"classname" "mp_tdm_spawn_axis_start"
+}
+{
+"origin" "-2589.9 5206.3 -23.1"
+"angles" "0 30 0"
+"classname" "mp_tdm_spawn"
+}

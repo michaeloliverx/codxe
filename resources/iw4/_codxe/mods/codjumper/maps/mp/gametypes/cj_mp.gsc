@@ -3,6 +3,11 @@
 
 init()
 {
+    precachemodel("viewmodel_base_viewhands");
+
+    // Unless this is set then SP maps spawn with no weapons
+    // https://github.com/shit-ware/IW4/blob/master/common_scripts/utility.gsc#L2080
+    level.isSP = false;
 
     DeleteUnwantedEntities();
 
@@ -59,6 +64,11 @@ onPlayerConnect()
     }
 }
 
+is_sp_mapname()
+{
+    return getsubstr(getdvar("mapname"), 0, 2) != "mp_";
+}
+
 onPlayerSpawned()
 {
     self endon("disconnect");
@@ -75,6 +85,12 @@ onPlayerSpawned()
         self thread MonitorButtons();
         self thread MonitorPlayerCommands();
         self thread maps\mp\gametypes\cj_hud::StartHUD();
+
+        // On singleplayer maps use the base viewhands included in common_mp
+        if (is_sp_mapname())
+        {
+            self setViewmodel("viewmodel_base_viewhands");
+        }
     }
 }
 

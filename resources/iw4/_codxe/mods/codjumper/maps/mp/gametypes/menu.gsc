@@ -11,6 +11,7 @@ init()
 
     level.THEMES = get_themes();
     level.MAPS = get_maps();
+    level.MAPS_SP = get_maps_sp();
 }
 
 /**
@@ -80,6 +81,36 @@ get_maps()
     maps["mp_underpass"] = "Underpass";
     maps["mp_vacant"] = "Vacant";
     maps["mp_brecourt"] = "Wasteland";
+
+    return maps;
+}
+
+get_maps_sp()
+{
+    maps = [];
+    // Alphabetically sorted by value
+    maps["af_caves"] = "af_caves";
+    maps["af_chase"] = "af_chase";
+    maps["airport"] = "airport";
+    maps["arcadia"] = "arcadia";
+    maps["boneyard"] = "boneyard";
+    maps["cliffhanger"] = "cliffhanger";
+    maps["co_hunted"] = "co_hunted";
+    maps["contingency"] = "contingency";
+    maps["dc_whitehouse"] = "dc_whitehouse";
+    maps["dcburning"] = "dcburning";
+    maps["dcemp"] = "dcemp";
+    maps["ending"] = "ending";
+    maps["estate"] = "estate";
+    maps["favela"] = "favela";
+    maps["favela_escape"] = "favela_escape";
+    maps["gulag"] = "gulag";
+    maps["invasion"] = "invasion";
+    maps["oilrig"] = "oilrig";
+    maps["roadkill"] = "roadkill";
+    maps["so_bridge"] = "so_bridge";
+    maps["so_ghillies"] = "so_ghillies";
+    maps["trainer"] = "trainer";
 
     return maps;
 }
@@ -388,6 +419,17 @@ generateMenuOptions()
         mapname = maps[i];
         label = level.MAPS[mapname];
         self addMenuOption("host_menu_maps", label, ::changeMap, mapname);
+    }
+
+    // Map selector SP
+    self addMenuOption("main", "Maps SP", ::menuAction, "CHANGE_MENU", "host_menu_maps_sp");
+    self addMenu("host_menu_maps_sp", "main");
+    maps = getarraykeys(level.MAPS_SP);
+    for (i = 0; i < maps.size; i++)
+    {
+        mapname = maps[i];
+        label = level.MAPS_SP[mapname];
+        self addMenuOption("host_menu_maps_sp", label, ::changeMap, mapname);
     }
 
     self addMenuOption("main", "Themes", ::menuAction, "CHANGE_MENU", "theme_menu");

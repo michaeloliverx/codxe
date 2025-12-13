@@ -25,3 +25,13 @@ hash = "A3FFB7C11B688FE5" # default_mp.xex
     [[patch.be16]]
         address = 0x823C3E36
         value = 0x0000       # 2 -> 0
+
+# 0x1C50
+
+[[patch.be16]]
+address = 0x823129FA
+value = 0x1E00
+
+[[patch.be16]]
+address = 0x82312A1E
+value = 0x1E00

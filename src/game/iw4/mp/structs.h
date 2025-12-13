@@ -1216,6 +1216,46 @@ struct __declspec(align(64)) clipMap_t
     unsigned int checksum;
 };
 
+struct pathnode_t;
+struct pathbasenode_t;
+struct pathnode_tree_t;
+struct VehicleTrackSegment;
+struct G_GlassData;
+
+struct PathData
+{
+    unsigned int nodeCount;
+    pathnode_t *nodes;
+    pathbasenode_t *basenodes;
+    unsigned int chainNodeCount;
+    unsigned __int16 *chainNodeForNode;
+    unsigned __int16 *nodeForChainNode;
+    int visBytes;
+    unsigned __int8 *pathVis;
+    int nodeTreeCount;
+    pathnode_tree_t *nodeTree;
+};
+
+struct VehicleTrack
+{
+    VehicleTrackSegment *segments;
+    unsigned int segmentCount;
+};
+
+struct GameWorldSp
+{
+    const char *name;
+    PathData path;
+    VehicleTrack vehicleTrack;
+    G_GlassData *g_glassData;
+};
+
+struct GameWorldMp
+{
+    const char *name;
+    G_GlassData *g_glassData;
+};
+
 struct RawFile
 {
     const char *name;
@@ -1227,6 +1267,9 @@ struct RawFile
 union XAssetHeader
 {
     clipMap_t *clipMap;
+    GameWorldSp *gameWorldSp;
+    GameWorldMp *gameWorldMp;
+    MapEnts *mapEnts;
     RawFile *rawfile;
     void *data;
 };

@@ -5,6 +5,7 @@
 #include "components/events.h"
 #include "components/g_client_fields.h"
 #include "components/g_scr_main.h"
+#include "components/mpsp.h"
 #include "components/mr.h"
 #include "components/patches.h"
 #include "components/scr_parser.h"
@@ -26,6 +27,7 @@ IW4_MP_Plugin::IW4_MP_Plugin()
     RegisterModule(new Console());
     RegisterModule(new g_client_fields());
     RegisterModule(new g_scr_main());
+    RegisterModule(new mpsp());
     RegisterModule(new MovementRecorder());
     RegisterModule(new patches());
     RegisterModule(new scr_parser());
