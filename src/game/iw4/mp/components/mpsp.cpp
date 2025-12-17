@@ -369,78 +369,14 @@ void override_(RawFile *asset)
 
 } // namespace Asset
 
-// "default",
-// "void",
-// "void",
-// "fx10",
-// "void",
-// "$default",
-// "null.hlsl",
-// "default",
-// "$white",
-// "null",
-// "default",
-// "null",
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// "light_dynamic",
-// &byte_82006A5F,
-// "fonts/consolefont",
-// "ui/default.menu",
-// "default_menu",
-// "CGAME_UNKNOWN",
-// "defaultweapon_mp",
-// &byte_82006A5F,
-// "misc/missing_fx",
-// "default",
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// &byte_82006A5F,
-// "codescripts/$default",
-// "mp/defaultStringTable.csv",
-// "DEFAULT_LB",
-// "mp/defaultStructuredData.def",
-// "defaulttracer",
-// "defaultvehicle",
-// &byte_82006A5F
-
 Detour DB_LinkXAssetEntry1_Detour;
 XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(XAssetType type, XAssetHeader *header)
 {
-
-    static const char *last_fastfile = nullptr;
-    static int asset_counter = 0;
-
-    const char *current_fastfile = g_load->file->name;
-
-    // Reset counter when fastfile changes
-    if (last_fastfile == nullptr || strcmp(last_fastfile, current_fastfile) != 0)
-    {
-        last_fastfile = current_fastfile;
-        asset_counter = 0;
-    }
-
     XAsset xasset;
     xasset.type = type;
     xasset.header = *header;
 
-    const int asset_type = type;
-    const char *asset_type_name = g_assetNames[asset_type];
     const char *asset_name = DB_GetXAssetName(&xasset);
-    const char *zone_name = g_zones[*g_zoneIndex].file.name;
-
-    DbgPrint("[DB_LinkXAssetEntry1] [%04d] %-24s | %-16s (%d) | %s\n", asset_counter, zone_name, asset_type_name,
-             asset_type, asset_name);
-
-    ++asset_counter;
-    // DbgPrint("[DB_LinkXAssetEntry1] returnaddr %p\n", _ReturnAddress());
 
     // Before linking
     switch (type)
@@ -454,9 +390,9 @@ XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(XAssetType type, XAssetHeader *he
         break;
     }
 
-    // Ignore these assets to save on asset pool slots
-    // Hijacks the referenced asset mechanism so that DB_AllocXAssetEntry is never called
-    // Make some assumptions that these assets will not be used.
+    // Hijacks the referenced asset mechanism so that DB_AllocXAssetEntry
+    // is never called thus never increasing the asset pool for those assets.
+    // Make the assumption that these assets will not be used.
     if (!is_mp_fastfile(g_load->file->name))
     {
         switch (type)
@@ -580,42 +516,24 @@ void Patch_ImageCache_OOM()
     *(volatile uint32_t *)0x823DF628 = 0x480000A4;
 }
 
-DWORD WINAPI ThreadProc(LPVOID param)
-{
-
-    DbgPrint("Thread Started!\n");
-
-    Sleep(2000);
-    Cbuf_AddText(0, "meminfo\n");
-    // Cbuf_AddText(0, "set developer 1\n");
-    // Cbuf_AddText(0, "set developer_script 1\n");
-    Cbuf_AddText(0, "set ui_mapname contingency\n");
-
-    // Sleep(3500);
-
-    // Cbuf_AddText(0, "set loc_warnings 0\n"); // Disable unlocalized warnings
-    // Cbuf_AddText(0, "set ui_mapname trainer\n");
-
-    return 0;
-}
-
 mpsp::mpsp()
 {
     DisableFastfileAuthCheck();
-    // Patch_ImageCache_OOM();
+    Patch_ImageCache_OOM();
 
+// Debug-only: intercept internal console printing to also forward output to stdout
+#ifndef NDEBUG
     CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
     CL_ConsolePrint_Detour.Install();
+#endif
 
+    // Modify some assets before linking
     DB_LinkXAssetEntry1_Detour = Detour(DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
     DB_LinkXAssetEntry1_Detour.Install();
 
     // Rewrite some strings on the fly
     Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
     Com_sprintf_Detour.Install();
-
-    // Start a thread to not block the main thread
-    ExCreateThread(nullptr, 0, nullptr, nullptr, &ThreadProc, nullptr, EX_CREATE_FLAG_TITLE_EXEC);
 }
 
 mpsp::~mpsp()

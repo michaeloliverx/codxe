@@ -72,30 +72,36 @@ NOTE: Xenia requires the [patch](<resources/xenia/patches/415607E6 - Call of Dut
 
 Loading single player maps in multiplayer is a best effort approach. Lots of things are broken such as missing FX, player models, crashes etc.
 
-| Name             | Xbox 360 | Xenia |
-| ---------------- | :------: | :---: |
-| af_caves.ff      |          |  🟢   |
-| af_chase.ff      |          |  🟢   |
-| airport.ff       |          |  🟢   |
-| arcadia.ff       |          |  🔴   |
-| boneyard.ff      |          |  🟢   |
-| cliffhanger.ff   |          |  🟢   |
-| co_hunted.ff     |          |  🟢   |
-| contingency.ff   |          |  🟢   |
-| dc_whitehouse.ff |          |  🟢   |
-| dcburning.ff     |          |  🔴   |
-| dcemp.ff         |          |  🟢   |
-| ending.ff        |          |  🔴   |
-| estate.ff        |          |  🟢   |
-| favela.ff        |          |  🔴   |
-| favela_escape.ff |          |  🔴   |
-| gulag.ff         |          |  🔴   |
-| invasion.ff      |          |  🔴   |
-| oilrig.ff        |          |  🟢   |
-| roadkill.ff      |          |  🔴   |
-| so_bridge.ff     |          |  🟢   |
-| so_ghillies.ff   |          |  🟢   |
-| trainer.ff       |          |  🟢   |
+🟢 - Loads without issues
+🟡 - Texture limit was reached but the out of memory error was patched to not fail. Expect broken and undefined behaviour.
+🔴 - Does not load
+
+| Name             | Xbox 360 | Xenia | Notes                                       |
+| ---------------- | :------: | :---: | ------------------------------------------- |
+| af_caves.ff      |    🟢    |  🟢   |
+| af_chase.ff      |    🟢    |  🟢   |
+| airport.ff       |    🟡    |  🟢   |
+| arcadia.ff       |    🔴    |  🔴   | `Exceeded limit of 1536 'xmodel' assets.`   |
+| boneyard.ff      |    🟡    |  🟢   |
+| cliffhanger.ff   |    🟡    |  🟢   |
+| co_hunted.ff     |    🟢    |  🟢   |
+| contingency.ff   |    🟡    |  🟢   |
+| dc_whitehouse.ff |    🟢    |  🟢   |
+| dcburning.ff     |    🟡    |  🟡   |
+| dcemp.ff         |    🟡    |  🟢   |
+| ending.ff        |    🔴    |  🔴   | `Exceeded limit of 3584 'image' assets.`    |
+| estate.ff        |    🟢    |  🟢   |
+| favela.ff        |    🔴    |  🔴   | `Exceeded limit of 4096 'material' assets.` |
+| favela_escape.ff |    🔴    |  🔴   | `Exceeded limit of 4096 'material' assets.` |
+| gulag.ff         |    🟡    |  🟡   |
+| invasion.ff      |    🔴    |  🔴   | `Exceeded limit of 3584 'image' assets.`    |
+| oilrig.ff        |    🟡    |  🟢   |
+| roadkill.ff      |    🔴    |  🔴   | `Exceeded limit of 4096 'material' assets.` |
+| so_bridge.ff     |    🟡    |  🟢   |
+| so_ghillies.ff   |    🟢    |  🟢   |
+| trainer.ff       |    🟢    |  🟢   |
+
+NOTE: Xenia requires the [patch](<resources\xenia\patches\41560817 - Call of Duty - Modern Warfare 2 MP (TU6).patch.toml>) to increase memory installed.
 
 ## Features
 
