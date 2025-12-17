@@ -20,14 +20,15 @@ To run CoDxe, you will need one of the following:
 
 ## Game Compatibility
 
-| Game                                        | Version                                                      | Singleplayer       | Multiplayer        | Supported Region                                |
-| ------------------------------------------- | ------------------------------------------------------------ | ------------------ | ------------------ | ----------------------------------------------- |
-| Call of Duty 2 (2005) (IW2)                 | [TU3](resources/iw2/TU_10LC1UH_0000000000000.0000000000181)  | :white_check_mark: | :white_check_mark: | `Call of Duty 2 (USA, Europe)`                  |
-| Call of Duty 4: Modern Warfare (2007) (IW3) | [TU4](resources/iw3/TU_10LC1V6_0000004000000.0000000000101)  | :white_check_mark: | :white_check_mark: | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
-| 007: Quantum of Solace (2008)               | [TU2](resources/qos/TU_10LC1VV_000000S000000.00000000000G7)  | :white_check_mark: | :white_check_mark: | `007 - Quantum of Solace (USA, Europe) (En,Fr)` |
-| Call of Duty 5: World at War (2008) (T4)    | [TU7](resources/t4/TU_10LC20S_0000010000000.00000000001O8)   | :white_check_mark: | :white_check_mark: | `Call of Duty - World at War (USA, Europe)`     |
-| Call of Duty: Modern Warfare 2 (2009) (IW4) | [TU9](/resources/iw4/TU_10LC20N_0000018000000.000000000028A) | :white_check_mark: | :x:                | `Call of Duty - Modern Warfare 2 (USA, Europe)` |
-| Call of Duty: Black Ops (2010) (T5)         | [TU11](/resources/t5/tu00000003_00000000)                    | :white_check_mark: | :white_check_mark: | `Call of Duty - Black Ops (USA, Europe)`        |
+| Game                                        | Version                                                                                                                                                                   | Singleplayer       | Multiplayer        | Supported Region                                |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------ | ----------------------------------------------- |
+| Call of Duty 2 (2005) (IW2)                 | [TU3](resources/iw2/TU_10LC1UH_0000000000000.0000000000181)                                                                                                               | :white_check_mark: | :white_check_mark: | `Call of Duty 2 (USA, Europe)`                  |
+| Call of Duty 4: Modern Warfare (2007) (IW3) | [TU4](resources/iw3/TU_10LC1V6_0000004000000.0000000000101)                                                                                                               | :white_check_mark: | :white_check_mark: | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
+| 007: Quantum of Solace (2008)               | [TU2](resources/qos/TU_10LC1VV_000000S000000.00000000000G7)                                                                                                               | :white_check_mark: | :white_check_mark: | `007 - Quantum of Solace (USA, Europe) (En,Fr)` |
+| Call of Duty 5: World at War (2008) (T4)    | [TU7](resources/t4/TU_10LC20S_0000010000000.00000000001O8)                                                                                                                | :white_check_mark: | :white_check_mark: | `Call of Duty - World at War (USA, Europe)`     |
+| Call of Duty: Modern Warfare 2 (2009) (IW4) | SP [TU9](/resources/iw4/Title%20Updates/TU9/TU_10LC20N_0000018000000.000000000028A) / MP [TU6](/resources/iw4/Title%20Updates/TU6/TU_10LC20N_0000018000000.00000000001GA) | :white_check_mark: | :x:                | `Call of Duty - Modern Warfare 2 (USA, Europe)` |
+| Call of Duty: Black Ops (2010) (T5)         | [TU11](/resources/t5/tu00000003_00000000)                                                                                                                                 | :white_check_mark: | :white_check_mark: | `Call of Duty - Black Ops (USA, Europe)`        |
+| Call of Duty: Modern Warfare 3 (2011) (IW5) | [TU24](/resources/iw5/tu00000002_00000000)                                                                                                                                | :x:                | :white_check_mark: | `Call of Duty - Modern Warfare 3 (USA Europe)`  |
 
 ## Feature Matrix
 
@@ -37,7 +38,46 @@ To run CoDxe, you will need one of the following:
 | Raw map ents loader       | :x:                | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Raw `.dds` texture loader | :x:                | :x:                | :x:                | :white_check_mark: | :x:                | :x:                | :x:                |
 
-## Call of Duty 4
+## Call of Duty 4 - Modern Warfare
+
+The following is an incomplete version of all the features the client has to offer.
+
+Client Commands:
+
+- `god`
+- `noclip`
+- `ufo`
+- `togglerecord` - start/stop movement recorder
+- `startplayback` - start a playback of the current movement recorder
+- `imagedump` - Dump all currently loaded textures to disk.
+
+Dvars:
+
+- `pm_pc_mp_velocity_snap` - Enable PC Multiplayer style velocity snapping (round to nearest).
+- `pm_multi_bounce` - Enable multi-bounces.
+- `noclip_brushes` - Disable player collision for clipmap brush indices e.g. `"50 123 647"`
+  - `""` - Empty string restores original collision flag for all brushes.
+  - `"*"` disable collision for all brushes.
+
+GSC Entity fields:
+
+- `self.noclip = <bool>` - toggles noclip
+- `self.ufo = <bool>` - toggles ufomode
+- `self.god = <bool>` - toggles godmode
+
+GSC Functions:
+
+- `exec` Executes the given command on server as console command e.g. `exec("fast_restart");`
+
+GSC Methods:
+
+- `HoldBreathButtonPressed`
+- `JumpButtonPressed`
+- `NightVisionButtonPressed`
+- `SetVelocity` - Changes current player velocity. `self setVelocity((0, 0, 300)); // Go up.`
+- `CloneBrushModelToScriptModel`
+
+### Loading single-player maps
 
 Loading single player maps in multiplayer is a best effort approach. Lots of things are broken such as missing FX, player models, crashes etc.
 
