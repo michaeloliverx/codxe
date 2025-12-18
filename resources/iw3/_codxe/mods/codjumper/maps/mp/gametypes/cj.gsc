@@ -2454,6 +2454,27 @@ menuAction(action, param1)
 		break;
 	case "CHANGE_MENU":
 		self.menuKey = param1;
+
+		// Set cursor to current map when opening maps menu
+		if (param1 == "host_menu_maps" || param1 == "host_menu_maps_sp")
+		{
+			currentMap = getDvar("mapname");
+			maps = [];
+			if(param1 == "host_menu_maps")
+				maps = getarraykeys(level.MAPS);
+			else if(param1 == "host_menu_maps_sp")
+				maps = getarraykeys(level.MAPS_SP);
+
+			for (i = 0; i < maps.size; i++)
+			{
+				if (maps[i] == currentMap)
+				{
+					// Menu items are added in reverse order, so invert the index
+					self.menuCursor[self.menuKey] = (maps.size - 1) - i;
+					break;
+				}
+			}
+		}
 		self menuAction("REFRESH_TEXT");
 		break;
 	case "REFRESH_TEXT":
