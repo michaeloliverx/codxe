@@ -29,6 +29,9 @@ init()
     SetDvar("testClients_doCrouch", 0);
     SetDvar("testClients_doMove", 0);
 
+    // Reset any dvars that could of changed
+    SetDvar("jump_height", 39); // Reset Old School Mode
+
     maps\mp\gametypes\menu::init();
 
     level thread onPlayerConnect();

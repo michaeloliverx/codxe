@@ -75,6 +75,9 @@ init()
 	setDvar("dynEntPieces_impactForce", 0);
 	setDvar("dynEntPieces_velocity", 0);
 
+	// Reset any dvars that could of changed
+	SetDvar("jump_height", 39); // Reset Old School Mode
+
 	level thread onPlayerConnect();
 }
 
