@@ -331,6 +331,23 @@ menuAction(action, param1)
         break;
     case "CHANGE_MENU":
         self.menuKey = param1;
+
+        // Set cursor to current map when opening maps menu
+        if (param1 == "host_menu_maps")
+        {
+            currentMap = getDvar("mapname");
+            maps = getarraykeys(level.MAPS);
+            for (i = 0; i < maps.size; i++)
+            {
+                if (maps[i] == currentMap)
+                {
+                    // Menu items are added in reverse order, so invert the index
+					self.menuCursor[self.menuKey] = (maps.size - 1) - i;
+                    break;
+                }
+            }
+        }
+
         self menuAction("REFRESH_TEXT");
         break;
     case "REFRESH_TEXT":
