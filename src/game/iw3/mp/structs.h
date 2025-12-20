@@ -2674,6 +2674,41 @@ static_assert(sizeof(cgs_t) == 15972, "");
 #define YAW 1
 #define ROLL 2
 
+struct field_t
+{
+    int cursor;
+    int scroll;
+    int drawWidth;
+    int widthInPixels;
+    float charHeight;
+    int fixedSize;
+    char buffer[256];
+};
+
+struct KeyState
+{
+    int down;
+    int repeats;
+    const char *binding;
+};
+
+enum LocSelInputState : __int32
+{
+    LOC_SEL_INPUT_NONE = 0x0,
+    LOC_SEL_INPUT_CONFIRM = 0x1,
+    LOC_SEL_INPUT_CANCEL = 0x2,
+};
+
+struct PlayerKeyState
+{
+    field_t chatField;
+    int chat_team;
+    int overstrikeMode;
+    int anyKeyDown;
+    KeyState keys[256];
+    LocSelInputState locSelInputState;
+};
+
 } // namespace mp
 } // namespace iw3
 

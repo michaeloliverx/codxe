@@ -63,7 +63,7 @@ GSC Entity fields:
 
 - `self.noclip = <bool>` - toggles noclip
 - `self.ufo = <bool>` - toggles ufomode
-- `self.god = <bool>` - toggles godmode
+- `self.entityflags = <int>` - gentity flags e.g. `1` is godmode
 
 GSC Functions:
 
@@ -76,6 +76,35 @@ GSC Methods:
 - `NightVisionButtonPressed`
 - `SetVelocity` - Changes current player velocity. `self setVelocity((0, 0, 300)); // Go up.`
 - `CloneBrushModelToScriptModel`
+- **HOST ONLY** `ButtonPressed` e.g. `self ButtonPressed("DPAD_DOWN")` - See **keynames** below for valid button identifiers.
+
+<details>
+<summary>keynames</summary>
+
+```
+BUTTON_A
+BUTTON_B
+BUTTON_X
+BUTTON_Y
+BUTTON_LSHLDR
+BUTTON_RSHLDR
+BUTTON_START
+BUTTON_BACK
+BUTTON_LSTICK
+BUTTON_RSTICK
+BUTTON_RTRIG
+BUTTON_LTRIG
+DPAD_UP
+DPAD_DOWN
+DPAD_LEFT
+DPAD_RIGHT
+APAD_UP
+APAD_DOWN
+APAD_LEFT
+APAD_RIGHT
+```
+
+</details>
 
 ### Loading single-player maps
 

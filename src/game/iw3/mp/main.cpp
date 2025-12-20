@@ -1454,6 +1454,33 @@ void PlayerCmd_GetRightMove(scr_entref_t entref)
     Scr_AddInt(cl->lastUsercmd.rightmove);
 }
 
+int CL_IsKeyPressed(const int localClientNum, const char *keyName)
+{
+    const int keynum = Key_StringToKeynum(keyName);
+    if (keynum >= 0)
+        return playerKeys[0].keys[keynum].down;
+    else
+        return 0;
+}
+
+void PlayerCmd_ButtonPressed(scr_entref_t entref)
+{
+    if (entref.classnum != 0)
+        Scr_ObjectError("not an entity");
+
+    char *button = Scr_GetString(0);
+    if (!button || !*button)
+        Scr_Error("usage: <client> buttonPressed(<button name>)");
+
+    // toupper
+    for (char *p = button; *p; p++)
+        if (*p >= 'a' && *p <= 'z')
+            *p -= 32;
+
+    const int keypressed = CL_IsKeyPressed(0, button);
+    return Scr_AddInt(keypressed);
+}
+
 void PlayerCmd_SetVelocity(scr_entref_t entref)
 {
     if (entref.classnum != 0)
@@ -1596,6 +1623,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     Scr_AddMethod("getrightmove", PlayerCmd_GetRightMove, 0);
     Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, 0);
     Scr_AddMethod("nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, 0);
+    Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, 0);
 
     SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
     SV_ClientThinkDetour.Install();

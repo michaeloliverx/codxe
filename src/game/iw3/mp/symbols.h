@@ -198,6 +198,11 @@ static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(
         0x822212C0);
 
+typedef int (*Key_StringToKeynum_t)(const char *str);
+static Key_StringToKeynum_t Key_StringToKeynum = reinterpret_cast<Key_StringToKeynum_t>(0x822D69A8);
+
+static PlayerKeyState *playerKeys = reinterpret_cast<PlayerKeyState *>(0x8242AB38);
+
 // Variables
 static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
 static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
