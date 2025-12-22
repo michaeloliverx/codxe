@@ -4,8 +4,9 @@
 #include "components/cj_tas.h"
 #include "components/clipmap.h"
 #include "components/cmds.h"
-#include "components/g_client_fields.h"
 #include "components/g_scr_main.h"
+#include "components/gsc_client_fields.h"
+#include "components/gsc_methods.h"
 #include "components/mpsp.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
@@ -1372,19 +1373,6 @@ void UI_Refresh_Hook(int localClientNum)
     CheckKeyboardCompletion();
 }
 
-void GScr_CloneBrushModelToScriptModel(scr_entref_t scriptModelEntRef)
-{
-    gentity_s *scriptEnt = GetEntity(scriptModelEntRef);
-    gentity_s *brushEnt = Scr_GetEntity(0);
-
-    SV_UnlinkEntity(scriptEnt);
-    scriptEnt->s.index = brushEnt->s.index;
-    int contents = scriptEnt->r.contents;
-    SV_SetBrushModel(scriptEnt);
-    scriptEnt->r.contents |= contents;
-    SV_LinkEntity(scriptEnt);
-}
-
 struct BotAction
 {
     bool jump;
@@ -1428,93 +1416,6 @@ void SV_ClientThinkHook(client_t *cl, usercmd_s *cmd)
     }
 
     SV_ClientThinkDetour.GetOriginal<decltype(SV_ClientThink)>()(cl, cmd);
-}
-
-void PlayerCmd_HoldBreathButtonPressed(scr_entref_t entref)
-{
-    gentity_s *ent = GetEntity(entref);
-    Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 8192) != 0);
-}
-
-void PlayerCmd_JumpButtonPressed(scr_entref_t entref)
-{
-    gentity_s *ent = GetEntity(entref);
-    Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 1024) != 0);
-}
-
-void PlayerCmd_GetForwardMove(scr_entref_t entref)
-{
-    client_t *cl = &svsHeader->clients[entref.entnum];
-    Scr_AddInt(cl->lastUsercmd.forwardmove);
-}
-
-void PlayerCmd_GetRightMove(scr_entref_t entref)
-{
-    client_t *cl = &svsHeader->clients[entref.entnum];
-    Scr_AddInt(cl->lastUsercmd.rightmove);
-}
-
-int CL_IsKeyPressed(const int localClientNum, const char *keyName)
-{
-    const int keynum = Key_StringToKeynum(keyName);
-    if (keynum >= 0)
-        return playerKeys[0].keys[keynum].down;
-    else
-        return 0;
-}
-
-void PlayerCmd_ButtonPressed(scr_entref_t entref)
-{
-    if (entref.classnum != 0)
-        Scr_ObjectError("not an entity");
-
-    char *button = Scr_GetString(0);
-    if (!button || !*button)
-        Scr_Error("usage: <client> buttonPressed(<button name>)");
-
-    // toupper
-    for (char *p = button; *p; p++)
-        if (*p >= 'a' && *p <= 'z')
-            *p -= 32;
-
-    const int keypressed = CL_IsKeyPressed(0, button);
-    return Scr_AddInt(keypressed);
-}
-
-void PlayerCmd_SetVelocity(scr_entref_t entref)
-{
-    if (entref.classnum != 0)
-        Scr_ObjectError("not an entity");
-
-    auto ent = &g_entities[entref.entnum];
-    if (!ent->client)
-        Scr_ObjectError(va("entity %i is not a player", entref.entnum));
-
-    if (Scr_GetNumParam() != 1)
-        Scr_Error("Usage: <client> SetVelocity( vec3 )\n");
-
-    float velocity[3] = {0};
-
-    Scr_GetVector(0, velocity);
-
-    ent->client->ps.velocity[0] = velocity[0];
-    ent->client->ps.velocity[1] = velocity[1];
-    ent->client->ps.velocity[2] = velocity[2];
-}
-
-void PlayerCmd_NightVisionButtonPressed(scr_entref_t entref)
-{
-    if (entref.classnum != 0)
-        Scr_ObjectError("not an entity");
-
-    auto ent = &g_entities[entref.entnum];
-    if (!ent->client)
-        Scr_ObjectError(va("entity %i is not a player", entref.entnum));
-
-    if (Scr_GetNumParam())
-        Scr_Error("Usage: <client> NightVisionButtonPressed()\n");
-
-    Scr_AddInt(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & 262144) != 0);
 }
 
 Detour Pmove_Detour;
@@ -1584,8 +1485,9 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new cj_tas());
     RegisterModule(new clipmap());
     RegisterModule(new cmds());
-    RegisterModule(new g_client_fields());
     RegisterModule(new g_scr_main());
+    RegisterModule(new gsc_client_fields());
+    RegisterModule(new gsc_methods());
     RegisterModule(new pm());
     RegisterModule(new mpsp());
     RegisterModule(new scr_parser());
@@ -1616,14 +1518,6 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
 
     Scr_AddMethod("botjump", GScr_BotJump, 0);
-    Scr_AddMethod("clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0);
-    Scr_AddMethod("holdbreathbuttonpressed", PlayerCmd_HoldBreathButtonPressed, 0);
-    Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0);
-    Scr_AddMethod("getforwardmove", PlayerCmd_GetForwardMove, 0);
-    Scr_AddMethod("getrightmove", PlayerCmd_GetRightMove, 0);
-    Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, 0);
-    Scr_AddMethod("nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, 0);
-    Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, 0);
 
     SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
     SV_ClientThinkDetour.Install();

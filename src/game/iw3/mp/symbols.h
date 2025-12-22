@@ -94,7 +94,11 @@ static auto Dvar_RegisterString =
     reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
         0x821D1040);
 
-static auto GetEntity = reinterpret_cast<gentity_s *(*)(scr_entref_t entref)>(0x82257F30);
+typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
+static GetEntity_t GetEntity = reinterpret_cast<GetEntity_t>(0x82257F30);
+
+typedef gentity_s *(*GetPlayerEntity_t)(scr_entref_t entref);
+static GetPlayerEntity_t GetPlayerEntity = reinterpret_cast<GetPlayerEntity_t>(0x82259258);
 
 static auto G_SetAngle = reinterpret_cast<void (*)(gentity_s *ent, float *origin)>(0x8224AA98);
 static auto G_SetLastServerTime = reinterpret_cast<void (*)(int clientNum, int lastServerTime)>(0x82285D08);

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "g_client_fields.h"
+#include "gsc_client_fields.h"
 
 const unsigned int CLIENT_FIELD_MASK = 0xC000;
 
@@ -10,14 +10,26 @@ namespace mp
 
 void ClientScr_SetEntityFlags(gclient_s *pSelf, const client_fields_s *pField)
 {
-    gentity_s *ent = &g_entities[g_clients - pSelf];
+    gentity_s *ent = &g_entities[pSelf - g_clients];
     ent->flags = Scr_GetInt(0);
 }
 
 void ClientScr_GetEntityFlags(gclient_s *pSelf, const client_fields_s *field)
 {
-    const gentity_s *ent = &g_entities[g_clients - pSelf];
+    const gentity_s *ent = &g_entities[pSelf - g_clients];
     Scr_AddInt(ent->flags);
+}
+
+void ClientScr_GetForwardMove(gclient_s *pSelf, const client_fields_s *field)
+{
+    const client_t *cl = &svsHeader->clients[pSelf - g_clients];
+    Scr_AddInt(cl->lastUsercmd.rightmove);
+}
+
+void ClientScr_GetRightMove(gclient_s *pSelf, const client_fields_s *field)
+{
+    const client_t *cl = &svsHeader->clients[pSelf - g_clients];
+    Scr_AddInt(cl->lastUsercmd.forwardmove);
 }
 
 client_fields_s client_fields_extended[] = {
@@ -44,6 +56,8 @@ client_fields_s client_fields_extended[] = {
     {"noclip", 12456, F_INT, nullptr, nullptr},
     {"ufo", 12460, F_INT, nullptr, nullptr},
     {"entityflags", NULL, F_INT, ClientScr_SetEntityFlags, ClientScr_GetEntityFlags},
+    {"forwardmove", NULL, F_INT, ClientScr_ReadOnly, ClientScr_GetForwardMove},
+    {"rightmove", NULL, F_INT, ClientScr_ReadOnly, ClientScr_GetRightMove},
 
     {nullptr, 0, F_INT, nullptr, nullptr}};
 
@@ -133,7 +147,7 @@ void Scr_GetEntityField_Hook(int entnum, int offset)
     }
 }
 
-g_client_fields::g_client_fields()
+gsc_client_fields::gsc_client_fields()
 {
     GScr_AddFieldsForClient_Detour = Detour(GScr_AddFieldsForClient, GScr_AddFieldsForClient_Hook);
     GScr_AddFieldsForClient_Detour.Install();
@@ -145,7 +159,7 @@ g_client_fields::g_client_fields()
     Scr_SetEntityField_Detour.Install();
 }
 
-g_client_fields::~g_client_fields()
+gsc_client_fields::~gsc_client_fields()
 {
     GScr_AddFieldsForClient_Detour.Remove();
     Scr_GetEntityField_Detour.Remove();
