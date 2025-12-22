@@ -87,6 +87,7 @@ GSC Methods:
 - `LeftButtonPressed` - Check if the player is moving left (left stick left).
 - `RightButtonPressed` - Check if the player is moving right (left stick right).
 - `SetVelocity` - Changes current player velocity.
+- `SetStance` - Changes current players stance.
 
   - Usage: `self setVelocity((0, 0, 300)); // Go up.`
 

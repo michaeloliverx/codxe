@@ -140,6 +140,45 @@ void PlayerCmd_SetVelocity(scr_entref_t entref)
     ent->client->ps.velocity[2] = velocity[2];
 }
 
+void PlayerCmd_SetStance(scr_entref_t entref)
+{
+    gentity_s *ent = GetPlayerEntity(entref);
+
+    if (Scr_GetNumParam() != 1)
+        Scr_Error("usage: <client> SetStance( <stance> )\n");
+
+    const char *stanceStr = Scr_GetString(0);
+
+    int event = -1;
+    int newPmFlags = ent->client->ps.pm_flags;
+
+    if (!I_stricmp(stanceStr, "stand"))
+    {
+        event = EV_STANCE_FORCE_STAND;
+        newPmFlags = (newPmFlags & ~0x3) | CL_STANCE_STAND;
+    }
+    else if (!I_stricmp(stanceStr, "crouch"))
+    {
+        event = EV_STANCE_FORCE_CROUCH;
+        newPmFlags = (newPmFlags & ~0x3) | CL_STANCE_CROUCH;
+    }
+    else if (!I_stricmp(stanceStr, "prone"))
+    {
+        event = EV_STANCE_FORCE_PRONE;
+        newPmFlags = (newPmFlags & ~0x3) | CL_STANCE_PRONE;
+    }
+    else
+    {
+        Scr_ParamError(0, "stance must be 'stand', 'crouch', or 'prone'");
+    }
+
+    // Update server-side stance flags
+    ent->client->ps.pm_flags = newPmFlags;
+
+    // Send event to client to sync stance visually
+    G_AddEvent(ent, event, 0);
+}
+
 void GScr_CloneBrushModelToScriptModel(scr_entref_t entref)
 {
     gentity_s *scriptEnt = GetEntity(entref);
@@ -188,6 +227,7 @@ gsc_methods::gsc_methods()
     Scr_AddMethod("leftbuttonpressed", PlayerCmd_LeftButtonPressed, 0);
     Scr_AddMethod("rightbuttonpressed", PlayerCmd_RightButtonPressed, 0);
     Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, 0);
+    Scr_AddMethod("setstance", PlayerCmd_SetStance, 0);
 
     // Script entity methods
     Scr_AddMethod("clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0);

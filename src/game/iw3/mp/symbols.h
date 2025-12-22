@@ -202,6 +202,12 @@ static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(
         0x822212C0);
 
+typedef int (*I_stricmp_t)(const char *s0, const char *s1);
+static I_stricmp_t I_stricmp = reinterpret_cast<I_stricmp_t>(0x821CDCC8);
+
+typedef void (*G_AddEvent_t)(gentity_s *ent, int event, int eventParm);
+static G_AddEvent_t G_AddEvent = reinterpret_cast<G_AddEvent_t>(0x8224AB48);
+
 typedef int (*Key_StringToKeynum_t)(const char *str);
 static Key_StringToKeynum_t Key_StringToKeynum = reinterpret_cast<Key_StringToKeynum_t>(0x822D69A8);
 
