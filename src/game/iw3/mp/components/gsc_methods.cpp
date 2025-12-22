@@ -140,9 +140,9 @@ void PlayerCmd_SetVelocity(scr_entref_t entref)
     ent->client->ps.velocity[2] = velocity[2];
 }
 
-void GScr_CloneBrushModelToScriptModel(scr_entref_t scriptModelEntRef)
+void GScr_CloneBrushModelToScriptModel(scr_entref_t entref)
 {
-    gentity_s *scriptEnt = GetEntity(scriptModelEntRef);
+    gentity_s *scriptEnt = GetEntity(entref);
     gentity_s *brushEnt = Scr_GetEntity(0);
 
     SV_UnlinkEntity(scriptEnt);
@@ -153,9 +153,29 @@ void GScr_CloneBrushModelToScriptModel(scr_entref_t scriptModelEntRef)
     SV_LinkEntity(scriptEnt);
 }
 
+void GScr_SetBrushModel(scr_entref_t entref)
+{
+    if (Scr_GetNumParam() != 1)
+        Scr_Error("usage: <entity> SetBrushModel( <index> )\n");
+
+    gentity_s *ent = GetEntity(entref);
+    const int index = Scr_GetInt(0);
+
+    if (index < 0 || (unsigned int)index >= cm->numSubModels)
+    {
+        Scr_ParamError(0, "brush model index out of range");
+    }
+
+    SV_UnlinkEntity(ent);
+    ent->s.index = index;
+
+    SV_SetBrushModel(ent);
+    SV_LinkEntity(ent);
+}
+
 gsc_methods::gsc_methods()
 {
-    // Player commands
+    // Player entity methods
     Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, 0); // Host-only
     Scr_AddMethod("sprintbreathbuttonpressed", PlayerCmd_SprintButtonPressed, 0);
     Scr_AddMethod("leanleftbuttonpressed", PlayerCmd_LeanLeftButtonPressed, 0);
@@ -169,8 +189,9 @@ gsc_methods::gsc_methods()
     Scr_AddMethod("rightbuttonpressed", PlayerCmd_RightButtonPressed, 0);
     Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, 0);
 
-    // Script mover
+    // Script entity methods
     Scr_AddMethod("clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0);
+    Scr_AddMethod("setbrushmodel", GScr_SetBrushModel, 0);
 }
 
 gsc_methods::~gsc_methods()

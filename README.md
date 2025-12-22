@@ -64,6 +64,8 @@ GSC Entity fields:
 - `self.noclip = <bool>` - toggles noclip
 - `self.ufo = <bool>` - toggles ufomode
 - `self.entityflags = <int>` - gentity flags e.g. `1` is godmode
+- `self.forwardmove <int>` - **Read-Only** Player's forward/backward movement input (-127 = full backward, 127 = full forward, 0 = no input)
+- `self.rightmove <int>` - **Read-Only** Player's left/right movement input (-127 = full left, 127 = full right, 0 = no input)
 
 GSC Functions:
 
@@ -71,12 +73,27 @@ GSC Functions:
 
 GSC Methods:
 
-- `HoldBreathButtonPressed`
-- `JumpButtonPressed`
-- `NightVisionButtonPressed`
-- `SetVelocity` - Changes current player velocity. `self setVelocity((0, 0, 300)); // Go up.`
-- `CloneBrushModelToScriptModel`
-- **HOST ONLY** `ButtonPressed` e.g. `self ButtonPressed("DPAD_DOWN")` - See **keynames** below for valid button identifiers.
+- `ButtonPressed` - **HOST ONLY** - Check if a specific button is pressed.
+  - Usage: `self ButtonPressed("DPAD_DOWN")`
+  - See **keynames** below for valid button identifiers.
+- `SprintBreathButtonPressed` - Check if the sprint button is pressed.
+- `LeanLeftButtonPressed` - Check if the lean left button is pressed.
+- `LeanRightButtonPressed` - Check if the lean right button is pressed.
+- `JumpButtonPressed` - Check if the jump button is pressed.
+- `HoldBreathButtonPressed` - Check if the hold breath button is pressed.
+- `NightVisionButtonPressed` - Check if the night vision button is pressed.
+- `ForwardButtonPressed` - Check if the player is moving forward (left stick up).
+- `BackButtonPressed` - Check if the player is moving backward (left stick down).
+- `LeftButtonPressed` - Check if the player is moving left (left stick left).
+- `RightButtonPressed` - Check if the player is moving right (left stick right).
+- `SetVelocity` - Changes current player velocity.
+
+  - Usage: `self setVelocity((0, 0, 300)); // Go up.`
+
+- `CloneBrushModelToScriptModel` - Clones a brush model's geometry to a script model entity.
+  - Usage: `scriptModel CloneBrushModelToScriptModel(brushEntity);`
+- `SetBrushModel` - Sets an entity's brush model by index.
+  - Usage: `entity SetBrushModel(index);`
 
 <details>
 <summary>keynames</summary>
