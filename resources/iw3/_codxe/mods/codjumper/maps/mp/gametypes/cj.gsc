@@ -3057,26 +3057,41 @@ initBot()
 {
 	bot = addtestclient();
 
-	if (!isDefined(bot))
-		return undefined;
+	if (!isdefined(bot)) {
+		println("Could not add test client");
+		return;
+	}
 
 	bot.pers["isBot"] = true;
 
-	while (!isDefined(bot.pers["team"]))
-		wait 0.05;
+	// Wait for the bot to have a team assigned
+	while(!isdefined(bot.pers["team"]))
+		wait .05;
 
-	bot [[level.axis]] ();
-
+	// Make them join axis
+	bot notify("menuresponse", game["menu_team"], "axis");
 	wait 0.5;
 
-	bot.class = level.defaultClass;
-	bot.pers["class"] = level.defaultClass;
-	bot [[level.spawnClient]] ();
+	// Setup their class. `GiveWeapon` does not work on testclients
+	/* custom class stat allocation order, example of custom class slot 1
+	201  weapon_primary    
+	202  weapon_primary attachment
+	203  weapon_secondary
+	204  weapon_secondary attachment
+	205  weapon_specialty1
+	206  weapon_specialty2
+	207  weapon_specialty3
+	208  weapon_special_grenade_type
+	209	 weapon_primary_camo_style
+	*/
+	bot setstat( 201, 4 );  // deserteaglegold
+	bot setstat( 205, 186 );  // specialty_weapon_rpg
 
-	wait .1;
+	// Make them choose CLASS_CUSTOM1
+	bot notify("menuresponse", "changeclass", "custom1");
 
-	// plugin handles bot controls
-	bot freezeControls(false);
+	// Wait till they are spawned
+	bot waittill("spawned_player");
 
 	return bot;
 }
