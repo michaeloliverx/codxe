@@ -2753,6 +2753,7 @@ generateMenuOptions()
 		self addMenuOption("bot_action_menu", "Auto Mantle ON/OFF", ::toggleAutoMantle);
 		self addMenuOption("bot_action_menu", "Trigger Distance UP", ::modifyTriggerDistance, 10);
 		self addMenuOption("bot_action_menu", "Trigger Distance DOWN", ::modifyTriggerDistance, -10);
+		self addMenuOption("bot_action_menu", "Toggle stance", ::CycleBotStance);
 	}
 
 	// Player model menu
@@ -2775,6 +2776,31 @@ generateMenuOptions()
 	self addMenuOption("main", "Graphics Menu", ::menuAction, "CHANGE_MENU", "graphics_menu");
 	self addMenu("graphics_menu", "main");
 	self addMenuOption("graphics_menu", "Toggle Greenscreen", ::toggleGreenscreen);
+}
+
+CycleBotStance()
+{
+	bot = self.cj["bots"][self.cj["botnumber"]];
+	if(!isdefined(bot))
+	{
+		self iprintln("^1bot not found.");
+		return;
+	}
+
+	stance = bot GetStance();
+	if (stance == "stand")
+	{
+		bot botaction("+gocrouch");
+	}
+	else if (stance == "crouch")
+	{
+		bot botaction("-gocrouch");
+		bot botaction("+goprone");
+	}
+	else if (stance == "prone")
+	{
+		bot botaction("-goprone"); // returns to stand
+	}
 }
 
 toggleRpgLookdown()
@@ -3242,11 +3268,13 @@ startAutoMantle()
 	{
 		if (distance(botEye, self getorigin()) < self.triggerDistance)
 		{
-			bot botjump();
+			bot botaction("+gostand");
 			self waittill("position_loaded");
 			// wait for bot to finish mantling before loading position
 			if (bot ismantling())
 				wait 0.5;
+
+			bot botstop();
 
 			bot loadPos(0);
 		}

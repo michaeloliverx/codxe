@@ -11,6 +11,7 @@
 #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "components/scr_vm_functions.h"
+#include "components/sv_bots.h"
 #include "common/config.h"
 
 // Structure to hold data for the active keyboard request
@@ -1373,51 +1374,6 @@ void UI_Refresh_Hook(int localClientNum)
     CheckKeyboardCompletion();
 }
 
-struct BotAction
-{
-    bool jump;
-};
-
-// map of client index to bot action
-std::map<int, BotAction> botActions;
-
-void GScr_BotJump(scr_entref_t entref)
-{
-    client_t *cl = &svsHeader->clients[entref.entnum];
-
-    if (cl->header.state && cl->header.netchan.remoteAddress.type == NA_BOT)
-    {
-        botActions[entref.entnum].jump = true;
-    }
-}
-
-Detour SV_ClientThinkDetour;
-
-// TODO: maybe recreate the original and call it in the hook
-void SV_ClientThinkHook(client_t *cl, usercmd_s *cmd)
-{
-    // Check if the client is a bot
-    if (cl->header.state && cl->header.netchan.remoteAddress.type == NA_BOT)
-    {
-        // Reset bot's movement and actions set in SV_BotUserMove
-        cmd->forwardmove = 0;
-        cmd->rightmove = 0;
-        cmd->buttons = 0;
-
-        int clientIndex = cl - svsHeader->clients;
-        if (botActions.find(clientIndex) != botActions.end())
-        {
-            if (botActions[clientIndex].jump)
-            {
-                cmd->buttons = 1024; // BUTTON_JUMP
-                botActions[clientIndex].jump = false;
-            }
-        }
-    }
-
-    SV_ClientThinkDetour.GetOriginal<decltype(SV_ClientThink)>()(cl, cmd);
-}
-
 Detour Pmove_Detour;
 
 // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L11
@@ -1492,6 +1448,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new mpsp());
     RegisterModule(new scr_parser());
     RegisterModule(new scr_vm_functions());
+    RegisterModule(new sv_bots());
 
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
@@ -1517,11 +1474,6 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     cmd_function_s *cmdinput_VAR = new cmd_function_s;
     Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
 
-    Scr_AddMethod("botjump", GScr_BotJump, 0);
-
-    SV_ClientThinkDetour = Detour(SV_ClientThink, SV_ClientThinkHook);
-    SV_ClientThinkDetour.Install();
-
     Dvar_RegisterBool("pm_fixed_fps_enable", false, 0, "Enable fixed FPS mode");
     Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
     Pmove_Detour = Detour(Pmove, Pmove_Hook);
@@ -1540,7 +1492,6 @@ IW3_MP_Plugin::~IW3_MP_Plugin()
     Load_MapEntsPtr_Detour.Remove();
     R_StreamLoadFileSynchronously_Detour.Remove();
 
-    SV_ClientThinkDetour.Remove();
     Pmove_Detour.Remove();
 }
 

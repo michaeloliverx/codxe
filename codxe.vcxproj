@@ -97,6 +97,7 @@
       <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_vm_functions.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\sv_bots.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
 
       <ClCompile Include="src\game\iw3\sp\components\scr_parser.cpp" />
