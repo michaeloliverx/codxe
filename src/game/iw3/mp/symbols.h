@@ -6,6 +6,9 @@ namespace iw3
 {
 namespace mp
 {
+#define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+#define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
+
 // Functions
 static auto AngleDelta = reinterpret_cast<float (*)(float a1, float a2)>(0x821DABC0);
 static auto AngleNormalize180 = reinterpret_cast<float (*)(float angle)>(0x820A0088);

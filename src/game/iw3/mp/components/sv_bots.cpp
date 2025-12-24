@@ -64,13 +64,13 @@ void SV_BotUserMove_Stub(client_t *cl)
         cmd.buttons = g_botai[clientNum].buttons;
 
         // Handle mirrored mode
-        // TODO: fix angles
+        // TODO: fix angles?
         if (g_botai[clientNum].is_mirroring_client)
         {
             const int mirror_num = g_botai[clientNum].mirror_client_num;
             if (mirror_num < MAX_CLIENTS)
             {
-                const usercmd_s lastUsercmd = svsHeader->clients[mirror_num].lastUsercmd;
+                const usercmd_s &lastUsercmd = svsHeader->clients[mirror_num].lastUsercmd;
                 cmd.buttons = lastUsercmd.buttons;
                 cmd.angles[PITCH] = lastUsercmd.angles[PITCH];
                 cmd.angles[YAW] = lastUsercmd.angles[YAW];
@@ -145,17 +145,17 @@ static void Scr_BotStop(scr_entref_t entref)
 
 static void Scr_BotMirror(scr_entref_t entref)
 {
+    // Validate self is a player entity
     GetPlayerEntity(entref);
 
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: <bot> BotMirror(<client>);");
 
-    const gentity_s *ent = Scr_GetEntity(0);
-    if (!ent->client)
+    const gentity_s *targetEntity = Scr_GetEntity(0);
+    if (!targetEntity->client)
         Scr_Error("not a player");
 
-    const int clientNum = ent->client - g_clients;
-
+    const int clientNum = targetEntity->client - g_clients;
     if (entref.entnum == clientNum)
     {
         Scr_Error("BotMirror: a bot cannot mirror itself.");

@@ -2,9 +2,6 @@
 #include "events.h"
 #include "cj_tas.h"
 
-#define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
-#define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
-
 namespace iw3
 {
 namespace mp
@@ -97,7 +94,7 @@ void Cmd_Startplayback_f()
     is_playing = true;
     playback_start_time = 0; // Will be set on first UpdateCommand
     recording_start_time = current_recording[0].serverTime;
-    CG_GameMessage(0, "Playback ^2started\n");
+    // CG_GameMessage(0, "Playback ^2started\n");
 }
 
 void Cmd_Stopplayback_f()
@@ -110,7 +107,7 @@ void Cmd_Stopplayback_f()
 
     play_frame = 0;
     is_playing = false;
-    CG_GameMessage(0, "Playback ^1stopped\n");
+    // CG_GameMessage(0, "Playback ^1stopped\n");
 }
 
 bool IsPlayback()
@@ -404,14 +401,14 @@ cj_tas::cj_tas()
     cj_tas_rpg_lookdown_pitch =
         Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle");
 
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (cj_tas::TAS_Enabled())
-            {
-                CG_DrawTAS();
-            }
-        });
+    // Events::OnCG_DrawActive(
+    //     []()
+    //     {
+    //         if (cj_tas::TAS_Enabled())
+    //         {
+    //             CG_DrawTAS();
+    //         }
+    //     });
 
     Events::OnCG_Init(
         []()
