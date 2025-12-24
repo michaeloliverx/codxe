@@ -32,6 +32,8 @@ namespace mp
 struct BotMovementInfo_t
 {
     int buttons;
+    bool is_mirroring_client;
+    int mirror_client_num;
 };
 
 BotMovementInfo_t g_botai[MAX_CLIENTS];
@@ -60,6 +62,23 @@ void SV_BotUserMove_Stub(client_t *cl)
     if (g_clients[clientNum].sess.archiveTime == 0)
     {
         cmd.buttons = g_botai[clientNum].buttons;
+
+        // Handle mirrored mode
+        // TODO: fix angles
+        if (g_botai[clientNum].is_mirroring_client)
+        {
+            const int mirror_num = g_botai[clientNum].mirror_client_num;
+            if (mirror_num < MAX_CLIENTS)
+            {
+                const usercmd_s lastUsercmd = svsHeader->clients[mirror_num].lastUsercmd;
+                cmd.buttons = lastUsercmd.buttons;
+                cmd.angles[PITCH] = lastUsercmd.angles[PITCH];
+                cmd.angles[YAW] = lastUsercmd.angles[YAW];
+                // Ignore ROLL
+                cmd.forwardmove = lastUsercmd.forwardmove;
+                cmd.rightmove = lastUsercmd.rightmove;
+            }
+        }
     }
 
     cl->header.deltaMessage = cl->header.netchan.outgoingSequence - 1;
@@ -121,6 +140,29 @@ static void Scr_BotStop(scr_entref_t entref)
         Scr_Error("Usage: <bot> botStop();");
 
     g_botai[entref.entnum].buttons = 0;
+    g_botai[entref.entnum].is_mirroring_client = false;
+}
+
+static void Scr_BotMirror(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+
+    if (Scr_GetNumParam() != 1)
+        Scr_Error("Usage: <bot> BotMirror(<client>);");
+
+    const gentity_s *ent = Scr_GetEntity(0);
+    if (!ent->client)
+        Scr_Error("not a player");
+
+    const int clientNum = ent->client - g_clients;
+
+    if (entref.entnum == clientNum)
+    {
+        Scr_Error("BotMirror: a bot cannot mirror itself.");
+    }
+
+    g_botai[entref.entnum].is_mirroring_client = true;
+    g_botai[entref.entnum].mirror_client_num = clientNum;
 }
 
 sv_bots::sv_bots()
@@ -129,6 +171,7 @@ sv_bots::sv_bots()
     SV_BotUserMove_Detour.Install();
 
     Scr_AddMethod("botaction", Scr_BotAction, 0);
+    Scr_AddMethod("botmirror", Scr_BotMirror, 0);
     Scr_AddMethod("botstop", Scr_BotStop, 0);
 
     Events::OnVMShutdown(CleanBotArray);
