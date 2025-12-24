@@ -90,6 +90,7 @@
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\events.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_client_fields.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_functions.cpp" />

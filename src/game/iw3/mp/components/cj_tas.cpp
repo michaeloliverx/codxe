@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "events.h"
 #include "cj_tas.h"
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
@@ -34,12 +35,6 @@ static cmd_function_s Cmd_Stopplayback_VAR;
 dvar_s *cj_tas_playback_ignore_weapon = nullptr;
 
 unsigned int rpg_mp_index = 0;
-
-void cj_tas::On_CG_Init()
-{
-    // Weapon indexes change every game
-    rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
-}
 
 void Cmd_Startrecord_f()
 {
@@ -372,6 +367,15 @@ void CL_CreateNewCommands_Hook(int localClientNum)
     }
 }
 
+const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+void CG_DrawTAS()
+{
+    static Font_s *bigDevFont = R_RegisterFont("fonts/bigDevFont");
+    const float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
+    const float y = 30.f;
+    R_AddCmdDrawText("TAS", 5, bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
+}
+
 cj_tas::cj_tas()
 {
     CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
@@ -399,6 +403,22 @@ cj_tas::cj_tas()
     cj_tas_rpg_lookdown_yaw = Dvar_RegisterInt("cj_tas_rpg_lookdown_yaw", 0, -180, 180, 0, "RPG lookdown yaw angle");
     cj_tas_rpg_lookdown_pitch =
         Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle");
+
+    Events::OnCG_DrawActive(
+        []()
+        {
+            if (cj_tas::TAS_Enabled())
+            {
+                CG_DrawTAS();
+            }
+        });
+
+    Events::OnCG_Init(
+        []()
+        {
+            // Weapon indexes change every game
+            rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+        });
 }
 
 cj_tas::~cj_tas()

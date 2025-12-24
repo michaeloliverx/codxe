@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "events.h"
 #include "clipmap.h"
 
 namespace iw3
@@ -123,6 +124,8 @@ clipmap::clipmap()
 
     CM_LoadMap_Detour = Detour(CM_LoadMap, CM_LoadMap_Hook);
     CM_LoadMap_Detour.Install();
+
+    Events::OnCG_DrawActive(clipmap::HandleBrushCollisionChange);
 }
 
 clipmap::~clipmap()

@@ -15,7 +15,9 @@ static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const c
 static auto Cbuf_ExecuteBuffer =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x8223AAE8);
 
-static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x8231E6E0);
+typedef void (*CG_DrawActive_t)(int localClientNum);
+static CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x8231E6E0);
+
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8230AAF0);
 static auto CG_GetPredictedPlayerState = reinterpret_cast<const playerState_s *(*)(int localClientNum)>(0x82309120);
 static auto CG_RegisterGraphics = reinterpret_cast<void (*)(int localClientNum, const char *mapname)>(0x8230D858);
@@ -201,9 +203,8 @@ static auto CL_GetPredictedOriginForServerTime =
                              int *bobCycle, int *movementDir)>(0x822CAA38);
 static auto CL_SetStance = reinterpret_cast<void (*)(int localClientNum, int stance)>(0x822D92A0);
 
-static auto CG_Init =
-    reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(
-        0x8230DEA0);
+typedef void (*CG_Init_t)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum);
+static CG_Init_t CG_Init = reinterpret_cast<CG_Init_t>(0x8230DEA0);
 
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x821D7328);
 static auto Scr_AddSourceBuffer =

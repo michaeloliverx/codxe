@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "main.h"
 #include "components/cg.h"
 #include "components/cj_tas.h"
 #include "components/clipmap.h"
 #include "components/cmds.h"
+#include "components/events.h"
 #include "components/g_scr_main.h"
 #include "components/gsc_client_fields.h"
 #include "components/gsc_functions.h"
@@ -14,6 +14,7 @@
 #include "components/scr_parser.h"
 #include "components/sv_bots.h"
 #include "common/config.h"
+#include "main.h"
 
 // Structure to hold data for the active keyboard request
 struct KeyboardRequest
@@ -279,14 +280,6 @@ void DrawFixedFPS()
     R_AddCmdDrawText(buff, 16, font, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
 }
 
-void CG_DrawTAS()
-{
-    static Font_s *bigDevFont = R_RegisterFont("fonts/bigDevFont");
-    const float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
-    const float y = 30.f;
-    R_AddCmdDrawText("TAS", 5, bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
-}
-
 dvar_s *cg_draw_player_info = nullptr;
 
 void CG_DrawPlayerInfo()
@@ -309,34 +302,6 @@ void CG_DrawPlayerInfo()
     const float y = 50.f;
 
     R_AddCmdDrawText(buff, 256, consoleFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
-}
-
-Detour CG_DrawActive_Detour;
-
-void CG_DrawActive_Hook(int localClientNum)
-{
-    static dvar_s *pm_fixed_fps_enable = Dvar_FindMalleableVar("pm_fixed_fps_enable");
-
-    CheckKeyboardCompletion();
-
-    if (pm_fixed_fps_enable->current.enabled)
-    {
-        DrawFixedFPS();
-    }
-
-    if (cj_tas::TAS_Enabled())
-    {
-        CG_DrawTAS();
-    }
-
-    if (cg_draw_player_info->current.enabled)
-    {
-        CG_DrawPlayerInfo();
-    }
-
-    clipmap::HandleBrushCollisionChange();
-
-    CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
 }
 
 Detour UI_Refresh_Detour;
@@ -408,7 +373,9 @@ IW3_MP_Plugin::IW3_MP_Plugin()
 
     DisableFastfileAuth();
 
+    // Special modules need to be registered first
     RegisterModule(new Config());
+    RegisterModule(new Events());
 
     RegisterModule(new cg());
     RegisterModule(new cj_tas());
@@ -427,9 +394,6 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
 
-    CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
-    CG_DrawActive_Detour.Install();
-
     CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
     CL_GamepadButtonEvent_Detour.Install();
 
@@ -446,13 +410,30 @@ IW3_MP_Plugin::IW3_MP_Plugin()
 
     cg_draw_player_info =
         Dvar_RegisterBool("cg_draw_player_info", false, 0, "Draw player info (origin, viewangles, speed) on screen");
+
+    Events::OnCG_DrawActive(
+        []()
+        {
+            CheckKeyboardCompletion();
+
+            static dvar_s *pm_fixed_fps_enable = Dvar_FindMalleableVar("pm_fixed_fps_enable");
+
+            if (pm_fixed_fps_enable->current.enabled)
+            {
+                DrawFixedFPS();
+            }
+
+            if (cg_draw_player_info->current.enabled)
+            {
+                CG_DrawPlayerInfo();
+            }
+        });
 }
 
 IW3_MP_Plugin::~IW3_MP_Plugin()
 {
     DbgPrint("Shutting down MP\n");
 
-    CG_DrawActive_Detour.Remove();
     CL_GamepadButtonEvent_Detour.Remove();
     Load_MapEntsPtr_Detour.Remove();
 
