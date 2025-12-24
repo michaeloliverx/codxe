@@ -95,6 +95,7 @@
       <ClCompile Include="src\game\iw3\mp\components\gsc_functions.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_methods.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\image_loader.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\sv_bots.cpp" />
