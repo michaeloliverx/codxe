@@ -58,9 +58,6 @@ init()
 	setDvar("bg_fallDamageMaxHeight", 9999);
 	setDvar("bg_fallDamageMinHeight", 9998);
 
-	// Prevent bots from moving
-	setDvar("sv_botsPressAttackBtn", 0);
-
 	setDvar("userinfo", "L"); // prevent people from freezing consoles via userinfo command
 
 	// prevent dynents from moving from bullets / explosions
@@ -2712,15 +2709,6 @@ generateMenuOptions()
 			text += level.SELECTED_PREFIX;
 
 		text += "Set active bot " + (i + 1);
-		// If bot is already spawned display its origin
-		// useful to record good bot positions
-		if (isplayer(self.cj["bots"][i]))
-		{
-			origin = self.cj["bots"][i].origin;
-			origin = (int(origin[0]), int(origin[1]), int(origin[2]));
-			text += (" " + origin);
-		}
-
 		self addMenuOption("bot_menu", text, ::setSelectedBot, i);
 	}
 	self addMenuOption("bot_menu", "Spawn Floating Bot", ::spawnFloatingBot);
@@ -2728,6 +2716,7 @@ generateMenuOptions()
 	self addMenuOption("bot_menu", "Trigger Distance UP", ::modifyTriggerDistance, 10);
 	self addMenuOption("bot_menu", "Trigger Distance DOWN", ::modifyTriggerDistance, -10);
 	self addMenuOption("bot_menu", "Toggle stance", ::CycleBotStance);
+	self addMenuOption("bot_menu", "Mirror movement", ::BotMirrorMovement);
 	if (is_host)
 		self addMenuOption("bot_menu", "Kick All Bots", ::kickAllBots);
 
@@ -2791,6 +2780,29 @@ CycleBotStance()
 	else if (stance == "prone")
 	{
 		bot botaction("-goprone"); // returns to stand
+	}
+}
+
+BotMirrorMovement()
+{
+	bot = self.cj["bots"][self.cj["botnumber"]];
+	if(!isdefined(bot))
+	{
+		self iprintln("^1bot not found.");
+		return;
+	}
+
+	if(isdefined(bot.is_mirroring))
+	{
+		bot BotStop();
+		bot.is_mirroring = undefined;
+		self iprintln("Mirror movement [^1OFF^7]");
+	}
+	else
+	{
+		bot BotMirror(self);
+		bot.is_mirroring = true;
+		self iprintln("Mirror movement [^2ON^7]");
 	}
 }
 
