@@ -149,6 +149,15 @@ static auto Scr_MakeArray = reinterpret_cast<void (*)()>(0x82210CA0);
 static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x8220FDD0);
 static auto Scr_ParamError = reinterpret_cast<void (*)(unsigned int index, const char *error)>(0x8220FE08);
 
+typedef void (*Scr_Notify_t)(gentity_s *ent, unsigned __int16 stringValue, unsigned int paramcount);
+static Scr_Notify_t Scr_Notify = reinterpret_cast<Scr_Notify_t>(0x8224FC50);
+
+typedef int (*Scr_AllocString_t)(const char *s);
+static Scr_AllocString_t Scr_AllocString = reinterpret_cast<Scr_AllocString_t>(0x8221FAC0);
+
+typedef void (*Scr_AddUndefined_t)();
+static Scr_AddUndefined_t Scr_AddUndefined = reinterpret_cast<Scr_AddUndefined_t>(0x82211070);
+
 typedef void (*SV_ClientThink_t)(client_t *cl, usercmd_s *cmd);
 static SV_ClientThink_t SV_ClientThink = reinterpret_cast<SV_ClientThink_t>(0x82208448);
 
@@ -335,11 +344,11 @@ static auto uiInfoArray = reinterpret_cast<uiInfo_s **>(0x849F2DF0);
 static PlayerKeyState *playerKeys = reinterpret_cast<PlayerKeyState *>(0x8242AB38);
 static unsigned __int8 **g_streamPos = reinterpret_cast<unsigned __int8 **>(0x826B91F4);
 static unsigned __int8 **g_streamPosArray = reinterpret_cast<unsigned __int8 **>(0x82708C04);
-// XBlock **g_streamBlocks = reinterpret_cast<XBlock **>(0x826AD1EC);
-// unsigned __int8 *g_streamPosIndex = reinterpret_cast<unsigned __int8 *>(0x826BA3FC);
+static XBlock **g_streamBlocks = reinterpret_cast<XBlock **>(0x826AD1EC);
+static unsigned int *g_streamPosIndex = reinterpret_cast<unsigned int *>(0x826BA3FC);
 static unsigned *g_streamDelayIndex = reinterpret_cast<unsigned *>(0x82668D5C);
 static StreamDelayInfo *g_streamDelayArray = reinterpret_cast<StreamDelayInfo *>(0x8270C4F0);
-// unsigned __int8 *g_streamPosStackIndex = reinterpret_cast<unsigned __int8 *>(0x82668A34);
+// static unsigned unsigned int *g_streamPosStackIndex = reinterpret_cast<unsigned unsigned int *>(0x82668A34);
 static unsigned int *g_loadingAssets = reinterpret_cast<unsigned int *>(0x824754F4);
 static bool *g_anyFastFileLoaded = reinterpret_cast<bool *>(0x82435AB5);
 static DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82475508);

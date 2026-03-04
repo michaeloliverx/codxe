@@ -34,6 +34,8 @@ struct BotMovementInfo_t
     int buttons;
     bool is_mirroring_client;
     int mirror_client_num;
+    float moveTo[2];
+    int doMove;
 };
 
 BotMovementInfo_t g_botai[MAX_CLIENTS];
@@ -62,6 +64,50 @@ void SV_BotUserMove_Stub(client_t *cl)
     if (g_clients[clientNum].sess.archiveTime == 0)
     {
         cmd.buttons = g_botai[clientNum].buttons;
+
+        if (g_botai[clientNum].doMove)
+        {
+            gentity_s *ent = cl->gentity;
+
+            float move_pos[2];
+            move_pos[0] = g_botai[clientNum].moveTo[0] - ent->r.currentOrigin[0];
+            move_pos[1] = g_botai[clientNum].moveTo[1] - ent->r.currentOrigin[1];
+
+            const float distance = sqrtf(move_pos[0] * move_pos[0] + move_pos[1] * move_pos[1]);
+            g_botai[clientNum].doMove = distance > 7.0f ? 1 : 0;
+
+            // Rotate offset into bot-local space by negative yaw
+            const float yaw_rad = -ent->r.currentAngles[1] * (3.14159265358979323846f / 180.0f);
+            const float s = sinf(yaw_rad);
+            const float c = cosf(yaw_rad);
+            const float rx = move_pos[0] * c - move_pos[1] * s;
+            const float ry = move_pos[0] * s + move_pos[1] * c;
+            move_pos[0] = rx;
+            move_pos[1] = ry;
+
+            // Scale to [-127, 127]
+            const float absX = move_pos[0] < 0.0f ? -move_pos[0] : move_pos[0];
+            const float absY = move_pos[1] < 0.0f ? -move_pos[1] : move_pos[1];
+            const float maxabs = absX > absY ? absX : absY;
+            if (maxabs > 0.0f)
+            {
+                move_pos[0] = move_pos[0] * (127.0f / maxabs);
+                move_pos[1] = move_pos[1] * (127.0f / maxabs);
+            }
+
+            // Floor and invert Y to fit movement requirements
+            move_pos[0] = floorf(move_pos[0]);
+            move_pos[1] = -floorf(move_pos[1]);
+
+            cmd.forwardmove = ((int)move_pos[0]) & 0xFF;
+            cmd.rightmove = ((int)move_pos[1]) & 0xFF;
+
+            if (!g_botai[clientNum].doMove)
+            {
+                static const auto scr_const_movedone = Scr_AllocString("movedone");
+                Scr_Notify(ent, (unsigned __int16)scr_const_movedone, 0);
+            }
+        }
 
         // Handle mirrored mode
         // TODO: fix angles?
@@ -99,6 +145,20 @@ const BotAction_t BotActions[] = {{"gostand", KEY_MASK_JUMP},          {"gocrouc
                                   {"leanright", KEY_MASK_LEANRIGHT},   {"ads", KEY_MASK_ADS_MODE | KEY_MASK_ADS},
                                   {"holdbreath", KEY_MASK_HOLDBREATH}, {"activate", KEY_MASK_USE}};
 
+static void Scr_BotMoveTo(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+
+    if (Scr_GetNumParam() != 1)
+        Scr_Error("Usage: <bot> botMoveTo(<vec3 position>);");
+
+    float moveTo[3];
+    Scr_GetVector(0, moveTo);
+    g_botai[entref.entnum].moveTo[0] = moveTo[0];
+    g_botai[entref.entnum].moveTo[1] = moveTo[1];
+    g_botai[entref.entnum].doMove = 1;
+}
+
 static void Scr_BotAction(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
@@ -111,12 +171,10 @@ static void Scr_BotAction(scr_entref_t entref)
     if (action[0] != '+' && action[0] != '-')
         Scr_ParamError(0, "Sign for bot action must be '+' or '-'.");
 
-    bool key_found = false;
-    for (size_t i = 0; i < ARRAYSIZE(g_botai); ++i)
+    for (size_t i = 0; i < ARRAYSIZE(BotActions); ++i)
     {
         if (!stricmp(&action[1], BotActions[i].action))
         {
-            key_found = true;
             if (action[0] == '+')
                 g_botai[entref.entnum].buttons |= BotActions[i].key;
             else
@@ -126,10 +184,14 @@ static void Scr_BotAction(scr_entref_t entref)
         }
     }
 
-    if (!key_found)
+    char buffer[1024];
+    buffer[0] = '\0';
+    for (size_t i = 0; i < ARRAYSIZE(BotActions); ++i)
     {
-        Scr_ParamError(0, va("Unknown bot action."));
+        strncat(buffer, " ", sizeof(buffer) - strlen(buffer) - 1);
+        strncat(buffer, BotActions[i].action, sizeof(buffer) - strlen(buffer) - 1);
     }
+    Scr_ParamError(0, va("Unknown bot action. Must be one of:%s.", buffer));
 }
 
 static void Scr_BotStop(scr_entref_t entref)
@@ -141,6 +203,7 @@ static void Scr_BotStop(scr_entref_t entref)
 
     g_botai[entref.entnum].buttons = 0;
     g_botai[entref.entnum].is_mirroring_client = false;
+    g_botai[entref.entnum].doMove = 0;
 }
 
 static void Scr_BotMirror(scr_entref_t entref)
@@ -170,6 +233,7 @@ sv_bots::sv_bots()
     SV_BotUserMove_Detour = Detour(SV_BotUserMove, SV_BotUserMove_Stub);
     SV_BotUserMove_Detour.Install();
 
+    Scr_AddMethod("botmoveto", Scr_BotMoveTo, 0);
     Scr_AddMethod("botaction", Scr_BotAction, 0);
     Scr_AddMethod("botmirror", Scr_BotMirror, 0);
     Scr_AddMethod("botstop", Scr_BotStop, 0);

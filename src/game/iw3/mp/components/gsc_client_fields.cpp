@@ -32,6 +32,15 @@ void ClientScr_GetRightMove(gclient_s *pSelf, const client_fields_s *field)
     Scr_AddInt(cl->lastUsercmd.forwardmove);
 }
 
+void ClientScr_GetBotStatus(gclient_s *pSelf, const client_fields_s *pField)
+{
+    assert(pSelf != NULL);
+
+    const client_t *cl = &svsHeader->clients[pSelf - g_clients];
+
+    Scr_AddInt(cl->header.netchan.remoteAddress.type == NA_BOT);
+}
+
 client_fields_s client_fields_extended[] = {
     // Original fields
     {"name", 0, F_LSTRING, ClientScr_ReadOnly, ClientScr_GetName},
@@ -58,6 +67,7 @@ client_fields_s client_fields_extended[] = {
     {"entityflags", NULL, F_INT, ClientScr_SetEntityFlags, ClientScr_GetEntityFlags},
     {"forwardmove", NULL, F_INT, ClientScr_ReadOnly, ClientScr_GetForwardMove},
     {"rightmove", NULL, F_INT, ClientScr_ReadOnly, ClientScr_GetRightMove},
+    {"isbot", 0, F_INT, ClientScr_ReadOnly, ClientScr_GetBotStatus},
 
     {nullptr, 0, F_INT, nullptr, nullptr}};
 
