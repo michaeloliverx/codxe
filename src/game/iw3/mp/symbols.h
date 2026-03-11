@@ -353,6 +353,12 @@ static Scr_GetIString_t Scr_GetIString = reinterpret_cast<Scr_GetIString_t>(0x82
 typedef void (*SV_UserinfoChanged_t)(client_t *cl);
 static SV_UserinfoChanged_t SV_UserinfoChanged = reinterpret_cast<SV_UserinfoChanged_t>(0x82205DC0);
 
+typedef gentity_s *(*SV_AddTestClient_t)();
+static SV_AddTestClient_t SV_AddTestClient = reinterpret_cast<SV_AddTestClient_t>(0x82207DD8);
+
+typedef void (*Scr_AddEntityNum_t)(int entnum, unsigned int classnum);
+static Scr_AddEntityNum_t Scr_AddEntityNum = reinterpret_cast<Scr_AddEntityNum_t>(0x822118F8);
+
 typedef void (*G_SelectWeaponIndex_t)(int clientNum, int iWeaponIndex);
 static G_SelectWeaponIndex_t G_SelectWeaponIndex = reinterpret_cast<G_SelectWeaponIndex_t>(0x8235AA98);
 

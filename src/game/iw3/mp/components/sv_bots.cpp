@@ -237,6 +237,57 @@ static void Scr_BotMirror(scr_entref_t entref)
     g_botai[entref.entnum].mirror_client_num = clientNum;
 }
 
+static char s_pendingBotName[32];
+
+// Intercept SV_UserinfoChanged when called from SV_DirectConnect for a bot
+// connecting (NA_BOT type, CS_CONNECTED state). At this point cl->userinfo
+// has the raw connect string; we patch the "name" key before SV_UserinfoChanged
+// reads it so the correct name propagates through SV_ClientEnterWorld and the
+// subsequent SV_SetConfigstring broadcast to all clients.
+Detour SV_UserinfoChanged_Detour;
+void SV_UserinfoChanged_Hook(client_t *cl)
+{
+    if (s_pendingBotName[0] && cl->header.netchan.remoteAddress.type == NA_BOT && cl->header.state == CS_CONNECTED)
+    {
+        Info_SetValueForKey(cl->userinfo, "name", s_pendingBotName);
+    }
+
+    SV_UserinfoChanged_Detour.GetOriginal<SV_UserinfoChanged_t>()(cl);
+}
+
+static void GScr_AddTestClient()
+{
+    if (Scr_GetNumParam() == 1)
+    {
+        const char *string = Scr_GetString(0);
+
+        // Strip non-printable chars, matching name field size (32 bytes = 31 chars + null)
+        char name[32];
+        int i, j;
+        for (i = 0, j = 0; string[i] && j < (int)sizeof(name) - 1; ++i)
+        {
+            if ((unsigned char)string[i] >= 0x20)
+            {
+                name[j] = string[i];
+                ++j;
+            }
+        }
+        name[j] = '\0';
+
+        if (j < 1)
+            Scr_Error("AddTestClient(): name must be at least 1 character long");
+
+        strncpy(s_pendingBotName, name, sizeof(s_pendingBotName) - 1);
+        s_pendingBotName[sizeof(s_pendingBotName) - 1] = '\0';
+    }
+
+    gentity_s *ent = SV_AddTestClient();
+    s_pendingBotName[0] = '\0';
+
+    if (ent)
+        Scr_AddEntityNum(ent->s.number, 0);
+}
+
 sv_bots::sv_bots()
 {
     G_SelectWeaponIndex_Detour = Detour(G_SelectWeaponIndex, G_SelectWeaponIndex_Hook);
@@ -244,6 +295,11 @@ sv_bots::sv_bots()
 
     SV_BotUserMove_Detour = Detour(SV_BotUserMove, SV_BotUserMove_Stub);
     SV_BotUserMove_Detour.Install();
+
+    SV_UserinfoChanged_Detour = Detour(SV_UserinfoChanged, SV_UserinfoChanged_Hook);
+    SV_UserinfoChanged_Detour.Install();
+
+    Scr_AddFunction("addtestclient", GScr_AddTestClient, 0);
 
     Scr_AddMethod("botmoveto", Scr_BotMoveTo, 0);
     Scr_AddMethod("botaction", Scr_BotAction, 0);
@@ -257,6 +313,8 @@ sv_bots::~sv_bots()
 {
     G_SelectWeaponIndex_Detour.Remove();
     SV_BotUserMove_Detour.Remove();
+
+    SV_UserinfoChanged_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw3

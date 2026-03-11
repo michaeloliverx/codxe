@@ -1595,10 +1595,18 @@ struct netchan_t
     netProfileInfo_t prof;
 };
 
-/* 9758 */
+enum clientConnectState_t : __int32
+{
+    CS_FREE = 0x0,
+    CS_ZOMBIE = 0x1,
+    CS_CONNECTED = 0x2,
+    CS_CLIENTLOADING = 0x3,
+    CS_ACTIVE = 0x4,
+};
+
 const struct clientHeader_t
 {
-    int state;
+    clientConnectState_t state;
     int sendAsActive;
     int deltaMessage;
     int rateDelayed;
