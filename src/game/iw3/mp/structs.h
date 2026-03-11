@@ -14,6 +14,15 @@ namespace iw3
 namespace mp
 {
 
+enum scr_classnum_t : __int32
+{
+    CLASS_NUM_ENTITY = 0x0,
+    CLASS_NUM_HUDELEM = 0x1,
+    CLASS_NUM_PATHNODE = 0x2,
+    CLASS_NUM_VEHICLENODE = 0x3,
+    CLASS_NUM_COUNT = 0x4,
+};
+
 enum entityType_t : __int32
 {
     ET_GENERAL = 0x0,
@@ -381,23 +390,18 @@ enum he_type_t : __int32
     HE_TYPE_COUNT = 0xE,
 };
 
-/* 8713 */
-struct $0D0CB43DF22755AD856C77DD3F304010
-{
-    unsigned __int8 r;
-    unsigned __int8 g;
-    unsigned __int8 b;
-    unsigned __int8 a;
-};
-
-/* 8714 */
 union hudelem_color_t
 {
-    $0D0CB43DF22755AD856C77DD3F304010 __s0;
+    struct
+    {
+        unsigned char r;
+        unsigned char g;
+        unsigned char b;
+        unsigned char a;
+    };
     int rgba;
 };
 
-/* 8737 */
 struct hudelem_s
 {
     he_type_t type;
@@ -440,6 +444,14 @@ struct hudelem_s
     int fxDecayDuration;
     int soundID;
     int flags;
+};
+
+struct game_hudelem_s
+{
+    hudelem_s elem;
+    int clientNum;
+    int team;
+    int archived;
 };
 
 struct hudElemState_t
@@ -1717,6 +1729,10 @@ struct recentFrame
     bool lagged;
 };
 
+#define MAX_CONFIGSTRINGS 2350
+#define MAX_LOCALIZEDSTRINGS 420
+#define CS_LOCALIZEDSTRINGS 382
+
 struct server_t
 {
     serverState_t state;
@@ -1729,7 +1745,7 @@ struct server_t
     int checksumFeed;
     cmodel_t *models[512];
     unsigned __int16 emptyConfigString;
-    unsigned __int16 configstrings[2350];
+    unsigned __int16 configstrings[MAX_CONFIGSTRINGS];
     svEntity_s svEntities[1024];
     gentity_s *gentities;
     int gentitySize;

@@ -323,6 +323,33 @@ static Info_SetValueForKey_t Info_SetValueForKey = reinterpret_cast<Info_SetValu
 typedef void (*ClientUserinfoChanged_t)(int clientNum);
 static ClientUserinfoChanged_t ClientUserinfoChanged = reinterpret_cast<ClientUserinfoChanged_t>(0x82284F00);
 
+typedef void (*HudElem_ClearTypeSettings_t)(game_hudelem_s *hud);
+static HudElem_ClearTypeSettings_t HudElem_ClearTypeSettings =
+    reinterpret_cast<HudElem_ClearTypeSettings_t>(0x82277440);
+
+typedef void (*HECmd_SetText_t)(scr_entref_t entref);
+static HECmd_SetText_t HECmd_SetText = reinterpret_cast<HECmd_SetText_t>(0x822798E0);
+
+typedef void (*Scr_FreeHudElem_t)(game_hudelem_s *hud);
+static Scr_FreeHudElem_t Scr_FreeHudElem = reinterpret_cast<Scr_FreeHudElem_t>(0x8224FC68);
+
+typedef void (*Scr_PrecacheString_t)(game_hudelem_s *hud);
+static Scr_PrecacheString_t Scr_PrecacheString = reinterpret_cast<Scr_PrecacheString_t>(0x82261D38);
+
+typedef void (*SV_SetConfigstring_t)(unsigned int index, const char *val);
+static SV_SetConfigstring_t SV_SetConfigstring = reinterpret_cast<SV_SetConfigstring_t>(0x82201F90);
+
+typedef void (*Scr_ConstructMessageString_t)(int firstParmIndex, int lastParmIndex, const char *errorContext,
+                                             char *string, unsigned int stringLimit);
+static Scr_ConstructMessageString_t Scr_ConstructMessageString =
+    reinterpret_cast<Scr_ConstructMessageString_t>(0x8225E6B0);
+
+typedef int (*G_LocalizedStringIndex_t)(const char *string);
+static G_LocalizedStringIndex_t G_LocalizedStringIndex = reinterpret_cast<G_LocalizedStringIndex_t>(0x8224CAD0);
+
+typedef char *(*Scr_GetIString_t)(unsigned int index);
+static Scr_GetIString_t Scr_GetIString = reinterpret_cast<Scr_GetIString_t>(0x8220FE90);
+
 // Variables
 static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
 static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
@@ -364,6 +391,7 @@ static void **DB_XAssetPool = reinterpret_cast<void **>(0x823A4070);
 static int *g_poolSize = reinterpret_cast<int *>(0x823A3E50);
 static auto level = reinterpret_cast<level_locals_t *>(0x82A07650);
 static auto sv = reinterpret_cast<server_t *>(0x82E83820);
+static auto g_hudelems = reinterpret_cast<game_hudelem_s *>(0x8284FD00);
 
 static int *g_trackLoadProgress = reinterpret_cast<int *>(0x824754FC);
 static int *g_totalSize = reinterpret_cast<int *>(0x824754F8);

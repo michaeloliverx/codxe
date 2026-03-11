@@ -1,5 +1,6 @@
 #pragma once
 
+#pragma warning(disable : 4201) // warning C4201: nonstandard extension used : nameless struct/union
 #pragma warning(disable : 4324) // structure was padded due to __declspec(align())
 #pragma warning(disable : 4480) // nonstandard extension used: specifying underlying type for enum
 
