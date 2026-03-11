@@ -362,6 +362,7 @@ static XAssetHeader **varXAssetHeader = reinterpret_cast<XAssetHeader **>(0x8247
 static XAssetList **varXAssetList = reinterpret_cast<XAssetList **>(0x824756F4);
 static void **DB_XAssetPool = reinterpret_cast<void **>(0x823A4070);
 static int *g_poolSize = reinterpret_cast<int *>(0x823A3E50);
+static auto level = reinterpret_cast<level_locals_t *>(0x82A07650);
 
 static int *g_trackLoadProgress = reinterpret_cast<int *>(0x824754FC);
 static int *g_totalSize = reinterpret_cast<int *>(0x824754F8);

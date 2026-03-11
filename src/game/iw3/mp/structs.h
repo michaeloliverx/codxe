@@ -3019,5 +3019,100 @@ struct __declspec(align(32)) serverStatic_t
 };
 static_assert(sizeof(serverStatic_t) == 0x1AAE000, "");
 
+struct SpawnVar
+{
+    bool spawnVarsValid;
+    int numSpawnVars;
+    char *spawnVars[64][2];
+    int numSpawnVarChars;
+    char spawnVarChars[2048];
+};
+
+struct trigger_info_t
+{
+    unsigned __int16 entnum;
+    unsigned __int16 otherEntnum;
+    int useCount;
+    int otherUseCount;
+};
+
+struct com_parse_mark_t
+{
+    int lines;
+    const char *text;
+    int ungetToken;
+    int backup_lines;
+    const char *backup_text;
+};
+
+struct cached_tag_mat_t
+{
+    int time;
+    int entnum;
+    unsigned __int16 name;
+    float tagMat[4][3];
+};
+
+struct level_locals_t
+{
+    gclient_s *clients;
+    gentity_s *gentities;
+    int gentitySize;
+    int num_entities;
+    gentity_s *firstFreeEnt;
+    gentity_s *lastFreeEnt;
+    void *logFile;
+    int initializing;
+    int clientIsSpawning;
+    objective_t objectives[16];
+    int maxclients;
+    int framenum;
+    int time;
+    int previousTime;
+    int frametime;
+    int startTime;
+    int teamScores[4];
+    int lastTeammateHealthTime;
+    int bUpdateScoresForIntermission;
+    bool teamHasRadar[4];
+    int manualNameChange;
+    int numConnectedClients;
+    int sortedClients[24];
+    char voteString[1024];
+    char voteDisplayString[1024];
+    int voteTime;
+    int voteExecuteTime;
+    int voteYes;
+    int voteNo;
+    int numVotingClients;
+    SpawnVar spawnVar;
+    int savepersist;
+    EntHandle droppedWeaponCue[32];
+    float fFogOpaqueDist;
+    float fFogOpaqueDistSqrd;
+    int remapCount;
+    int currentPlayerClone;
+    trigger_info_t pendingTriggerList[256];
+    trigger_info_t currentTriggerList[256];
+    int pendingTriggerListSize;
+    int currentTriggerListSize;
+    int finished;
+    int bPlayerIgnoreRadiusDamage;
+    int bPlayerIgnoreRadiusDamageLatched;
+    int registerWeapons;
+    int bRegisterItems;
+    int currentEntityThink;
+    void *openScriptIOFileHandles[1];
+    char *openScriptIOFileBuffers[1];
+    com_parse_mark_t currentScriptIOLineMark[1];
+    cached_tag_mat_t cachedTagMat;
+    int scriptPrintChannel;
+    float compassMapUpperLeft[2];
+    float compassMapWorldSize[2];
+    float compassNorth[2];
+    scr_vehicle_s *vehicles;
+};
+static_assert(sizeof(level_locals_t) == 0x2DCC, "");
+
 } // namespace mp
 } // namespace iw3
