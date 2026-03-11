@@ -1690,6 +1690,71 @@ struct serverStaticHeader_t
 
 static_assert(sizeof(serverStaticHeader_t) == 0x0080, "");
 
+struct cmodel_t;
+
+enum serverState_t : __int32
+{
+    SS_DEAD = 0x0,
+    SS_LOADING = 0x1,
+    SS_GAME = 0x2,
+};
+
+struct svEntity_s
+{
+    unsigned __int16 worldSector;
+    unsigned __int16 nextEntityInWorldSector;
+    archivedEntity_s baseline;
+    int numClusters;
+    int clusternums[16];
+    int lastCluster;
+    int linkcontents;
+    float linkmin[2];
+    float linkmax[2];
+};
+
+struct recentFrame
+{
+    bool lagged;
+};
+
+struct server_t
+{
+    serverState_t state;
+    int timeResidual;
+    bool inFrame;
+    bool smp;
+    bool allowNetPackets;
+    int restarting;
+    int start_frameTime;
+    int checksumFeed;
+    cmodel_t *models[512];
+    unsigned __int16 emptyConfigString;
+    unsigned __int16 configstrings[2350];
+    svEntity_s svEntities[1024];
+    gentity_s *gentities;
+    int gentitySize;
+    int num_entities;
+    playerState_s *gameClients;
+    int gameClientSize;
+    int skelTimeStamp;
+    int skelMemPos;
+    int bpsWindow[20];
+    int bpsWindowSteps;
+    int bpsTotalBytes;
+    int bpsMaxBytes;
+    int ubpsWindow[20];
+    int ubpsTotalBytes;
+    int ubpsMaxBytes;
+    float ucompAve;
+    int ucompNum;
+    char gametype[64];
+    bool killServer;
+    const char *killReason;
+    recentFrame recentFrameInfo[200];
+    int currentFrameNum;
+};
+static_assert(sizeof(server_t) == 392292, "");
+
 enum DvarFlags : unsigned __int16
 {
     DVAR_FLAG_NONE = 0x0,
