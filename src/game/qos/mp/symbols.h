@@ -17,6 +17,37 @@ static auto entity_fields = reinterpret_cast<ent_field_t *>(0x82036B78);
 typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 static Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x8225C288);
 
+typedef void (*CG_DrawActive_t)(int localClientNum);
+static CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x821778D8);
+
+typedef void (*CG_GameMessage_t)(unsigned int localClientNum, const char *msg);
+static auto CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x82188A10);
+
+typedef void (*CG_Init_t)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum);
+static CG_Init_t CG_Init = reinterpret_cast<CG_Init_t>(0x8218A8A8);
+
+typedef void (*Dvar_AddFlags_t)(const dvar_s *dvar, __int16 flags);
+static Dvar_AddFlags_t Dvar_AddFlags = reinterpret_cast<Dvar_AddFlags_t>(0x822BDB78);
+
+typedef const char *(*Dvar_GetString_t)(const char *dvarName);
+static Dvar_GetString_t Dvar_GetString = reinterpret_cast<Dvar_GetString_t>(0x822BC240);
+
+typedef bool (*R_CheckDvarModified_t)(const dvar_s *dvar);
+static R_CheckDvarModified_t R_CheckDvarModified = reinterpret_cast<R_CheckDvarModified_t>(0x824C3768);
+
+typedef dvar_s *(*Dvar_RegisterString_t)(const char *dvarName, const char *value, DvarFlags flags,
+                                         const char *description);
+static Dvar_RegisterString_t Dvar_RegisterString = reinterpret_cast<Dvar_RegisterString_t>(0x822BD178);
+
+typedef void (*Dvar_SetString_t)(const dvar_s *dvar, const char *value);
+static Dvar_SetString_t Dvar_SetString = reinterpret_cast<Dvar_SetString_t>(0x822BDA70);
+
+typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
+static DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x821E1E70);
+
+typedef XAssetEntry *(*DB_LinkXAssetEntry_t)(XAssetEntry *newEntry, int allowOverride);
+static DB_LinkXAssetEntry_t DB_LinkXAssetEntry = reinterpret_cast<DB_LinkXAssetEntry_t>(0x821F1950);
+
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822B89E8);
 
 static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x8227FBC8);
@@ -55,6 +86,9 @@ static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, 
 
 typedef void (*Scr_GetObjectField_t)(unsigned int classnum, unsigned int entnum, unsigned int offset);
 static Scr_GetObjectField_t Scr_GetObjectField = reinterpret_cast<Scr_GetObjectField_t>(0x82246C80);
+
+typedef void (*Scr_ShutdownSystem_t)(unsigned __int8 sys, int bComplete);
+static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x8227F9D8);
 
 static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x822C1848);
 

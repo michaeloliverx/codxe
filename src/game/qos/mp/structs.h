@@ -5,6 +5,58 @@ namespace qos
 namespace mp
 {
 
+enum XAssetType : __int32
+{
+    ASSET_TYPE_CLIPMAP_SP = 12,
+    ASSET_TYPE_CLIPMAP_MP = 13, // ASSET_TYPE_CLIPMAP_PVS
+};
+
+struct clipMap_t;
+
+union XAssetHeader
+{
+    clipMap_t *clipMap;
+    void *data;
+};
+
+struct XAsset
+{
+    XAssetType type;
+    XAssetHeader header;
+};
+
+struct XAssetEntry
+{
+    XAsset asset;
+    unsigned __int8 zoneIndex;
+    bool inuse;
+    unsigned __int16 nextHash;
+    unsigned __int16 nextOverride;
+    unsigned __int16 usageFrame;
+};
+
+// TODO: TBC...
+enum DvarFlags : uint16_t
+{
+    DVAR_SERVERINFO =
+        256, // this is sent (replicated) to all clients if you are host. Found in `GScr_MakeDvarServerInfo`
+};
+
+struct dvar_s
+{
+    const char *name;
+    const char *description;
+    unsigned __int16 flags;
+    // unsigned __int8 type;
+    // bool modified;
+    // DvarValue current;
+    // DvarValue latched;
+    // DvarValue reset;
+    // DvarLimits domain;
+    // dvar_s *hashNext;
+};
+static_assert(offsetof(dvar_s, flags) == 8, "");
+
 enum usercmd_button_bits
 {
     CMD_BUTTON_ATTACK = 1,
@@ -77,13 +129,20 @@ static_assert(offsetof(gclient_s, buttonsSinceLastFrame) == 13280, "");
 
 struct gentity_s
 {
-    char pad_0[388];
+    char pad_0[328];
+    int contents;
+    float absmin[3];
+    float absmax[3];
+    char pad_1[32];
     gclient_s *client;
     char pad_392[36];
     int flags;
     char pad_428[224];
 };
 static_assert(sizeof(gentity_s) == 656, "");
+static_assert(offsetof(gentity_s, contents) == 328, "");
+static_assert(offsetof(gentity_s, absmin) == 332, "");
+static_assert(offsetof(gentity_s, absmax) == 344, "");
 static_assert(offsetof(gentity_s, client) == 388, "");
 static_assert(offsetof(gentity_s, flags) == 428, "");
 

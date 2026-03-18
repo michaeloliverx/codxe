@@ -2,6 +2,23 @@
 
 ## Multiplayer
 
+### DVARs
+
+#### `noclip_brushes` _(string)_
+
+A server-info (synced to all clients) dvar that controls which brushes have their `PLAYERCLIP` flag disabled. It holds a space-separated list of brush indices.
+
+Special values:
+
+- `""` (empty) — restores all brushes to their original collision state
+- `"*"` — disables `PLAYERCLIP` flag on every brush in the clipmap
+
+```
+set noclip_brushes "";    // reset all brush collision
+set noclip_brushes "*";   // disable all brush collision
+set noclip_brushes "4 7"; // disable collision on brushes 4 and 7
+```
+
 ### General Functions
 
 #### `exec(string <command>)`
@@ -45,6 +62,18 @@ Usage example: `if (self SprintButtonPressed()) { ... }`
 Changes current player velocity.
 
 Usage example: `self SetVelocity((0, 0, 300)); // Go up.`
+
+#### `DisablePlayerClipOnTouchingBrushes()`
+
+Disables `PLAYERCLIP` collision on all brushes whose AABB touches or overlaps the player's bounding box. This includes brushes the player is standing on top of, not just ones they are inside.
+
+The affected brush indices are written to the `noclip_brushes` dvar so the state persists and can be restored.
+
+Usage example:
+
+```
+self DisablePlayerClipOnTouchingBrushes();
+```
 
 ### Client Fields
 
