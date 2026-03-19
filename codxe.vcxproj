@@ -83,6 +83,7 @@
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
 
+      <ClCompile Include="src\game\iw2\mp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
 
@@ -164,6 +165,8 @@
       <ClCompile Include="src\game\qos\sp\components\scr_parser.cpp" />
 
       <ClCompile Include="src\game\qos\mp\main.cpp" />
+      <ClCompile Include="src\game\qos\mp\components\clipmap.cpp" />
+      <ClCompile Include="src\game\qos\mp\components\events.cpp" />
       <ClCompile Include="src\game\qos\mp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\qos\mp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />
