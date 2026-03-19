@@ -6,7 +6,7 @@ namespace iw2
 {
 namespace mp
 {
-const unsigned int *scrVmPub_outparamcount = reinterpret_cast<const unsigned int *>(0x8447399C);
+static const unsigned int *scrVmPub_outparamcount = reinterpret_cast<const unsigned int *>(0x8447399C);
 
 static auto g_entities = reinterpret_cast<gentity_s *>(0x83676880);
 

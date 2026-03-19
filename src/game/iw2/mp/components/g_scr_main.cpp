@@ -8,7 +8,7 @@ namespace mp
 std::vector<BuiltinFunctionDef *> scr_functions;
 std::vector<BuiltinMethodDef *> scr_methods;
 
-unsigned int Scr_GetNumParam()
+static unsigned int Scr_GetNumParam()
 {
     return *scrVmPub_outparamcount;
 }
