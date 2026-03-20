@@ -5,6 +5,14 @@ namespace iw2
 namespace mp
 {
 
+struct qkey_t
+{
+    int down;
+    int repeats;
+    const char *binding;
+};
+static_assert(sizeof(qkey_t) == 0x0C, "");
+
 enum usercmd_button_bits
 {
     CMD_BUTTON_ATTACK = 1,

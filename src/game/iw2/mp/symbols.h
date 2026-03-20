@@ -9,6 +9,7 @@ namespace mp
 static const unsigned int *scrVmPub_outparamcount = reinterpret_cast<const unsigned int *>(0x8447399C);
 
 static auto g_entities = reinterpret_cast<gentity_s *>(0x83676880);
+static qkey_t **keys = reinterpret_cast<qkey_t **>(0x824D3518);
 
 static auto player_methods = reinterpret_cast<BuiltinMethodDef *>(0x8203EAC8);
 static const int PLAYER_METHODS_COUNT = 59;
@@ -35,6 +36,9 @@ static auto Scr_AddBool = reinterpret_cast<Scr_AddBool_t>(0x82346948);
 
 typedef void (*Scr_AddInt_t)(int value);
 static auto Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x82346900);
+
+typedef int (*Key_StringToKeynum_t)(const char *str);
+static Key_StringToKeynum_t Key_StringToKeynum = reinterpret_cast<Key_StringToKeynum_t>(0x8241E338);
 
 static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x82304090);
 } // namespace mp

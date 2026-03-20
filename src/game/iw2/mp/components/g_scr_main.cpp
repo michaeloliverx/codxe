@@ -8,6 +8,7 @@ namespace mp
 std::vector<BuiltinFunctionDef *> scr_functions;
 std::vector<BuiltinMethodDef *> scr_methods;
 
+// Inlined in the executable, reimplemented here
 static unsigned int Scr_GetNumParam()
 {
     return *scrVmPub_outparamcount;
@@ -20,6 +21,28 @@ void GScr_CbufAddText()
 
     const char *text = Scr_GetString(0);
     Cbuf_AddText(text);
+}
+
+int CL_IsKeyPressed(const char *keyName)
+{
+    const int keynum = Key_StringToKeynum(keyName);
+    if (keynum >= 0)
+        return (*keys)[keynum].down;
+    else
+        return 0;
+}
+
+void PlayerCmd_ButtonPressed(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+
+    const char *button = Scr_GetString(0);
+
+    if (!button || !*button)
+        Scr_Error("usage: <client> buttonPressed(<button name>)");
+
+    const int keypressed = CL_IsKeyPressed(button);
+    return Scr_AddBool(keypressed);
 }
 
 void PlayerCmd_ADSButtonPressed(scr_entref_t entref)
@@ -114,6 +137,8 @@ g_scr_main::g_scr_main()
     Scr_GetMethod_Detour.Install();
 
     Scr_AddFunction("exec", GScr_CbufAddText, BUILTIN_ANY);
+
+    Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY); // Only works for host buttons
 
     Scr_AddMethod("adsbuttonpressed", PlayerCmd_ADSButtonPressed, BUILTIN_ANY);
     Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY);

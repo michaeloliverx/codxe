@@ -7,6 +7,11 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
 {
     if (reason == DLL_PROCESS_ATTACH)
     {
+        if (g_plugin_manager != nullptr)
+        {
+            DbgPrint("[codxe] DLL_PROCESS_ATTACH: Already initialized, skipping.\n");
+            return TRUE;
+        }
         DbgPrint("[codxe] DLL_PROCESS_ATTACH: Initializing PluginManager...\n");
         g_plugin_manager = new PluginManager();
     }
