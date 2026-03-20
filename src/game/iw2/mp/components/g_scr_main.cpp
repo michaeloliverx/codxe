@@ -9,10 +9,23 @@ std::vector<BuiltinFunctionDef *> scr_functions;
 std::vector<BuiltinMethodDef *> scr_methods;
 
 // Inlined in the executable, reimplemented here
+namespace
+{
+
 static unsigned int Scr_GetNumParam()
 {
     return *scrVmPub_outparamcount;
 }
+
+static unsigned int GScr_AllocString(const char *s)
+{
+    const char *end = s;
+    while (*end++)
+        ;
+
+    return SL_GetStringOfLen(s, 1, static_cast<unsigned int>(end - s), 6);
+}
+} // namespace
 
 void GScr_CbufAddText()
 {
@@ -69,8 +82,26 @@ void PlayerCmd_SmokeButtonPressed(scr_entref_t entref)
     Scr_AddBool(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & CMD_BUTTON_SMOKE) != 0);
 }
 
-static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x823CB720);
-static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x823CB968);
+void PlayerCmd_GetStance(scr_entref_t entref)
+{
+    const gentity_s *ent = GetPlayerEntity(entref);
+
+    const int pm_flags = ent->client->pm_flags;
+    if ((pm_flags & PMF_PRONE) != 0)
+    {
+        Scr_AddConstString(scr_const->prone);
+    }
+    else if ((pm_flags & PMF_DUCKED) != 0)
+    {
+        // 'crouch' isn't part of scr_const.
+        static const auto scr_const_crouch = GScr_AllocString("crouch");
+        Scr_AddConstString(scr_const_crouch);
+    }
+    else
+    {
+        Scr_AddConstString(scr_const->stand);
+    }
+}
 
 void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type)
 {
@@ -139,11 +170,11 @@ g_scr_main::g_scr_main()
     Scr_AddFunction("exec", GScr_CbufAddText, BUILTIN_ANY);
 
     Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY); // Only works for host buttons
-
     Scr_AddMethod("adsbuttonpressed", PlayerCmd_ADSButtonPressed, BUILTIN_ANY);
     Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY);
     Scr_AddMethod("fragbuttonpressed", PlayerCmd_FragButtonPressed, BUILTIN_ANY);
     Scr_AddMethod("smokebuttonpressed", PlayerCmd_SmokeButtonPressed, BUILTIN_ANY);
+    Scr_AddMethod("getstance", PlayerCmd_GetStance, BUILTIN_ANY);
 }
 
 g_scr_main::~g_scr_main()
