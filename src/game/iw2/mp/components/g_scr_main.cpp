@@ -157,6 +157,27 @@ void PlayerCmd_SetStance(scr_entref_t entref)
     G_AddPredictableEvent(ent, event, 0);
 }
 
+void PlayerCmd_GetVelocity(scr_entref_t entref)
+{
+    gentity_s *ent = GetPlayerEntity(entref);
+    Scr_AddVector(ent->client->ps.velocity);
+}
+
+void PlayerCmd_SetVelocity(scr_entref_t entref)
+{
+    gentity_s *ent = GetPlayerEntity(entref);
+
+    if (Scr_GetNumParam() != 1)
+        Scr_Error("Usage: <client> SetVelocity( vec3 )\n");
+
+    float velocity[3] = {0};
+    Scr_GetVector(0, velocity);
+
+    ent->client->ps.velocity[0] = velocity[0];
+    ent->client->ps.velocity[1] = velocity[1];
+    ent->client->ps.velocity[2] = velocity[2];
+}
+
 void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type)
 {
     BuiltinFunctionDef *newFunc = new BuiltinFunctionDef;
@@ -235,6 +256,9 @@ g_scr_main::g_scr_main()
 
     Scr_AddMethod("getstance", PlayerCmd_GetStance, BUILTIN_ANY);
     Scr_AddMethod("setstance", PlayerCmd_SetStance, BUILTIN_ANY);
+
+    Scr_AddMethod("getvelocity", PlayerCmd_GetVelocity, BUILTIN_ANY);
+    Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, BUILTIN_ANY);
 }
 
 g_scr_main::~g_scr_main()

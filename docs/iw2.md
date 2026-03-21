@@ -144,3 +144,15 @@ Usage example: `if (self GetStance() == "crouch") { ... }`
 Sets the player's stance. Valid values are `"stand"`, `"crouch"`, or `"prone"`.
 
 Usage example: `self SetStance("prone");`
+
+#### `GetVelocity()`
+
+Returns the player's current velocity as a 3D vector `(x, y, z)`.
+
+Usage example: `vel = self GetVelocity();`
+
+#### `SetVelocity(vec3 <velocity>)`
+
+Sets the player's velocity to the given 3D vector.
+
+Usage example: `self SetVelocity((0, 0, 300)); // go up`

@@ -51,6 +51,12 @@ static auto Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x82346900);
 typedef void (*Scr_AddConstString_t)(int value);
 static auto Scr_AddConstString = reinterpret_cast<Scr_AddConstString_t>(0x82346648);
 
+typedef void (*Scr_GetVector_t)(unsigned int index, float *vectorValue);
+static Scr_GetVector_t Scr_GetVector = reinterpret_cast<Scr_GetVector_t>(0x82342FB0);
+
+typedef void (*Scr_AddVector_t)(float *value);
+static Scr_AddVector_t Scr_AddVector = reinterpret_cast<Scr_AddVector_t>(0x823465F8);
+
 typedef int (*Key_StringToKeynum_t)(const char *str);
 static Key_StringToKeynum_t Key_StringToKeynum = reinterpret_cast<Key_StringToKeynum_t>(0x8241E338);
 

@@ -373,12 +373,15 @@ static_assert(sizeof(BuiltinMethodDef) == 12, "");
 
 struct playerState_s
 {
-    char pad_0[0xC];  //
-    int pm_flags;     // 12
-    char pad_1[9876]; //
+    char pad_0[12];    //
+    int pm_flags;      // 12
+    char pad_1[16];    //
+    float velocity[3]; // 32
+    char pad_2[9848];  //
 };
 static_assert(sizeof(playerState_s) == 9892, "");
 static_assert(offsetof(playerState_s, pm_flags) == 12, "");
+static_assert(offsetof(playerState_s, velocity) == 32, "");
 
 struct gclient_s
 {
