@@ -138,3 +138,9 @@ Usage example: `if (self RightButtonPressed()) { ... }`
 Returns the player's current stance as a string: `"stand"`, `"crouch"`, or `"prone"`.
 
 Usage example: `if (self GetStance() == "crouch") { ... }`
+
+#### `SetStance(string <stance>)`
+
+Sets the player's stance. Valid values are `"stand"`, `"crouch"`, or `"prone"`.
+
+Usage example: `self SetStance("prone");`

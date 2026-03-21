@@ -131,6 +131,32 @@ void PlayerCmd_GetStance(scr_entref_t entref)
     }
 }
 
+void PlayerCmd_SetStance(scr_entref_t entref)
+{
+    gentity_s *ent = GetPlayerEntity(entref);
+
+    if (Scr_GetNumParam() != 1)
+        Scr_Error("usage: <client> SetStance( <stance> )\n");
+
+    const char *stance = Scr_GetString(0);
+
+    int event = EV_NONE;
+
+    if (!strcmp(stance, "stand"))
+        event = EV_STANCE_FORCE_STAND;
+    else if (!strcmp(stance, "crouch"))
+        event = EV_STANCE_FORCE_CROUCH;
+    else if (!strcmp(stance, "prone"))
+        event = EV_STANCE_FORCE_PRONE;
+    else
+    {
+        // Scr_ParamError(0, "stance must be 'stand', 'crouch', or 'prone'");
+        Scr_Error("stance must be 'stand', 'crouch', or 'prone'");
+    }
+
+    G_AddPredictableEvent(ent, event, 0);
+}
+
 void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type)
 {
     BuiltinFunctionDef *newFunc = new BuiltinFunctionDef;
@@ -208,6 +234,7 @@ g_scr_main::g_scr_main()
     Scr_AddMethod("rightbuttonpressed", PlayerCmd_RightButtonPressed, BUILTIN_ANY);
 
     Scr_AddMethod("getstance", PlayerCmd_GetStance, BUILTIN_ANY);
+    Scr_AddMethod("setstance", PlayerCmd_SetStance, BUILTIN_ANY);
 }
 
 g_scr_main::~g_scr_main()

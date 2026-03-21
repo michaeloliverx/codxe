@@ -35,6 +35,9 @@ static Scr_GetString_t Scr_GetString = reinterpret_cast<Scr_GetString_t>(0x82345
 typedef gentity_s *(*GetPlayerEntity_t)(scr_entref_t entref);
 static GetPlayerEntity_t GetPlayerEntity = reinterpret_cast<GetPlayerEntity_t>(0x823CCC28);
 
+typedef void (*G_AddPredictableEvent_t)(gentity_s *ent, int event, unsigned __int8 eventParm);
+static G_AddPredictableEvent_t G_AddPredictableEvent = reinterpret_cast<G_AddPredictableEvent_t>(0x823C5DB0);
+
 // TODO: verify this one
 typedef void (*Scr_Error_t)(const char *error);
 static auto Scr_Error = reinterpret_cast<Scr_Error_t>(0x82342AC0);
