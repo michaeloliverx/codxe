@@ -108,3 +108,33 @@ Usage example: `if (self FragButtonPressed()) { ... }`
 #### `SmokeButtonPressed()`
 
 Usage example: `if (self SmokeButtonPressed()) { ... }`
+
+#### `ForwardButtonPressed()`
+
+Returns true if the player is moving forward.
+
+Usage example: `if (self ForwardButtonPressed()) { ... }`
+
+#### `BackButtonPressed()`
+
+Returns true if the player is moving back.
+
+Usage example: `if (self BackButtonPressed()) { ... }`
+
+#### `LeftButtonPressed()`
+
+Returns true if the player is moving left.
+
+Usage example: `if (self LeftButtonPressed()) { ... }`
+
+#### `RightButtonPressed()`
+
+Returns true if the player is moving right.
+
+Usage example: `if (self RightButtonPressed()) { ... }`
+
+#### `GetStance()`
+
+Returns the player's current stance as a string: `"stand"`, `"crouch"`, or `"prone"`.
+
+Usage example: `if (self GetStance() == "crouch") { ... }`

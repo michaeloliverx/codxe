@@ -9,6 +9,8 @@ namespace mp
 static const unsigned int *scrVmPub_outparamcount = reinterpret_cast<const unsigned int *>(0x8447399C);
 
 static auto g_entities = reinterpret_cast<gentity_s *>(0x83676880);
+static auto level = reinterpret_cast<level_locals_t *>(0x837E4A00);
+static auto svs = reinterpret_cast<serverStatic_t *>(0x84517300);
 static qkey_t **keys = reinterpret_cast<qkey_t **>(0x824D3518);
 
 static auto player_methods = reinterpret_cast<BuiltinMethodDef *>(0x8203EAC8);

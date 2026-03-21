@@ -168,18 +168,33 @@ struct BuiltinMethodDef
 };
 static_assert(sizeof(BuiltinMethodDef) == 12, "");
 
+struct playerState_s
+{
+    char pad_0[0xC];  //
+    int pm_flags;     // 12
+    char pad_1[9876]; //
+};
+static_assert(sizeof(playerState_s) == 9892, "");
+static_assert(offsetof(playerState_s, pm_flags) == 12, "");
+
 struct gclient_s
 {
-    char pad_0[0xC];
-    int pm_flags;
-    char pad_1[10152];
-    int buttons; // 0x27B8
-    char pad_27BC[0x08];
-    int buttonsSinceLastFrame; // 0x27C4
+    playerState_s ps;          //  0
+    char pad_1[260];           //
+    int noclip;                // 10152
+    int ufo;                   // 10156
+    char pad_2[8];             //
+    int buttons;               // 10168
+    char pad_3[0x08];          //
+    int buttonsSinceLastFrame; // 10180
+    char pad_4[216];           //
 };
-static_assert(offsetof(gclient_s, pm_flags) == 0xC, "");
-static_assert(offsetof(gclient_s, buttons) == 0x27B8, "");
-static_assert(offsetof(gclient_s, buttonsSinceLastFrame) == 0x27C4, "");
+static_assert(sizeof(gclient_s) == 10400, "");
+static_assert(offsetof(gclient_s, ps.pm_flags) == 12, "");
+static_assert(offsetof(gclient_s, noclip) == 10152, "");
+static_assert(offsetof(gclient_s, ufo) == 10156, "");
+static_assert(offsetof(gclient_s, buttons) == 10168, "");
+static_assert(offsetof(gclient_s, buttonsSinceLastFrame) == 10180, "");
 
 struct gentity_s
 {
@@ -189,6 +204,60 @@ struct gentity_s
 };
 static_assert(sizeof(gentity_s) == 0x230, "");
 static_assert(offsetof(gentity_s, client) == 0x158, "");
+
+// struct usercmd_s
+// {
+//     int serverTime; // 0
+//     int buttons;    // 4
+//     char pad_8[20];
+// };
+
+struct usercmd_s
+{
+    int serverTime;
+    int buttons;
+    byte weapon;
+    byte offHandIndex;
+    int angles[3];
+    char forwardmove;
+    char rightmove;
+};
+static_assert(sizeof(usercmd_s) == 28, "");
+static_assert(offsetof(usercmd_s, serverTime) == 0, "");
+static_assert(offsetof(usercmd_s, buttons) == 4, "");
+
+struct client_t
+{
+    char pad_0[133156];
+    usercmd_s lastUsercmd;
+};
+static_assert(offsetof(client_t, lastUsercmd) == 133156, "");
+
+struct level_locals_t
+{
+    gclient_s *clients;
+    gentity_s *gentities;
+    int gentitySize;
+    int num_entities;
+    gentity_s *firstFreeEnt;
+    gentity_s *lastFreeEnt;
+    void *logFile;
+    int initializing;
+    char pad_0[13636];
+};
+static_assert(sizeof(level_locals_t) == 13668, "");
+static_assert(offsetof(level_locals_t, clients) == 0, "");
+static_assert(offsetof(level_locals_t, num_entities) == 12, "");
+static_assert(offsetof(level_locals_t, initializing) == 28, "");
+
+struct serverStatic_t
+{
+    char pad_0[12];
+    client_t *clients;
+    char pad_1[41296];
+};
+static_assert(sizeof(serverStatic_t) == 41312, "");
+static_assert(offsetof(serverStatic_t, clients) == 12, "");
 
 } // namespace mp
 } // namespace iw2

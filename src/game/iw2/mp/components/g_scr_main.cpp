@@ -82,11 +82,39 @@ void PlayerCmd_SmokeButtonPressed(scr_entref_t entref)
     Scr_AddBool(((ent->client->buttonsSinceLastFrame | ent->client->buttons) & CMD_BUTTON_SMOKE) != 0);
 }
 
+void PlayerCmd_ForwardButtonPressed(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+    const client_t *client = &svs->clients[entref.entnum];
+    Scr_AddBool(client->lastUsercmd.forwardmove > 0);
+}
+
+void PlayerCmd_BackButtonPressed(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+    const client_t *client = &svs->clients[entref.entnum];
+    Scr_AddBool(client->lastUsercmd.forwardmove < 0);
+}
+
+void PlayerCmd_LeftButtonPressed(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+    const client_t *client = &svs->clients[entref.entnum];
+    Scr_AddBool(client->lastUsercmd.rightmove < 0);
+}
+
+void PlayerCmd_RightButtonPressed(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+    const client_t *client = &svs->clients[entref.entnum];
+    Scr_AddBool(client->lastUsercmd.rightmove > 0);
+}
+
 void PlayerCmd_GetStance(scr_entref_t entref)
 {
     const gentity_s *ent = GetPlayerEntity(entref);
 
-    const int pm_flags = ent->client->pm_flags;
+    const int pm_flags = ent->client->ps.pm_flags;
     if ((pm_flags & PMF_PRONE) != 0)
     {
         Scr_AddConstString(scr_const->prone);
@@ -174,6 +202,11 @@ g_scr_main::g_scr_main()
     Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY);
     Scr_AddMethod("fragbuttonpressed", PlayerCmd_FragButtonPressed, BUILTIN_ANY);
     Scr_AddMethod("smokebuttonpressed", PlayerCmd_SmokeButtonPressed, BUILTIN_ANY);
+    Scr_AddMethod("forwardbuttonpressed", PlayerCmd_ForwardButtonPressed, BUILTIN_ANY);
+    Scr_AddMethod("backbuttonpressed", PlayerCmd_BackButtonPressed, BUILTIN_ANY);
+    Scr_AddMethod("leftbuttonpressed", PlayerCmd_LeftButtonPressed, BUILTIN_ANY);
+    Scr_AddMethod("rightbuttonpressed", PlayerCmd_RightButtonPressed, BUILTIN_ANY);
+
     Scr_AddMethod("getstance", PlayerCmd_GetStance, BUILTIN_ANY);
 }
 
