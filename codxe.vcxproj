@@ -80,6 +80,8 @@
 
       <ClCompile Include="src\common\config.cpp" />
 
+      <ClCompile Include="src\game\ngl\mp\main.cpp" />
+
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
 
@@ -171,6 +173,9 @@
       <ClCompile Include="src\game\qos\mp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />
 
+
+      
+
       <ClCompile Include="src\dllmain.cpp" />
       <ClCompile Include="src\detour.cpp" />
       <ClCompile Include="src\filesystem.cpp" />
@@ -183,6 +188,8 @@
 
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
+
+      <ClInclude Include="src\game\ngl\mp\main.h" />
 
       <ClInclude Include="src\game\iw2\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw2\sp\main.h" />
