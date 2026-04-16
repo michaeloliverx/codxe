@@ -87,6 +87,8 @@
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
 
+      <ClCompile Include="src\game\ngl\mp\main.cpp" />
+
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
@@ -169,7 +171,7 @@
       <ClCompile Include="src\game\qos\mp\components\events.cpp" />
       <ClCompile Include="src\game\qos\mp\components\g_scr_main.cpp" />
       <ClCompile Include="src\game\qos\mp\components\gsc_fields.cpp" />
-      <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />   
 
       <ClCompile Include="src\dllmain.cpp" />
       <ClCompile Include="src\detour.cpp" />
@@ -193,6 +195,8 @@
       <ClInclude Include="src\game\iw2\mp\main.h" />
       <ClInclude Include="src\game\iw2\mp\structs.h" />
       <ClInclude Include="src\game\iw2\mp\symbols.h" />
+      
+      <ClInclude Include="src\game\ngl\mp\main.h" />
 
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />

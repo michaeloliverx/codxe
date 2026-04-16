@@ -146,6 +146,14 @@ const GameInfo GAME_INFO[] = {
         "Call of Duty: Modern Warfare 3 MP Title Update #24",
         &CreatePlugin<iw5::mp::IW5_MP_Plugin>,
     },
+    {
+        0x415607E1,
+        0x45B56A5C,// Mon Jan 22 20 : 52 : 28 2007
+        "codmp_xenonf.xex",
+        "NGL MP TU3",
+        "Call of Duty: 3 MP Title Update #3",
+        &CreatePlugin<ngl::mp::NGL_MP_Plugin>,
+    },
 };
 
 const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)

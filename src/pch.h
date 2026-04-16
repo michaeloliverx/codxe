@@ -53,6 +53,9 @@
 #include "game/iw2/mp/structs.h"
 #include "game/iw2/mp/symbols.h"
 
+// NGL-specific includes
+#include "game/ngl/mp/main.h"
+
 // IW3-specific includes
 #include "game/iw3/mp/main.h"
 #include "game/iw3/mp/structs.h"
