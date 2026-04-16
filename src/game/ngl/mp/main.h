@@ -14,4 +14,4 @@ class NGL_MP_Plugin : public Plugin
     ~NGL_MP_Plugin();
 };
 } // namespace mp
-} // namespace iw2
+} // namespace ngl
