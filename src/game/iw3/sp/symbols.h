@@ -29,7 +29,7 @@ static auto DB_EnumXAssets_FastFile =
 static auto DB_GetAllXAssetOfType_FastFile =
     reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x822AEB20);
 
-static auto Load_MapEntsPtr = reinterpret_cast<void (*)()>(0x822A9648);
+static auto Load_MapEntsPtr = reinterpret_cast<void (*)()>(0x822B9788);
 
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x82192CC0);
 static auto Scr_AddSourceBuffer =
