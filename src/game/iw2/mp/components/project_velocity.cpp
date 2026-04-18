@@ -5,10 +5,13 @@
 namespace iw2 {
 namespace mp {
 
-uint32_t NOP_INST = 0x60000000;
+// Global detour object
+Detour PM_ProjectVelocity_Detour;
 
-// Logic for the math
-void PM_ProjectVelocity(vec3_t in, vec3_t normal, vec3_t out)
+const uint32_t NOP_INST = 0x60000000;
+
+// The Hook function that the Detour will point to
+void PM_ProjectVelocity_Hook(vec3_t in, vec3_t normal, vec3_t out)
 {
     const float EPSILON = 0.001f;
     float normalZ = normal[2];
@@ -26,6 +29,7 @@ void PM_ProjectVelocity(vec3_t in, vec3_t normal, vec3_t out)
 
     if (divisor > 0.0f) {
         float scale = sqrtf(projSq / divisor);
+        // FIXED: Added logical OR operators
         if (scale < 1.0f || projRatio < 0.0f || in[2] > 0.0f) {
             out[0] = in[0] * scale;
             out[1] = in[1] * scale;
@@ -33,62 +37,61 @@ void PM_ProjectVelocity(vec3_t in, vec3_t normal, vec3_t out)
             return;
         }
     }
+
     out[0] = in[0]; out[1] = in[1]; out[2] = in[2];
 }
 
+// Simple helper to build the branch-link (bl) instruction
 static uint32_t make_bl(uint32_t current, uint32_t target) {
     uint32_t li = (target - current) & 0x03FFFFFC;
     return (18u << 26) | li | 1u;
 }
 
-void project_velocity::install_patch() {
-    uint32_t funcAddr = (uint32_t)(void*)&PM_ProjectVelocity;
-
-    // Explicitly cast the value to (uint32_t) to ensure the compiler
-    // treats it as a raw bit pattern before assigning it to the volatile pointer.
-    *(volatile uint32_t *)PV_Config::CallToStubAddr = (uint32_t)NOP_INST;
-
-    volatile uint32_t* stub = (volatile uint32_t*)PV_Config::StubAddr;
-    uint16_t hi = (uint16_t)((funcAddr >> 16) & 0xFFFF);
-    uint16_t lo = (uint16_t)(funcAddr & 0xFFFF);
-
-    stub[0] = 0x3D800000 | hi;
-    stub[1] = 0x618C0000 | lo;
-    stub[2] = 0x7D8903A6;
-    stub[3] = 0x4E800420;
-
-    *(volatile uint32_t*)PV_Config::PatchAddr = make_bl(PV_Config::PatchAddr, PV_Config::StubAddr);
+// Simple helper to build the unconditional branch (b) instruction
+static uint32_t make_b(uint32_t current, uint32_t target) {
+    uint32_t li = (target - current) & 0x03FFFFFC;
+    return (18u << 26) | li;
 }
 
-void remove_clip_velocity(int count)
-{
-    // The header is 12 bytes. Since we are using uint32_t (4 bytes),
-    // we move back exactly 3 "indices".
-    const int headerOpCount = 3;
+void project_velocity::install_patch() {
+    // 1. NOP out the original call to the dummy function
+    *(volatile uint32_t*)PV_Config::CallToDummyAddr = NOP_INST;
 
-    volatile uint32_t* patchBase = reinterpret_cast<volatile uint32_t*>(PV_Config::PatchAddr);
+    // 2. Initialize the Detour on the DummyAddr
+    // This redirects any call to DummyAddr to our PM_ProjectVelocity_Hook
+    PM_ProjectVelocity_Detour = Detour(reinterpret_cast<void*>(PV_Config::DummyAddr), reinterpret_cast<void*>(PM_ProjectVelocity_Hook));
+    PM_ProjectVelocity_Detour.Install();
 
-    // 1. Write the 12-byte header BEFORE the patch address
-    // Pointer arithmetic: patchBase - 3 is PatchAddr - 0xC (12 bytes)
-    volatile uint32_t* headerStart = patchBase - headerOpCount;
+    // 3. Write the inline argument setup and call at PatchAddr
+    volatile uint32_t* patch = (volatile uint32_t*)PV_Config::PatchAddr;
 
-    headerStart[0] = 0x7FE3FB78;    //r31->r3
-    headerStart[1] = 0x388100A4;    //sp+A4->r4
-    headerStart[2] = 0x7FE5FB78;    //r31->r5
+    // Setup Arguments
+    patch[0] = 0x7FE3FB78; // mr r3, r31
+    patch[1] = 0x388100A4; // addi r4, r1, 0xA4
+    patch[2] = 0x7FE5FB78; // mr r5, r31
 
-    // 2. NOP out the instructions starting AT the patch address
-    for (int i = 0; i < count; i++)
-    {
-        patchBase[i] = NOP_INST;
+    // Call the hooked DummyAddr (where our Detour is waiting)
+    uint32_t blAddr = PV_Config::PatchAddr + (3 * 4);
+    patch[3] = make_bl(blAddr, PV_Config::DummyAddr);
+
+    // Jump past the rest of the original logic (18 instructions total)
+    uint32_t bAddr = PV_Config::PatchAddr + (4 * 4);
+    uint32_t targetAddr = PV_Config::PatchAddr + (18 * 4);
+    patch[4] = make_b(bAddr, targetAddr);
+
+    // Clear the remaining original instructions
+    for (int i = 5; i < 18; i++) {
+        patch[i] = NOP_INST;
     }
 }
 
 project_velocity::project_velocity() {
-    remove_clip_velocity(18);
     install_patch();
 }
 
-project_velocity::~project_velocity() {}
+project_velocity::~project_velocity() {
+    PM_ProjectVelocity_Detour.Remove();
+}
 
 } // namespace mp
 } // namespace iw2
