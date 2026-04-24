@@ -333,6 +333,8 @@ IW3_MP_Plugin::~IW3_MP_Plugin()
 {
     DbgPrint("Shutting down MP\n");
 
+    CL_ConsolePrint_Detour.Remove();
+    UI_Refresh_Detour.Remove();
     CL_GamepadButtonEvent_Detour.Remove();
     Load_MapEntsPtr_Detour.Remove();
 }

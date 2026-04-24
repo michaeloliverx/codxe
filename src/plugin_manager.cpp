@@ -196,6 +196,12 @@ PluginManager::~PluginManager()
         CloseHandle(m_monitor_thread);
         m_monitor_thread = nullptr;
     }
+
+    if (m_current_plugin)
+    {
+        DbgPrint("[codxe][PluginManager] Cleaning up current plugin during shutdown\n");
+        m_current_plugin.reset();
+    }
 }
 
 DWORD WINAPI PluginManager::ThreadProc(LPVOID param)
