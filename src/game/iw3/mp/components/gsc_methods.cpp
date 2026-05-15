@@ -23,14 +23,9 @@ void PlayerCmd_ButtonPressed(scr_entref_t entref)
     if (entref.classnum != 0)
         Scr_ObjectError("not an entity");
 
-    char *button = Scr_GetString(0);
+    const char *button = Scr_GetString(0);
     if (!button || !*button)
         Scr_Error("usage: <client> buttonPressed(<button name>)");
-
-    // toupper
-    for (char *p = button; *p; p++)
-        if (*p >= 'a' && *p <= 'z')
-            *p -= 32;
 
     const int keypressed = CL_IsKeyPressed(0, button);
     return Scr_AddInt(keypressed);

@@ -196,6 +196,13 @@ PluginManager::~PluginManager()
         CloseHandle(m_monitor_thread);
         m_monitor_thread = nullptr;
     }
+
+    if (m_current_plugin)
+    {
+        DbgPrint("[codxe][PluginManager] Cleaning up current plugin during shutdown\n");
+        m_current_plugin.reset();
+        Detour::ResetTrampolinePool();
+    }
 }
 
 DWORD WINAPI PluginManager::ThreadProc(LPVOID param)
@@ -232,6 +239,7 @@ void PluginManager::OnTitleChanged(DWORD title_id, DWORD timestamp)
     {
         DbgPrint("[codxe][PluginManager] Cleaning up current plugin\n");
         m_current_plugin.reset();
+        Detour::ResetTrampolinePool();
     }
 
     // Special case

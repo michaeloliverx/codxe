@@ -5,7 +5,7 @@ void DrawBranding(int localClientNum)
 {
     const iw5::mp::ScreenPlacement *placement =
         iw5::mp::ScrPlace_GetActivePlacement((iw5::mp::LocalClientNum_t)localClientNum);
-    const char *text = branding::GetBrandingString(branding::GAME_IW5, branding::MODE_MP);
+    const char *text = branding::GetBrandingString();
     const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f};
 
     const float x = -105.0f;

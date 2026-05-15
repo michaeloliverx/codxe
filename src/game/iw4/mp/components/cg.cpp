@@ -10,7 +10,7 @@ void DrawBranding(int localClientNum)
 {
     auto const placement = ScrPlace_GetUnsafeFullPlacement();
 
-    const char *text = branding::GetBrandingString(branding::GAME_IW4, branding::MODE_MP);
+    const char *text = branding::GetBrandingString();
 
     const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f}; // RGBA white color
 

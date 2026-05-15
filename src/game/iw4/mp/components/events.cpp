@@ -30,4 +30,6 @@ Events::Events()
 Events::~Events()
 {
     CG_DrawActive_Detour.Remove();
+
+    cg_drawactive_callbacks.clear();
 }

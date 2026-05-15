@@ -86,6 +86,10 @@ Events::~Events()
     CG_DrawActive_Detour.Remove();
     CG_Init_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
+
+    cg_drawactive_callbacks.clear();
+    cg_init_callbacks.clear();
+    vmshutdown_callbacks.clear();
 }
 
 } // namespace mp

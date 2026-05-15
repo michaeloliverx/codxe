@@ -141,12 +141,12 @@ namespace mp
 {
 void Cmd_cmdinput_f()
 {
-    bool success = ShowKeyboardAsync(0,                         // First controller
-                                     L"",                       // Default text
-                                     L"Enter Text",             // Title
-                                     L"Please enter some text", // Description
-                                     256,                       // Max length
-                                     VKBD_DEFAULT,              // Keyboard type
+    bool success = ShowKeyboardAsync(0,                // First controller
+                                     L"",              // Default text
+                                     L"Enter command", // Title
+                                     L"",              // Description
+                                     256,              // Max length
+                                     VKBD_DEFAULT,     // Keyboard type
                                      [](bool success, const wchar_t *text)
                                      {
                                          if (success && text)
@@ -291,8 +291,6 @@ void DisableFastfileAuth()
 
 IW3_MP_Plugin::IW3_MP_Plugin()
 {
-    DbgPrint("Initializing MP\n");
-
     DisableFastfileAuth();
 
     // Special modules need to be registered first
@@ -331,8 +329,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
 
 IW3_MP_Plugin::~IW3_MP_Plugin()
 {
-    DbgPrint("Shutting down MP\n");
-
+    UI_Refresh_Detour.Remove();
     CL_GamepadButtonEvent_Detour.Remove();
     Load_MapEntsPtr_Detour.Remove();
 }

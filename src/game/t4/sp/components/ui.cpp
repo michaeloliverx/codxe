@@ -9,7 +9,7 @@ void DrawBranding(int localClientNum)
 {
     static auto consoleFont = R_RegisterFont("fonts/consoleFont", -1);
 
-    const char *text = branding::GetBrandingString(branding::GAME_T4, branding::MODE_SP);
+    const char *text = branding::GetBrandingString();
 
     const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f}; // RGBA white color
 

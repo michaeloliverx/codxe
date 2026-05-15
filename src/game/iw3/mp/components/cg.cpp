@@ -47,7 +47,7 @@ void R_DrawAllDynEnt_Hook(const GfxViewInfo *viewInfo)
 
 void DrawBranding()
 {
-    const char *brandingWithBuild = branding::GetBrandingString(branding::GAME_IW3, branding::MODE_MP);
+    const char *brandingWithBuild = branding::GetBrandingString();
 
     static Font_s *font = R_RegisterFont("fonts/consoleFont");
     float color[4] = {1.0, 1.0, 1.0, 0.4};
@@ -109,6 +109,16 @@ void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
         Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, "settings_map");
     else
         Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+
+    // Increase the maximum number of clients in xboxlive private match and systemlink from 18 > 24
+    if (strcmp(menuName, "menu_xboxlive_privatelobby") == 0)
+    {
+        Cbuf_AddText(0, "set party_maxplayers 24");
+    }
+    else if (strcmp(menuName, "menu_gamesetup_systemlink") == 0)
+    {
+        Cbuf_AddText(0, "set sv_maxclients 24");
+    }
 }
 
 static const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};

@@ -261,7 +261,7 @@ void GScr_Float()
         Scr_AddFloat(1.0f * Scr_GetInt(0));
     else if (varType == VAR_STRING)
     {
-        char *strFloat = Scr_GetString(0);
+        const char *strFloat = Scr_GetString(0);
         double result = 0.0;
         if (isdigit(strFloat[0]) || (strFloat[0] == '-' && isdigit(strFloat[1])))
             result = atof(strFloat);

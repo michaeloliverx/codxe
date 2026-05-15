@@ -14,7 +14,7 @@ void Branding::UI_DrawBuildNumber_Hook(const int localClientNum)
 
 void Branding::DrawBranding()
 {
-    const char *brandingWithBuild = branding::GetBrandingString(::branding::GAME_T4, ::branding::MODE_MP);
+    const char *brandingWithBuild = branding::GetBrandingString();
 
     static Font_s *font = (Font_s *)DB_FindXAssetHeader(ASSET_TYPE_FONT, "fonts/consoleFont", 1, -1);
 
