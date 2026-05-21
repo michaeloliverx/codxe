@@ -160,81 +160,37 @@ const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)
     return nullptr;
 }
 
-/**
- * Get the time date stamp from the current title xex.
- */
-DWORD XexGetTimeDateStamp()
-{
-    const PLDR_DATA_TABLE_ENTRY entry = (PLDR_DATA_TABLE_ENTRY)GetModuleHandle(nullptr);
-    if (entry == nullptr)
-    {
-        return 0;
-    }
-    return entry->TimeDateStamp;
-}
-
-PluginManager::PluginManager() : m_monitor_active(false), m_monitor_thread(nullptr), m_current_plugin(nullptr)
+PluginManager::PluginManager() : m_current_plugin(nullptr), m_current_title_id(NONE), m_current_timestamp(0)
 {
     if (xbox::IsXenia())
     {
-        DbgPrint("[codxe][PluginManager] Running in Xenia environment, skipping plugin manager initialization.\n");
-        OnTitleChanged(XamGetCurrentTitleId(), XexGetTimeDateStamp());
+        DbgPrint("[codxe][PluginManager] Running in Xenia, initializing the current executable immediately.\n");
+        InitializeForCurrentExecutable();
         return;
     }
 
-    // Start the monitoring thread
-    ExCreateThread(&m_monitor_thread, 0, nullptr, nullptr, &PluginManager::ThreadProc, this, EX_CREATE_FLAG_SYSTEM);
+    DbgPrint("[codxe][PluginManager] Waiting for XexpFinishExecutableLoad before initializing a game plugin.\n");
 }
 
 PluginManager::~PluginManager()
 {
-    // Signal the thread to stop and wait for it to finish
-    m_monitor_active = false;
-    if (m_monitor_thread)
-    {
-        WaitForSingleObject(m_monitor_thread, INFINITE);
-        CloseHandle(m_monitor_thread);
-        m_monitor_thread = nullptr;
-    }
-
-    if (m_current_plugin)
-    {
-        DbgPrint("[codxe][PluginManager] Cleaning up current plugin during shutdown\n");
-        m_current_plugin.reset();
-        Detour::ResetTrampolinePool();
-    }
+    ResetCurrentPlugin();
 }
 
-DWORD WINAPI PluginManager::ThreadProc(LPVOID param)
+void PluginManager::InitializeForCurrentExecutable()
 {
-    auto self = static_cast<PluginManager *>(param);
-    self->m_monitor_active = true;
-
-    DWORD prevTitleId = 0;
-    DWORD prevTimestamp = 0;
-
-    while (self->m_monitor_active)
+    const auto module = reinterpret_cast<PLDR_DATA_TABLE_ENTRY>(GetModuleHandle(nullptr));
+    if (module == nullptr)
     {
-        const DWORD titleId = XamGetCurrentTitleId();
-        const DWORD xexTimestamp = XexGetTimeDateStamp();
-
-        if (titleId != prevTitleId || xexTimestamp != prevTimestamp)
-        {
-            self->OnTitleChanged(titleId, xexTimestamp);
-            prevTitleId = titleId;
-            prevTimestamp = xexTimestamp;
-        }
-        Sleep(100);
+        DbgPrint("[codxe][PluginManager] Failed to resolve the current executable module.\n");
+        return;
     }
 
-    return 0;
+    OnExecutableLoaded(module, nullptr);
 }
 
-void PluginManager::OnTitleChanged(DWORD title_id, DWORD timestamp)
+void PluginManager::ResetCurrentPlugin()
 {
-    DbgPrint("[codxe][PluginManager] Title ID changed to: 0x%08X\n", title_id);
-
-    // If there is a current plugin, clean it up
     if (m_current_plugin)
     {
         DbgPrint("[codxe][PluginManager] Cleaning up current plugin\n");
@@ -242,9 +198,41 @@ void PluginManager::OnTitleChanged(DWORD title_id, DWORD timestamp)
         Detour::ResetTrampolinePool();
     }
 
-    // Special case
-    if (title_id == NONE || title_id == DASHBOARD)
+    m_current_title_id = NONE;
+    m_current_timestamp = 0;
+}
+
+void PluginManager::OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module, const char *commandLine)
+{
+    if (module == nullptr)
+    {
+        DbgPrint("[codxe][PluginManager] Ignoring executable load with a null module entry.\n");
         return;
+    }
+
+    const DWORD title_id = XamGetCurrentTitleId();
+    const DWORD timestamp = module->TimeDateStamp;
+
+    if (title_id == m_current_title_id && timestamp == m_current_timestamp)
+    {
+        DbgPrint("[codxe][PluginManager] Ignoring duplicate executable load for Title ID:0x%08X TimeDateStamp=0x%08X\n",
+                 title_id, timestamp);
+        return;
+    }
+
+    DbgPrint("[codxe][PluginManager] Executable loaded. Title ID:0x%08X TimeDateStamp=0x%08X CommandLine:%s\n",
+             title_id, timestamp, commandLine != nullptr ? commandLine : "<null>");
+
+    ResetCurrentPlugin();
+
+    m_current_title_id = title_id;
+    m_current_timestamp = timestamp;
+
+    if (title_id == NONE || title_id == DASHBOARD)
+    {
+        DbgPrint("[codxe][PluginManager] No game plugin needed for Title ID:0x%08X\n", title_id);
+        return;
+    }
 
     const GameInfo *info = FindGameInfo(title_id, timestamp);
     if (!info)
@@ -259,12 +247,6 @@ void PluginManager::OnTitleChanged(DWORD title_id, DWORD timestamp)
     {
         DbgPrint("[codxe][PluginManager] No plugin for this executable.\n");
         return;
-    }
-
-    // On Xenia we can immediately init the plugin. On the xbox wait a bit for loading
-    if (!xbox::IsXenia())
-    {
-        Sleep(2000); // Allow some time for the game to load
     }
 
     auto plugin = info->createPlugin();

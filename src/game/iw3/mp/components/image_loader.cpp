@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "common/config.h"
+#include "events.h"
 #include "image_loader.h"
 
 // Forgive me for this dreadful code. It was hacked together until semi working and not touched since.
@@ -244,6 +245,7 @@ namespace iw3
 {
 namespace mp
 {
+static cmd_function_s Cmd_imagedump_VAR;
 
 void Image_DbgPrint(const GfxImage *image)
 {
@@ -1036,8 +1038,7 @@ image_loader::image_loader()
     R_StreamLoadFileSynchronously_Detour = Detour(R_StreamLoadFileSynchronously, R_StreamLoadFileSynchronously_Hook);
     R_StreamLoadFileSynchronously_Detour.Install();
 
-    cmd_function_s *imagedump_VAR = new cmd_function_s;
-    Cmd_AddCommandInternal("imagedump", Cmd_imagedump, imagedump_VAR);
+    Events::OnCmdInit([]() { Cmd_AddCommandInternal("imagedump", Cmd_imagedump, &Cmd_imagedump_VAR); });
 }
 
 image_loader::~image_loader()

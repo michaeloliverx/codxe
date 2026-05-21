@@ -289,6 +289,8 @@ void DisableFastfileAuth()
     *(volatile uint32_t *)0x822B2D44 = 0x60000000;
 }
 
+static cmd_function_s Cmd_cmdinput_VAR;
+
 IW3_MP_Plugin::IW3_MP_Plugin()
 {
     DisableFastfileAuth();
@@ -321,10 +323,9 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
     Load_MapEntsPtr_Detour.Install();
 
-    cmd_function_s *cmdinput_VAR = new cmd_function_s;
-    Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, cmdinput_VAR);
+    Events::OnCmdInit([] { Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, &Cmd_cmdinput_VAR); });
 
-    Events::OnCG_DrawActive([]() { CheckKeyboardCompletion(); });
+    Events::OnCG_DrawActive([] { CheckKeyboardCompletion(); });
 }
 
 IW3_MP_Plugin::~IW3_MP_Plugin()

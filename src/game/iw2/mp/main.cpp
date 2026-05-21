@@ -10,7 +10,6 @@ namespace mp
 
 IW2_MP_Plugin::IW2_MP_Plugin()
 {
-    DbgPrint("IW2 MP Plugin initialized\n");
     RegisterModule(new Config());
     RegisterModule(new g_scr_main());
     RegisterModule(new scr_parser());

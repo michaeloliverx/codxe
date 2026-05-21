@@ -8,12 +8,13 @@ class PluginManager
     PluginManager();
     ~PluginManager();
 
+    void InitializeForCurrentExecutable();
+    void OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module, const char *commandLine);
+
   private:
     std::unique_ptr<Plugin> m_current_plugin;
+    DWORD m_current_title_id;
+    DWORD m_current_timestamp;
 
-    bool m_monitor_active;
-    HANDLE m_monitor_thread;
-
-    void OnTitleChanged(DWORD title_id, DWORD timestamp);
-    static DWORD WINAPI ThreadProc(LPVOID param);
+    void ResetCurrentPlugin();
 };

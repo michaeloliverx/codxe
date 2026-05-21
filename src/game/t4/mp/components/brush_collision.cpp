@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "brush_collision.h"
+#include "events.h"
 
 namespace t4
 {
@@ -129,11 +130,12 @@ void CG_DrawActive_Hook(int localClientNum)
 
 BrushCollision::BrushCollision()
 {
-    DbgPrint("BrushCollision initialized\n");
-    Sleep(1000); // Wait for the game to initialize
-
-    noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
-                                         "Space separated list of brushes to disable collision on.");
+    Events::OnDvarInit(
+        []
+        {
+            noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
+                                                 "Space separated list of brushes to disable collision on.");
+        });
 
     CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
     CG_DrawActive_Detour.Install();
@@ -144,7 +146,6 @@ BrushCollision::BrushCollision()
 
 BrushCollision::~BrushCollision()
 {
-    DbgPrint("BrushCollision shutdown\n");
 
     CG_DrawActive_Detour.Remove();
     CM_LoadMap_Detour.Remove();

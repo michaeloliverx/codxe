@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "cg.h"
+#include "events.h"
 
 namespace t4
 {
@@ -32,8 +33,7 @@ void BG_CalculateView_IdleAngles_Hook(viewState_t *vs, float *angles)
 
 cg::cg()
 {
-    DbgPrint("cg initialized\n");
-    bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, DVAR_FLAG_NONE, "Idle gun sway");
+    Events::OnDvarInit([] { bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, DVAR_FLAG_NONE, "Idle gun sway"); });
 
     BG_CalculateWeaponPosition_IdleAngles_Detour =
         Detour(BG_CalculateWeaponPosition_IdleAngles, BG_CalculateWeaponPosition_IdleAngles_Hook);
@@ -45,7 +45,7 @@ cg::cg()
 
 cg::~cg()
 {
-    DbgPrint("cg shutdown\n");
+
     BG_CalculateWeaponPosition_IdleAngles_Detour.Remove();
     BG_CalculateView_IdleAngles_Detour.Remove();
 }

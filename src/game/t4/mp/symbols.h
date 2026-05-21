@@ -47,6 +47,8 @@ static auto Cbuf_ExecuteBuffer =
 
 static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
 
+static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x82272BF8);
+
 static auto DB_FindXAssetHeader =
     reinterpret_cast<XAssetHeader *(*)(const XAssetType type, const char *name, bool errorIfMissing, int waitTime)>(
         0x821EA5D8);

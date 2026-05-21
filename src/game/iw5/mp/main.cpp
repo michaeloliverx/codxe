@@ -199,8 +199,6 @@ bool DB_IsXAssetDefault_Hook(XAssetType type, const char *name)
 
 IW5_MP_Plugin::IW5_MP_Plugin()
 {
-    DbgPrint("IW5 MP Plugin initialized\n");
-
     RegisterModule(new Config());
     RegisterModule(new Branding());
     RegisterModule(new patches());
@@ -216,7 +214,6 @@ IW5_MP_Plugin::IW5_MP_Plugin()
 
 IW5_MP_Plugin::~IW5_MP_Plugin()
 {
-    DbgPrint("IW5 MP Plugin shutting down\n");
     DB_FindXAssetHeader_Detour.Remove();
     DB_IsXAssetDefault_Detour.Remove();
 }

@@ -526,8 +526,6 @@ void ImageLoader::ReplaceGfxImage(GfxImage *image)
 
 ImageLoader::ImageLoader()
 {
-    Sleep(10000); // Simulate some initialization delay
-
     // Create directories for dumping images
     CreateDirectoryA("game:\\_codxe", nullptr);
     CreateDirectoryA("game:\\_codxe\\dump", nullptr);
@@ -555,7 +553,6 @@ ImageLoader::ImageLoader()
 
 ImageLoader::~ImageLoader()
 {
-    DbgPrint("ImageLoader shutdown\n");
 }
 } // namespace mp
 } // namespace t4

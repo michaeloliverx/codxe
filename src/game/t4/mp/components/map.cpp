@@ -53,16 +53,12 @@ void Load_clipMap_t_Hook(bool atStreamStart)
 
 Map::Map()
 {
-    DbgPrint("Map initialized\n");
-
     Load_clipMap_t_Detour = Detour(Load_clipMap_t, Load_clipMap_t_Hook);
     Load_clipMap_t_Detour.Install();
 }
 
 Map::~Map()
 {
-    DbgPrint("Map shutdown\n");
-
     Load_clipMap_t_Detour.Remove();
 }
 } // namespace mp

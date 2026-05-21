@@ -75,6 +75,7 @@ patches::patches()
 
 patches::~patches()
 {
+    Weapon_RocketLauncher_Fire_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw4

@@ -147,15 +147,45 @@ void CG_DrawPlayerInfo()
 
 cg::cg()
 {
+    Events::OnDvarInit(
+        []
+        {
+            // Default to true for idle gun sway
+            // This is the default behavior in the original game.
+            bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, 0, "Idle gun sway");
+
+            Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
+
+            cg_scoreboardLabel_Score = Dvar_RegisterString("cg_scoreboardLabel_Score", "", DVAR_FLAG_NONE,
+                                                           "Override label for 'Score' column on scoreboard");
+
+            cg_scoreboardLabel_Kills = Dvar_RegisterString("cg_scoreboardLabel_Kills", "", DVAR_FLAG_NONE,
+                                                           "Override label for 'Kills' column on scoreboard");
+
+            cg_scoreboardLabel_Assists = Dvar_RegisterString("cg_scoreboardLabel_Assists", "", DVAR_FLAG_NONE,
+                                                             "Override label for 'Assists' column on scoreboard");
+
+            cg_scoreboardLabel_Deaths = Dvar_RegisterString("cg_scoreboardLabel_Deaths", "", DVAR_FLAG_NONE,
+                                                            "Override label for 'Deaths' column on scoreboard");
+
+            cg_draw_player_info = Dvar_RegisterBool("cg_draw_player_info", false, 0,
+                                                    "Draw player info (origin, viewangles, speed) on screen");
+        });
+
+    Events::OnCG_DrawActive(
+        []()
+        {
+            if (cg_draw_player_info->current.enabled)
+            {
+                CG_DrawPlayerInfo();
+            }
+        });
+
     Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
     Menus_OpenByName_Detour.Install();
 
     UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
     UI_DrawBuildNumber_Detour.Install();
-
-    // Default to true for idle gun sway
-    // This is the default behavior in the original game.
-    bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, 0, "Idle gun sway");
 
     BG_CalculateWeaponPosition_IdleAngles_Detour =
         Detour(BG_CalculateWeaponPosition_IdleAngles, BG_CalculateWeaponPosition_IdleAngles_Hook);
@@ -167,34 +197,8 @@ cg::cg()
     R_DrawAllDynEnt_Detour = Detour(R_DrawAllDynEnt, R_DrawAllDynEnt_Hook);
     R_DrawAllDynEnt_Detour.Install();
 
-    Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
-
     UI_SafeTranslateString_Detour = Detour(UI_SafeTranslateString, UI_SafeTranslateString_Hook);
     UI_SafeTranslateString_Detour.Install();
-
-    cg_scoreboardLabel_Score = Dvar_RegisterString("cg_scoreboardLabel_Score", "", DVAR_FLAG_NONE,
-                                                   "Override label for 'Score' column on scoreboard");
-
-    cg_scoreboardLabel_Kills = Dvar_RegisterString("cg_scoreboardLabel_Kills", "", DVAR_FLAG_NONE,
-                                                   "Override label for 'Kills' column on scoreboard");
-
-    cg_scoreboardLabel_Assists = Dvar_RegisterString("cg_scoreboardLabel_Assists", "", DVAR_FLAG_NONE,
-                                                     "Override label for 'Assists' column on scoreboard");
-
-    cg_scoreboardLabel_Deaths = Dvar_RegisterString("cg_scoreboardLabel_Deaths", "", DVAR_FLAG_NONE,
-                                                    "Override label for 'Deaths' column on scoreboard");
-
-    cg_draw_player_info =
-        Dvar_RegisterBool("cg_draw_player_info", false, 0, "Draw player info (origin, viewangles, speed) on screen");
-
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (cg_draw_player_info->current.enabled)
-            {
-                CG_DrawPlayerInfo();
-            }
-        });
 }
 
 cg::~cg()
@@ -204,6 +208,7 @@ cg::~cg()
     UI_SafeTranslateString_Detour.Remove();
     BG_CalculateWeaponPosition_IdleAngles_Detour.Remove();
     BG_CalculateView_IdleAngles_Detour.Remove();
+    R_DrawAllDynEnt_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw3

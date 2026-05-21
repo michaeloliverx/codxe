@@ -21,6 +21,8 @@ class Events : public Module
     static void OnCG_DrawActive(const std::function<void()> &callback);
     static void OnCG_Init(const std::function<void()> &callback);
     static void OnVMShutdown(const std::function<void()> &callback);
+    static void OnDvarInit(const std::function<void()> &callback);
+    static void OnCmdInit(const std::function<void()> &callback);
 
   private:
     static std::vector<std::function<void()>> cg_drawactive_callbacks;
@@ -34,6 +36,14 @@ class Events : public Module
     static std::vector<std::function<void()>> vmshutdown_callbacks;
     static Detour Scr_ShutdownSystem_Detour;
     static void Scr_ShutdownSystem_Hook(unsigned __int8 sys, int bComplete);
+
+    static std::vector<std::function<void()>> dvarinit_callbacks;
+    static Detour Com_InitDvars_Detour;
+    static void Com_InitDvars_Hook();
+
+    static std::vector<std::function<void()>> cmdinit_callbacks;
+    static Detour Cmd_Init_Detour;
+    static void __fastcall Cmd_Init_Hook();
 };
 } // namespace mp
 } // namespace iw3

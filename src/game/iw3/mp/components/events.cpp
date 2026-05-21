@@ -6,9 +6,6 @@ namespace iw3
 namespace mp
 {
 
-typedef void (*Scr_ShutdownSystem_t)(unsigned __int8 sys, int bComplete);
-static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x82211FD0);
-
 std::vector<std::function<void()>> Events::cg_drawactive_callbacks;
 
 void Events::CG_DrawActive_Hook(int localClientNum)
@@ -69,6 +66,50 @@ void Events::OnVMShutdown(const std::function<void()> &callback)
 
 Detour Events::Scr_ShutdownSystem_Detour;
 
+std::vector<std::function<void()>> Events::dvarinit_callbacks;
+
+void Events::Com_InitDvars_Hook()
+{
+    for (auto it = dvarinit_callbacks.begin(); it != dvarinit_callbacks.end(); ++it)
+    {
+        (*it)();
+    }
+
+    dvarinit_callbacks.clear();
+
+    // Call original function after callbacks
+    Com_InitDvars_Detour.GetOriginal<Com_InitDvars_t>()();
+}
+
+void Events::OnDvarInit(const std::function<void()> &callback)
+{
+    dvarinit_callbacks.emplace_back(callback);
+}
+
+Detour Events::Com_InitDvars_Detour;
+
+std::vector<std::function<void()>> Events::cmdinit_callbacks;
+
+void __fastcall Events::Cmd_Init_Hook()
+{
+    // Call original function first so the command subsystem is ready.
+    Cmd_Init_Detour.GetOriginal<Cmd_Init_t>()();
+
+    for (auto it = cmdinit_callbacks.begin(); it != cmdinit_callbacks.end(); ++it)
+    {
+        (*it)();
+    }
+
+    cmdinit_callbacks.clear();
+}
+
+void Events::OnCmdInit(const std::function<void()> &callback)
+{
+    cmdinit_callbacks.emplace_back(callback);
+}
+
+Detour Events::Cmd_Init_Detour;
+
 Events::Events()
 {
     CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
@@ -79,6 +120,12 @@ Events::Events()
 
     Scr_ShutdownSystem_Detour = Detour(Scr_ShutdownSystem, Scr_ShutdownSystem_Hook);
     Scr_ShutdownSystem_Detour.Install();
+
+    Com_InitDvars_Detour = Detour(Com_InitDvars, Com_InitDvars_Hook);
+    Com_InitDvars_Detour.Install();
+
+    Cmd_Init_Detour = Detour(Cmd_Init, Cmd_Init_Hook);
+    Cmd_Init_Detour.Install();
 }
 
 Events::~Events()
@@ -86,10 +133,14 @@ Events::~Events()
     CG_DrawActive_Detour.Remove();
     CG_Init_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
+    Com_InitDvars_Detour.Remove();
+    Cmd_Init_Detour.Remove();
 
     cg_drawactive_callbacks.clear();
     cg_init_callbacks.clear();
     vmshutdown_callbacks.clear();
+    dvarinit_callbacks.clear();
+    cmdinit_callbacks.clear();
 }
 
 } // namespace mp

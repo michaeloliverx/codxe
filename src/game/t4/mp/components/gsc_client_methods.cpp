@@ -199,15 +199,12 @@ void DebugPrintBuiltinMethods()
 
 GSCClientMethods::GSCClientMethods()
 {
-    DbgPrint("GSCClientMethods initialized\n");
-
     Player_GetMethod_Detour = Detour(Player_GetMethod, Player_GetMethod_Hook);
     Player_GetMethod_Detour.Install();
 }
 
 GSCClientMethods::~GSCClientMethods()
 {
-    DbgPrint("GSCClientMethods shutdown\n");
     Player_GetMethod_Detour.Remove();
 }
 } // namespace mp

@@ -137,8 +137,6 @@ clipmap::clipmap()
 
     iw4::mp::Scr_AddMethod("disableplayercliponintersectingbrushes", DisablePlayerClipOnIntersectingBrushes, 0);
 
-    // RemovePlayerClipOnTouchingBrushes
-
     Events::OnCG_DrawActive(
         []()
         {

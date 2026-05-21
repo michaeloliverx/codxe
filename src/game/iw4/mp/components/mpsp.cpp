@@ -538,6 +538,14 @@ mpsp::mpsp()
 
 mpsp::~mpsp()
 {
+
+#ifndef NDEBUG
+    CL_ConsolePrint_Detour.Remove();
+#endif
+
+    DB_LinkXAssetEntry1_Detour.Remove();
+
+    Com_sprintf_Detour.Remove();
 }
 
 } // namespace mp

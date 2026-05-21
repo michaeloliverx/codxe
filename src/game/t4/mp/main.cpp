@@ -3,13 +3,13 @@
 #include "components/branding.h"
 #include "components/brush_collision.h"
 #include "components/cg.h"
+#include "components/events.h"
 #include "components/gsc_client_fields.h"
 #include "components/gsc_client_methods.h"
 #include "components/gsc_functions.h"
 #include "components/gsc_loader.h"
 #include "components/image_loader.h"
 #include "components/map.h"
-#include "components/test_module.h"
 #include "components/ui.h"
 
 namespace t4
@@ -21,6 +21,7 @@ T4_MP_Plugin::T4_MP_Plugin()
 {
     DbgPrint("T4 MP: Plugin loaded\n");
     RegisterModule(new Config());
+    RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());
     RegisterModule(new cg());
@@ -30,7 +31,6 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new GSCLoader());
     // RegisterModule(new ImageLoader());
     RegisterModule(new Map());
-    RegisterModule(new TestModule());
     RegisterModule(new ui());
 
     // Patches

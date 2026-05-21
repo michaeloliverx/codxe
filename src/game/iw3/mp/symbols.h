@@ -412,6 +412,15 @@ typedef int (*CL_ConsolePrint_AddLine_t)(int localClientNum, int channel, const 
                                          unsigned int pixelWidth, char color, int flags);
 static CL_ConsolePrint_AddLine_t CL_ConsolePrint_AddLine = reinterpret_cast<CL_ConsolePrint_AddLine_t>(0x822E1EB8);
 
+typedef void (*Scr_ShutdownSystem_t)(unsigned __int8 sys, int bComplete);
+static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x82211FD0);
+
+typedef void (*Com_InitDvars_t)();
+static Com_InitDvars_t Com_InitDvars = reinterpret_cast<Com_InitDvars_t>(0x82236990);
+
+typedef void (*Cmd_Init_t)();
+static Cmd_Init_t Cmd_Init = reinterpret_cast<Cmd_Init_t>(0x8223B228);
+
 // Variables
 static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
 static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);

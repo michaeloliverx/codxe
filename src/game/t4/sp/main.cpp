@@ -15,8 +15,6 @@ namespace sp
 
 T4_SP_Plugin::T4_SP_Plugin()
 {
-    DbgPrint("T4 SP: Plugin loaded\n");
-
     RegisterModule(new Config());
     RegisterModule(new clipmap());
     RegisterModule(new g_scr_main()); // Needs to be registered before g_client_script_cmd

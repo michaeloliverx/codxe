@@ -108,9 +108,12 @@ void clipmap::HandleBrushCollisionChange()
 
 clipmap::clipmap()
 {
-    noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
-                                         "Space separated list of brushes to disable collision on.");
-
+    Events::OnDvarInit(
+        []
+        {
+            noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
+                                                 "Space separated list of brushes to disable collision on.");
+        });
     Events::OnCG_Init(SaveBrushContents);
     Events::OnCG_DrawActive(clipmap::HandleBrushCollisionChange);
 }
