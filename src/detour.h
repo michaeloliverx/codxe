@@ -129,9 +129,14 @@ class Detour
         return Detour::WriteFarBranchEx(Destination, BranchTarget, Linked, PreserveRegister);
     }
 
-    static void ResetTrampolinePool()
+    static SIZE_T GetTrampolinePoolSize()
     {
-        Detour::TrampolineSize = 0;
+        return Detour::TrampolineSize;
+    }
+
+    static void ResetTrampolinePool(SIZE_T size = 0)
+    {
+        Detour::TrampolineSize = size;
     }
 
     //

@@ -3,7 +3,6 @@
 
 enum TitleID : DWORD
 {
-    NONE = 0, // Shown when loading reloading a title
     DASHBOARD = 0xFFFE07D1,
 };
 
@@ -37,7 +36,7 @@ struct GameInfo
      * NOTE: This is not checked and is only for display/dev purposes.
      */
     const char *friendlyVersion;
-    std::unique_ptr<Plugin> (*createPlugin)(); // nullptr = no plugin for this exe
+    std::unique_ptr<Plugin> (*createPlugin)();
 };
 
 const GameInfo GAME_INFO[] = {
@@ -148,6 +147,21 @@ const GameInfo GAME_INFO[] = {
     },
 };
 
+namespace
+{
+DWORD ResolveCurrentTitleId()
+{
+    PXEX_EXECUTION_ID execution_id = nullptr;
+    const NTSTATUS status = XamGetExecutionId(&execution_id);
+    if (status == 0 && execution_id != nullptr)
+    {
+        return execution_id->TitleID;
+    }
+
+    return XamGetCurrentTitleId();
+}
+} // namespace
+
 const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)
 {
     for (size_t i = 0; i < ARRAYSIZE(GAME_INFO); i++)
@@ -160,16 +174,12 @@ const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)
     return nullptr;
 }
 
-PluginManager::PluginManager() : m_current_plugin(nullptr), m_current_title_id(NONE), m_current_timestamp(0)
+PluginManager::PluginManager() : m_current_plugin(nullptr), m_trampoline_pool_baseline(0)
 {
     if (xbox::IsXenia())
     {
-        DbgPrint("[codxe][PluginManager] Running in Xenia, initializing the current executable immediately.\n");
         InitializeForCurrentExecutable();
-        return;
     }
-
-    DbgPrint("[codxe][PluginManager] Waiting for XexpFinishExecutableLoad before initializing a game plugin.\n");
 }
 
 PluginManager::~PluginManager()
@@ -184,53 +194,43 @@ void PluginManager::InitializeForCurrentExecutable()
     {
         DbgPrint("[codxe][PluginManager] Failed to resolve the current executable module.\n");
         return;
-    }
+    };
 
-    OnExecutableLoaded(module, nullptr);
+    OnExecutableLoaded(module);
+}
+
+void PluginManager::SetTrampolinePoolBaseline(SIZE_T size)
+{
+    // The loader hook is process-lifetime state, while game plugin hooks are title-lifetime state.
+    // Reset plugin trampolines back to this baseline so unloading a game never overwrites the loader hook trampoline.
+    m_trampoline_pool_baseline = size;
 }
 
 void PluginManager::ResetCurrentPlugin()
 {
     if (m_current_plugin)
     {
-        DbgPrint("[codxe][PluginManager] Cleaning up current plugin\n");
+        DbgPrint("[codxe][PluginManager] Unloading plugin.\n");
         m_current_plugin.reset();
-        Detour::ResetTrampolinePool();
+        Detour::ResetTrampolinePool(m_trampoline_pool_baseline);
+        DbgPrint("[codxe][PluginManager] Plugin unloaded.\n");
     }
-
-    m_current_title_id = NONE;
-    m_current_timestamp = 0;
 }
 
-void PluginManager::OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module, const char *commandLine)
+void PluginManager::OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module)
 {
     if (module == nullptr)
     {
-        DbgPrint("[codxe][PluginManager] Ignoring executable load with a null module entry.\n");
         return;
     }
 
-    const DWORD title_id = XamGetCurrentTitleId();
+    const DWORD title_id = ResolveCurrentTitleId();
     const DWORD timestamp = module->TimeDateStamp;
-
-    if (title_id == m_current_title_id && timestamp == m_current_timestamp)
-    {
-        DbgPrint("[codxe][PluginManager] Ignoring duplicate executable load for Title ID:0x%08X TimeDateStamp=0x%08X\n",
-                 title_id, timestamp);
-        return;
-    }
-
-    DbgPrint("[codxe][PluginManager] Executable loaded. Title ID:0x%08X TimeDateStamp=0x%08X CommandLine:%s\n",
-             title_id, timestamp, commandLine != nullptr ? commandLine : "<null>");
 
     ResetCurrentPlugin();
 
-    m_current_title_id = title_id;
-    m_current_timestamp = timestamp;
-
-    if (title_id == NONE || title_id == DASHBOARD)
+    if (title_id == DASHBOARD)
     {
-        DbgPrint("[codxe][PluginManager] No game plugin needed for Title ID:0x%08X\n", title_id);
         return;
     }
 
@@ -242,12 +242,9 @@ void PluginManager::OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module, const char 
         return;
     }
 
-    DbgPrint("[codxe][PluginManager] Supported game found: '%s' (%s)\n", info->friendlyVersion, info->moduleName);
-    if (!info->createPlugin)
-    {
-        DbgPrint("[codxe][PluginManager] No plugin for this executable.\n");
-        return;
-    }
+    assert(info->createPlugin != nullptr);
+    DbgPrint("[codxe][PluginManager] Game detected: '%s'.\n", info->friendlyVersion);
+    DbgPrint("[codxe][PluginManager] Loading plugin.\n");
 
     auto plugin = info->createPlugin();
     if (!plugin)
@@ -257,5 +254,5 @@ void PluginManager::OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module, const char 
     }
 
     m_current_plugin = std::move(plugin);
-    DbgPrint("[codxe][PluginManager] Plugin started!\n");
+    DbgPrint("[codxe][PluginManager] Plugin loaded.\n");
 }

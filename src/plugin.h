@@ -18,16 +18,12 @@ class Plugin
 {
   public:
     Plugin() {};
-    virtual ~Plugin()
-    {
-        DbgPrint("Plugin::~Plugin\n");
-    };
+    virtual ~Plugin() {};
 
     void RegisterModule(Module *module)
     {
         if (module)
         {
-            DbgPrint("Plugin: Registering module: %s\n", module->get_name());
             m_modules.push_back(std::unique_ptr<Module>(module));
         }
     }

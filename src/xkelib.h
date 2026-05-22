@@ -14,6 +14,11 @@
 #define EX_CREATE_FLAG_SYSTEM 0x2       // create a system thread
 #define EX_CREATE_FLAG_TITLE_EXEC 0x100 // title execution thread
 
+typedef long NTSTATUS;
+
+#define PROC_TYPE_SYSTEM 2
+#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+
 typedef struct _STRING
 {
     USHORT Length;
@@ -61,6 +66,28 @@ typedef struct _LDR_DATA_TABLE_ENTRY
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY; // size 100
 C_ASSERT(sizeof(LDR_DATA_TABLE_ENTRY) == 0x64);
 
+typedef struct _XEX_EXECUTION_ID
+{
+    DWORD MediaID;     // 0x0 sz:0x4
+    DWORD Version;     // 0x4 sz:0x4
+    DWORD BaseVersion; // 0x8 sz:0x4
+    union
+    {
+        DWORD TitleID; // 0xC sz:0x4
+        struct
+        {
+            WORD PublisherID; // 0xC sz:0x2
+            WORD GameID;      // 0xE sz:0x2
+        };
+    };
+    BYTE Platform;                      // 0x10 sz:0x1
+    BYTE ExecutableType;                // 0x11 sz:0x1
+    BYTE DiscNum;                       // 0x12 sz:0x1
+    BYTE DiscsInSet;                    // 0x13 sz:0x1
+    DWORD SaveGameID;                   // 0x14 sz:0x4
+} XEX_EXECUTION_ID, *PXEX_EXECUTION_ID; // size 24
+C_ASSERT(sizeof(XEX_EXECUTION_ID) == 0x18);
+
 extern "C"
 {
     NTSYSAPI
@@ -69,11 +96,42 @@ extern "C"
 
     NTSYSAPI
     EXPORTNUM(463)
-    DWORD NTAPI XamGetCurrentTitleId(VOID);
+    DWORD
+    NTAPI
+    XamGetCurrentTitleId(VOID);
 
     NTSYSAPI
     EXPORTNUM(13)
-    DWORD NTAPI ExCreateThread(IN PHANDLE pHandle, IN DWORD dwStackSize, IN LPDWORD lpThreadId,
-                               IN PVOID apiThreadStartup, IN LPTHREAD_START_ROUTINE lpStartAddress,
-                               IN LPVOID lpParameter, IN DWORD dwCreationFlagsMod);
+    DWORD
+    NTAPI
+    ExCreateThread(IN PHANDLE pHandle, IN DWORD dwStackSize, IN LPDWORD lpThreadId, IN PVOID apiThreadStartup,
+                   IN LPTHREAD_START_ROUTINE lpStartAddress, IN LPVOID lpParameter, IN DWORD dwCreationFlagsMod);
+
+    NTSYSAPI
+    EXPORTNUM(102)
+    DWORD
+    NTAPI
+    KeGetCurrentProcessType(VOID);
+
+    NTSYSAPI
+    EXPORTNUM(300)
+    VOID NTAPI RtlInitAnsiString(OUT PSTRING DestinationString, IN const char *SourceString);
+
+    NTSYSAPI
+    EXPORTNUM(259)
+    NTSTATUS
+    NTAPI
+    ObCreateSymbolicLink(IN PSTRING SymbolicLinkName, IN PSTRING DeviceName);
+
+    NTSYSAPI
+    EXPORTNUM(260)
+    NTSTATUS
+    NTAPI
+    ObDeleteSymbolicLink(IN PSTRING SymbolicLinkName);
+
+    NTSYSAPI
+    EXPORTNUM(640)
+    NTSTATUS
+    NTAPI
+    XamGetExecutionId(IN OUT PXEX_EXECUTION_ID *xid);
 }
