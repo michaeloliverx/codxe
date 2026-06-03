@@ -49,10 +49,9 @@ void DrawBranding()
 {
     const char *brandingWithBuild = branding::GetBrandingString();
 
-    static Font_s *font = R_RegisterFont("fonts/consoleFont");
     float color[4] = {1.0, 1.0, 1.0, 0.4};
 
-    R_AddCmdDrawText(brandingWithBuild, 256, font, 10, 20, 1.0, 1.0, 0.0, color, 0);
+    R_AddCmdDrawText(brandingWithBuild, 256, sharedUiInfo->assets.consoleFont, 10, 20, 1.0, 1.0, 0.0, color, 0);
 }
 
 Detour UI_DrawBuildNumber_Detour;
@@ -138,11 +137,10 @@ void CG_DrawPlayerInfo()
               "speed: %d\n",
               ps->origin[0], ps->origin[1], ps->origin[2], ps->viewangles[0], ps->viewangles[1], speed2D);
 
-    static Font_s *consoleFont = R_RegisterFont("fonts/consoleFont");
     const float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
     const float y = 50.f;
 
-    R_AddCmdDrawText(buff, 256, consoleFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
+    R_AddCmdDrawText(buff, 256, sharedUiInfo->assets.consoleFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
 }
 
 cg::cg()

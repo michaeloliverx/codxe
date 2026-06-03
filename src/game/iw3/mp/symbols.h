@@ -464,6 +464,8 @@ static auto level = reinterpret_cast<level_locals_t *>(0x82A07650);
 static auto sv = reinterpret_cast<server_t *>(0x82E83820);
 static auto g_hudelems = reinterpret_cast<game_hudelem_s *>(0x8284FD00);
 static const char **var_typename = reinterpret_cast<const char **>(0x823A2820);
+static auto cgMedia = reinterpret_cast<cgMedia_t *>(0x823F28A8);
+static auto sharedUiInfo = reinterpret_cast<sharedUiInfo_t *>(0x849F8080);
 
 static int *g_trackLoadProgress = reinterpret_cast<int *>(0x824754FC);
 static int *g_totalSize = reinterpret_cast<int *>(0x824754F8);

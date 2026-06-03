@@ -1418,6 +1418,34 @@ struct StringTable
 };
 
 struct Material;
+struct Font_s;
+
+struct CachedAssets_t
+{
+    Material *scrollBarArrowUp;
+    Material *scrollBarArrowDown;
+    Material *scrollBarArrowLeft;
+    Material *scrollBarArrowRight;
+    Material *scrollBar;
+    Material *scrollBarThumb;
+    Material *sliderBar;
+    Material *sliderThumb;
+    Material *whiteMaterial;
+    Material *cursor;
+    Font_s *bigFont;
+    Font_s *smallFont;
+    Font_s *consoleFont;
+    Font_s *boldFont;
+    Font_s *textFont;
+    Font_s *extraBigFont;
+    Font_s *objectiveFont;
+};
+static_assert(sizeof(CachedAssets_t) == 0x44, "");
+
+struct __declspec(align(4)) sharedUiInfo_t
+{
+    CachedAssets_t assets;
+};
 
 struct Glyph
 {
@@ -3276,6 +3304,117 @@ struct level_locals_t
     scr_vehicle_s *vehicles;
 };
 static_assert(sizeof(level_locals_t) == 0x2DCC, "");
+
+struct snd_alias_list_t;
+struct FxImpactTable;
+
+struct cgMedia_t
+{
+    Material *whiteMaterial;
+    Material *teamStatusBar;
+    Material *balloonMaterial;
+    Material *connectionMaterial;
+    Material *youInKillCamMaterial;
+    Material *tracerMaterial;
+    Material *laserMaterial;
+    Material *laserLightMaterial;
+    Material *lagometerMaterial;
+    Material *hintMaterials[133];
+    Material *stanceMaterials[4];
+    Material *objectiveMaterials[1];
+    Material *friendMaterials[2];
+    Material *damageMaterial;
+    Material *mantleHint;
+    Font_s *smallDevFont;
+    Font_s *bigDevFont;
+    snd_alias_list_t *landDmgSound;
+    snd_alias_list_t *grenadeExplodeSound[29];
+    snd_alias_list_t *rocketExplodeSound[29];
+    snd_alias_list_t *bulletHitSmallSound[29];
+    snd_alias_list_t *bulletHitLargeSound[29];
+    snd_alias_list_t *bulletHitAPSound[29];
+    snd_alias_list_t *shotgunHitSound[29];
+    snd_alias_list_t *bulletExitSmallSound[29];
+    snd_alias_list_t *bulletExitLargeSound[29];
+    snd_alias_list_t *bulletExitAPSound[29];
+    snd_alias_list_t *shotgunExitSound[29];
+    snd_alias_list_t *stepSprintSound[58];
+    snd_alias_list_t *stepSprintSoundPlayer[58];
+    snd_alias_list_t *stepRunSound[58];
+    snd_alias_list_t *stepRunSoundPlayer[58];
+    snd_alias_list_t *stepWalkSound[58];
+    snd_alias_list_t *stepWalkSoundPlayer[58];
+    snd_alias_list_t *stepProneSound[58];
+    snd_alias_list_t *stepProneSoundPlayer[58];
+    snd_alias_list_t *landSound[58];
+    snd_alias_list_t *landSoundPlayer[58];
+    snd_alias_list_t *qsprintingEquipmentSound;
+    snd_alias_list_t *qsprintingEquipmentSoundPlayer;
+    snd_alias_list_t *qrunningEquipmentSound;
+    snd_alias_list_t *qrunningEquipmentSoundPlayer;
+    snd_alias_list_t *qwalkingEquipmentSound;
+    snd_alias_list_t *qwalkingEquipmentSoundPlayer;
+    snd_alias_list_t *sprintingEquipmentSound;
+    snd_alias_list_t *sprintingEquipmentSoundPlayer;
+    snd_alias_list_t *runningEquipmentSound;
+    snd_alias_list_t *runningEquipmentSoundPlayer;
+    snd_alias_list_t *walkingEquipmentSound;
+    snd_alias_list_t *walkingEquipmentSoundPlayer;
+    snd_alias_list_t *foliageMovement;
+    snd_alias_list_t *bulletWhizby;
+    snd_alias_list_t *meleeHit;
+    snd_alias_list_t *meleeHitOther;
+    snd_alias_list_t *meleeKnifeHit;
+    snd_alias_list_t *meleeKnifeHitOther;
+    snd_alias_list_t *nightVisionOn;
+    snd_alias_list_t *nightVisionOff;
+    snd_alias_list_t *playerSprintGasp;
+    snd_alias_list_t *playerHeartBeatSound;
+    snd_alias_list_t *playerBreathInSound;
+    snd_alias_list_t *playerBreathOutSound;
+    snd_alias_list_t *playerBreathGaspSound;
+    snd_alias_list_t *playerSwapOffhand;
+    snd_alias_list_t *physCollisionSound[50][29];
+    Material *compassping_friendlyfiring;
+    Material *compassping_friendlyyelling;
+    Material *compassping_enemy;
+    Material *compassping_enemyfiring;
+    Material *compassping_enemyyelling;
+    Material *compassping_grenade;
+    Material *compassping_explosion;
+    Material *compass_radarline;
+    Material *compass_helicopter_friendly;
+    Material *compass_helicopter_enemy;
+    Material *compass_plane_friendly;
+    Material *compass_plane_enemy;
+    Material *grenadeIconFrag;
+    Material *grenadeIconFlash;
+    Material *grenadeIconThrowBack;
+    Material *grenadePointer;
+    Material *offscreenObjectivePointer;
+    FxImpactTable *fx;
+    const FxEffectDef *fxNoBloodFleshHit;
+    const FxEffectDef *fxKnifeBlood;
+    const FxEffectDef *fxKnifeNoBlood;
+    const FxEffectDef *heliDustEffect;
+    const FxEffectDef *heliWaterEffect;
+    const FxEffectDef *helicopterLightSmoke;
+    const FxEffectDef *helicopterHeavySmoke;
+    const FxEffectDef *helicopterOnFire;
+    const FxEffectDef *jetAfterburner;
+    const FxEffectDef *fxVehicleTireDust;
+    Material *nightVisionOverlay;
+    Material *hudIconNVG;
+    Material *hudDpadArrow;
+    Material *ammoCounterBullet;
+    Material *ammoCounterBeltBullet;
+    Material *ammoCounterRifleBullet;
+    Material *ammoCounterRocket;
+    Material *ammoCounterShotgunShell;
+    Material *textDecodeCharacters;
+    Material *textDecodeCharactersGlow;
+};
+static_assert(sizeof(cgMedia_t) == 0x27A8, "");
 
 } // namespace mp
 } // namespace iw3

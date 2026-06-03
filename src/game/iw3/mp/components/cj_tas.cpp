@@ -362,10 +362,9 @@ void CL_CreateNewCommands_Hook(int localClientNum)
 const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 void CG_DrawTAS()
 {
-    static Font_s *bigDevFont = R_RegisterFont("fonts/bigDevFont");
     const float x = 10.f * scrPlaceFullUnsafe.scaleVirtualToFull[0];
     const float y = 30.f;
-    R_AddCmdDrawText("TAS", 5, bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
+    R_AddCmdDrawText("TAS", 5, cgMedia->bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
 }
 
 cj_tas::cj_tas()

@@ -88,10 +88,9 @@ void DrawFixedFPS()
     char buff[16];
     sprintf_s(buff, "%d", pm_fixed_fps->current.integer);
 
-    static Font_s *font = R_RegisterFont("fonts/bigDevFont");
     float x = 620 * scrPlaceFullUnsafe.scaleVirtualToFull[0];
     float y = 15 * scrPlaceFullUnsafe.scaleVirtualToFull[1];
-    R_AddCmdDrawText(buff, 16, font, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
+    R_AddCmdDrawText(buff, 16, cgMedia->bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
 }
 
 pm::pm()
