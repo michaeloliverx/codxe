@@ -92,9 +92,9 @@ C_ASSERT(sizeof(XEX_EXECUTION_ID) == 0x18);
 
 typedef struct _EX_TITLE_TERMINATE_REGISTRATION
 {
-    PVOID NotificationRoutine;
-    DWORD Priority;
-    LIST_ENTRY ListEntry;
+    PVOID NotificationRoutine; // function pointer
+    DWORD Priority;            // xam uses 0x7C800000 for early and 0x0 for late
+    LIST_ENTRY ListEntry;      // already defined in winnt.h
 } EX_TITLE_TERMINATE_REGISTRATION, *PEX_TITLE_TERMINATE_REGISTRATION;
 C_ASSERT(sizeof(EX_TITLE_TERMINATE_REGISTRATION) == 0x10);
 
@@ -120,7 +120,8 @@ extern "C"
     NTSYSAPI
     EXPORTNUM(21)
     VOID NTAPI ExRegisterTitleTerminateNotification(IN OUT PEX_TITLE_TERMINATE_REGISTRATION pTermStruct,
-                                                    IN BOOL bCreate);
+                                                    IN BOOL bCreate // true create, false destroy existing
+    );
 
     NTSYSAPI
     EXPORTNUM(102)
