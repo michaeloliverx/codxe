@@ -7,7 +7,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 struct RecordedCmd
 {
@@ -251,8 +251,8 @@ MovementRecorder::MovementRecorder()
         {
             if (is_playing)
             {
-                static auto bigDevFont = iw4::mp::R_RegisterFont("fonts/bigDevFont");
-                iw4::mp::R_AddCmdDrawText("TAS", 4, bigDevFont, 10.f, 20.f, 1.0f, 1.0f, 0.0f, color_white_rgba, 0);
+                static auto bigDevFont = iw4::mp_tu6::R_RegisterFont("fonts/bigDevFont");
+                iw4::mp_tu6::R_AddCmdDrawText("TAS", 4, bigDevFont, 10.f, 20.f, 1.0f, 1.0f, 0.0f, color_white_rgba, 0);
             }
         });
 }
@@ -261,5 +261,5 @@ MovementRecorder::~MovementRecorder()
 {
     CL_CreateNewCommands_Detour.Remove();
 }
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

@@ -1,13 +1,10 @@
 #pragma once
 
-#pragma warning(disable : 4480) // nonstandard extension used: specifying underlying type for enum
-#pragma warning(disable : 4324) // structure was padded due to __declspec(align())
-
 namespace iw4
 {
+
 namespace mp
 {
-
 union DvarValue
 {
     bool enabled;
@@ -51,10 +48,14 @@ union DvarLimits
     DvarLimits_vector vector;
 };
 
+enum DvarFlags : std::uint16_t
+{
+    DVAR_FLAG_SERVERINFO = 0x10,
+};
+
 struct dvar_t
 {
     const char *name;
-    const char *description;
     unsigned __int16 flags;
     unsigned __int8 type;
     bool modified;
@@ -64,364 +65,70 @@ struct dvar_t
     DvarLimits domain;
     dvar_t *hashNext;
 };
+static_assert(offsetof(dvar_t, current) == 0x08, "");
+static_assert(offsetof(dvar_t, latched) == 0x18, "");
+static_assert(offsetof(dvar_t, reset) == 0x28, "");
+static_assert(offsetof(dvar_t, domain) == 0x38, "");
+static_assert(offsetof(dvar_t, hashNext) == 0x40, "");
 
-enum ViewLockTypes : __int32
+struct ScreenPlacement;
+struct Font_s;
+struct Material;
+
+struct CachedAssets_t
 {
-    PLAYERVIEWLOCK_NONE = 0x0,
-    PLAYERVIEWLOCK_FULL = 0x1,
-    PLAYERVIEWLOCK_WEAPONJITTER = 0x2,
-    PLAYERVIEWLOCKCOUNT = 0x3,
+    Material *scrollBarArrowUp;
+    Material *scrollBarArrowDown;
+    Material *scrollBarArrowLeft;
+    Material *scrollBarArrowRight;
+    Material *scrollBar;
+    Material *scrollBarThumb;
+    Material *sliderBar;
+    Material *sliderThumb;
+    Material *whiteMaterial;
+    Material *cursor;
+    Material *textDecodeCharacters;
+    Material *textDecodeCharactersGlow;
+    Font_s *bigFont;
+    Font_s *smallFont;
+    Font_s *consoleFont;
+    Font_s *boldFont;
+    Font_s *textFont;
+    Font_s *extraBigFont;
+    Font_s *objectiveFont;
+    Font_s *hudBigFont;
+    Font_s *hudSmallFont;
 };
 
-struct SprintState
+struct __declspec(align(4)) sharedUiInfo_t
 {
-    int sprintButtonUpRequired;
-    int sprintDelay;
-    int lastSprintStart;
-    int lastSprintEnd;
-    int sprintStartMaxLength;
+    CachedAssets_t assets;
+    bool preventPause;
 };
 
-struct MantleState
-{
-    float yaw;
-    int timer;
-    int transIndex;
-    int flags;
-};
+struct WeaponDef;
+struct WeaponCompleteDef;
 
-struct PlayerActiveWeaponState
+struct weaponParms
 {
-    int weapAnim;
-    int weaponTime;
-    int weaponDelay;
-    int weaponRestrictKickTime;
-    int weaponState;
-    int weapHandFlags;
-    unsigned int weaponShotCount;
+    float forward[3];
+    float right[3];
+    float up[3];
+    float muzzleTrace[3];
+    float gunForward[3];
+    unsigned int weaponIndex;
+    const WeaponDef *weapDef;
+    const WeaponCompleteDef *weapCompleteDef;
 };
+static_assert(sizeof(weaponParms) == 0x48, "");
 
-struct PlayerEquippedWeaponState
-{
-    bool usedBefore;
-    bool dualWielding;
-    unsigned __int8 weaponModel;
-    bool needsRechamber[2];
-};
+struct weaponParms;
+struct lockonFireParms;
 
-enum OffhandClass : __int32
-{
-    OFFHAND_CLASS_NONE = 0x0,
-    OFFHAND_CLASS_FRAG_GRENADE = 0x1,
-    OFFHAND_CLASS_SMOKE_GRENADE = 0x2,
-    OFFHAND_CLASS_FLASH_GRENADE = 0x3,
-    OFFHAND_CLASS_THROWINGKNIFE = 0x4,
-    OFFHAND_CLASS_OTHER = 0x5,
-    OFFHAND_CLASS_COUNT = 0x6,
-};
-
-enum PlayerHandIndex : __int32
-{
-    WEAPON_HAND_RIGHT = 0x0,
-    WEAPON_HAND_LEFT = 0x1,
-    NUM_WEAPON_HANDS = 0x2,
-    WEAPON_HAND_DEFAULT = 0x0,
-};
-
-struct GlobalAmmo
-{
-    int ammoType;
-    int ammoCount;
-};
-
-struct ClipAmmo
-{
-    int clipIndex;
-    int ammoCount[2];
-};
-
-struct PlayerWeaponCommonState
-{
-    int offHandIndex;
-    OffhandClass offhandPrimary;
-    OffhandClass offhandSecondary;
-    unsigned int weapon;
-    unsigned int primaryWeaponForAltMode;
-    int weapFlags;
-    float fWeaponPosFrac;
-    float aimSpreadScale;
-    int adsDelayTime;
-    int spreadOverride;
-    int spreadOverrideState;
-    PlayerHandIndex lastWeaponHand;
-    GlobalAmmo ammoNotInClip[15];
-    ClipAmmo ammoInClip[15];
-    int weapLockFlags;
-    int weapLockedEntnum;
-    float weapLockedPos[3];
-    int weaponIdleTime;
-};
-
-enum ActionSlotType : __int32
-{
-    ACTIONSLOTTYPE_DONOTHING = 0x0,
-    ACTIONSLOTTYPE_SPECIFYWEAPON = 0x1,
-    ACTIONSLOTTYPE_ALTWEAPONTOGGLE = 0x2,
-    ACTIONSLOTTYPE_NIGHTVISION = 0x3,
-    ACTIONSLOTTYPECOUNT = 0x4,
-};
-
-struct ActionSlotParam_SpecifyWeapon
-{
-    unsigned int index;
-};
-
-struct ActionSlotParam
-{
-    ActionSlotParam_SpecifyWeapon specifyWeapon;
-};
-
-enum objectiveState_t : __int32
-{
-    OBJST_EMPTY = 0x0,
-    OBJST_ACTIVE = 0x1,
-    OBJST_INVISIBLE = 0x2,
-    OBJST_DONE = 0x3,
-    OBJST_CURRENT = 0x4,
-    OBJST_FAILED = 0x5,
-    OBJST_NUMSTATES = 0x6,
-};
-
-struct objective_t
-{
-    objectiveState_t state;
-    float origin[3];
-    int entNum;
-    int teamNum;
-    int icon;
-};
-
-enum he_type_t : __int32
-{
-    HE_TYPE_FREE = 0x0,
-    HE_TYPE_TEXT = 0x1,
-    HE_TYPE_VALUE = 0x2,
-    HE_TYPE_PLAYERNAME = 0x3,
-    HE_TYPE_MAPNAME = 0x4,
-    HE_TYPE_GAMETYPE = 0x5,
-    HE_TYPE_MATERIAL = 0x6,
-    HE_TYPE_TIMER_DOWN = 0x7,
-    HE_TYPE_TIMER_UP = 0x8,
-    HE_TYPE_TENTHS_TIMER_DOWN = 0x9,
-    HE_TYPE_TENTHS_TIMER_UP = 0xA,
-    HE_TYPE_CLOCK_DOWN = 0xB,
-    HE_TYPE_CLOCK_UP = 0xC,
-    HE_TYPE_WAYPOINT = 0xD,
-    HE_TYPE_COUNT = 0xE,
-};
-
-struct $0D0CB43DF22755AD856C77DD3F304010
-{
-    unsigned __int8 r;
-    unsigned __int8 g;
-    unsigned __int8 b;
-    unsigned __int8 a;
-};
-
-union hudelem_color_t
-{
-    $0D0CB43DF22755AD856C77DD3F304010 __s0;
-    int rgba;
-};
-
-struct hudelem_s
-{
-    he_type_t type;
-    float x;
-    float y;
-    float z;
-    int targetEntNum;
-    float fontScale;
-    float fromFontScale;
-    int fontScaleStartTime;
-    int fontScaleTime;
-    int font;
-    int alignOrg;
-    int alignScreen;
-    hudelem_color_t color;
-    hudelem_color_t fromColor;
-    int fadeStartTime;
-    int fadeTime;
-    int label;
-    int width;
-    int height;
-    int materialIndex;
-    int fromWidth;
-    int fromHeight;
-    int scaleStartTime;
-    int scaleTime;
-    float fromX;
-    float fromY;
-    int fromAlignOrg;
-    int fromAlignScreen;
-    int moveStartTime;
-    int moveTime;
-    int time;
-    int duration;
-    float value;
-    int text;
-    float sort;
-    hudelem_color_t glowColor;
-    int fxBirthTime;
-    int fxLetterTime;
-    int fxDecayStartTime;
-    int fxDecayDuration;
-    int soundID;
-    int flags;
-};
-
-struct playerState_s_hud
-{
-    hudelem_s current[31];
-    hudelem_s archival[31];
-};
-
-struct __declspec(align(128)) playerState_s
-{
-    int commandTime;
-    int pm_type;
-    int pm_time;
-    int pm_flags;
-    int otherFlags;
-    int linkFlags;
-    int bobCycle;
-    float origin[3];
-    float velocity[3];
-    int grenadeTimeLeft;
-    int throwbackGrenadeOwner;
-    int throwbackGrenadeTimeLeft;
-    unsigned int throwbackWeaponIndex;
-    int remoteEyesEnt;
-    int remoteEyesTagname;
-    int remoteControlEnt;
-    int foliageSoundTime;
-    int gravity;
-    float leanf;
-    int speed;
-    float delta_angles[3];
-    int groundEntityNum;
-    float vLadderVec[3];
-    int jumpTime;
-    float jumpOriginZ;
-    int legsTimer;
-    int legsAnim;
-    int torsoTimer;
-    int torsoAnim;
-    int legsAnimDuration;
-    int torsoAnimDuration;
-    int damageTimer;
-    int damageDuration;
-    int flinchYawAnim;
-    int corpseIndex;
-    int movementDir;
-    int eFlags;
-    int eventSequence;
-    int events[4];
-    unsigned int eventParms[4];
-    int oldEventSequence;
-    int unpredictableEventSequence;
-    int unpredictableEventSequenceOld;
-    int unpredictableEvents[4];
-    unsigned int unpredictableEventParms[4];
-    int clientNum;
-    int viewmodelIndex;
-    float viewangles[3];
-    int viewHeightTarget;
-    float viewHeightCurrent;
-    int viewHeightLerpTime;
-    int viewHeightLerpTarget;
-    int viewHeightLerpDown;
-    float viewAngleClampBase[2];
-    float viewAngleClampRange[2];
-    int damageEvent;
-    int damageYaw;
-    int damagePitch;
-    int damageCount;
-    int damageFlags;
-    int stats[4];
-    float proneDirection;
-    float proneDirectionPitch;
-    float proneTorsoPitch;
-    ViewLockTypes viewlocked;
-    int viewlocked_entNum;
-    float linkAngles[3];
-    float linkWeaponAngles[3];
-    int linkWeaponEnt;
-    int loopSound;
-    int cursorHint;
-    int cursorHintString;
-    int cursorHintEntIndex;
-    int cursorHintDualWield;
-    int iCompassPlayerInfo;
-    int radarEnabled;
-    int radarBlocked;
-    int radarMode;
-    int locationSelectionInfo;
-    SprintState sprintState;
-    float holdBreathScale;
-    int holdBreathTimer;
-    float moveSpeedScaleMultiplier;
-    MantleState mantleState;
-    PlayerActiveWeaponState weapState[2];
-    unsigned int weaponsEquipped[15];
-    PlayerEquippedWeaponState weapEquippedData[15];
-    PlayerWeaponCommonState weapCommon;
-    float meleeChargeYaw;
-    int meleeChargeDist;
-    int meleeChargeTime;
-    unsigned int perks[2];
-    unsigned int perkSlots[8];
-    ActionSlotType actionSlotType[4];
-    ActionSlotParam actionSlotParam[4];
-    int weaponHudIconOverrides[6];
-    int animScriptedType;
-    int shellshockIndex;
-    int shellshockTime;
-    int shellshockDuration;
-    float dofNearStart;
-    float dofNearEnd;
-    float dofFarStart;
-    float dofFarEnd;
-    float dofNearBlur;
-    float dofFarBlur;
-    float dofViewmodelStart;
-    float dofViewmodelEnd;
-    objective_t objective[32];
-    int deltaTime;
-    int killCamEntity;
-    int killCamLookAtEntity;
-    int killCamClientNum;
-    playerState_s_hud hud;
-    unsigned int partBits[5];
-    int recoilScale;
-    int diveDirection;
-    int stunTime;
-};
-
-static_assert(sizeof(playerState_s) == 12672, "");
-static_assert(offsetof(playerState_s, velocity) == 40, "");
-static_assert(offsetof(playerState_s, delta_angles) == 96, "");
-
-struct gclient_s
-{
-    playerState_s ps;
-    char padding1[0x2A0];
-    int flags;
-    char padding2[0x2DC];
-};
-static_assert(sizeof(gclient_s) == 14080, "");
-static_assert(offsetof(gclient_s, ps) == 0x0, "");
-static_assert(offsetof(gclient_s, flags) == 13344, "");
+struct gclient_s;
+struct Turret;
+struct Vehicle;
+struct tagInfo_s;
 
 enum trType_t : __int32
 {
@@ -616,37 +323,6 @@ struct LerpEntityState
     LerpEntityStateTypeUnion u;
 };
 
-union entityState_s_index
-{
-    int brushModel;
-    int triggerModel;
-    int item;
-    int xmodel;
-    int primaryLight;
-};
-
-struct entityState_s_wes
-{
-    unsigned __int16 weapon;
-    unsigned __int16 primaryWeapon;
-};
-
-union entityState_s_un1
-{
-    int eventParm2;
-    int hintString;
-    int fxId;
-    int helicopterStage;
-};
-
-union entityState_s_un2
-{
-    int hintType;
-    int vehicleXModel;
-    int actorFlags;
-    unsigned __int8 weaponModel;
-};
-
 struct clientLinkInfo_t
 {
     unsigned __int8 flags;
@@ -665,7 +341,14 @@ struct entityState_s
     int groundEntityNum;
     int loopSound;
     int surfType;
-    entityState_s_index index;
+    union
+    {
+        int brushModel;
+        int triggerModel;
+        int item;
+        int xmodel;
+        int primaryLight;
+    } index;
     int clientNum;
     int iHeadIcon;
     int iHeadIconTeam;
@@ -674,27 +357,43 @@ struct entityState_s
     int eventSequence;
     int events[4];
     unsigned int eventParms[4];
-    entityState_s_wes wes;
+    struct
+    {
+        unsigned __int16 weapon;
+        unsigned __int16 primaryWeapon;
+    } wes;
     int legsAnim;
     int torsoAnim;
-    entityState_s_un1 un1;
-    entityState_s_un2 un2;
+    union
+    {
+        int eventParm2;
+        int hintString;
+        int fxId;
+        int helicopterStage;
+    } un1;
+    union
+    {
+        int hintType;
+        int vehicleXModel;
+        int actorFlags;
+        unsigned __int8 weaponModel;
+    } un2;
     clientLinkInfo_t clientLinkInfo;
     unsigned int partBits[5];
     int clientMask[1];
     unsigned int pad[1];
 };
 
-struct EntHandle
-{
-    unsigned __int16 number;
-    unsigned __int16 infoIndex;
-};
-
 struct Bounds
 {
     float midPoint[3];
     float halfSize[3];
+};
+
+struct EntHandle
+{
+    unsigned __int16 number;
+    unsigned __int16 infoIndex;
 };
 
 struct entityShared_t
@@ -712,68 +411,531 @@ struct entityShared_t
     int eventTime;
 };
 
+struct __declspec(align(4)) item_ent_t
+{
+    int ammoCount;
+    int clipAmmoCount[2];
+    int index;
+    bool dualWieldItem;
+};
+
+struct spawner_ent_t
+{
+    int team;
+    int timestamp;
+    int index;
+};
+
+struct __declspec(align(4)) trigger_ent_t
+{
+    int threshold;
+    int accumulate;
+    int timestamp;
+    int singleUserEntIndex;
+    bool requireLookAt;
+};
+
+struct mover_positions_t
+{
+    float decelTime;
+    float speed;
+    float midTime;
+    float pos1[3];
+    float pos2[3];
+    float pos3[3];
+};
+
+struct mover_slidedata_t
+{
+    Bounds bounds;
+    float velocity[3];
+};
+
+struct mover_ent_t
+{
+    union
+    {
+        mover_positions_t pos;
+        mover_slidedata_t slide;
+    } ___u0;
+    mover_positions_t angle;
+};
+
+struct corpse_ent_t
+{
+    int deathAnimStartTime;
+};
+
+enum team_t : __int32
+{
+    TEAM_FREE = 0x0,
+    TEAM_AXIS = 0x1,
+    TEAM_ALLIES = 0x2,
+    TEAM_SPECTATOR = 0x3,
+    TEAM_NUM_TEAMS = 0x4,
+};
+
+struct missile_fields_grenade
+{
+    float wobbleCycle;
+    float curve;
+};
+
+enum MissileStage : __int32
+{
+    MISSILESTAGE_SOFTLAUNCH = 0x0,
+    MISSILESTAGE_ASCENT = 0x1,
+    MISSILESTAGE_DESCENT = 0x2,
+};
+
+struct missile_fields_nonGrenade
+{
+    float curvature[3];
+    float targetEntOffset[3];
+    float targetPos[3];
+    float launchOrigin[3];
+    MissileStage stage;
+};
+
+struct missile_ent_t
+{
+    float time;
+    int timeOfBirth;
+    float travelDist;
+    float surfaceNormal[3];
+    team_t team;
+    int flags;
+    int antilagTimeOffset;
+    union
+    {
+        missile_fields_grenade grenade;
+        missile_fields_nonGrenade nonGrenade;
+    } ___u7;
+};
+
+struct blend_ent_t
+{
+    float pos[3];
+    float vel[3];
+    float viewQuat[4];
+    bool changed;
+    float accelTime;
+    float decelTime;
+    float startTime;
+    float totalTime;
+};
+
 struct gentity_s
 {
     entityState_s s;
     entityShared_t r;
     gclient_s *client;
-    char padding2[0x28];
+    Turret *turret;
+    Vehicle *vehicle;
+    int physObjId;
+    unsigned __int16 model;
+    unsigned __int8 physicsObject;
+    unsigned __int8 takedamage;
+    unsigned __int8 active;
+    unsigned __int8 handler;
+    unsigned __int8 team;
+    bool freeAfterEvent;
+    __int16 padding_short;
+    unsigned __int16 classname;
+    unsigned __int16 script_classname;
+    unsigned __int16 script_linkName;
+    unsigned __int16 target;
+    unsigned __int16 targetname;
+    unsigned int attachIgnoreCollision;
+    int spawnflags;
     int flags;
-    char padding3[0xF8];
+    int eventTime;
+    int clipmask;
+    int processedFrame;
+    EntHandle parent;
+    int nextthink;
+    int health;
+    int maxHealth;
+    int damage;
+    int count;
+    union
+    {
+        item_ent_t item[2];
+        spawner_ent_t spawner;
+        trigger_ent_t trigger;
+        mover_ent_t mover;
+        corpse_ent_t corpse;
+        missile_ent_t missile;
+        blend_ent_t blend;
+    } ___u31;
+    EntHandle missileTargetEnt;
+    EntHandle remoteControlledOwner;
+    tagInfo_s *tagInfo;
+    gentity_s *tagChildren;
+    unsigned __int16 attachModelNames[19];
+    unsigned __int16 attachTagNames[19];
+    int useCount;
+    gentity_s *nextFree;
+    int birthTime;
+    int padding[3];
 };
-static_assert(sizeof(gentity_s) == 640, "");
+
+static_assert(sizeof(gentity_s) == 0x280, "");
 static_assert(offsetof(gentity_s, client) == 344, "");
 
-struct sentient_s;
-struct actor_s;
-struct Vehicle;
-struct Turret;
-
-struct level_locals_t
+enum ViewLockTypes : __int32
 {
-    gclient_s *clients;
-    gentity_s *gentities;
-    int num_entities;
-    gentity_s *firstFreeEnt;
-    gentity_s *lastFreeEnt;
-    sentient_s *sentients;
-    actor_s *actors;
-    Vehicle *vehicles;
-    Turret *turrets;
-    int initializing;
-    int clientIsSpawning;
-    int maxclients;
-};
-static_assert(offsetof(level_locals_t, clients) == 0x0, "");
-static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
-static_assert(offsetof(level_locals_t, maxclients) == 44, "");
-
-struct weaponParms
-{
-    float forward[3];
-    float right[3];
-    float up[3];
-    float muzzleTrace[3];
-    float gunForward[3];
-    unsigned int weaponIndex;
-    const struct WeaponDef *weapDef;
-    const struct WeaponCompleteDef *weapCompleteDef;
-};
-static_assert(sizeof(weaponParms) == 0x48, "");
-
-struct scr_entref_t
-{
-    unsigned __int16 entnum;
-    unsigned __int16 classnum;
+    PLAYERVIEWLOCK_NONE = 0x0,
+    PLAYERVIEWLOCK_FULL = 0x1,
+    PLAYERVIEWLOCK_WEAPONJITTER = 0x2,
+    PLAYERVIEWLOCKCOUNT = 0x3,
 };
 
-struct cmd_function_s
+struct SprintState
 {
-    cmd_function_s *next;
-    const char *name;
-    const char *autoCompleteDir;
-    const char *autoCompleteExt;
-    void (*function)();
+    int sprintButtonUpRequired;
+    int sprintDelay;
+    int lastSprintStart;
+    int lastSprintEnd;
+    int sprintStartMaxLength;
+};
+
+struct MantleState
+{
+    float yaw;
+    int timer;
+    int transIndex;
+    int flags;
+};
+
+struct PlayerActiveWeaponState
+{
+    int weapAnim;
+    int weaponTime;
+    int weaponDelay;
+    int weaponRestrictKickTime;
+    int weaponState;
+    int weapHandFlags;
+    unsigned int weaponShotCount;
+};
+
+struct PlayerEquippedWeaponState
+{
+    bool usedBefore;
+    bool dualWielding;
+    unsigned __int8 weaponModel;
+    bool needsRechamber[2];
+};
+
+enum OffhandClass : __int32
+{
+    OFFHAND_CLASS_NONE = 0x0,
+    OFFHAND_CLASS_FRAG_GRENADE = 0x1,
+    OFFHAND_CLASS_SMOKE_GRENADE = 0x2,
+    OFFHAND_CLASS_FLASH_GRENADE = 0x3,
+    OFFHAND_CLASS_THROWINGKNIFE = 0x4,
+    OFFHAND_CLASS_OTHER = 0x5,
+    OFFHAND_CLASS_COUNT = 0x6,
+};
+
+enum PlayerHandIndex : __int32
+{
+    WEAPON_HAND_RIGHT = 0x0,
+    WEAPON_HAND_LEFT = 0x1,
+    NUM_WEAPON_HANDS = 0x2,
+    WEAPON_HAND_DEFAULT = 0x0,
+};
+
+struct GlobalAmmo
+{
+    int ammoType;
+    int ammoCount;
+};
+
+struct ClipAmmo
+{
+    int clipIndex;
+    int ammoCount[2];
+};
+
+struct PlayerWeaponCommonState
+{
+    int offHandIndex;
+    OffhandClass offhandPrimary;
+    OffhandClass offhandSecondary;
+    unsigned int weapon;
+    unsigned int primaryWeaponForAltMode;
+    int weapFlags;
+    float fWeaponPosFrac;
+    float aimSpreadScale;
+    int adsDelayTime;
+    int spreadOverride;
+    int spreadOverrideState;
+    PlayerHandIndex lastWeaponHand;
+    GlobalAmmo ammoNotInClip[15];
+    ClipAmmo ammoInClip[15];
+    int weapLockFlags;
+    int weapLockedEntnum;
+    float weapLockedPos[3];
+    int weaponIdleTime;
+};
+
+enum ActionSlotType : __int32
+{
+    ACTIONSLOTTYPE_DONOTHING = 0x0,
+    ACTIONSLOTTYPE_SPECIFYWEAPON = 0x1,
+    ACTIONSLOTTYPE_ALTWEAPONTOGGLE = 0x2,
+    ACTIONSLOTTYPE_NIGHTVISION = 0x3,
+    ACTIONSLOTTYPECOUNT = 0x4,
+};
+
+struct ActionSlotParam_SpecifyWeapon
+{
+    unsigned int index;
+};
+
+struct ActionSlotParam
+{
+    ActionSlotParam_SpecifyWeapon specifyWeapon;
+};
+
+enum objectiveState_t : __int32
+{
+    OBJST_EMPTY = 0x0,
+    OBJST_ACTIVE = 0x1,
+    OBJST_INVISIBLE = 0x2,
+    OBJST_DONE = 0x3,
+    OBJST_CURRENT = 0x4,
+    OBJST_FAILED = 0x5,
+    OBJST_NUMSTATES = 0x6,
+};
+
+struct objective_t
+{
+    objectiveState_t state;
+    float origin[3];
+    int entNum;
+    int teamNum;
+    int icon;
+};
+
+enum he_type_t : __int32
+{
+    HE_TYPE_FREE = 0x0,
+    HE_TYPE_TEXT = 0x1,
+    HE_TYPE_VALUE = 0x2,
+    HE_TYPE_PLAYERNAME = 0x3,
+    HE_TYPE_MAPNAME = 0x4,
+    HE_TYPE_GAMETYPE = 0x5,
+    HE_TYPE_MATERIAL = 0x6,
+    HE_TYPE_TIMER_DOWN = 0x7,
+    HE_TYPE_TIMER_UP = 0x8,
+    HE_TYPE_TENTHS_TIMER_DOWN = 0x9,
+    HE_TYPE_TENTHS_TIMER_UP = 0xA,
+    HE_TYPE_CLOCK_DOWN = 0xB,
+    HE_TYPE_CLOCK_UP = 0xC,
+    HE_TYPE_WAYPOINT = 0xD,
+    HE_TYPE_COUNT = 0xE,
+};
+
+union hudelem_color_t
+{
+    struct
+    {
+        unsigned char r;
+        unsigned char g;
+        unsigned char b;
+        unsigned char a;
+    };
+
+    int rgba;
+};
+
+struct hudelem_s
+{
+    he_type_t type;
+    float x;
+    float y;
+    float z;
+    int targetEntNum;
+    float fontScale;
+    float fromFontScale;
+    int fontScaleStartTime;
+    int fontScaleTime;
+    int font;
+    int alignOrg;
+    int alignScreen;
+    hudelem_color_t color;
+    hudelem_color_t fromColor;
+    int fadeStartTime;
+    int fadeTime;
+    int label;
+    int width;
+    int height;
+    int materialIndex;
+    int fromWidth;
+    int fromHeight;
+    int scaleStartTime;
+    int scaleTime;
+    float fromX;
+    float fromY;
+    int fromAlignOrg;
+    int fromAlignScreen;
+    int moveStartTime;
+    int moveTime;
+    int time;
+    int duration;
+    float value;
+    int text;
+    float sort;
+    hudelem_color_t glowColor;
+    int fxBirthTime;
+    int fxLetterTime;
+    int fxDecayStartTime;
+    int fxDecayDuration;
+    int soundID;
+    int flags;
+};
+
+struct __declspec(align(128)) playerState_s
+{
+    int commandTime;
+    int pm_type;
+    int pm_time;
+    int pm_flags;
+    int otherFlags;
+    int linkFlags;
+    int bobCycle;
+    float origin[3];
+    float velocity[3];
+    int grenadeTimeLeft;
+    int throwbackGrenadeOwner;
+    int throwbackGrenadeTimeLeft;
+    unsigned int throwbackWeaponIndex;
+    int remoteEyesEnt;
+    int remoteEyesTagname;
+    int remoteControlEnt;
+    int foliageSoundTime;
+    int gravity;
+    float leanf;
+    int speed;
+    float delta_angles[3];
+    int groundEntityNum;
+    float vLadderVec[3];
+    int jumpTime;
+    float jumpOriginZ;
+    int legsTimer;
+    int legsAnim;
+    int torsoTimer;
+    int torsoAnim;
+    int legsAnimDuration;
+    int torsoAnimDuration;
+    int damageTimer;
+    int damageDuration;
+    int flinchYawAnim;
+    int corpseIndex;
+    int movementDir;
+    int eFlags;
+    int eventSequence;
+    int events[4];
+    unsigned int eventParms[4];
+    int oldEventSequence;
+    int unpredictableEventSequence;
+    int unpredictableEventSequenceOld;
+    int unpredictableEvents[4];
+    unsigned int unpredictableEventParms[4];
+    int clientNum;
+    int viewmodelIndex;
+    float viewangles[3];
+    int viewHeightTarget;
+    float viewHeightCurrent;
+    int viewHeightLerpTime;
+    int viewHeightLerpTarget;
+    int viewHeightLerpDown;
+    float viewAngleClampBase[2];
+    float viewAngleClampRange[2];
+    int damageEvent;
+    int damageYaw;
+    int damagePitch;
+    int damageCount;
+    int damageFlags;
+    int stats[4];
+    float proneDirection;
+    float proneDirectionPitch;
+    float proneTorsoPitch;
+    ViewLockTypes viewlocked;
+    int viewlocked_entNum;
+    float linkAngles[3];
+    float linkWeaponAngles[3];
+    int linkWeaponEnt;
+    int loopSound;
+    int cursorHint;
+    int cursorHintString;
+    int cursorHintEntIndex;
+    int cursorHintDualWield;
+    int iCompassPlayerInfo;
+    int radarEnabled;
+    int radarBlocked;
+    int radarMode;
+    int locationSelectionInfo;
+    SprintState sprintState;
+    float holdBreathScale;
+    int holdBreathTimer;
+    float moveSpeedScaleMultiplier;
+    MantleState mantleState;
+    PlayerActiveWeaponState weapState[2];
+    unsigned int weaponsEquipped[15];
+    PlayerEquippedWeaponState weapEquippedData[15];
+    PlayerWeaponCommonState weapCommon;
+    float meleeChargeYaw;
+    int meleeChargeDist;
+    int meleeChargeTime;
+    unsigned int perks[2];
+    unsigned int perkSlots[8];
+    ActionSlotType actionSlotType[4];
+    ActionSlotParam actionSlotParam[4];
+    int weaponHudIconOverrides[6];
+    int animScriptedType;
+    int shellshockIndex;
+    int shellshockTime;
+    int shellshockDuration;
+    float dofNearStart;
+    float dofNearEnd;
+    float dofFarStart;
+    float dofFarEnd;
+    float dofNearBlur;
+    float dofFarBlur;
+    float dofViewmodelStart;
+    float dofViewmodelEnd;
+    objective_t objective[32];
+    int deltaTime;
+    int killCamEntity;
+    int killCamLookAtEntity;
+    int killCamClientNum;
+    struct
+    {
+        hudelem_s current[31];
+        hudelem_s archival[31];
+    } hud;
+    unsigned int partBits[5];
+    int recoilScale;
+    int diveDirection;
+    int stunTime;
+};
+
+enum sessionState_t : __int32
+{
+    SESS_STATE_PLAYING = 0x0,
+    SESS_STATE_DEAD = 0x1,
+    SESS_STATE_SPECTATOR = 0x2,
+    SESS_STATE_INTERMISSION = 0x3,
+};
+
+enum clientConnected_t : __int32
+{
+    CON_DISCONNECTED = 0x0,
+    CON_CONNECTING = 0x1,
+    CON_CONNECTED = 0x2,
 };
 
 struct __declspec(align(4)) usercmd_s
@@ -793,53 +955,9 @@ struct __declspec(align(4)) usercmd_s
     char remoteControlAngles[2];
 };
 
-struct __declspec(align(128)) clSnapshot_t
+struct playerTeamState_t
 {
-    playerState_s ps;
-    int valid;
-    int snapFlags;
-    int serverTime;
-    int messageNum;
-    int deltaNum;
-    int ping;
-    int cmdNum;
-    int numEntities;
-    int numClients;
-    int parseEntitiesIndex;
-    int parseClientsIndex;
-    int serverCommandNum;
-};
-
-enum StanceState : __int32
-{
-    CL_STANCE_STAND = 0x0,
-    CL_STANCE_CROUCH = 0x1,
-    CL_STANCE_PRONE = 0x2,
-};
-
-struct ClientArchiveData
-{
-    int serverTime;
-    float origin[3];
-    float velocity[3];
-    int bobCycle;
-    int movementDir;
-};
-
-struct outPacket_t
-{
-    int p_cmdNumber;
-    int p_serverTime;
-    int p_realtime;
-};
-
-enum team_t : __int32
-{
-    TEAM_FREE = 0x0,
-    TEAM_AXIS = 0x1,
-    TEAM_ALLIES = 0x2,
-    TEAM_SPECTATOR = 0x3,
-    TEAM_NUM_TEAMS = 0x4,
+    int location;
 };
 
 struct clientState_s
@@ -864,436 +982,148 @@ struct clientState_s
     unsigned int playerCardNameplate;
 };
 
-struct __declspec(align(128)) clientActive_t
+struct clientSession_t
 {
-    bool usingAds;
-    int timeoutcount;
-    clSnapshot_t snap;
-    bool alwaysFalse;
-    int serverTime;
-    int oldServerTime;
-    int oldFrameServerTime;
-    int serverTimeDelta;
-    int oldSnapServerTime;
-    int extrapolatedSnapshot;
-    int newSnapshots;
-    int serverId;
-    char mapname[64];
-    int parseEntitiesIndex;
-    int parseClientsIndex;
-    int mouseDx[2];
-    int mouseDy[2];
-    int mouseIndex;
-    bool stanceHeld;
-    StanceState stance;
-    StanceState stancePosition;
-    int stanceTime;
-    int cgameUserCmdWeapon;
-    int cgameUserCmdOffHandIndex;
-    float cgameFOVSensitivityScale;
-    float cgameMaxPitchSpeed;
-    float cgameMaxYawSpeed;
-    float cgameKickAngles[3];
-    float cgameOrigin[3];
-    float cgameVelocity[3];
-    int cgameBobCycle;
-    int cgameMovementDir;
-    int cgameExtraButtons;
-    int cgamePredictedDataServerTime;
-    float viewangles[3];
-    usercmd_s cmds[128];
-    int cmdNumber;
-    ClientArchiveData clientArchive[256];
-    int clientArchiveIndex;
-    int packetBackupCount;
-    int packetBackupMask;
-    int parseEntitiesCount;
-    int parseClientsCount;
-    outPacket_t *outPackets;
-    clSnapshot_t *snapshots;
-    entityState_s *parseEntities;
-    clientState_s *parseClients;
-    int corruptedTranslationFile;
-    char translationVersion[256];
-};
-static_assert(sizeof(clientActive_t) == 27904, "");
-
-enum connstate_t : __int32
-{
-    CA_DISCONNECTED = 0x0,
-    CA_CINEMATIC = 0x1,
-    CA_LOGO = 0x2,
-    CA_CONNECTING = 0x3,
-    CA_CHALLENGING = 0x4,
-    CA_CONNECTED = 0x5,
-    CA_SENDINGSTATS = 0x6,
-    CA_LOADING = 0x7,
-    CA_PRIMED = 0x8,
-    CA_ACTIVE = 0x9,
+    sessionState_t sessionState;
+    int forceSpectatorClient;
+    int killCamEntity;
+    int killCamLookAtEntity;
+    int status_icon;
+    int archiveTime;
+    int score;
+    int deaths;
+    int kills;
+    int assists;
+    unsigned __int16 scriptPersId;
+    clientConnected_t connected;
+    usercmd_s cmd;
+    usercmd_s oldcmd;
+    int localClient;
+    int predictItemPickup;
+    char newnetname[32];
+    int maxHealth;
+    int enterTime;
+    playerTeamState_t teamState;
+    int voteCount;
+    int teamVoteCount;
+    float moveSpeedScaleMultiplier;
+    int viewmodelIndex;
+    int noSpectate;
+    int teamInfo;
+    clientState_s cs;
+    int psOffsetTime;
+    int hasRadar;
+    int isRadarBlocked;
+    int radarMode;
+    int weaponHudIconOverrides[6];
+    unsigned int unusableEntFlags[64];
+    float spectateDefaultPos[3];
+    float spectateDefaultAngles[3];
 };
 
-struct clientUIActive_t
+struct viewClamp
 {
-    bool active;
-    bool isRunning;
-    bool cgameInitialized;       // 0x002 - v7[2] = 1 in retail
-    bool cgameInitCalled;        // 0x003 - v7[3] = 1 in retail
-    char pad_4[2884];            // 0x004 - padding to reach connectionState
-    connstate_t connectionState; // 0xB48 - dword_825A6460[804*a1] in retail
-    char pad_B4C[324];           // 0xB4C - padding to reach struct size
+    float start[2];
+    float current[2];
+    float goal[2];
 };
 
-static_assert(sizeof(clientUIActive_t) == 0xC90, "");                    // 3216 bytes
-static_assert(offsetof(clientUIActive_t, connectionState) == 0xB48, ""); // 2888 bytes
-
-struct __declspec(align(128)) cg_s
+struct viewClampState
 {
-    playerState_s predictedPlayerState;
-    char padding[1027200];
-};
-static_assert(sizeof(cg_s) == 1039872, "");
-
-typedef void (*BuiltinFunction)();
-typedef void (*BuiltinMethod)(scr_entref_t);
-
-struct BuiltinFunctionDef
-{
-    const char *actionString;
-    void (*actionFunc)();
-    int type;
+    viewClamp min;
+    viewClamp max;
+    float accelTime;
+    float decelTime;
+    float totalTime;
+    float startTime;
 };
 
-struct BuiltinMethodDef
+enum hintType_t : __int32
 {
-    const char *actionString;
-    void (*actionFunc)(scr_entref_t);
-    int type;
+    HINT_NONE = 0x0,
+    HINT_NOICON = 0x1,
+    HINT_ACTIVATE = 0x2,
+    HINT_HEALTH = 0x3,
+    HINT_FRIENDLY = 0x4,
+    FIRST_WEAPON_HINT = 0x5,
+    LAST_WEAPON_HINT = 0x4B4,
+    HINT_NUM_HINTS = 0x4B5,
 };
 
-enum fieldtype_t : __int32
+struct gclient_s
 {
-    F_INT = 0x0,
-    F_SHORT = 0x1,
-    F_BYTE = 0x2,
-    F_FLOAT = 0x3,
-    F_CSTRING = 0x4,
-    F_STRING = 0x5,
-    F_VECTOR = 0x6,
-    F_ENTITY = 0x7,
-    F_ENTHANDLE = 0x8,
-    F_ANGLES_YAW = 0x9,
-    F_OBJECT = 0xA,
-    F_MODEL = 0xB,
+    playerState_s ps;
+    clientSession_t sess;
+    int flags;
+    int spectatorClient;
+    int lastCmdTime;
+    int mpviewer;
+    int buttons;
+    int oldbuttons;
+    int latched_buttons;
+    int buttonsSinceLastFrame;
+    float oldOrigin[3];
+    float fGunPitch;
+    float fGunYaw;
+    int damage_blood;
+    int damage_stun;
+    float damage_from[3];
+    int damage_fromWorld;
+    int accurateCount;
+    int accuracy_shots;
+    int accuracy_hits;
+    int inactivityTime;
+    int inactivityWarning;
+    int lastVoiceTime;
+    int switchTeamTime;
+    float currentAimSpreadScale;
+    float prevLinkedInvQuat[4];
+    bool prevLinkAnglesSet;
+    bool link_rotationMovesEyePos;
+    bool link_doCollision;
+    bool link_useTagAnglesForViewAngles;
+    float linkAnglesFrac;
+    viewClampState link_viewClamp;
+    gentity_s *persistantPowerup;
+    int portalID;
+    int dropWeaponTime;
+    int sniperRifleFiredTime;
+    float sniperRifleMuzzleYaw;
+    int PCSpecialPickedUpCount;
+    EntHandle useHoldEntity;
+    int useHoldTime;
+    int useButtonDone;
+    int iLastCompassPlayerInfoEnt;
+    int compassPingTime;
+    int damageTime;
+    float v_dmg_roll;
+    float v_dmg_pitch;
+    float baseAngles[3];
+    float baseOrigin[3];
+    float swayViewAngles[3];
+    float swayOffset[3];
+    float swayAngles[3];
+    float recoilAngles[3];
+    float recoilSpeed[3];
+    float fLastIdleFactor;
+    int weapIdleTime;
+    int lastServerTime;
+    unsigned int lastWeapon;
+    bool previouslyFiring;
+    bool previouslyFiringLeftHand;
+    bool previouslyUsingNightVision;
+    bool previouslySprinting;
+    int visionDuration[5];
+    char visionName[5][64];
+    int lastStand;
+    int lastStandTime;
+    int hudElemLastAssignedSoundID;
+    float lockedTargetOffset[3];
+    int attachShieldTagName;
+    hintType_t hintForcedType;
+    int hintForcedString;
 };
-
-struct client_fields_s
-{
-    const char *name;
-    int ofs;
-    fieldtype_t type;
-    void (*setter)(gclient_s *, const client_fields_s *);
-    void (*getter)(gclient_s *, const client_fields_s *);
-};
-
-struct Font_s;
-struct Material;
-
-struct CachedAssets_t
-{
-    Material *scrollBarArrowUp;
-    Material *scrollBarArrowDown;
-    Material *scrollBarArrowLeft;
-    Material *scrollBarArrowRight;
-    Material *scrollBar;
-    Material *scrollBarThumb;
-    Material *sliderBar;
-    Material *sliderThumb;
-    Material *whiteMaterial;
-    Material *cursor;
-    Material *textDecodeCharacters;
-    Material *textDecodeCharactersGlow;
-    Font_s *bigFont;
-    Font_s *smallFont;
-    Font_s *consoleFont;
-    Font_s *boldFont;
-    Font_s *textFont;
-    Font_s *extraBigFont;
-    Font_s *objectiveFont;
-    Font_s *hudBigFont;
-    Font_s *hudSmallFont;
-};
-
-struct __declspec(align(4)) sharedUiInfo_t
-{
-    CachedAssets_t assets;
-    bool preventPause;
-};
-
-struct ScreenPlacement
-{
-    float scaleVirtualToReal[2];
-    float scaleVirtualToFull[2];
-    float scaleRealToVirtual[2];
-    float realViewportPosition[2];
-    float realViewportSize[2];
-    float virtualViewableMin[2];
-    float virtualViewableMax[2];
-    float realViewableMin[2];
-    float realViewableMax[2];
-    float virtualAdjustableMin[2];
-    float virtualAdjustableMax[2];
-    float realAdjustableMin[2];
-    float realAdjustableMax[2];
-    float subScreenLeft;
-};
-
-enum XAssetType : __int32
-{
-    ASSET_TYPE_PHYSPRESET = 0x0,
-    ASSET_TYPE_PHYSCOLLMAP = 0x1,
-    ASSET_TYPE_XANIMPARTS = 0x2,
-    ASSET_TYPE_XMODEL_SURFS = 0x3,
-    ASSET_TYPE_XMODEL = 0x4,
-    ASSET_TYPE_MATERIAL = 0x5,
-    ASSET_TYPE_PIXELSHADER = 0x6,
-    ASSET_TYPE_TECHNIQUE_SET = 0x7,
-    ASSET_TYPE_IMAGE = 0x8,
-    ASSET_TYPE_SOUND = 0x9,
-    ASSET_TYPE_SOUND_CURVE = 0xA,
-    ASSET_TYPE_LOADED_SOUND = 0xB,
-    ASSET_TYPE_CLIPMAP_SP = 0xC,
-    ASSET_TYPE_CLIPMAP_MP = 0xD,
-    ASSET_TYPE_COMWORLD = 0xE,
-    ASSET_TYPE_GAMEWORLD_SP = 0xF,
-    ASSET_TYPE_GAMEWORLD_MP = 0x10,
-    ASSET_TYPE_MAP_ENTS = 0x11,
-    ASSET_TYPE_FXWORLD = 0x12,
-    ASSET_TYPE_GFXWORLD = 0x13,
-    ASSET_TYPE_LIGHT_DEF = 0x14,
-    ASSET_TYPE_UI_MAP = 0x15,
-    ASSET_TYPE_FONT = 0x16,
-    ASSET_TYPE_MENULIST = 0x17,
-    ASSET_TYPE_MENU = 0x18,
-    ASSET_TYPE_LOCALIZE_ENTRY = 0x19,
-    ASSET_TYPE_WEAPON = 0x1A,
-    ASSET_TYPE_SNDDRIVER_GLOBALS = 0x1B,
-    ASSET_TYPE_FX = 0x1C,
-    ASSET_TYPE_IMPACT_FX = 0x1D,
-    ASSET_TYPE_AITYPE = 0x1E,
-    ASSET_TYPE_MPTYPE = 0x1F,
-    ASSET_TYPE_CHARACTER = 0x20,
-    ASSET_TYPE_XMODELALIAS = 0x21,
-    ASSET_TYPE_RAWFILE = 0x22,
-    ASSET_TYPE_STRINGTABLE = 0x23,
-    ASSET_TYPE_LEADERBOARD = 0x24,
-    ASSET_TYPE_STRUCTURED_DATA_DEF = 0x25,
-    ASSET_TYPE_TRACER = 0x26,
-    ASSET_TYPE_VEHICLE = 0x27,
-    ASSET_TYPE_ADDON_MAP_ENTS = 0x28,
-    ASSET_TYPE_COUNT = 0x29,
-    ASSET_TYPE_STRING = 0x29,
-    ASSET_TYPE_ASSETLIST = 0x2A,
-};
-
-struct cplane_s;
-struct cStaticModel_s;
-struct ClipMaterial;
-struct cbrushside_t;
-struct cNode_t;
-struct cLeaf_t;
-struct cLeafBrushNode_s;
-struct CollisionBorder;
-struct CollisionPartition;
-struct CollisionAabbTree;
-struct cmodel_t;
-struct cbrush_t;
-
-struct TriggerModel
-{
-    int contents;
-    unsigned __int16 hullCount;
-    unsigned __int16 firstHull;
-};
-
-struct TriggerHull
-{
-    Bounds bounds;
-    int contents;
-    unsigned __int16 slabCount;
-    unsigned __int16 firstSlab;
-};
-
-struct TriggerSlab
-{
-    float dir[3];
-    float midPoint;
-    float halfSize;
-};
-
-struct MapTriggers
-{
-    unsigned int count;
-    TriggerModel *models;
-    unsigned int hullCount;
-    TriggerHull *hulls;
-    unsigned int slabCount;
-    TriggerSlab *slabs;
-};
-
-struct __declspec(align(2)) Stage
-{
-    const char *name;
-    float origin[3];
-    unsigned __int16 triggerIndex;
-    unsigned __int8 sunPrimaryLightIndex;
-};
-
-struct __declspec(align(4)) MapEnts
-{
-    const char *name;
-    char *entityString;
-    int numEntityChars;
-    MapTriggers trigger;
-    Stage *stages;
-    unsigned __int8 stageCount;
-};
-
-struct SModelAabbNode;
-struct DynEntityDef;
-struct DynEntityPose;
-struct DynEntityClient;
-struct DynEntityColl;
-
-struct __declspec(align(64)) clipMap_t
-{
-    const char *name;
-    int isInUse;
-    int planeCount;
-    cplane_s *planes;
-    unsigned int numStaticModels;
-    cStaticModel_s *staticModelList;
-    unsigned int numMaterials;
-    ClipMaterial *materials;
-    unsigned int numBrushSides;
-    cbrushside_t *brushsides;
-    unsigned int numBrushEdges;
-    unsigned __int8 *brushEdges;
-    unsigned int numNodes;
-    cNode_t *nodes;
-    unsigned int numLeafs;
-    cLeaf_t *leafs;
-    unsigned int leafbrushNodesCount;
-    cLeafBrushNode_s *leafbrushNodes;
-    unsigned int numLeafBrushes;
-    unsigned __int16 *leafbrushes;
-    unsigned int numLeafSurfaces;
-    unsigned int *leafsurfaces;
-    unsigned int vertCount;
-    float (*verts)[3];
-    int triCount;
-    unsigned __int16 *triIndices;
-    unsigned __int8 *triEdgeIsWalkable;
-    int borderCount;
-    CollisionBorder *borders;
-    int partitionCount;
-    CollisionPartition *partitions;
-    int aabbTreeCount;
-    CollisionAabbTree *aabbTrees;
-    unsigned int numSubModels;
-    cmodel_t *cmodels;
-    unsigned __int16 numBrushes;
-    cbrush_t *brushes;
-    Bounds *brushBounds;
-    int *brushContents;
-    MapEnts *mapEnts;
-    unsigned __int16 smodelNodeCount;
-    SModelAabbNode *smodelNodes;
-    unsigned __int16 dynEntCount[2];
-    DynEntityDef *dynEntDefList[2];
-    DynEntityPose *dynEntPoseList[2];
-    DynEntityClient *dynEntClientList[2];
-    DynEntityColl *dynEntCollList[2];
-    unsigned int checksum;
-};
-
-struct pathnode_t;
-struct pathbasenode_t;
-struct pathnode_tree_t;
-struct VehicleTrackSegment;
-struct G_GlassData;
-
-struct PathData
-{
-    unsigned int nodeCount;
-    pathnode_t *nodes;
-    pathbasenode_t *basenodes;
-    unsigned int chainNodeCount;
-    unsigned __int16 *chainNodeForNode;
-    unsigned __int16 *nodeForChainNode;
-    int visBytes;
-    unsigned __int8 *pathVis;
-    int nodeTreeCount;
-    pathnode_tree_t *nodeTree;
-};
-
-struct VehicleTrack
-{
-    VehicleTrackSegment *segments;
-    unsigned int segmentCount;
-};
-
-struct GameWorldSp
-{
-    const char *name;
-    PathData path;
-    VehicleTrack vehicleTrack;
-    G_GlassData *g_glassData;
-};
-
-struct GameWorldMp
-{
-    const char *name;
-    G_GlassData *g_glassData;
-};
-
-struct RawFile
-{
-    const char *name;
-    int compressedLen;
-    int len;
-    const char *buffer;
-};
-
-union XAssetHeader
-{
-    clipMap_t *clipMap;
-    GameWorldSp *gameWorldSp;
-    GameWorldMp *gameWorldMp;
-    MapEnts *mapEnts;
-    RawFile *rawfile;
-    void *data;
-};
-
-struct XAsset
-{
-    XAssetType type;
-    XAssetHeader header;
-};
-
-struct __declspec(align(4)) XAssetEntry
-{
-    XAsset asset;
-    unsigned __int8 zoneIndex;
-    volatile unsigned __int8 inuseMask;
-    unsigned __int16 nextHash;
-    unsigned __int16 nextOverride;
-};
-
-union XAssetEntryPoolEntry
-{
-    XAssetEntry entry;
-    XAssetEntryPoolEntry *next;
-};
+static_assert(sizeof(gclient_s) == 0x3700, "");
 
 } // namespace mp
 } // namespace iw4

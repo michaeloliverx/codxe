@@ -2,20 +2,20 @@
 #include "console.h"
 
 typedef void (*R_AddCmdDrawStretchPic_t)(float x, float y, float w, float h, float s0, float t0, float s1, float t1,
-                                         const float *color, iw4::mp::Material *material);
+                                         const float *color, iw4::mp_tu6::Material *material);
 static auto R_AddCmdDrawStretchPic = reinterpret_cast<R_AddCmdDrawStretchPic_t>(0x823C6DB0);
 
-typedef iw4::mp::Material *(*Material_RegisterHandle_t)(const char *name);
+typedef iw4::mp_tu6::Material *(*Material_RegisterHandle_t)(const char *name);
 Material_RegisterHandle_t Material_RegisterHandle = reinterpret_cast<Material_RegisterHandle_t>(0x823C2FF8);
 
-typedef void (*R_AddCmdDrawText_t)(const char *text, int maxChars, iw4::mp::Font_s *font, float x, float y,
+typedef void (*R_AddCmdDrawText_t)(const char *text, int maxChars, iw4::mp_tu6::Font_s *font, float x, float y,
                                    float xScale, float yScale, float rotation, const float *color, int style);
 R_AddCmdDrawText_t R_AddCmdDrawText = reinterpret_cast<R_AddCmdDrawText_t>(0x823C7690);
 
-typedef int (*R_TextWidth_t)(const char *text, int maxChars, iw4::mp::Font_s *font);
+typedef int (*R_TextWidth_t)(const char *text, int maxChars, iw4::mp_tu6::Font_s *font);
 R_TextWidth_t R_TextWidth = reinterpret_cast<R_TextWidth_t>(0x823C28F8);
 
-typedef int (*R_TextHeight_t)(iw4::mp::Font_s *font);
+typedef int (*R_TextHeight_t)(iw4::mp_tu6::Font_s *font);
 R_TextHeight_t R_TextHeight = reinterpret_cast<R_TextHeight_t>(0x823C28F8);
 
 typedef unsigned int (*Sys_Milliseconds_t)();
@@ -243,18 +243,18 @@ void Console::RenderConsole()
 
     // Draw background
     R_AddCmdDrawStretchPic(CONSOLE_X, CONSOLE_Y, CONSOLE_WIDTH, CONSOLE_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f,
-                           settings.background_color, iw4::mp::sharedUiInfo->assets.whiteMaterial);
+                           settings.background_color, iw4::mp_tu6::sharedUiInfo->assets.whiteMaterial);
 
     // Draw border (optional, for better visibility)
     const float borderColor[4] = {0.5f, 0.5f, 0.5f, 1.0f};
     R_AddCmdDrawStretchPic(CONSOLE_X, CONSOLE_Y, CONSOLE_WIDTH, 2.0f, 0.0f, 0.0f, 1.0f, 1.0f, borderColor,
-                           iw4::mp::sharedUiInfo->assets.whiteMaterial);
+                           iw4::mp_tu6::sharedUiInfo->assets.whiteMaterial);
     R_AddCmdDrawStretchPic(CONSOLE_X, CONSOLE_Y + CONSOLE_HEIGHT - 2.0f, CONSOLE_WIDTH, 2.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-                           borderColor, iw4::mp::sharedUiInfo->assets.whiteMaterial);
+                           borderColor, iw4::mp_tu6::sharedUiInfo->assets.whiteMaterial);
 
     // The text anchor is at the bottom left of the first line, not top left
     // So we need to add the line height to position the first line correctly
-    int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+    int fontHeight = R_TextHeight(iw4::mp_tu6::sharedUiInfo->assets.consoleFont);
     float scaledFontHeight = fontHeight * 0.8f; // Account for the 0.8f scale we use when drawing
     float yPos = CONSOLE_Y + TEXT_MARGIN + scaledFontHeight;
 
@@ -289,8 +289,8 @@ void Console::RenderConsole()
         const char *line = consoleState.GetHistoryLine(i);
         if (line)
         {
-            R_AddCmdDrawText(line, MAX_INPUT_LENGTH, iw4::mp::sharedUiInfo->assets.consoleFont, CONSOLE_X + TEXT_MARGIN,
-                             yPos, 0.8f, 0.8f, 0.0f, settings.text_color, 0);
+            R_AddCmdDrawText(line, MAX_INPUT_LENGTH, iw4::mp_tu6::sharedUiInfo->assets.consoleFont,
+                             CONSOLE_X + TEXT_MARGIN, yPos, 0.8f, 0.8f, 0.0f, settings.text_color, 0);
             yPos += scaledFontHeight;
         }
     }
@@ -301,23 +301,23 @@ void Console::RenderConsole()
         const float scrollIndColor[4] = {1.0f, 1.0f, 0.0f, 0.8f};
         char scrollText[64];
         _snprintf(scrollText, sizeof(scrollText), "[Scrolled up %d lines]", consoleState.historyScroll);
-        R_AddCmdDrawText(scrollText, 64, iw4::mp::sharedUiInfo->assets.consoleFont, CONSOLE_X + CONSOLE_WIDTH - 200.0f,
-                         CONSOLE_Y + 20.0f, 0.7f, 0.7f, 0.0f, scrollIndColor, 0);
+        R_AddCmdDrawText(scrollText, 64, iw4::mp_tu6::sharedUiInfo->assets.consoleFont,
+                         CONSOLE_X + CONSOLE_WIDTH - 200.0f, CONSOLE_Y + 20.0f, 0.7f, 0.7f, 0.0f, scrollIndColor, 0);
     }
 
     // Draw input line separator
     yPos = CONSOLE_Y + CONSOLE_HEIGHT - 35.0f;
     const float separatorColor[4] = {0.3f, 0.3f, 0.3f, 1.0f};
     R_AddCmdDrawStretchPic(CONSOLE_X + TEXT_MARGIN, yPos, CONSOLE_WIDTH - (TEXT_MARGIN * 2), 1.0f, 0.0f, 0.0f, 1.0f,
-                           1.0f, separatorColor, iw4::mp::sharedUiInfo->assets.whiteMaterial);
+                           1.0f, separatorColor, iw4::mp_tu6::sharedUiInfo->assets.whiteMaterial);
 
     // Draw prompt and input
     yPos += 10.0f;
-    R_AddCmdDrawText("> ", 2, iw4::mp::sharedUiInfo->assets.consoleFont, CONSOLE_X + TEXT_MARGIN, yPos, 0.8f, 0.8f,
+    R_AddCmdDrawText("> ", 2, iw4::mp_tu6::sharedUiInfo->assets.consoleFont, CONSOLE_X + TEXT_MARGIN, yPos, 0.8f, 0.8f,
                      0.0f, settings.prompt_color, 0);
 
     // Draw input buffer
-    R_AddCmdDrawText(consoleState.inputBuffer, MAX_INPUT_LENGTH, iw4::mp::sharedUiInfo->assets.consoleFont,
+    R_AddCmdDrawText(consoleState.inputBuffer, MAX_INPUT_LENGTH, iw4::mp_tu6::sharedUiInfo->assets.consoleFont,
                      CONSOLE_X + TEXT_MARGIN + 20.0f, yPos, 0.8f, 0.8f, 0.0f, settings.input_text_color, 0);
 
     // Draw cursor (blinking)
@@ -338,7 +338,7 @@ void Console::RenderConsole()
         float cursorX =
             CONSOLE_X + TEXT_MARGIN + 20.0f + (consoleState.inputCursor * 8.0f); // Approximate character width
 
-        R_AddCmdDrawText("_", 1, iw4::mp::sharedUiInfo->assets.consoleFont, cursorX, yPos, 0.8f, 0.8f, 0.0f,
+        R_AddCmdDrawText("_", 1, iw4::mp_tu6::sharedUiInfo->assets.consoleFont, cursorX, yPos, 0.8f, 0.8f, 0.0f,
                          settings.input_text_color, 0);
     }
 }
@@ -384,7 +384,7 @@ void Console::HandleInput()
     // Handle Page Up - scroll history up
     if (keystroke.VirtualKey == VK_PRIOR) // VK_PRIOR is Page Up
     {
-        int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+        int fontHeight = R_TextHeight(iw4::mp_tu6::sharedUiInfo->assets.consoleFont);
         float scaledFontHeight = fontHeight * 0.8f;
         int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / scaledFontHeight);
         int maxScroll = consoleState.lineCount - maxVisibleLines;
@@ -404,7 +404,7 @@ void Console::HandleInput()
     // Handle Page Down - scroll history down
     if (keystroke.VirtualKey == VK_NEXT) // VK_NEXT is Page Down
     {
-        int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+        int fontHeight = R_TextHeight(iw4::mp_tu6::sharedUiInfo->assets.consoleFont);
         float scaledFontHeight = fontHeight * 0.8f;
         int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / scaledFontHeight);
 
@@ -421,7 +421,7 @@ void Console::HandleInput()
     // Handle Home key - jump to top of history
     if (keystroke.VirtualKey == VK_HOME)
     {
-        int fontHeight = R_TextHeight(iw4::mp::sharedUiInfo->assets.consoleFont);
+        int fontHeight = R_TextHeight(iw4::mp_tu6::sharedUiInfo->assets.consoleFont);
         float scaledFontHeight = fontHeight * 0.8f;
         int maxVisibleLines = (int)((CONSOLE_HEIGHT - 50.0f) / scaledFontHeight);
         int maxScroll = consoleState.lineCount - maxVisibleLines;
@@ -514,8 +514,8 @@ Detour Console::SCR_DrawScreenField_Detour;
 void Console::SCR_DrawScreenField_Hook(int localClientNum, int refreshedUI)
 {
     // Call the original function
-    Console::SCR_DrawScreenField_Detour.GetOriginal<decltype(iw4::mp::SCR_DrawScreenField)>()(localClientNum,
-                                                                                              refreshedUI);
+    Console::SCR_DrawScreenField_Detour.GetOriginal<decltype(iw4::mp_tu6::SCR_DrawScreenField)>()(localClientNum,
+                                                                                                  refreshedUI);
 
     // TODO: Remove this hack once we figure out why the game crashes when rendering the console too early (text
     // rendering)
@@ -544,7 +544,7 @@ void Console::CL_ConsolePrint_Hook(int localClientNum, int channel, const char *
 
 Console::Console()
 {
-    SCR_DrawScreenField_Detour = Detour(iw4::mp::SCR_DrawScreenField, SCR_DrawScreenField_Hook);
+    SCR_DrawScreenField_Detour = Detour(iw4::mp_tu6::SCR_DrawScreenField, SCR_DrawScreenField_Hook);
     SCR_DrawScreenField_Detour.Install();
 
     // Redirect the games internal console print to ours

@@ -3,7 +3,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 std::vector<BuiltinFunctionDef *> scr_functions;
 std::vector<BuiltinMethodDef *> scr_methods;
@@ -106,5 +106,5 @@ g_scr_main::~g_scr_main()
 
     Scr_GetMethod_Detour.Remove();
 }
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

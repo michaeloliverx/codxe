@@ -4,7 +4,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 void Scr_AddMethod(const char *name, BuiltinMethod func, int type);
 void Scr_AddFunction(const char *name, BuiltinFunction func, int type);
@@ -19,5 +19,5 @@ class g_scr_main : public Module
         return "g_scr_main";
     };
 };
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

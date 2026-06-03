@@ -111,6 +111,14 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "IW4 MP 1.4 build 669 latest Wed May 05 2010 06:55:32PM xenon",
         "Call of Duty: Modern Warfare 2 MP Title Update #6",
+        &CreatePlugin<iw4::mp_tu6::IW4_MP_TU6_Plugin>,
+    },
+    {
+        0x41560817,
+        0x5B11C269, // Fri Jun 1 23:02:17 2018
+        "default_mp.xex",
+        "IW4 MP 1.4 build 163842 Tue Feb 08 16:52:00 2011 xenon",
+        "Call of Duty: Modern Warfare 2 MP Title Update #9",
         &CreatePlugin<iw4::mp::IW4_MP_Plugin>,
     },
     {

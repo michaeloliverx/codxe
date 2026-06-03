@@ -72,6 +72,10 @@
 #include "game/iw4/mp/structs.h"
 #include "game/iw4/mp/symbols.h"
 
+#include "game/iw4/mp_tu6/main.h"
+#include "game/iw4/mp_tu6/structs.h"
+#include "game/iw4/mp_tu6/symbols.h"
+
 // IW5-specific includes
 #include "game/iw5/mp/main.h"
 #include "game/iw5/mp/structs.h"

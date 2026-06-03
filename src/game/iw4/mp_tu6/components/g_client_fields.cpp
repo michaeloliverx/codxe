@@ -3,7 +3,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 const unsigned short CLIENT_FIELD_MASK = 0x6000;
 
@@ -121,5 +121,5 @@ g_client_fields::~g_client_fields()
 
     Scr_GetObjectField_Detour.Remove();
 }
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

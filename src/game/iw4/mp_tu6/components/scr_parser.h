@@ -4,7 +4,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 class scr_parser : public Module
 {
@@ -17,5 +17,5 @@ class scr_parser : public Module
         return "scr_parser";
     };
 };
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

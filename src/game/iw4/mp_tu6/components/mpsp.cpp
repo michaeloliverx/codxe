@@ -6,7 +6,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 bool mpsp::is_sp_map = false;
 
@@ -548,5 +548,5 @@ mpsp::~mpsp()
     Com_sprintf_Detour.Remove();
 }
 
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

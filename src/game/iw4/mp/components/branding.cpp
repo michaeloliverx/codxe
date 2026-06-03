@@ -1,18 +1,20 @@
 #include "pch.h"
-#include "cg.h"
+#include "branding.h"
 
 namespace iw4
 {
 namespace mp
 {
-
-void DrawBranding(int localClientNum)
+namespace
 {
-    auto const placement = ScrPlace_GetUnsafeFullPlacement();
+Detour UI_DrawBuildNumber_Detour;
+} // namespace
 
+void Branding::DrawBranding(int localClientNum)
+{
+    const ScreenPlacement *placement = ScrPlace_GetActivePlacement(localClientNum);
     const char *text = branding::GetBrandingString();
-
-    const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f}; // RGBA white color
+    const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f};
 
     const float x = -100.0f;
     const float y = 10.0f;
@@ -20,21 +22,19 @@ void DrawBranding(int localClientNum)
     UI_DrawText(placement, text, 64, sharedUiInfo->assets.consoleFont, x, y, 0, 0, 0.2, color_white_rgba, 0);
 }
 
-Detour UI_DrawBuildNumber_Detour;
-
-void UI_DrawBuildNumber_Hook(int localClientNum)
+void Branding::UI_DrawBuildNumber_Hook(int localClientNum)
 {
     UI_DrawBuildNumber_Detour.GetOriginal<decltype(UI_DrawBuildNumber)>()(localClientNum);
     DrawBranding(localClientNum);
 }
 
-cg::cg()
+Branding::Branding()
 {
-    UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
+    UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, Branding::UI_DrawBuildNumber_Hook);
     UI_DrawBuildNumber_Detour.Install();
 }
 
-cg::~cg()
+Branding::~Branding()
 {
     UI_DrawBuildNumber_Detour.Remove();
 }

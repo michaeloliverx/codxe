@@ -3,7 +3,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 Detour Scr_AddSourceBuffer_Detour;
 
@@ -60,5 +60,5 @@ scr_parser::~scr_parser()
 {
     Scr_AddSourceBuffer_Detour.Remove();
 }
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

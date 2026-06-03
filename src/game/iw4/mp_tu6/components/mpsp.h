@@ -4,7 +4,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 class mpsp : public Module
 {
@@ -18,5 +18,5 @@ class mpsp : public Module
     static bool is_sp_map;
     // static bool is_sp_mapname(const std::string &name);
 };
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

@@ -4,7 +4,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 class g_client_fields : public Module
 {
@@ -17,5 +17,5 @@ class g_client_fields : public Module
         return "g_client_fields";
     };
 };
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

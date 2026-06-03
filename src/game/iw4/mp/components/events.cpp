@@ -1,62 +1,40 @@
 #include "pch.h"
 #include "events.h"
 
-std::vector<std::function<void()>> Events::cg_drawactive_callbacks;
-
-void Events::CG_DrawActive_Hook(int localClientNum)
+namespace iw4
 {
-    // Call original function first
-    CG_DrawActive_Detour.GetOriginal<decltype(&CG_DrawActive_Hook)>()(localClientNum);
-
-    for (auto it = cg_drawactive_callbacks.begin(); it != cg_drawactive_callbacks.end(); ++it)
-    {
-        (*it)();
-    }
-}
-
-void Events::OnCG_DrawActive(const std::function<void()> &callback)
+namespace mp
 {
-    cg_drawactive_callbacks.emplace_back(callback);
-}
+std::vector<std::function<void()>> Events::com_initdvars_callbacks;
+Detour Events::Com_InitDvars_Detour;
 
-Detour Events::CG_DrawActive_Detour;
-
-std::vector<std::function<void()>> Events::cmdinit_callbacks;
-
-void Events::Cmd_Init_Hook()
+void Events::Com_InitDvars_Hook()
 {
-    // Call original function first so the command subsystem is ready.
-    Cmd_Init_Detour.GetOriginal<decltype(iw4::mp::Cmd_Init)>()();
+    Com_InitDvars_Detour.GetOriginal<Com_InitDvars_t>()();
 
-    for (auto it = cmdinit_callbacks.begin(); it != cmdinit_callbacks.end(); ++it)
+    for (auto it = com_initdvars_callbacks.begin(); it != com_initdvars_callbacks.end(); ++it)
     {
         (*it)();
     }
 
-    cmdinit_callbacks.clear();
+    com_initdvars_callbacks.clear();
 }
 
-void Events::OnCmdInit(const std::function<void()> &callback)
+void Events::OnDvarInit(const std::function<void()> &callback)
 {
-    cmdinit_callbacks.emplace_back(callback);
+    com_initdvars_callbacks.emplace_back(callback);
 }
-
-Detour Events::Cmd_Init_Detour;
 
 Events::Events()
 {
-    CG_DrawActive_Detour = Detour(iw4::mp::CG_DrawActive, CG_DrawActive_Hook);
-    CG_DrawActive_Detour.Install();
-
-    Cmd_Init_Detour = Detour(iw4::mp::Cmd_Init, Cmd_Init_Hook);
-    Cmd_Init_Detour.Install();
+    Com_InitDvars_Detour = Detour(Com_InitDvars, Events::Com_InitDvars_Hook);
+    Com_InitDvars_Detour.Install();
 }
 
 Events::~Events()
 {
-    CG_DrawActive_Detour.Remove();
-    Cmd_Init_Detour.Remove();
-
-    cg_drawactive_callbacks.clear();
-    cmdinit_callbacks.clear();
+    Com_InitDvars_Detour.Remove();
+    com_initdvars_callbacks.clear();
 }
+} // namespace mp
+} // namespace iw4

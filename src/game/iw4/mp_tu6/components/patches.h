@@ -1,19 +1,21 @@
 #pragma once
 
+#include "pch.h"
+
 namespace iw4
 {
-
-namespace mp
+namespace mp_tu6
 {
 class patches : public Module
 {
   public:
     patches();
+    ~patches();
 
     const char *get_name() override
     {
-        return "iw4_mp_patches";
-    }
+        return "patches";
+    };
 };
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

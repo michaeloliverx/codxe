@@ -4,7 +4,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 class MovementRecorder : public Module
 {
@@ -18,5 +18,5 @@ class MovementRecorder : public Module
     static bool TAS_Enabled();
     static void MovementRecorder::On_CG_Init();
 };
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4

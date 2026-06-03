@@ -4,7 +4,7 @@
 
 namespace iw4
 {
-namespace mp
+namespace mp_tu6
 {
 class cg : public Module
 {
@@ -17,5 +17,5 @@ class cg : public Module
         return "cg";
     };
 };
-} // namespace mp
+} // namespace mp_tu6
 } // namespace iw4
