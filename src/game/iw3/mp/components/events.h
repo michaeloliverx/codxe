@@ -35,7 +35,7 @@ class Events : public Module
 
     static std::vector<std::function<void()>> vmshutdown_callbacks;
     static Detour Scr_ShutdownSystem_Detour;
-    static void Scr_ShutdownSystem_Hook(unsigned __int8 sys, int bComplete);
+    static void Scr_ShutdownSystem_Hook(unsigned __int8 sys);
 
     static std::vector<std::function<void()>> dvarinit_callbacks;
     static Detour Com_InitDvars_Detour;

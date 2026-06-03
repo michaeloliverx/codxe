@@ -1156,7 +1156,7 @@ struct cmd_function_s
     const char *name;
     const char *autoCompleteDir;
     const char *autoCompleteExt;
-    void(__fastcall *function)();
+    void (*function)();
 };
 
 enum keyNum_t : __int32
@@ -3104,7 +3104,7 @@ struct XFile
 {
     unsigned int size;
     unsigned int externalSize;
-    unsigned int blockSize[7];
+    unsigned int blockSize[MAX_XFILE_COUNT];
 };
 
 struct XZoneName

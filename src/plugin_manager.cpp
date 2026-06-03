@@ -147,21 +147,6 @@ const GameInfo GAME_INFO[] = {
     },
 };
 
-namespace
-{
-DWORD ResolveCurrentTitleId()
-{
-    PXEX_EXECUTION_ID execution_id = nullptr;
-    const NTSTATUS status = XamGetExecutionId(&execution_id);
-    if (status == 0 && execution_id != nullptr)
-    {
-        return execution_id->TitleID;
-    }
-
-    return XamGetCurrentTitleId();
-}
-} // namespace
-
 const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)
 {
     for (size_t i = 0; i < ARRAYSIZE(GAME_INFO); i++)
@@ -174,12 +159,9 @@ const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)
     return nullptr;
 }
 
-PluginManager::PluginManager() : m_current_plugin(nullptr), m_trampoline_pool_baseline(0)
+PluginManager::PluginManager()
+    : m_current_plugin(nullptr), m_trampoline_pool_baseline(0)
 {
-    if (xbox::IsXenia())
-    {
-        InitializeForCurrentExecutable();
-    }
 }
 
 PluginManager::~PluginManager()
@@ -187,23 +169,33 @@ PluginManager::~PluginManager()
     ResetCurrentPlugin();
 }
 
-void PluginManager::InitializeForCurrentExecutable()
-{
-    const auto module = reinterpret_cast<PLDR_DATA_TABLE_ENTRY>(GetModuleHandle(nullptr));
-    if (module == nullptr)
-    {
-        DbgPrint("[codxe][PluginManager] Failed to resolve the current executable module.\n");
-        return;
-    };
-
-    OnExecutableLoaded(module);
-}
-
 void PluginManager::SetTrampolinePoolBaseline(SIZE_T size)
 {
     // The loader hook is process-lifetime state, while game plugin hooks are title-lifetime state.
     // Reset plugin trampolines back to this baseline so unloading a game never overwrites the loader hook trampoline.
     m_trampoline_pool_baseline = size;
+}
+
+bool PluginManager::LoadPlugin(const GameInfo *info)
+{
+    if (info == nullptr)
+    {
+        return false;
+    }
+
+    assert(info->createPlugin != nullptr);
+    DbgPrint("[codxe][PluginManager] Loading plugin.\n");
+
+    auto plugin = info->createPlugin();
+    if (!plugin)
+    {
+        DbgPrint("[codxe][PluginManager] Plugin factory returned nullptr.\n");
+        return false;
+    }
+
+    m_current_plugin = std::move(plugin);
+    DbgPrint("[codxe][PluginManager] Plugin loaded.\n");
+    return true;
 }
 
 void PluginManager::ResetCurrentPlugin()
@@ -217,18 +209,14 @@ void PluginManager::ResetCurrentPlugin()
     }
 }
 
-void PluginManager::OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module)
+void PluginManager::OnExecutableLoadStarted()
 {
-    if (module == nullptr)
-    {
-        return;
-    }
-
-    const DWORD title_id = ResolveCurrentTitleId();
-    const DWORD timestamp = module->TimeDateStamp;
-
+    // Fallback only. Normal cleanup runs from the kernel title-terminate notification before title memory is reset.
     ResetCurrentPlugin();
+}
 
+void PluginManager::OnExecutableLoaded(DWORD title_id, DWORD timestamp)
+{
     if (title_id == DASHBOARD)
     {
         return;
@@ -242,17 +230,11 @@ void PluginManager::OnExecutableLoaded(PLDR_DATA_TABLE_ENTRY module)
         return;
     }
 
-    assert(info->createPlugin != nullptr);
     DbgPrint("[codxe][PluginManager] Game detected: '%s'.\n", info->friendlyVersion);
-    DbgPrint("[codxe][PluginManager] Loading plugin.\n");
+    LoadPlugin(info);
+}
 
-    auto plugin = info->createPlugin();
-    if (!plugin)
-    {
-        DbgPrint("[codxe][PluginManager] Plugin factory returned nullptr.\n");
-        return;
-    }
-
-    m_current_plugin = std::move(plugin);
-    DbgPrint("[codxe][PluginManager] Plugin loaded.\n");
+void PluginManager::OnTitleTerminate()
+{
+    ResetCurrentPlugin();
 }

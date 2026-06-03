@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "common/config.h"
-#include "events.h"
+#include "command.h"
 #include "image_loader.h"
 
 // Forgive me for this dreadful code. It was hacked together until semi working and not touched since.
@@ -78,6 +78,15 @@ struct DDSImage
     DDSHeader header;
     std::vector<uint8_t> data;
 };
+
+struct StaticDDSImage
+{
+    DDSHeader header;
+    uint8_t *data;
+    DWORD dataSize;
+};
+
+uint8_t g_staticDDSData[1024 * 1024];
 
 // Function to swap all necessary fields from little-endian to big-endian
 void SwapDDSHeaderEndian(DDSHeader &header)
@@ -170,6 +179,73 @@ DDSImage ReadDDSFile(const std::string &filepath)
     return ddsImage;
 }
 
+StaticDDSImage ReadDDSFileStatic(const char *filepath)
+{
+    StaticDDSImage ddsImage = {};
+
+    HANDLE file = CreateFileA(filepath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        DbgPrint("ERROR: Unable to open file: %s\n", filepath);
+        return ddsImage;
+    }
+
+    DWORD bytesRead = 0;
+    if (!ReadFile(file, &ddsImage.header, sizeof(DDSHeader), &bytesRead, nullptr) || bytesRead != sizeof(DDSHeader))
+    {
+        DbgPrint("ERROR: Failed to read DDS header: %s\n", filepath);
+        CloseHandle(file);
+        return ddsImage;
+    }
+
+    const uint32_t magicSwapped = _byteswap_ulong(ddsImage.header.magic);
+    if (magicSwapped != 0x20534444)
+    {
+        DbgPrint("ERROR: Invalid DDS file: %s\n", filepath);
+        CloseHandle(file);
+        return ddsImage;
+    }
+
+    SwapDDSHeaderEndian(ddsImage.header);
+
+    const DWORD fileSize = GetFileSize(file, nullptr);
+    if (fileSize == INVALID_FILE_SIZE || fileSize <= sizeof(DDSHeader))
+    {
+        DbgPrint("ERROR: Failed to determine DDS file size: %s\n", filepath);
+        CloseHandle(file);
+        return ddsImage;
+    }
+
+    const DWORD dataSize = fileSize - sizeof(DDSHeader);
+    if (dataSize > sizeof(g_staticDDSData))
+    {
+        DbgPrint("ERROR: DDS file too large for static buffer: %s size=%u max=%u\n", filepath, dataSize,
+                 static_cast<unsigned int>(sizeof(g_staticDDSData)));
+        CloseHandle(file);
+        return ddsImage;
+    }
+
+    if (!ReadFile(file, g_staticDDSData, dataSize, &bytesRead, nullptr) || bytesRead != dataSize)
+    {
+        DbgPrint("ERROR: Failed to read DDS data: %s\n", filepath);
+        CloseHandle(file);
+        return ddsImage;
+    }
+
+    CloseHandle(file);
+
+    ddsImage.data = g_staticDDSData;
+    ddsImage.dataSize = dataSize;
+
+    DbgPrint("INFO: DDS file '%s' loaded successfully.\n", filepath);
+    DbgPrint("      Resolution: %ux%u\n", ddsImage.header.width, ddsImage.header.height);
+    DbgPrint("      MipMaps: %u\n", ddsImage.header.mipMapCount);
+    DbgPrint("      Data Size: %u bytes\n", ddsImage.dataSize);
+
+    return ddsImage;
+}
+
 std::string extract_filename(const char *filename)
 {
     std::string path(filename);
@@ -245,8 +321,6 @@ namespace iw3
 {
 namespace mp
 {
-static cmd_function_s Cmd_imagedump_VAR;
-
 void Image_DbgPrint(const GfxImage *image)
 {
     const int format = image->texture.basemap->Format.DataFormat;
@@ -876,6 +950,17 @@ void Image_Replace(GfxImage *image)
         return;
     }
 
+    StaticDDSImage staticDDSImage = ReadDDSFileStatic(replacement_path.c_str());
+    if (staticDDSImage.data == nullptr)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Failed to load DDS file: %s\n", replacement_path.c_str());
+        return;
+    }
+
+    DbgPrint("[codxe][image_loader] DDS loaded for isolation: %s bytes=%u\n", replacement_path.c_str(),
+             static_cast<unsigned int>(staticDDSImage.dataSize));
+    return;
+
     DDSImage ddsImage = ReadDDSFile(replacement_path.c_str());
     if (ddsImage.data.empty())
     {
@@ -1038,7 +1123,7 @@ image_loader::image_loader()
     R_StreamLoadFileSynchronously_Detour = Detour(R_StreamLoadFileSynchronously, R_StreamLoadFileSynchronously_Hook);
     R_StreamLoadFileSynchronously_Detour.Install();
 
-    Events::OnCmdInit([]() { Cmd_AddCommandInternal("imagedump", Cmd_imagedump, &Cmd_imagedump_VAR); });
+    command::add("imagedump", Cmd_imagedump);
 }
 
 image_loader::~image_loader()

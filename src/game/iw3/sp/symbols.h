@@ -19,6 +19,12 @@ static auto CL_GamepadButtonEvent =
 static auto Cmd_AddCommandInternal =
     reinterpret_cast<void (*)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd)>(0x821DFAD0);
 
+typedef void (*Cmd_Init_t)();
+static Cmd_Init_t Cmd_Init = reinterpret_cast<Cmd_Init_t>(0x821DFF40);
+
+typedef void (*Com_InitDvars_t)();
+static Com_InitDvars_t Com_InitDvars = reinterpret_cast<Com_InitDvars_t>(0x821DBB90);
+
 static auto Com_Printf = reinterpret_cast<void (*)(conChannel_t channel, const char *fmt, ...)>(0x821DC0A0);
 static auto Com_PrintError = reinterpret_cast<void (*)(conChannel_t channel, const char *fmt, ...)>(0x821DAC90);
 static auto Com_PrintWarning = reinterpret_cast<void (*)(conChannel_t channel, const char *fmt, ...)>(0x821DA798);

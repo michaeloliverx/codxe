@@ -49,9 +49,6 @@ Detour Pmove_Detour;
 // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L11
 void Pmove_Hook(pmove_t *pm)
 {
-    static dvar_s *pm_fixed_fps_enable = Dvar_FindMalleableVar("pm_fixed_fps_enable");
-    static dvar_s *pm_fixed_fps = Dvar_FindMalleableVar("pm_fixed_fps");
-
     if (!pm_fixed_fps_enable->current.enabled)
         return Pmove_Detour.GetOriginal<decltype(Pmove)>()(pm);
 

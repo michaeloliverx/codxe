@@ -66,6 +66,8 @@ typedef struct _LDR_DATA_TABLE_ENTRY
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY; // size 100
 C_ASSERT(sizeof(LDR_DATA_TABLE_ENTRY) == 0x64);
 
+typedef void (*XexpFinishExecutableLoad_t)(PLDR_DATA_TABLE_ENTRY module, const char *commandLine);
+
 typedef struct _XEX_EXECUTION_ID
 {
     DWORD MediaID;     // 0x0 sz:0x4
@@ -88,6 +90,14 @@ typedef struct _XEX_EXECUTION_ID
 } XEX_EXECUTION_ID, *PXEX_EXECUTION_ID; // size 24
 C_ASSERT(sizeof(XEX_EXECUTION_ID) == 0x18);
 
+typedef struct _EX_TITLE_TERMINATE_REGISTRATION
+{
+    PVOID NotificationRoutine;
+    DWORD Priority;
+    LIST_ENTRY ListEntry;
+} EX_TITLE_TERMINATE_REGISTRATION, *PEX_TITLE_TERMINATE_REGISTRATION;
+C_ASSERT(sizeof(EX_TITLE_TERMINATE_REGISTRATION) == 0x10);
+
 extern "C"
 {
     NTSYSAPI
@@ -106,6 +116,11 @@ extern "C"
     NTAPI
     ExCreateThread(IN PHANDLE pHandle, IN DWORD dwStackSize, IN LPDWORD lpThreadId, IN PVOID apiThreadStartup,
                    IN LPTHREAD_START_ROUTINE lpStartAddress, IN LPVOID lpParameter, IN DWORD dwCreationFlagsMod);
+
+    NTSYSAPI
+    EXPORTNUM(21)
+    VOID NTAPI ExRegisterTitleTerminateNotification(IN OUT PEX_TITLE_TERMINATE_REGISTRATION pTermStruct,
+                                                    IN BOOL bCreate);
 
     NTSYSAPI
     EXPORTNUM(102)

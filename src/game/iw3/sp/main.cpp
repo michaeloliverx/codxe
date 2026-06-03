@@ -1,4 +1,6 @@
 #include "pch.h"
+#include "components/command.h"
+#include "components/events.h"
 #include "components/scr_parser.h"
 
 namespace
@@ -126,8 +128,6 @@ void Load_MapEntsPtr_Hook()
     }
 }
 
-static cmd_function_s Cmd_Dumpraw_f_VAR;
-
 void Cmd_Dumpraw_f()
 {
     XAssetHeader files[2048];
@@ -147,6 +147,8 @@ IW3_SP_Plugin::IW3_SP_Plugin()
 {
     DbgPrint("IW3 SP: Plugin loaded\n");
     RegisterModule(new Config());
+    RegisterModule(new Events());
+    RegisterModule(new command());
     RegisterModule(new scr_parser());
 
     CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
@@ -155,7 +157,7 @@ IW3_SP_Plugin::IW3_SP_Plugin()
     Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
     Load_MapEntsPtr_Detour.Install();
 
-    Cmd_AddCommandInternal("dumpraw", Cmd_Dumpraw_f, &Cmd_Dumpraw_f_VAR);
+    command::add("dumpraw", Cmd_Dumpraw_f);
 }
 
 IW3_SP_Plugin::~IW3_SP_Plugin()

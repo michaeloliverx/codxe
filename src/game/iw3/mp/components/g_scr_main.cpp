@@ -5,25 +5,51 @@ namespace iw3
 {
 namespace mp
 {
-std::vector<BuiltinFunctionDef *> scr_functions;
-std::vector<BuiltinMethodDef *> scr_methods;
+namespace
+{
+const size_t MAX_CUSTOM_SCRIPT_FUNCTIONS = 128;
+const size_t MAX_CUSTOM_SCRIPT_METHODS = 128;
+
+BuiltinFunctionDef scr_functions[MAX_CUSTOM_SCRIPT_FUNCTIONS];
+BuiltinMethodDef scr_methods[MAX_CUSTOM_SCRIPT_METHODS];
+size_t scr_function_count = 0;
+size_t scr_method_count = 0;
+} // namespace
+
+void Scr_ClearBuiltins()
+{
+    ZeroMemory(scr_functions, sizeof(scr_functions));
+    ZeroMemory(scr_methods, sizeof(scr_methods));
+    scr_function_count = 0;
+    scr_method_count = 0;
+}
 
 void Scr_AddFunction(const char *name, BuiltinFunction func, int type)
 {
-    BuiltinFunctionDef *newFunc = new BuiltinFunctionDef;
-    newFunc->actionString = name;
-    newFunc->actionFunc = func;
-    newFunc->type = type;
-    scr_functions.push_back(newFunc);
+    if (scr_function_count >= MAX_CUSTOM_SCRIPT_FUNCTIONS)
+    {
+        DbgPrint("[codxe][g_scr_main] Too many custom script functions; ignoring '%s'.\n", name);
+        return;
+    }
+
+    BuiltinFunctionDef &newFunc = scr_functions[scr_function_count++];
+    newFunc.actionString = name;
+    newFunc.actionFunc = func;
+    newFunc.type = type;
 }
 
 void Scr_AddMethod(const char *name, BuiltinMethod func, int type)
 {
-    BuiltinMethodDef *newMethod = new BuiltinMethodDef;
-    newMethod->actionString = name;
-    newMethod->actionFunc = func;
-    newMethod->type = type;
-    scr_methods.push_back(newMethod);
+    if (scr_method_count >= MAX_CUSTOM_SCRIPT_METHODS)
+    {
+        DbgPrint("[codxe][g_scr_main] Too many custom script methods; ignoring '%s'.\n", name);
+        return;
+    }
+
+    BuiltinMethodDef &newMethod = scr_methods[scr_method_count++];
+    newMethod.actionString = name;
+    newMethod.actionFunc = func;
+    newMethod.type = type;
 }
 
 Detour Scr_GetFunction_Detour;
@@ -32,12 +58,12 @@ BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
     if (pName != nullptr)
     {
-        for (size_t i = 0; i < scr_functions.size(); ++i)
+        for (size_t i = 0; i < scr_function_count; ++i)
         {
-            if (std::strcmp(*pName, scr_functions[i]->actionString) == 0)
+            if (std::strcmp(*pName, scr_functions[i].actionString) == 0)
             {
-                *type = scr_functions[i]->type;
-                return scr_functions[i]->actionFunc;
+                *type = scr_functions[i].type;
+                return scr_functions[i].actionFunc;
             }
         }
     }
@@ -51,12 +77,12 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
     if (pName != nullptr)
     {
-        for (size_t i = 0; i < scr_methods.size(); ++i)
+        for (size_t i = 0; i < scr_method_count; ++i)
         {
-            if (std::strcmp(*pName, scr_methods[i]->actionString) == 0)
+            if (std::strcmp(*pName, scr_methods[i].actionString) == 0)
             {
-                *type = scr_methods[i]->type;
-                return scr_methods[i]->actionFunc;
+                *type = scr_methods[i].type;
+                return scr_methods[i].actionFunc;
             }
         }
     }
@@ -78,6 +104,8 @@ g_scr_main::~g_scr_main()
     Scr_GetFunction_Detour.Remove();
 
     Scr_GetMethod_Detour.Remove();
+
+    Scr_ClearBuiltins();
 }
 } // namespace mp
 } // namespace iw3

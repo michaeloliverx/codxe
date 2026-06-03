@@ -288,6 +288,7 @@ gsc_functions::gsc_functions()
 
 gsc_functions::~gsc_functions()
 {
+    CloseAllScriptFiles();
 }
 } // namespace mp
 } // namespace iw3

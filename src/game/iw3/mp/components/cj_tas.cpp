@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "command.h"
 #include "events.h"
 #include "cj_tas.h"
 
@@ -22,12 +23,6 @@ bool is_playing = false;
 int playback_start_time = 0;
 int recording_start_time = 0;
 std::vector<RecordedCmd> current_recording;
-
-static cmd_function_s Cmd_Startrecord_VAR;
-static cmd_function_s Cmd_Stoprecord_VAR;
-static cmd_function_s Cmd_Togglerecord_VAR;
-static cmd_function_s Cmd_Startplayback_VAR;
-static cmd_function_s Cmd_Stopplayback_VAR;
 
 dvar_s *cj_tas_playback_ignore_weapon = nullptr;
 
@@ -378,15 +373,11 @@ cj_tas::cj_tas()
     CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
     CL_CreateNewCommands_Detour.Install();
 
-    Events::OnCmdInit(
-        []()
-        {
-            Cmd_AddCommandInternal("startrecord", Cmd_Startrecord_f, &Cmd_Startrecord_VAR);
-            Cmd_AddCommandInternal("stoprecord", Cmd_Stoprecord_f, &Cmd_Stoprecord_VAR);
-            Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
-            Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
-            Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
-        });
+    command::add("startrecord", Cmd_Startrecord_f);
+    command::add("stoprecord", Cmd_Stoprecord_f);
+    command::add("togglerecord", Cmd_Togglerecord_f);
+    command::add("startplayback", Cmd_Startplayback_f);
+    command::add("stopplayback", Cmd_Stopplayback_f);
 
     Events::OnDvarInit(
         []

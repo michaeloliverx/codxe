@@ -2,6 +2,7 @@
 #include "components/cg.h"
 #include "components/cj_tas.h"
 #include "components/clipmap.h"
+#include "components/command.h"
 #include "components/cmds.h"
 #include "components/events.h"
 #include "components/g_scr_main.h"
@@ -289,8 +290,6 @@ void DisableFastfileAuth()
     *(volatile uint32_t *)0x822B2D44 = 0x60000000;
 }
 
-static cmd_function_s Cmd_cmdinput_VAR;
-
 IW3_MP_Plugin::IW3_MP_Plugin()
 {
     DisableFastfileAuth();
@@ -298,6 +297,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     // Special modules need to be registered first
     RegisterModule(new Config());
     RegisterModule(new Events());
+    RegisterModule(new command());
 
     RegisterModule(new cg());
     RegisterModule(new cj_tas());
@@ -323,7 +323,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
     Load_MapEntsPtr_Detour.Install();
 
-    Events::OnCmdInit([] { Cmd_AddCommandInternal("cmdinput", Cmd_cmdinput_f, &Cmd_cmdinput_VAR); });
+    command::add("cmdinput", Cmd_cmdinput_f);
 
     Events::OnCG_DrawActive([] { CheckKeyboardCompletion(); });
 }

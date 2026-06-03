@@ -360,6 +360,9 @@ sv_bots::~sv_bots()
     SV_BotUserMove_Detour.Remove();
     SV_UserinfoChanged_Detour.Remove();
     SV_CalcPings_Detour.Remove();
+
+    CleanBotArray();
+    s_pendingBotName[0] = '\0';
 }
 } // namespace mp
 } // namespace iw3

@@ -233,9 +233,9 @@ bool mpsp::is_sp_mapname(const std::string &name)
 struct ZoneOverride
 {
     std::string name;
-    unsigned int delayStreamStart; // = xfile.size - xfile.blockSize[2] + sizeof(XFile)
+    unsigned int delayStreamStart; // = xfile.size - xfile.blockSize[XFILE_BLOCK_LARGE_RUNTIME] + sizeof(XFile)
     int assetCountOverride;
-    unsigned int blockSizeOverride[7];
+    unsigned int blockSizeOverride[MAX_XFILE_COUNT];
 };
 
 // This data was obtained semi-manually by dumping info at different intervals during asset loading

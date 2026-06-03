@@ -28,4 +28,9 @@ bool IsXenia()
     return isXenia;
 }
 
+bool IsDevkit()
+{
+    return (*(DWORD *)0x8E038610 & 0x8000) ? false : true;
+}
+
 } // namespace xbox

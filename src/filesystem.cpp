@@ -92,7 +92,6 @@ std::string read_file_to_string(const std::string &file_path)
     std::ifstream file(file_path, std::ios::binary);
     if (!file)
     {
-        DbgPrint("read_file_to_string: Failed to open file: %s\n", file_path.c_str());
         return "";
     }
 

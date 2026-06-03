@@ -27,6 +27,7 @@ class Config : public Module
     static bool dump_map_ents;
 
     static std::string GetModBasePath();
+    static const char *GetModBasePathCStr();
 
   private:
     bool LoadFromJson(const char *jsonBuffer, DWORD bufferSize);
