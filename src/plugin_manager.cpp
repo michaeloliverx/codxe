@@ -159,8 +159,7 @@ const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)
     return nullptr;
 }
 
-PluginManager::PluginManager()
-    : m_current_plugin(nullptr), m_trampoline_pool_baseline(0)
+PluginManager::PluginManager() : m_current_plugin(nullptr), m_trampoline_pool_baseline(0)
 {
 }
 
