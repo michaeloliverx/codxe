@@ -23,7 +23,7 @@ class Events : public Module
   private:
     static std::vector<std::function<void()>> cmdinit_callbacks;
     static Detour Cmd_Init_Detour;
-    static void __fastcall Cmd_Init_Hook();
+    static void Cmd_Init_Hook();
 
     static std::vector<std::function<void()>> dvarinit_callbacks;
     static Detour Com_InitDvars_Detour;

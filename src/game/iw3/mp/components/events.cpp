@@ -89,7 +89,7 @@ Detour Events::Com_InitDvars_Detour;
 
 std::vector<std::function<void()>> Events::cmdinit_callbacks;
 
-void __fastcall Events::Cmd_Init_Hook()
+void Events::Cmd_Init_Hook()
 {
     // Call original function first so the command subsystem is ready.
     Cmd_Init_Detour.GetOriginal<Cmd_Init_t>()();

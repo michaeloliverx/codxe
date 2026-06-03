@@ -23,5 +23,5 @@ class Events : public Module
 
     static std::vector<std::function<void()>> cmdinit_callbacks;
     static Detour Cmd_Init_Detour;
-    static void __fastcall Cmd_Init_Hook();
+    static void Cmd_Init_Hook();
 };

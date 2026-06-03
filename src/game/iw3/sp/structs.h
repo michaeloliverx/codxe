@@ -11,7 +11,7 @@ struct cmd_function_s
     const char *name;
     const char *autoCompleteDir;
     const char *autoCompleteExt;
-    void(__fastcall *function)();
+    void (*function)();
 };
 
 enum keyNum_t : __int32

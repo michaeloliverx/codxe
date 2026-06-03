@@ -17,7 +17,7 @@ static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const
 static auto Cmd_AddCommandInternal =
     reinterpret_cast<void (*)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd)>(0x82276758);
 
-static auto Cmd_Init = reinterpret_cast<void(__fastcall *)()>(0x82278048);
+static auto Cmd_Init = reinterpret_cast<void (*)()>(0x82278048);
 
 static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x822804F8);
 

@@ -264,7 +264,7 @@ struct ent_field_t
     const char *name;
     int ofs;
     fieldtype_t type;
-    void(__fastcall *callback)(gentity_s *, int);
+    void (*callback)(gentity_s *, int);
 };
 static_assert(sizeof(ent_field_t) == 16, "");
 
