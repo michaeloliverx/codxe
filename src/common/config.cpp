@@ -159,7 +159,7 @@ Config::Config()
 {
     std::string config_path = CONFIG_PATH;
 
-    if (!xbox::IsXenia())
+    if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
     {
         const auto module = reinterpret_cast<PLDR_DATA_TABLE_ENTRY>(GetModuleHandle(nullptr));
         if (module != nullptr && module->FullDllName.Buffer != nullptr && module->FullDllName.Length != 0)

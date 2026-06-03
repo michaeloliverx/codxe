@@ -75,12 +75,12 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
             return TRUE;
         }
 
-        const bool is_xenia = xbox::IsXenia();
-        DbgPrint("[codxe] Environment: %s\n", is_xenia ? "Xenia" : "Xbox 360");
+        const xbox::Environment environment = xbox::GetEnvironment();
+        DbgPrint("[codxe] Environment: %s\n", xbox::GetEnvironmentName(environment));
 
         g_plugin_manager = new PluginManager();
 
-        if (is_xenia)
+        if (environment == xbox::ENVIRONMENT_XENIA)
         {
             g_plugin_manager->OnExecutableLoaded(ResolveCurrentTitleId(), ResolveCurrentTimeDateStamp());
             return TRUE;
@@ -90,7 +90,8 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
         g_title_terminate_registered = true;
 
         const auto hook_address = reinterpret_cast<XexpFinishExecutableLoad_t>(
-            xbox::IsDevkit() ? XEXP_FINISH_EXECUTABLE_LOAD_DEVKIT : XEXP_FINISH_EXECUTABLE_LOAD_RETAIL);
+            environment == xbox::ENVIRONMENT_XBOX_DEVKIT ? XEXP_FINISH_EXECUTABLE_LOAD_DEVKIT
+                                                         : XEXP_FINISH_EXECUTABLE_LOAD_RETAIL);
 
         DbgPrint("[codxe] Installing XexpFinishExecutableLoad hook at %p.\n", hook_address);
         g_xexp_finish_executable_load_detour =
@@ -111,7 +112,7 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
     {
         DbgPrint("[codxe] DLL_PROCESS_DETACH.\n");
 
-        if (!xbox::IsXenia())
+        if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
         {
             if (g_title_terminate_registered)
             {
