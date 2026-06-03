@@ -6,7 +6,7 @@ namespace iw3
 {
 namespace mp
 {
-std::vector<command::entry *> command::commands;
+std::vector<cmd_function_s *> command::commands;
 
 command::command()
 {
@@ -17,7 +17,6 @@ command::~command()
 {
     for (size_t i = 0; i < commands.size(); ++i)
     {
-        delete commands[i]->function;
         delete commands[i];
     }
 
@@ -26,10 +25,9 @@ command::~command()
 
 void command::add(const char *name, void (*callback)())
 {
-    entry *new_command = new entry;
+    cmd_function_s *new_command = allocate();
     new_command->name = name;
-    new_command->callback = callback;
-    new_command->function = nullptr;
+    new_command->function = callback;
 
     commands.push_back(new_command);
 }
@@ -49,15 +47,9 @@ void command::register_all()
     }
 }
 
-void command::register_command(entry *command)
+void command::register_command(cmd_function_s *command)
 {
-    if (command->function != nullptr)
-    {
-        return;
-    }
-
-    command->function = allocate();
-    Cmd_AddCommandInternal(command->name.c_str(), command->callback, command->function);
+    Cmd_AddCommandInternal(command->name, command->function, command);
 }
 } // namespace mp
 } // namespace iw3

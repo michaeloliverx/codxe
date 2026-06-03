@@ -20,18 +20,11 @@ class command : public Module
     static void add(const char *name, void (*callback)());
 
   private:
-    struct entry
-    {
-        std::string name;
-        void (*callback)();
-        cmd_function_s *function;
-    };
-
     static cmd_function_s *allocate();
     static void register_all();
-    static void register_command(entry *command);
+    static void register_command(cmd_function_s *command);
 
-    static std::vector<entry *> commands;
+    static std::vector<cmd_function_s *> commands;
 };
 } // namespace sp
 } // namespace iw3
