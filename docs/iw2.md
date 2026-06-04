@@ -1,8 +1,8 @@
-# CoDxe IW2: Call of Duty 2
+# CoD Xe IW2: Call of Duty 2
 
 ## Multiplayer
 
-### General Functions
+### GSC Functions
 
 #### `exec(string <command>)`
 
@@ -10,7 +10,7 @@ Executes the given command on server as console command.
 
 Usage example: `exec("fast_restart");`
 
-### Player Methods
+### GSC Player Methods
 
 #### `ButtonPressed(string <button>)`
 

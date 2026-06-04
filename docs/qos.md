@@ -1,4 +1,4 @@
-# CoDxe 007: Quantum of Solace
+# CoD Xe 007: Quantum of Solace
 
 ## Multiplayer
 
@@ -10,8 +10,8 @@ A server-info (synced to all clients) dvar that controls which brushes have thei
 
 Special values:
 
-- `""` (empty) — restores all brushes to their original collision state
-- `"*"` — disables `PLAYERCLIP` flag on every brush in the clipmap
+- `""` (empty) - restores all brushes to their original collision state
+- `"*"` - disables `PLAYERCLIP` flag on every brush in the clipmap
 
 ```
 set noclip_brushes "";    // reset all brush collision
@@ -19,7 +19,7 @@ set noclip_brushes "*";   // disable all brush collision
 set noclip_brushes "4 7"; // disable collision on brushes 4 and 7
 ```
 
-### General Functions
+### GSC Functions
 
 #### `exec(string <command>)`
 
@@ -27,7 +27,7 @@ Executes the given command on server as console command.
 
 Usage example: `exec("fast_restart");`
 
-### Player Methods
+### GSC Player Methods
 
 #### `ButtonPressed(string <button>)`
 
@@ -71,11 +71,11 @@ Usage example:
 self DisablePlayerClipOnTouchingBrushes();
 ```
 
-### Client Fields
+### GSC Client Fields
 
 #### `noclip` _(bool)_
 
-Enables noclip on the player — they can fly freely and pass through walls.
+Enables noclip on the player - they can fly freely and pass through walls.
 
 Usage example:
 
@@ -87,7 +87,7 @@ self.noclip = !self.noclip; // noclip toggle
 
 #### `ufo` _(bool)_
 
-Enables UFO mode on the player — they can fly freely and pass through walls.
+Enables UFO mode on the player - they can fly freely and pass through walls.
 
 Usage example:
 
@@ -99,7 +99,7 @@ self.ufo = !self.ufo;   // ufo toggle
 
 #### `entityflags` _(int, bitflag)_
 
-A bitmask field on the player entity. Individual flags must be toggled with bitwise operators — assigning directly will overwrite all other active flags.
+A bitmask field on the player entity. Individual flags must be toggled with bitwise operators - assigning directly will overwrite all other active flags.
 
 ```
 self.entityflags |= 0x1;  // set a flag
