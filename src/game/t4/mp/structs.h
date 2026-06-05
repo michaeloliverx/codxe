@@ -1071,6 +1071,83 @@ static_assert(offsetof(SpawnFuncEntry, callback) == 0x4, "");
 
 struct UiContext;
 
+struct ScreenPlacement
+{
+    float scaleVirtualToReal[2];
+    float scaleVirtualToFull[2];
+    float scaleRealToVirtual[2];
+    float virtualViewableMin[2];
+    float virtualViewableMax[2];
+    float realViewportSize[2];
+    float realViewableMin[2];
+    float realViewableMax[2];
+    float subScreen[2];
+};
+static_assert(sizeof(ScreenPlacement) == 0x48, "");
+static_assert(offsetof(ScreenPlacement, scaleVirtualToReal) == 0x0, "");
+static_assert(offsetof(ScreenPlacement, scaleVirtualToFull) == 0x8, "");
+static_assert(offsetof(ScreenPlacement, scaleRealToVirtual) == 0x10, "");
+static_assert(offsetof(ScreenPlacement, virtualViewableMin) == 0x18, "");
+static_assert(offsetof(ScreenPlacement, virtualViewableMax) == 0x20, "");
+static_assert(offsetof(ScreenPlacement, realViewportSize) == 0x28, "");
+static_assert(offsetof(ScreenPlacement, realViewableMin) == 0x30, "");
+static_assert(offsetof(ScreenPlacement, realViewableMax) == 0x38, "");
+static_assert(offsetof(ScreenPlacement, subScreen) == 0x40, "");
+
+enum keyNum_t : __int32
+{
+    K_NONE = 0x0,
+    K_TAB = 0x9,
+    K_ENTER = 0xD,
+    K_ESCAPE = 0x1B,
+    K_SPACE = 0x20,
+    K_BACKSPACE = 0x7F,
+    K_CAPSLOCK = 0x97,
+    K_PAUSE = 0x99,
+    K_UPARROW = 0x9A,
+    K_DOWNARROW = 0x9B,
+    K_LEFTARROW = 0x9C,
+    K_RIGHTARROW = 0x9D,
+    K_ALT = 0x9E,
+    K_CTRL = 0x9F,
+    K_SHIFT = 0xA0,
+    K_INS = 0xA1,
+    K_DEL = 0xA2,
+    K_PGDN = 0xA3,
+    K_PGUP = 0xA4,
+    K_HOME = 0xA5,
+    K_END = 0xA6,
+    K_F1 = 0xA7,
+    K_F2 = 0xA8,
+    K_F3 = 0xA9,
+    K_F4 = 0xAA,
+    K_F5 = 0xAB,
+    K_F6 = 0xAC,
+    K_F7 = 0xAD,
+    K_F8 = 0xAE,
+    K_F9 = 0xAF,
+    K_F10 = 0xB0,
+    K_F11 = 0xB1,
+    K_F12 = 0xB2,
+    K_KP_HOME = 0xB6,
+    K_KP_UPARROW = 0xB7,
+    K_KP_PGUP = 0xB8,
+    K_KP_LEFTARROW = 0xB9,
+    K_KP_5 = 0xBA,
+    K_KP_RIGHTARROW = 0xBB,
+    K_KP_END = 0xBC,
+    K_KP_DOWNARROW = 0xBD,
+    K_KP_PGDN = 0xBE,
+    K_KP_ENTER = 0xBF,
+    K_KP_INS = 0xC0,
+    K_KP_DEL = 0xC1,
+    K_KP_SLASH = 0xC2,
+    K_KP_MINUS = 0xC3,
+    K_KP_PLUS = 0xC4,
+    K_KP_NUMLOCK = 0xC5,
+    K_KP_STAR = 0xC6,
+};
+
 struct field_t
 {
     int cursor;
@@ -1082,6 +1159,122 @@ struct field_t
     char buffer[256];
 };
 static_assert(sizeof(field_t) == 0x118, "");
+
+struct MessageLine
+{
+    int messageIndex;
+    int textBufPos;
+    int textBufSize;
+    int typingStartTime;
+    int lastTypingSoundTime;
+    int flags;
+};
+static_assert(sizeof(MessageLine) == 0x18, "");
+
+struct Message
+{
+    int startTime;
+    int endTime;
+};
+static_assert(sizeof(Message) == 0x8, "");
+
+struct MessageWindow
+{
+    MessageLine *lines;
+    Message *messages;
+    char *circularTextBuffer;
+    int textBufSize;
+    int lineCount;
+    int padding;
+    int scrollTime;
+    int fadeIn;
+    int fadeOut;
+    int textBufPos;
+    int firstLineIndex;
+    int activeLineCount;
+    int messageIndex;
+};
+static_assert(sizeof(MessageWindow) == 0x34, "");
+static_assert(offsetof(MessageWindow, lines) == 0x0, "");
+static_assert(offsetof(MessageWindow, messages) == 0x4, "");
+static_assert(offsetof(MessageWindow, circularTextBuffer) == 0x8, "");
+static_assert(offsetof(MessageWindow, textBufSize) == 0xC, "");
+static_assert(offsetof(MessageWindow, lineCount) == 0x10, "");
+static_assert(offsetof(MessageWindow, scrollTime) == 0x18, "");
+static_assert(offsetof(MessageWindow, textBufPos) == 0x24, "");
+static_assert(offsetof(MessageWindow, firstLineIndex) == 0x28, "");
+static_assert(offsetof(MessageWindow, activeLineCount) == 0x2C, "");
+static_assert(offsetof(MessageWindow, messageIndex) == 0x30, "");
+
+struct MessageBuffer
+{
+    char gamemsgText[4][2048];
+    MessageWindow gamemsgWindows[4];
+    MessageLine gamemsgLines[4][12];
+    Message gamemsgMessages[4][12];
+    char miniconText[4096];
+    MessageWindow miniconWindow;
+    MessageLine miniconLines[100];
+    Message miniconMessages[100];
+    char errorText[1024];
+    MessageWindow errorWindow;
+    MessageLine errorLines[5];
+    Message errorMessages[5];
+};
+static_assert(sizeof(MessageBuffer) == 0x4858, "");
+static_assert(offsetof(MessageBuffer, gamemsgText) == 0x0, "");
+static_assert(offsetof(MessageBuffer, gamemsgWindows) == 0x2000, "");
+static_assert(offsetof(MessageBuffer, gamemsgLines) == 0x20D0, "");
+static_assert(offsetof(MessageBuffer, gamemsgMessages) == 0x2550, "");
+static_assert(offsetof(MessageBuffer, miniconText) == 0x26D0, "");
+static_assert(offsetof(MessageBuffer, miniconWindow) == 0x36D0, "");
+static_assert(offsetof(MessageBuffer, miniconLines) == 0x3704, "");
+static_assert(offsetof(MessageBuffer, miniconMessages) == 0x4064, "");
+static_assert(offsetof(MessageBuffer, errorText) == 0x4384, "");
+static_assert(offsetof(MessageBuffer, errorWindow) == 0x4784, "");
+static_assert(offsetof(MessageBuffer, errorLines) == 0x47B8, "");
+static_assert(offsetof(MessageBuffer, errorMessages) == 0x4830, "");
+
+struct Console
+{
+    dvar_s *outputWindowColor;
+    int initialized;
+    MessageWindow consoleWindow;
+    MessageLine consoleLines[1024];
+    Message consoleMessages[1024];
+    char consoleText[32768];
+    char textTempLine[512];
+    unsigned int lineOffset;
+    int displayLineOffset;
+    int prevChannel;
+    char outputVisible;
+    int fontHeight;
+    int visibleLineCount;
+    int visiblePixelWidth;
+    float screenMin[2];
+    float screenMax[2];
+    MessageBuffer messageBuffer[4];
+    float color[4];
+};
+static_assert(sizeof(Console) == 0x223D8, "");
+static_assert(offsetof(Console, outputWindowColor) == 0x0, "");
+static_assert(offsetof(Console, initialized) == 0x4, "");
+static_assert(offsetof(Console, consoleWindow) == 0x8, "");
+static_assert(offsetof(Console, consoleLines) == 0x3C, "");
+static_assert(offsetof(Console, consoleMessages) == 0x603C, "");
+static_assert(offsetof(Console, consoleText) == 0x803C, "");
+static_assert(offsetof(Console, textTempLine) == 0x1003C, "");
+static_assert(offsetof(Console, lineOffset) == 0x1023C, "");
+static_assert(offsetof(Console, displayLineOffset) == 0x10240, "");
+static_assert(offsetof(Console, prevChannel) == 0x10244, "");
+static_assert(offsetof(Console, outputVisible) == 0x10248, "");
+static_assert(offsetof(Console, fontHeight) == 0x1024C, "");
+static_assert(offsetof(Console, visibleLineCount) == 0x10250, "");
+static_assert(offsetof(Console, visiblePixelWidth) == 0x10254, "");
+static_assert(offsetof(Console, screenMin) == 0x10258, "");
+static_assert(offsetof(Console, screenMax) == 0x10260, "");
+static_assert(offsetof(Console, messageBuffer) == 0x10268, "");
+static_assert(offsetof(Console, color) == 0x223C8, "");
 
 struct KeyState
 {
@@ -1109,6 +1302,20 @@ struct PlayerKeyState
     LocSelInputState locSelInputState;
 };
 static_assert(sizeof(PlayerKeyState) == 0x1128, "");
+
+enum connstate_t
+{
+    CA_DISCONNECTED = 0x0,
+    CA_CINEMATIC = 0x1,
+    CA_LOGO = 0x2,
+    CA_CONNECTING = 0x3,
+    CA_CHALLENGING = 0x4,
+    CA_CONNECTED = 0x5,
+    CA_SENDINGSTATS = 0x6,
+    CA_LOADING = 0x7,
+    CA_PRIMED = 0x8,
+    CA_ACTIVE = 0x9,
+};
 
 } // namespace mp
 } // namespace t4

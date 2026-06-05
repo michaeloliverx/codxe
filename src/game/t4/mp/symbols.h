@@ -31,7 +31,11 @@ static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x84f85100);
 static auto sv_maxclients = reinterpret_cast<dvar_s **>(0x83008C08);
 static auto scrVarPub = reinterpret_cast<scrVarPub_t *>(0x85AC2F00);
 static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x82756700);
+static auto con = reinterpret_cast<Console *>(0x826B8C9C);
+static auto g_consoleField = reinterpret_cast<field_t *>(0x826DCA40);
+static auto clientConnectionStates = reinterpret_cast<connstate_t *>(0x826E8B10);
 static const PlayerKeyState *playerKeys = reinterpret_cast<PlayerKeyState *>(0x826DCB60);
+static ScreenPlacement &scrPlaceFull = *reinterpret_cast<ScreenPlacement *>(0x8274F6A8);
 
 const int NUM_BSP_ONLY_SPAWNS = 14;
 static auto s_bspOnlySpawns = reinterpret_cast<SpawnFuncEntry *>(0x82035CC0);
@@ -47,6 +51,9 @@ static auto CG_Init =
     reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(
         0x82171A30);
 
+typedef int (*Con_OneTimeInit_t)();
+static Con_OneTimeInit_t Con_OneTimeInit = reinterpret_cast<Con_OneTimeInit_t>(0x821A7360);
+
 static auto CM_EntityString = reinterpret_cast<const char *(*)()>(0x82264788);
 static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0);
 
@@ -56,6 +63,9 @@ typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 static Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x8226FF08);
 
 static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
+
+typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
+static Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x82271BE0);
 
 static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x82272BF8);
 
@@ -155,6 +165,8 @@ typedef void (*G_SelectWeaponIndex_t)(int clientNum, int iWeaponIndex);
 static G_SelectWeaponIndex_t G_SelectWeaponIndex = reinterpret_cast<G_SelectWeaponIndex_t>(0x82260C38);
 
 static auto UI_DrawBuildNumber = reinterpret_cast<void (*)()>(0x8229BCF8);
+typedef int (*UI_Refresh_t)(int localClientNum);
+static UI_Refresh_t UI_Refresh = reinterpret_cast<UI_Refresh_t>(0x822A4D48);
 static auto UI_RunMenuScript =
     reinterpret_cast<void (*)(int localClientNum, const char **args, const char *actualScript)>(0x822A29B8);
 
@@ -162,6 +174,30 @@ static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x822C38D8);
 
 typedef int (*Key_StringToKeynum_t)(const char *str);
 static Key_StringToKeynum_t Key_StringToKeynum = reinterpret_cast<Key_StringToKeynum_t>(0x821B2938);
+
+typedef void (*Field_AdjustScroll_t)(const ScreenPlacement *scrPlace, field_t *edit);
+static Field_AdjustScroll_t Field_AdjustScroll = reinterpret_cast<Field_AdjustScroll_t>(0x821B2598);
+
+typedef int (*Key_IsCatcherActive_t)(int localClientNum, int catcher);
+static Key_IsCatcherActive_t Key_IsCatcherActive = reinterpret_cast<Key_IsCatcherActive_t>(0x821B4068);
+
+typedef int (*Key_AddCatcher_t)(int localClientNum, int catcher);
+static Key_AddCatcher_t Key_AddCatcher = reinterpret_cast<Key_AddCatcher_t>(0x821B40A8);
+
+typedef int (*Key_RemoveCatcher_t)(int localClientNum, int catcher);
+static Key_RemoveCatcher_t Key_RemoveCatcher = reinterpret_cast<Key_RemoveCatcher_t>(0x821B40D8);
+
+void Con_ToggleConsole();
+void Con_ToggleConsoleOutput();
+void Con_Close(int localClientNum);
+void Con_Bottom();
+void Con_Top();
+void Con_PageDown();
+void Con_PageUp();
+void Console_SubmitInput(int localClientNum);
+void Console_HistoryNext();
+void Console_HistoryPrev();
+bool CL_IsConsoleKey(int key);
 
 } // namespace mp
 } // namespace t4

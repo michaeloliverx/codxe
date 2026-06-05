@@ -148,6 +148,7 @@
       <ClCompile Include="src\game\t4\mp\symbols.cpp" />
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\console.cpp" />
       <ClCompile Include="src\game\t4\mp\components\events.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_client_fields.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_client_methods.cpp" />
@@ -266,6 +267,7 @@
       <ClInclude Include="src\game\t4\mp\structs.h" />
       <ClInclude Include="src\game\t4\mp\components\branding.h" />
       <ClInclude Include="src\game\t4\mp\components\brush_collision.h" />
+      <ClInclude Include="src\game\t4\mp\components\console.h" />
       <ClInclude Include="src\game\t4\mp\components\events.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_client_fields.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_client_methods.h" />

@@ -2,6 +2,7 @@
 #include "main.h"
 #include "components/branding.h"
 #include "components/brush_collision.h"
+#include "components/console.h"
 #include "components/events.h"
 #include "components/gsc_client_fields.h"
 #include "components/gsc_client_methods.h"
@@ -24,6 +25,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());
+    RegisterModule(new console());
     RegisterModule(new GSCClientFields());
     RegisterModule(new GSCClientMethods());
     RegisterModule(new GSCFunctions());

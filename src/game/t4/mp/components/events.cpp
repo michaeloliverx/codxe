@@ -8,6 +8,7 @@ namespace mp
 
 std::vector<std::function<void()>> Events::dvarinit_callbacks;
 std::vector<std::function<void()>> Events::vmshutdown_callbacks;
+std::vector<std::function<void()>> Events::ui_refresh_callbacks;
 
 void Events::Com_InitDvars_Hook()
 {
@@ -45,6 +46,25 @@ void Events::OnVMShutdown(const std::function<void()> &callback)
 
 Detour Events::Scr_ShutdownSystem_Detour;
 
+int Events::UI_Refresh_Hook(int localClientNum)
+{
+    const int result = UI_Refresh_Detour.GetOriginal<UI_Refresh_t>()(localClientNum);
+
+    for (auto it = ui_refresh_callbacks.begin(); it != ui_refresh_callbacks.end(); ++it)
+    {
+        (*it)();
+    }
+
+    return result;
+}
+
+void Events::OnUIRefresh(const std::function<void()> &callback)
+{
+    ui_refresh_callbacks.emplace_back(callback);
+}
+
+Detour Events::UI_Refresh_Detour;
+
 Events::Events()
 {
     Com_InitDvars_Detour = Detour(Com_InitDvars, Com_InitDvars_Hook);
@@ -52,15 +72,20 @@ Events::Events()
 
     Scr_ShutdownSystem_Detour = Detour(Scr_ShutdownSystem, Scr_ShutdownSystem_Hook);
     Scr_ShutdownSystem_Detour.Install();
+
+    UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
+    UI_Refresh_Detour.Install();
 }
 
 Events::~Events()
 {
     Com_InitDvars_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
+    UI_Refresh_Detour.Remove();
 
     dvarinit_callbacks.clear();
     vmshutdown_callbacks.clear();
+    ui_refresh_callbacks.clear();
 }
 
 } // namespace mp
