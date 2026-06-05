@@ -16,6 +16,16 @@ void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
         Cbuf_ExecuteBuffer(0, 0, "set splitscreen 0");
 
     Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+
+    // Increase the maximum number of clients in xboxlive private match and systemlink from 18 > 24
+    if (strcmp(menuName, "menu_xboxlive_privatelobby") == 0)
+    {
+        Cbuf_AddText(0, "set party_maxplayers 24");
+    }
+    else if (strcmp(menuName, "menu_gamesetup_systemlink") == 0)
+    {
+        Cbuf_AddText(0, "set sv_maxclients 24");
+    }
 }
 
 Detour UI_RunMenuScript_Detour;
