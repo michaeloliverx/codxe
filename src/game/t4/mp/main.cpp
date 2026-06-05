@@ -9,6 +9,7 @@
 #include "components/gsc_loader.h"
 #include "components/image_loader.h"
 #include "components/map.h"
+#include "components/patches.h"
 #include "components/sv_bots.h"
 #include "components/ui.h"
 
@@ -30,16 +31,8 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new GSCLoader());
     // RegisterModule(new ImageLoader());
     RegisterModule(new Map());
+    RegisterModule(new Patches());
     RegisterModule(new ui());
-
-    // Patches
-    // sub_8220D2D0
-    // Patches NO_KNOCKBACK flag check, allows knockback regardless of flags
-    *(volatile uint32_t *)0x8220D2E8 = 0x60000000; // NOP replaces bnelr
-
-    // Weapon_RocketLauncher_Fire
-    *(volatile uint32_t *)0x8225F98C = 0x60000000;
-    *(volatile uint32_t *)0x8225F990 = 0x60000000;
 }
 
 T4_MP_Plugin::~T4_MP_Plugin()
