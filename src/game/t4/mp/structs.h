@@ -226,23 +226,29 @@ static_assert(offsetof(clipMap_t, mapEnts) == 180, "");
 
 struct playerState_s
 {
-    char pad0[12];        //
-    int pm_flags;         // OFS: 12 SIZE: 0x4
-    char pad[16];         //
-    float origin[3];      // OFS: 32 SIZE: 12
-    float velocity[3];    // OFS: 44 SIZE: 12
-    char pad_0056[148];   //
-    int eFlags;           // OFS: 204 SIZE: 0x4
-    char pad_end[40];     //
-    int clientNum;        // OFS: 248 SIZE:0x4
-    char pad_end2[14880]; //
+    char pad0[12];         //
+    int pm_flags;          // OFS: 12 SIZE: 0x4
+    char pad[16];          //
+    float origin[3];       // OFS: 32 SIZE: 12
+    float velocity[3];     // OFS: 44 SIZE: 12
+    char pad_0056[68];     //
+    float delta_angles[3]; // OFS: 124 SIZE: 0xC
+    char pad_0088[68];     //
+    int eFlags;            // OFS: 204 SIZE: 0x4
+    char pad_end[40];      //
+    int clientNum;         // OFS: 248 SIZE:0x4
+    char pad_end2[40];     //
+    float viewangles[3];   // OFS: 292 SIZE: 0xC
+    char pad_end3[14828];  //
 };
 static_assert(sizeof(playerState_s) == 15132, "");
 static_assert(offsetof(playerState_s, pm_flags) == 12, "");
 static_assert(offsetof(playerState_s, origin) == 32, "");
 static_assert(offsetof(playerState_s, velocity) == 44, "");
+static_assert(offsetof(playerState_s, delta_angles) == 124, "");
 static_assert(offsetof(playerState_s, eFlags) == 204, "");
 static_assert(offsetof(playerState_s, clientNum) == 248, "");
+static_assert(offsetof(playerState_s, viewangles) == 292, "");
 
 struct gclient_s
 {
@@ -829,7 +835,7 @@ static_assert(offsetof(dvar_s, hashNext) == 0x58, "");
 static_assert(sizeof(dvar_s) == 0x5C, "");
 
 // usercmd_t->button bits
-enum button_mask
+enum button_mask : uint32_t
 {
     KEY_FIRE = 0x1,
     KEY_SPRINT = 0x2,
@@ -884,20 +890,124 @@ static_assert(offsetof(usercmd_s, meleeChargeYaw) == 0x1C, "");
 static_assert(offsetof(usercmd_s, meleeChargeDist) == 0x20, "");
 static_assert(offsetof(usercmd_s, selectedLocation) == 0x28, "");
 
+enum netadrtype_t : __int32
+{
+    NA_BOT = 0x0,
+    NA_BAD = 0x1,
+    NA_LOOPBACK = 0x2,
+    NA_BROADCAST = 0x3,
+    NA_IP = 0x4,
+};
+
+enum netsrc_t : __int32
+{
+    NS_CLIENT1 = 0x0,
+    NS_CLIENT2 = 0x1,
+    NS_CLIENT3 = 0x2,
+    NS_CLIENT4 = 0x3,
+    NS_SERVER = 0x4,
+    NS_PACKET = 0x5,
+};
+
+enum clientConnectState_t : __int32
+{
+    CS_FREE = 0x0,
+    CS_ZOMBIE = 0x1,
+    CS_CONNECTED = 0x2,
+    CS_CLIENTLOADING = 0x3,
+    CS_ACTIVE = 0x4,
+};
+
+struct netadr_t
+{
+    netadrtype_t type;     // OFS: 0x0 SIZE: 0x4
+    unsigned __int8 ip[4]; // OFS: 0x4 SIZE: 0x4
+    unsigned __int16 port; // OFS: 0x8 SIZE: 0x2
+};
+static_assert(sizeof(netadr_t) == 0xC, "");
+static_assert(offsetof(netadr_t, type) == 0x0, "");
+static_assert(offsetof(netadr_t, ip) == 0x4, "");
+static_assert(offsetof(netadr_t, port) == 0x8, "");
+
+struct netProfilePacket_t
+{
+    int iTime;
+    int iSize;
+    int bFragment;
+};
+static_assert(sizeof(netProfilePacket_t) == 0xC, "");
+
+struct netProfileStream_t
+{
+    netProfilePacket_t packets[60];
+    int iCurrPacket;
+    int iBytesPerSecond;
+    int iLastBPSCalcTime;
+    int iCountedPackets;
+    int iCountedFragments;
+    int iFragmentPercentage;
+    int iLargestPacket;
+    int iSmallestPacket;
+};
+static_assert(sizeof(netProfileStream_t) == 0x2F0, "");
+
+struct netProfileInfo_t
+{
+    netProfileStream_t send;
+    netProfileStream_t recieve;
+};
+static_assert(sizeof(netProfileInfo_t) == 0x5E0, "");
+
+struct netchan_t
+{
+    int outgoingSequence;            // OFS: 0x0 SIZE: 0x4
+    netsrc_t sock;                   // OFS: 0x4 SIZE: 0x4
+    int dropped;                     // OFS: 0x8 SIZE: 0x4
+    int incomingSequence;            // OFS: 0xC SIZE: 0x4
+    netadr_t remoteAddress;          // OFS: 0x10 SIZE: 0xC
+    int fragmentSequence;            // OFS: 0x1C SIZE: 0x4
+    int fragmentLength;              // OFS: 0x20 SIZE: 0x4
+    unsigned __int8 *fragmentBuffer; // OFS: 0x24 SIZE: 0x4
+    int fragmentBufferSize;          // OFS: 0x28 SIZE: 0x4
+    int unsentFragments;             // OFS: 0x2C SIZE: 0x4
+    int unsentFragmentStart;         // OFS: 0x30 SIZE: 0x4
+    int unsentLength;                // OFS: 0x34 SIZE: 0x4
+    unsigned __int8 *unsentBuffer;   // OFS: 0x38 SIZE: 0x4
+    int unsentBufferSize;            // OFS: 0x3C SIZE: 0x4
+    netProfileInfo_t prof;           // OFS: 0x40 SIZE: 0x5E0
+};
+static_assert(sizeof(netchan_t) == 0x620, "");
+static_assert(offsetof(netchan_t, outgoingSequence) == 0x0, "");
+static_assert(offsetof(netchan_t, sock) == 0x4, "");
+static_assert(offsetof(netchan_t, incomingSequence) == 0xC, "");
+static_assert(offsetof(netchan_t, remoteAddress) == 0x10, "");
+static_assert(offsetof(netchan_t, unsentFragments) == 0x2C, "");
+static_assert(offsetof(netchan_t, prof) == 0x40, "");
+
 struct clientHeader_t
 {
-    int state;        // OFS: 0x0 SIZE: 0x4
-    int sendAsActive; // OFS: 0x4 SIZE: 0x4
-    int deltaMessage; // OFS: 0x8 SIZE: 0x4
+    clientConnectState_t state;    // OFS: 0x0 SIZE: 0x4
+    int sendAsActive;              // OFS: 0x4 SIZE: 0x4
+    int deltaMessage;              // OFS: 0x8 SIZE: 0x4
+    int rateDelayed;               // OFS: 0xC SIZE: 0x4
+    netchan_t netchan;             // OFS: 0x10 SIZE: 0x620
+    float predictedOrigin[3];      // OFS: 0x630 SIZE: 0xC
+    int predictedOriginServerTime; // OFS: 0x63C SIZE: 0x4
 };
+static_assert(sizeof(clientHeader_t) == 0x640, "");
 static_assert(offsetof(clientHeader_t, state) == 0x0, "");
 static_assert(offsetof(clientHeader_t, sendAsActive) == 0x4, "");
 static_assert(offsetof(clientHeader_t, deltaMessage) == 0x8, "");
+static_assert(offsetof(clientHeader_t, rateDelayed) == 0xC, "");
+static_assert(offsetof(clientHeader_t, netchan) == 0x10, "");
+static_assert(offsetof(clientHeader_t, predictedOrigin) == 0x630, "");
+static_assert(offsetof(clientHeader_t, predictedOriginServerTime) == 0x63C, "");
+static_assert(offsetof(clientHeader_t, netchan.remoteAddress.type) == 0x20, "");
 
 struct client_t
 {
     clientHeader_t header; // OFS: 0x0
-    char pad[134888];      //
+    char pad[0x20EF4 - sizeof(clientHeader_t)];
     usercmd_s lastUsercmd; // OFS: 0x20EF4 SIZE: 0x2C
     char pad1[1032];       //
     char name[32];         // OFS: 0x21328 SIZE: 0x20

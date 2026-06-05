@@ -13,7 +13,7 @@ namespace mp
 struct ScriptFileHandle_t
 {
     FILE *fh;
-    char filename[256];
+    char filename[MAX_PATH];
 };
 
 static ScriptFileHandle_t s_scriptFiles[MAX_SCRIPT_FILEHANDLES];

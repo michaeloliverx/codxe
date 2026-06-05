@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gsc_client_methods.h"
+#include "sv_bots.h"
 
 namespace t4
 {
@@ -164,6 +165,13 @@ static struct
     {"getforwardmove", PlayerCmd_GetForwardMove},
     {"getrightmove", PlayerCmd_GetRightMove},
     {"clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel},
+    {"botaction", PlayerCmd_BotAction},
+    {"botstop", PlayerCmd_BotStop},
+    {"botmovement", PlayerCmd_BotMovement},
+    {"botmeleeparams", PlayerCmd_BotMeleeParams},
+    {"botangles", PlayerCmd_BotAngles},
+    {"isbot", PlayerCmd_IsBot},
+    {"ishost", PlayerCmd_IsHost},
     {nullptr, nullptr} // Terminator
 };
 

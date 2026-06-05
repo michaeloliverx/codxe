@@ -143,6 +143,7 @@
       <ClCompile Include="src\game\iw5\mp\script.cpp" />
 
       <ClCompile Include="src\game\t4\mp\main.cpp" />
+      <ClCompile Include="src\game\t4\mp\symbols.cpp" />
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
       <ClCompile Include="src\game\t4\mp\components\cg.cpp" />
@@ -153,6 +154,7 @@
       <ClCompile Include="src\game\t4\mp\components\gsc_loader.cpp" />
       <ClCompile Include="src\game\t4\mp\components\image_loader.cpp" />
       <ClCompile Include="src\game\t4\mp\components\map.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\sv_bots.cpp" />
       <ClCompile Include="src\game\t4\mp\components\ui.cpp" />
 
       <ClCompile Include="src\game\t4\sp\components\clipmap.cpp" />
@@ -269,6 +271,7 @@
       <ClInclude Include="src\game\t4\mp\components\gsc_loader.h" />
       <ClInclude Include="src\game\t4\mp\components\image_loader.h" />
       <ClInclude Include="src\game\t4\mp\components\map.h" />
+      <ClInclude Include="src\game\t4\mp\components\sv_bots.h" />
       <ClInclude Include="src\game\t4\mp\components\ui.h" />
 
       <ClInclude Include="src\game\t4\sp\components\clipmap.h" />

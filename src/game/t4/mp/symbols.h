@@ -6,6 +6,17 @@ namespace t4
 {
 namespace mp
 {
+#define T4_MAX_CLIENTS 24
+
+#define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+
+enum
+{
+    T4_PITCH = 0,
+    T4_YAW = 1,
+    T4_ROLL = 2,
+};
+
 // Variables
 static const int BUILTIN_FUNCTION_COUNT = 266;
 static auto builtinFunctions = reinterpret_cast<BuiltinFunctionDef *>(0x82485C60);
@@ -17,6 +28,7 @@ static auto ent_fields = reinterpret_cast<ent_field_t *>(0x82035BF0); // null-te
 static auto g_entities = reinterpret_cast<gentity_s *>(0x82BAD1B0);
 static auto level = reinterpret_cast<level_locals_t *>(0x82D6A440);
 static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x84f85100);
+static auto sv_maxclients = reinterpret_cast<dvar_s **>(0x83008C08);
 static auto scrVarPub = reinterpret_cast<scrVarPub_t *>(0x85AC2F00);
 static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x82756700);
 static const PlayerKeyState *playerKeys = reinterpret_cast<PlayerKeyState *>(0x826DCB60);
@@ -44,6 +56,8 @@ static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0
 
 static auto Cbuf_ExecuteBuffer =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x822711A8);
+typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
+static Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x8226FF08);
 
 static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
 
@@ -93,6 +107,10 @@ static auto Scr_AddClassField =
     reinterpret_cast<void (*)(unsigned int classnum, const char *name, unsigned __int16 offset, scriptInstance_t inst)>(
         0x823414F0);
 static auto Scr_AddInt = reinterpret_cast<void (*)(int value, scriptInstance_t inst)>(0x82345668);
+typedef void (*Scr_AddString_t)(const char *value, scriptInstance_t inst);
+static Scr_AddString_t Scr_AddString = reinterpret_cast<Scr_AddString_t>(0x823459A8);
+typedef void (*Scr_AddUndefined_t)(scriptInstance_t inst);
+static Scr_AddUndefined_t Scr_AddUndefined = reinterpret_cast<Scr_AddUndefined_t>(0x82345808);
 static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(scriptInstance_t inst, const char *filename, const char *extFilename,
                                const char *codePos, bool archive)>(0x82339EF8);
@@ -120,16 +138,25 @@ static auto Scr_SetClientField =
     reinterpret_cast<void (*)(gclient_s *client, int offset, scriptInstance_t inst)>(0x8220A2D0);
 static auto Scr_SetGenericField =
     reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst)>(0x82254E90);
+typedef void *(*Scr_ShutdownSystem_t)(scriptInstance_t inst, int sys, int bComplete);
+static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x82345388);
 
 static auto String_Parse = reinterpret_cast<int (*)(const char **p, char *out, int len)>(0x822A8680);
 
 static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82284D50);
+typedef void (*SV_BotUserMove_t)(client_t *cl);
+static SV_BotUserMove_t SV_BotUserMove = reinterpret_cast<SV_BotUserMove_t>(0x8228AB98);
 static auto SV_GameSendServerCommand =
     reinterpret_cast<void (*)(int clientNum, svscmd_type type, const char *text)>(0x82285FA8);
 static auto SV_LinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82290C38);
 static auto SV_SetBrushModel = reinterpret_cast<int (*)(gentity_s *ent)>(0x82286190);
 static auto SV_UnlinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82290BF0);
 static auto Sys_SnapVector = reinterpret_cast<void (*)(float *v)>(0x822EA5A0);
+
+bool SV_IsClientBot(unsigned int clientNum);
+
+typedef void (*G_SelectWeaponIndex_t)(int clientNum, int iWeaponIndex);
+static G_SelectWeaponIndex_t G_SelectWeaponIndex = reinterpret_cast<G_SelectWeaponIndex_t>(0x82260C38);
 
 static auto UI_DrawBuildNumber = reinterpret_cast<void (*)()>(0x8229BCF8);
 static auto UI_RunMenuScript =
