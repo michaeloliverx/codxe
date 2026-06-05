@@ -4,6 +4,7 @@
 #include "components/clipmap.h"
 #include "components/command.h"
 #include "components/cmds.h"
+#include "components/console.h"
 #include "components/events.h"
 #include "components/g_scr_main.h"
 #include "components/gsc_client_fields.h"
@@ -272,6 +273,7 @@ Detour UI_Refresh_Detour;
 void UI_Refresh_Hook(int localClientNum)
 {
     UI_Refresh_Detour.GetOriginal<decltype(UI_Refresh)>()(localClientNum);
+    console::frame();
     CheckKeyboardCompletion();
 }
 
@@ -303,6 +305,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new cj_tas());
     RegisterModule(new clipmap());
     RegisterModule(new cmds());
+    RegisterModule(new console());
     RegisterModule(new g_scr_main());
     RegisterModule(new gsc_client_fields());
     RegisterModule(new gsc_functions());
