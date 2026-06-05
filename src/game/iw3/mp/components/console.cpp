@@ -224,6 +224,14 @@ bool dispatch_console_key(int key, const XINPUT_KEYSTROKE &keystroke)
     case K_KP_RIGHTARROW:
         console_input_right(is_ctrl_down());
         return true;
+    case K_UPARROW:
+    case K_KP_UPARROW:
+        Console_HistoryPrev();
+        return true;
+    case K_DOWNARROW:
+    case K_KP_DOWNARROW:
+        Console_HistoryNext();
+        return true;
     case K_DEL:
     case K_KP_DEL:
         console_input_delete();

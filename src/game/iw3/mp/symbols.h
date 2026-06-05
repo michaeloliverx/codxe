@@ -447,6 +447,7 @@ static auto con = reinterpret_cast<Console *>(0x82407590);
 static auto g_consoleField = reinterpret_cast<field_t *>(0x8242AA18);
 static auto g_console_field_width = reinterpret_cast<int *>(0x823A52F4);
 static auto g_console_char_height = reinterpret_cast<float *>(0x823A52F8);
+static auto historyEditLines = reinterpret_cast<field_t *>(0x8242DFD8);
 static auto cg_pmove = reinterpret_cast<pmove_t *>(0x823F6040);
 static auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);
 static auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
@@ -502,6 +503,8 @@ void Con_Top();
 void Con_PageDown();
 void Con_PageUp();
 void Console_SubmitInput(int localClientNum);
+void Console_HistoryNext();
+void Console_HistoryPrev();
 bool CL_IsConsoleKey(int key);
 
 } // namespace mp
