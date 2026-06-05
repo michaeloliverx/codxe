@@ -53,9 +53,9 @@ bool is_shift_down(const XINPUT_KEYSTROKE &keystroke)
     return shift_down || (keystroke.Flags & XINPUT_KEYSTROKE_SHIFT) != 0;
 }
 
-bool is_ctrl_down(const XINPUT_KEYSTROKE &keystroke)
+bool is_ctrl_down()
 {
-    return ctrl_down || (keystroke.Flags & XINPUT_KEYSTROKE_CTRL) != 0;
+    return ctrl_down;
 }
 
 bool is_large_console_toggle(const XINPUT_KEYSTROKE &keystroke)
@@ -76,6 +76,94 @@ bool should_process_key_down(const XINPUT_KEYSTROKE &keystroke)
 void send_console_char_event(int key)
 {
     CL_CharEvent(0, key);
+}
+
+int console_input_length()
+{
+    return static_cast<int>(strlen(g_consoleField->buffer));
+}
+
+bool is_console_input_alnum(int index)
+{
+    return isalnum(static_cast<unsigned char>(g_consoleField->buffer[index])) != 0;
+}
+
+void adjust_console_input_scroll()
+{
+    Field_AdjustScroll(&scrPlaceFull, g_consoleField);
+}
+
+void console_input_home()
+{
+    g_consoleField->cursor = 0;
+    g_consoleField->scroll = 0;
+    adjust_console_input_scroll();
+}
+
+void console_input_end()
+{
+    g_consoleField->cursor = console_input_length();
+    adjust_console_input_scroll();
+}
+
+void console_input_left(bool ctrl_down)
+{
+    if (g_consoleField->cursor > 0)
+    {
+        --g_consoleField->cursor;
+    }
+
+    if (ctrl_down)
+    {
+        while (g_consoleField->cursor > 0 && is_console_input_alnum(g_consoleField->cursor - 1))
+        {
+            --g_consoleField->cursor;
+        }
+    }
+
+    if (g_consoleField->cursor < g_consoleField->scroll)
+    {
+        g_consoleField->scroll = g_consoleField->cursor;
+    }
+
+    adjust_console_input_scroll();
+}
+
+void console_input_right(bool ctrl_down)
+{
+    const int len = console_input_length();
+
+    if (g_consoleField->cursor < len)
+    {
+        ++g_consoleField->cursor;
+    }
+
+    if (ctrl_down)
+    {
+        while (g_consoleField->cursor < len && is_console_input_alnum(g_consoleField->cursor))
+        {
+            ++g_consoleField->cursor;
+        }
+
+        while (g_consoleField->cursor < len && !is_console_input_alnum(g_consoleField->cursor))
+        {
+            ++g_consoleField->cursor;
+        }
+    }
+
+    adjust_console_input_scroll();
+}
+
+void console_input_delete()
+{
+    const int len = console_input_length();
+
+    if (g_consoleField->cursor < len)
+    {
+        memmove(&g_consoleField->buffer[g_consoleField->cursor], &g_consoleField->buffer[g_consoleField->cursor + 1],
+                len - g_consoleField->cursor);
+        adjust_console_input_scroll();
+    }
 }
 
 bool dispatch_console_key(int key, const XINPUT_KEYSTROKE &keystroke)
@@ -107,16 +195,38 @@ bool dispatch_console_key(int key, const XINPUT_KEYSTROKE &keystroke)
         Con_PageDown();
         return true;
     case K_HOME:
-        if (is_ctrl_down(keystroke))
+    case K_KP_HOME:
+        if (is_ctrl_down())
         {
             Con_Top();
         }
+        else
+        {
+            console_input_home();
+        }
         return true;
     case K_END:
-        if (is_ctrl_down(keystroke))
+    case K_KP_END:
+        if (is_ctrl_down())
         {
             Con_Bottom();
         }
+        else
+        {
+            console_input_end();
+        }
+        return true;
+    case K_LEFTARROW:
+    case K_KP_LEFTARROW:
+        console_input_left(is_ctrl_down());
+        return true;
+    case K_RIGHTARROW:
+    case K_KP_RIGHTARROW:
+        console_input_right(is_ctrl_down());
+        return true;
+    case K_DEL:
+    case K_KP_DEL:
+        console_input_delete();
         return true;
     case K_ESCAPE:
         console::close();

@@ -53,6 +53,10 @@ static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int 
                                                         int pixelWidth, int flags)>(0x822E4D18);
 typedef void (*CL_CharEvent_t)(int localClientNum, int key);
 static CL_CharEvent_t CL_CharEvent = reinterpret_cast<CL_CharEvent_t>(0x822D77F8);
+
+typedef void (*Field_AdjustScroll_t)(const ScreenPlacement *scrPlace, field_t *edit);
+static Field_AdjustScroll_t Field_AdjustScroll = reinterpret_cast<Field_AdjustScroll_t>(0x822D6E70);
+
 static auto CL_GamepadButtonEvent =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, int key, int down, unsigned int time)>(
         0x822DD1E8);
@@ -451,6 +455,7 @@ static auto dx = reinterpret_cast<DxGlobals *>(0x84CD7A80);
 static auto entity_fields = reinterpret_cast<ent_field_t *>(0x82046E00);
 static auto g_clients = reinterpret_cast<gclient_s *>(0x829BCD70);
 static auto g_entities = reinterpret_cast<gentity_s *>(0x8287CD08);
+static ScreenPlacement &scrPlaceFull = *reinterpret_cast<ScreenPlacement *>(0x8246F420);
 static ScreenPlacement &scrPlaceFullUnsafe = *reinterpret_cast<ScreenPlacement *>(0x8246F468);
 static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x849F1580);
 static serverStatic_t *svs = reinterpret_cast<serverStatic_t *>(0x82EE3500);
