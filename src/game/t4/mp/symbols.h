@@ -40,10 +40,6 @@ const int NUM_BSP_OR_DYNAMIC_SPAWNS = 6;
 static auto s_bspOrDynamicSpawns = reinterpret_cast<SpawnFuncEntry *>(0x82035D30);
 
 // Functions
-static auto BG_CalculateView_IdleAngles = reinterpret_cast<void (*)(viewState_t *vs, float *angles)>(0x82147018);
-static auto BG_CalculateWeaponPosition_IdleAngles =
-    reinterpret_cast<void (*)(weaponState_t *ws, float *angles)>(0x82147AC0);
-
 static auto CG_BoldGameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC88);
 static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82159560);
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC68);

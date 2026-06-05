@@ -2,7 +2,6 @@
 #include "main.h"
 #include "components/branding.h"
 #include "components/brush_collision.h"
-#include "components/cg.h"
 #include "components/events.h"
 #include "components/gsc_client_fields.h"
 #include "components/gsc_client_methods.h"
@@ -24,7 +23,6 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());
-    // RegisterModule(new cg());
     RegisterModule(new GSCClientFields());
     RegisterModule(new GSCClientMethods());
     RegisterModule(new GSCFunctions());
@@ -34,14 +32,14 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Map());
     RegisterModule(new ui());
 
-    // // Patches
-    // // sub_8220D2D0
-    // // Patches NO_KNOCKBACK flag check, allows knockback regardless of flags
-    // *(volatile uint32_t *)0x8220D2E8 = 0x60000000; // NOP replaces bnelr
+    // Patches
+    // sub_8220D2D0
+    // Patches NO_KNOCKBACK flag check, allows knockback regardless of flags
+    *(volatile uint32_t *)0x8220D2E8 = 0x60000000; // NOP replaces bnelr
 
-    // // Weapon_RocketLauncher_Fire
-    // *(volatile uint32_t *)0x8225F98C = 0x60000000;
-    // *(volatile uint32_t *)0x8225F990 = 0x60000000;
+    // Weapon_RocketLauncher_Fire
+    *(volatile uint32_t *)0x8225F98C = 0x60000000;
+    *(volatile uint32_t *)0x8225F990 = 0x60000000;
 }
 
 T4_MP_Plugin::~T4_MP_Plugin()

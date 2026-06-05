@@ -1034,8 +1034,6 @@ struct serverStaticHeader_t
 static_assert(offsetof(serverStaticHeader_t, clients) == 0x0, "");
 static_assert(offsetof(serverStaticHeader_t, time) == 0x4, "");
 
-struct viewState_t;
-struct weaponState_t;
 struct pmove_t;
 
 struct scrVarPub_t
