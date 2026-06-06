@@ -936,15 +936,208 @@ struct clientUIActive_t
 {
     bool active;
     bool isRunning;
-    bool cgameInitialized;       // 0x002 - v7[2] = 1 in retail
-    bool cgameInitCalled;        // 0x003 - v7[3] = 1 in retail
-    char pad_4[2884];            // 0x004 - padding to reach connectionState
-    connstate_t connectionState; // 0xB48 - dword_825A6460[804*a1] in retail
-    char pad_B4C[324];           // 0xB4C - padding to reach struct size
+    bool cgameInitialized;        // 0x002 - v7[2] = 1 in retail
+    bool cgameInitCalled;         // 0x003 - v7[3] = 1 in retail
+    char pad_4[2876];             // 0x004 - padding to reach keyCatchers
+    int keyCatchers;              // 0xB40 - dword_825A6458[804*a1] in retail
+    int displayHUDWithKeycatchUI; // 0xB44
+    connstate_t connectionState;  // 0xB48 - dword_825A6460[804*a1] in retail
+    char pad_B4C[324];            // 0xB4C - padding to reach struct size
 };
 
 static_assert(sizeof(clientUIActive_t) == 0xC90, "");                    // 3216 bytes
+static_assert(offsetof(clientUIActive_t, keyCatchers) == 0xB40, "");     // 2880 bytes
 static_assert(offsetof(clientUIActive_t, connectionState) == 0xB48, ""); // 2888 bytes
+
+enum keyNum_t : __int32
+{
+    K_NONE = 0x0,
+    K_TAB = 0x9,
+    K_ENTER = 0xD,
+    K_ESCAPE = 0x1B,
+    K_SPACE = 0x20,
+    K_BACKSPACE = 0x7F,
+    K_CAPSLOCK = 0x97,
+    K_PAUSE = 0x99,
+    K_UPARROW = 0x9A,
+    K_DOWNARROW = 0x9B,
+    K_LEFTARROW = 0x9C,
+    K_RIGHTARROW = 0x9D,
+    K_ALT = 0x9E,
+    K_CTRL = 0x9F,
+    K_SHIFT = 0xA0,
+    K_INS = 0xA1,
+    K_DEL = 0xA2,
+    K_PGDN = 0xA3,
+    K_PGUP = 0xA4,
+    K_HOME = 0xA5,
+    K_END = 0xA6,
+    K_F1 = 0xA7,
+    K_F2 = 0xA8,
+    K_F3 = 0xA9,
+    K_F4 = 0xAA,
+    K_F5 = 0xAB,
+    K_F6 = 0xAC,
+    K_F7 = 0xAD,
+    K_F8 = 0xAE,
+    K_F9 = 0xAF,
+    K_F10 = 0xB0,
+    K_F11 = 0xB1,
+    K_F12 = 0xB2,
+    K_KP_HOME = 0xB6,
+    K_KP_UPARROW = 0xB7,
+    K_KP_PGUP = 0xB8,
+    K_KP_LEFTARROW = 0xB9,
+    K_KP_5 = 0xBA,
+    K_KP_RIGHTARROW = 0xBB,
+    K_KP_END = 0xBC,
+    K_KP_DOWNARROW = 0xBD,
+    K_KP_PGDN = 0xBE,
+    K_KP_ENTER = 0xBF,
+    K_KP_INS = 0xC0,
+    K_KP_DEL = 0xC1,
+    K_KP_SLASH = 0xC2,
+    K_KP_MINUS = 0xC3,
+    K_KP_PLUS = 0xC4,
+    K_KP_NUMLOCK = 0xC5,
+    K_KP_STAR = 0xC6,
+    K_KP_EQUALS = 0xC7,
+};
+
+struct field_t
+{
+    int cursor;
+    int scroll;
+    int drawWidth;
+    int widthInPixels;
+    float charHeight;
+    int fixedSize;
+    char buffer[256];
+};
+
+static_assert(sizeof(field_t) == 0x118, "");
+static_assert(offsetof(field_t, buffer) == 0x18, "");
+
+enum LocSelInputState : __int32
+{
+    LOC_SEL_INPUT_NONE = 0x0,
+    LOC_SEL_INPUT_CONFIRM = 0x1,
+    LOC_SEL_INPUT_CANCEL = 0x2,
+};
+
+struct KeyState
+{
+    int down;
+    int repeats;
+    const char *binding;
+};
+
+static_assert(sizeof(KeyState) == 0xC, "");
+
+struct PlayerKeyState
+{
+    field_t chatField;
+    int chat_team;
+    int overstrikeMode;
+    int anyKeyDown;
+    KeyState keys[256];
+    LocSelInputState locSelInputState;
+};
+
+static_assert(sizeof(PlayerKeyState) == 0xD28, "");
+static_assert(offsetof(PlayerKeyState, keys) == 0x124, "");
+
+struct MessageLine
+{
+    int messageIndex;
+    int textBufPos;
+    int textBufSize;
+    int typingStartTime;
+    int lastTypingSoundTime;
+    int flags;
+};
+
+static_assert(sizeof(MessageLine) == 0x18, "");
+
+struct Message
+{
+    int startTime;
+    int endTime;
+};
+
+static_assert(sizeof(Message) == 0x8, "");
+
+struct MessageWindow
+{
+    MessageLine *lines;
+    Message *messages;
+    char *circularTextBuffer;
+    int textBufSize;
+    int lineCount;
+    int padding;
+    int scrollTime;
+    int fadeIn;
+    int fadeOut;
+    int textBufPos;
+    int firstLineIndex;
+    int activeLineCount;
+    int messageIndex;
+};
+
+static_assert(sizeof(MessageWindow) == 0x34, "");
+
+struct MessageBuffer
+{
+    char gamemsgText[4][2048];
+    MessageWindow gamemsgWindows[4];
+    MessageLine gamemsgLines[4][12];
+    Message gamemsgMessages[4][12];
+    char miniconText[4096];
+    MessageWindow miniconWindow;
+    MessageLine miniconLines[100];
+    Message miniconMessages[100];
+    char errorText[1024];
+    MessageWindow errorWindow;
+    MessageLine errorLines[5];
+    Message errorMessages[5];
+};
+
+static_assert(sizeof(MessageBuffer) == 0x4858, "");
+static_assert(offsetof(MessageBuffer, miniconText) == 0x26D0, "");
+static_assert(offsetof(MessageBuffer, errorText) == 0x4384, "");
+
+struct Console
+{
+    MessageWindow consoleWindow;
+    MessageLine consoleLines[1024];
+    Message consoleMessages[1024];
+    char consoleText[32768];
+    char textTempLine[512];
+    unsigned int lineOffset;
+    int displayLineOffset;
+    int prevChannel;
+    bool outputVisible;
+    int fontHeight;
+    int visibleLineCount;
+    int visiblePixelWidth;
+    float screenMin[2];
+    float screenMax[2];
+    MessageBuffer messageBuffer[4];
+    float color[4];
+};
+
+static_assert(sizeof(Console) == 0x223D0, "");
+static_assert(offsetof(Console, consoleLines) == 0x34, "");
+static_assert(offsetof(Console, consoleMessages) == 0x6034, "");
+static_assert(offsetof(Console, consoleText) == 0x8034, "");
+static_assert(offsetof(Console, textTempLine) == 0x10034, "");
+static_assert(offsetof(Console, lineOffset) == 0x10234, "");
+static_assert(offsetof(Console, displayLineOffset) == 0x10238, "");
+static_assert(offsetof(Console, outputVisible) == 0x10240, "");
+static_assert(offsetof(Console, fontHeight) == 0x10244, "");
+static_assert(offsetof(Console, visibleLineCount) == 0x10248, "");
+static_assert(offsetof(Console, messageBuffer) == 0x10260, "");
+static_assert(offsetof(Console, color) == 0x223C0, "");
 
 struct __declspec(align(128)) cg_s
 {

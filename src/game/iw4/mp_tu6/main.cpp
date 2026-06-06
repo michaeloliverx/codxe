@@ -22,7 +22,7 @@ IW4_MP_TU6_Plugin::IW4_MP_TU6_Plugin()
     RegisterModule(new Events()); // Must be registered first to ensure hooks are in place
     RegisterModule(new cg());
     RegisterModule(new clipmap());
-    RegisterModule(new Console());
+    RegisterModule(new console());
     RegisterModule(new g_client_fields());
     RegisterModule(new g_scr_main());
     RegisterModule(new mpsp());

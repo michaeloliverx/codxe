@@ -115,10 +115,6 @@ const unsigned int *g_zoneIndex = reinterpret_cast<const unsigned int *>(0x827AD
 const XZone *g_zones = reinterpret_cast<XZone *>(0x829D8048);
 GameWorldMp *gameWorldMp = reinterpret_cast<GameWorldMp *>(0x82DFD010);
 
-typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, unsigned int duration,
-                                  unsigned int pixelWidth, int flags);
-CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x821754B8);
-
 typedef int (*Com_sprintf_t)(char *dest, unsigned int size, const char *fmt, ...);
 Com_sprintf_t Com_sprintf = reinterpret_cast<Com_sprintf_t>(0x82315F20);
 

@@ -11,6 +11,19 @@ static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82275C60);
 
+typedef void (*CL_CharEvent_t)(int localClientNum, int key);
+static CL_CharEvent_t CL_CharEvent = reinterpret_cast<CL_CharEvent_t>(0x82182EC8);
+
+typedef void (*CL_ConsoleCharEvent_t)(int localClientNum, int key);
+static CL_ConsoleCharEvent_t CL_ConsoleCharEvent = reinterpret_cast<CL_ConsoleCharEvent_t>(0x82182E60);
+
+typedef void (*CL_ConsolePrint_t)(int localClientNum, int channel, const char *txt, unsigned int duration,
+                                  unsigned int pixelWidth, int flags);
+static CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x821754B8);
+
+typedef void (*CL_KeyEvent_t)(int localClientNum, int key, int down, unsigned int time);
+static CL_KeyEvent_t CL_KeyEvent = reinterpret_cast<CL_KeyEvent_t>(0x821826F8);
+
 static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82129270);
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8213DE38);
 
@@ -21,6 +34,52 @@ static auto Cmd_Init = reinterpret_cast<void (*)()>(0x82278048);
 
 static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x822804F8);
 
+typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
+static Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x8227F448);
+
+typedef void (*Com_PrintMessage_t)(int channel, const char *msg, int error);
+static Com_PrintMessage_t Com_PrintMessage = reinterpret_cast<Com_PrintMessage_t>(0x8227F370);
+
+typedef char (*Con_AllowAutoCompleteCycling_t)(char allowed);
+static Con_AllowAutoCompleteCycling_t Con_AllowAutoCompleteCycling =
+    reinterpret_cast<Con_AllowAutoCompleteCycling_t>(0x82177090);
+
+typedef void (*Con_Bottom_t)();
+static Con_Bottom_t Con_Bottom = reinterpret_cast<Con_Bottom_t>(0x82177AB8);
+
+typedef int (*Con_CancelAutoComplete_t)();
+static Con_CancelAutoComplete_t Con_CancelAutoComplete = reinterpret_cast<Con_CancelAutoComplete_t>(0x82177038);
+
+typedef void (*Con_Close_t)(int localClientNum);
+static Con_Close_t Con_Close = reinterpret_cast<Con_Close_t>(0x82177AD8);
+
+typedef int (*Con_CycleAutoComplete_t)(int step);
+static Con_CycleAutoComplete_t Con_CycleAutoComplete = reinterpret_cast<Con_CycleAutoComplete_t>(0x82176F48);
+
+typedef void (*Con_Init_t)();
+static Con_Init_t Con_Init = reinterpret_cast<Con_Init_t>(0x821735C0);
+
+typedef int (*Con_IsActive_t)(int localClientNum);
+static Con_IsActive_t Con_IsActive = reinterpret_cast<Con_IsActive_t>(0x82177C38);
+
+typedef void (*Con_PageDown_t)();
+static Con_PageDown_t Con_PageDown = reinterpret_cast<Con_PageDown_t>(0x82177A30);
+
+typedef void (*Con_PageUp_t)();
+static Con_PageUp_t Con_PageUp = reinterpret_cast<Con_PageUp_t>(0x821779C8);
+
+typedef void (*Con_ToggleConsole_t)();
+static Con_ToggleConsole_t Con_ToggleConsole = reinterpret_cast<Con_ToggleConsole_t>(0x82177D10);
+
+typedef void (*Con_ToggleConsoleOutput_t)();
+static Con_ToggleConsoleOutput_t Con_ToggleConsoleOutput = reinterpret_cast<Con_ToggleConsoleOutput_t>(0x82177528);
+
+typedef void (*Con_Top_t)();
+static Con_Top_t Con_Top = reinterpret_cast<Con_Top_t>(0x82177A78);
+
+typedef void (*Console_Key_t)(int localClientNum, int key);
+static Console_Key_t Console_Key = reinterpret_cast<Console_Key_t>(0x821821D0);
+
 static auto DB_LinkXAssetEntry1 =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
 
@@ -30,12 +89,44 @@ static auto Dvar_RegisterString =
 
 static auto Dvar_SetString = reinterpret_cast<void (*)(const dvar_t *dvar, const char *value)>(0x8230F7D8);
 
+typedef void (*Field_AdjustScroll_t)(const ScreenPlacement *scrPlace, field_t *edit);
+static Field_AdjustScroll_t Field_AdjustScroll = reinterpret_cast<Field_AdjustScroll_t>(0x8217FA98);
+
+typedef int (*Field_CharEvent_t)(int localClientNum, const ScreenPlacement *scrPlace, field_t *edit, int ch);
+static Field_CharEvent_t Field_CharEvent = reinterpret_cast<Field_CharEvent_t>(0x82182028);
+
+typedef int (*Field_KeyDownEvent_t)(int localClientNum, const ScreenPlacement *scrPlace, field_t *edit, int key);
+static Field_KeyDownEvent_t Field_KeyDownEvent = reinterpret_cast<Field_KeyDownEvent_t>(0x82181DB8);
+
+typedef int (*Key_AddCatcher_t)(int localClientNum, int orMask);
+static Key_AddCatcher_t Key_AddCatcher = reinterpret_cast<Key_AddCatcher_t>(0x82181AC8);
+
+typedef int (*Key_IsCatcherActive_t)(int localClientNum, int mask);
+static Key_IsCatcherActive_t Key_IsCatcherActive = reinterpret_cast<Key_IsCatcherActive_t>(0x82181AA0);
+
+typedef int (*Key_RemoveCatcher_t)(int localClientNum, int andMask);
+static Key_RemoveCatcher_t Key_RemoveCatcher = reinterpret_cast<Key_RemoveCatcher_t>(0x82181AE8);
+
+typedef int (*Key_SetCatcher_t)(int localClientNum, int catcher);
+static Key_SetCatcher_t Key_SetCatcher = reinterpret_cast<Key_SetCatcher_t>(0x82181B20);
+
+typedef Material *(*Material_RegisterHandle_t)(const char *name);
+static Material_RegisterHandle_t Material_RegisterHandle = reinterpret_cast<Material_RegisterHandle_t>(0x823C2FF8);
+
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_t *dvar)>(0x823DDD78);
+
+typedef void (*R_AddCmdDrawStretchPic_t)(float x, float y, float w, float h, float s0, float t0, float s1, float t1,
+                                         const float *color, Material *material);
+static R_AddCmdDrawStretchPic_t R_AddCmdDrawStretchPic = reinterpret_cast<R_AddCmdDrawStretchPic_t>(0x823C6DB0);
+
 typedef void (*R_AddCmdDrawText_t)(const char *text, int maxChars, iw4::mp_tu6::Font_s *font, float x, float y,
                                    float xScale, float yScale, float rotation, const float *color, int style);
 static R_AddCmdDrawText_t R_AddCmdDrawText = reinterpret_cast<R_AddCmdDrawText_t>(0x823C7690);
 
 static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name)>(0x823C2798);
+
+typedef int (*R_TextWidth_t)(const char *text, int maxChars, Font_s *font);
+static R_TextWidth_t R_TextWidth = reinterpret_cast<R_TextWidth_t>(0x823C28F8);
 
 static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(const char *filename, const char *extFilename)>(0x8229F2C8);
@@ -67,9 +158,17 @@ static auto Weapon_RocketLauncher_Fire =
     reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp,
                                     weaponParms *gunVel, struct lockonFireParms *lockParms,
                                     lockonFireParms *magicBullet)>(0x82260C90);
+
+typedef const ScreenPlacement *(*ScrPlace_GetFullPlacement_t)();
+static ScrPlace_GetFullPlacement_t ScrPlace_GetFullPlacement =
+    reinterpret_cast<ScrPlace_GetFullPlacement_t>(0x821AB790);
+
 static auto ScrPlace_GetUnsafeFullPlacement = reinterpret_cast<const ScreenPlacement *(*)()>(0x821AB7A0);
 
 static auto SCR_DrawScreenField = reinterpret_cast<void (*)(int localClientNum, int refreshedUI)>(0x8218E800);
+
+typedef unsigned int (*Sys_Milliseconds_t)();
+static Sys_Milliseconds_t Sys_Milliseconds = reinterpret_cast<Sys_Milliseconds_t>(0x823401C8);
 
 static auto UI_DrawBuildNumber = reinterpret_cast<void (*)(int localClientNum)>(0x822DAC70);
 static auto UI_DrawText =
@@ -84,6 +183,10 @@ static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x823160A8
 static auto cgArray = reinterpret_cast<cg_s **>(0x824C5B64);
 static auto clients = reinterpret_cast<clientActive_t **>(0x825A8B6C);
 static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x825A5918);
+static auto con = reinterpret_cast<Console *>(0x824DF4A8);
+static auto g_consoleField = reinterpret_cast<field_t *>(0x82502FF8);
+static auto historyEditLines = reinterpret_cast<field_t *>(0x825065B8);
+static auto playerKeys = reinterpret_cast<PlayerKeyState *>(0x82503118);
 
 static auto CG_GetPredictedPlayerState = reinterpret_cast<playerState_s *(*)(int localClientNum)>(0x8213DE18);
 static auto CL_CreateNewCommands = reinterpret_cast<void (*)(int localClientNum)>(0x8217E540);
