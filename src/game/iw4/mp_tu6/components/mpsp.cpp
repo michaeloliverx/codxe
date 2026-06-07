@@ -496,13 +496,6 @@ int Com_sprintf_Hook(char *dest, unsigned int size, const char *fmt...)
     return result;
 }
 
-void DisableFastfileAuthCheck()
-{
-    // The games requires fastfiles to be signed in MP but it has the code to load
-    // unsigned in the executable. Disables the check for auth
-    *(volatile uint32_t *)0x821B0978 = 0x60000000;
-}
-
 void Patch_ImageCache_OOM()
 {
     // ImageCache_AllocMemory
@@ -514,7 +507,6 @@ void Patch_ImageCache_OOM()
 
 mpsp::mpsp()
 {
-    DisableFastfileAuthCheck();
     Patch_ImageCache_OOM();
 
 // Debug-only: intercept internal console printing to also forward output to stdout

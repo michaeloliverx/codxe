@@ -135,7 +135,9 @@
       <ClCompile Include="src\game\iw4\mp_tu6\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\mr.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\patches.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\pm.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\sv_bots.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\main.cpp" />
 
       <ClCompile Include="src\game\iw5\mp\main.cpp" />
@@ -257,7 +259,9 @@
       <ClInclude Include="src\game\iw4\mp_tu6\components\mpsp.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\mr.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\patches.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\pm.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\scr_parser.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\sv_bots.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\main.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\structs.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\symbols.h" />

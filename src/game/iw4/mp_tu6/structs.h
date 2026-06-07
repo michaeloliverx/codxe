@@ -51,6 +51,11 @@ union DvarLimits
     DvarLimits_vector vector;
 };
 
+enum DvarFlags : std::uint16_t
+{
+    DVAR_FLAG_SERVERINFO = 0x10,
+};
+
 struct dvar_t
 {
     const char *name;
@@ -128,6 +133,15 @@ enum PlayerHandIndex : __int32
     WEAPON_HAND_DEFAULT = 0x0,
 };
 
+enum team_t : __int32
+{
+    TEAM_FREE = 0x0,
+    TEAM_AXIS = 0x1,
+    TEAM_ALLIES = 0x2,
+    TEAM_SPECTATOR = 0x3,
+    TEAM_NUM_TEAMS = 0x4,
+};
+
 struct GlobalAmmo
 {
     int ammoType;
@@ -161,6 +175,7 @@ struct PlayerWeaponCommonState
     float weapLockedPos[3];
     int weaponIdleTime;
 };
+static_assert(offsetof(PlayerWeaponCommonState, fWeaponPosFrac) == 0x18, "");
 
 enum ActionSlotType : __int32
 {
@@ -412,16 +427,10 @@ static_assert(sizeof(playerState_s) == 12672, "");
 static_assert(offsetof(playerState_s, velocity) == 40, "");
 static_assert(offsetof(playerState_s, delta_angles) == 96, "");
 
-struct gclient_s
-{
-    playerState_s ps;
-    char padding1[0x2A0];
-    int flags;
-    char padding2[0x2DC];
-};
-static_assert(sizeof(gclient_s) == 14080, "");
-static_assert(offsetof(gclient_s, ps) == 0x0, "");
-static_assert(offsetof(gclient_s, flags) == 13344, "");
+struct gclient_s;
+struct Turret;
+struct Vehicle;
+struct tagInfo_s;
 
 enum trType_t : __int32
 {
@@ -712,22 +721,171 @@ struct entityShared_t
     int eventTime;
 };
 
+struct __declspec(align(4)) item_ent_t
+{
+    int ammoCount;
+    int clipAmmoCount[2];
+    int index;
+    bool dualWieldItem;
+};
+
+struct spawner_ent_t
+{
+    int team;
+    int timestamp;
+    int index;
+};
+
+struct __declspec(align(4)) trigger_ent_t
+{
+    int threshold;
+    int accumulate;
+    int timestamp;
+    int singleUserEntIndex;
+    bool requireLookAt;
+};
+
+struct mover_positions_t
+{
+    float decelTime;
+    float speed;
+    float midTime;
+    float pos1[3];
+    float pos2[3];
+    float pos3[3];
+};
+
+struct mover_slidedata_t
+{
+    Bounds bounds;
+    float velocity[3];
+};
+
+struct mover_ent_t
+{
+    union
+    {
+        mover_positions_t pos;
+        mover_slidedata_t slide;
+    } ___u0;
+    mover_positions_t angle;
+};
+
+struct corpse_ent_t
+{
+    int deathAnimStartTime;
+};
+
+struct missile_fields_grenade
+{
+    float wobbleCycle;
+    float curve;
+};
+
+enum MissileStage : __int32
+{
+    MISSILESTAGE_SOFTLAUNCH = 0x0,
+    MISSILESTAGE_ASCENT = 0x1,
+    MISSILESTAGE_DESCENT = 0x2,
+};
+
+struct missile_fields_nonGrenade
+{
+    float curvature[3];
+    float targetEntOffset[3];
+    float targetPos[3];
+    float launchOrigin[3];
+    MissileStage stage;
+};
+
+struct missile_ent_t
+{
+    float time;
+    int timeOfBirth;
+    float travelDist;
+    float surfaceNormal[3];
+    team_t team;
+    int flags;
+    int antilagTimeOffset;
+    union
+    {
+        missile_fields_grenade grenade;
+        missile_fields_nonGrenade nonGrenade;
+    } ___u7;
+};
+
+struct blend_ent_t
+{
+    float pos[3];
+    float vel[3];
+    float viewQuat[4];
+    bool changed;
+    float accelTime;
+    float decelTime;
+    float startTime;
+    float totalTime;
+};
+
 struct gentity_s
 {
     entityState_s s;
     entityShared_t r;
     gclient_s *client;
-    char padding2[0x28];
+    Turret *turret;
+    Vehicle *vehicle;
+    int physObjId;
+    unsigned __int16 model;
+    unsigned __int8 physicsObject;
+    unsigned __int8 takedamage;
+    unsigned __int8 active;
+    unsigned __int8 handler;
+    unsigned __int8 team;
+    bool freeAfterEvent;
+    __int16 padding_short;
+    unsigned __int16 classname;
+    unsigned __int16 script_classname;
+    unsigned __int16 script_linkName;
+    unsigned __int16 target;
+    unsigned __int16 targetname;
+    unsigned int attachIgnoreCollision;
+    int spawnflags;
     int flags;
-    char padding3[0xF8];
+    int eventTime;
+    int clipmask;
+    int processedFrame;
+    EntHandle parent;
+    int nextthink;
+    int health;
+    int maxHealth;
+    int damage;
+    int count;
+    union
+    {
+        item_ent_t item[2];
+        spawner_ent_t spawner;
+        trigger_ent_t trigger;
+        mover_ent_t mover;
+        corpse_ent_t corpse;
+        missile_ent_t missile;
+        blend_ent_t blend;
+    } ___u31;
+    EntHandle missileTargetEnt;
+    EntHandle remoteControlledOwner;
+    tagInfo_s *tagInfo;
+    gentity_s *tagChildren;
+    unsigned __int16 attachModelNames[19];
+    unsigned __int16 attachTagNames[19];
+    int useCount;
+    gentity_s *nextFree;
+    int birthTime;
+    int padding[3];
 };
 static_assert(sizeof(gentity_s) == 640, "");
 static_assert(offsetof(gentity_s, client) == 344, "");
+static_assert(offsetof(gentity_s, flags) == 0x184, "");
 
 struct sentient_s;
 struct actor_s;
-struct Vehicle;
-struct Turret;
 
 struct level_locals_t
 {
@@ -742,11 +900,13 @@ struct level_locals_t
     Turret *turrets;
     int initializing;
     int clientIsSpawning;
+    char pad_2C[0x3A4 - 0x2C];
     int maxclients;
 };
 static_assert(offsetof(level_locals_t, clients) == 0x0, "");
 static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
-static_assert(offsetof(level_locals_t, maxclients) == 44, "");
+static_assert(offsetof(level_locals_t, num_entities) == 0x8, "");
+static_assert(offsetof(level_locals_t, maxclients) == 0x3A4, "");
 
 struct weaponParms
 {
@@ -761,10 +921,24 @@ struct weaponParms
 };
 static_assert(sizeof(weaponParms) == 0x48, "");
 
+struct weaponState_t;
+struct viewState_t;
+
 struct scr_entref_t
 {
     unsigned __int16 entnum;
     unsigned __int16 classnum;
+};
+
+enum ClassNum : __int32
+{
+    CLASS_NUM_ENTITY = 0x0,
+    CLASS_NUM_HUDELEM = 0x1,
+    CLASS_NUM_PATHNODE = 0x2,
+    CLASS_NUM_VEHICLENODE = 0x3,
+    CLASS_NUM_VEHTRACK_SEGMENT = 0x4,
+    CLASS_NUM_FXENTITY = 0x5,
+    CLASS_NUM_COUNT = 0x6,
 };
 
 struct cmd_function_s
@@ -775,6 +949,29 @@ struct cmd_function_s
     const char *autoCompleteExt;
     void (*function)();
 };
+
+enum usercmdButtonBits
+{
+    CMD_BUTTON_ATTACK = 1 << 0,
+    CMD_BUTTON_SPRINT = 1 << 1,
+    CMD_BUTTON_MELEE = 1 << 2,
+    CMD_BUTTON_ACTIVATE = 1 << 3,
+    CMD_BUTTON_RELOAD = 1 << 4,
+    CMD_BUTTON_USE_RELOAD = 1 << 5,
+    CMD_BUTTON_LEAN_LEFT = 1 << 6,
+    CMD_BUTTON_LEAN_RIGHT = 1 << 7,
+    CMD_BUTTON_PRONE = 1 << 8,
+    CMD_BUTTON_CROUCH = 1 << 9,
+    CMD_BUTTON_UP = 1 << 10,
+    CMD_BUTTON_ADS = 1 << 11,
+    CMD_BUTTON_DOWN = 1 << 12,
+    CMD_BUTTON_BREATH = 1 << 13,
+    CMD_BUTTON_FRAG = 1 << 14,
+    CMD_BUTTON_OFFHAND_SECONDARY = 1 << 15,
+    CMD_BUTTON_THROW = 1 << 19,
+    CMD_BUTTON_REMOTE = 1 << 20,
+};
+static_assert(sizeof(usercmdButtonBits) == 4, "");
 
 struct __declspec(align(4)) usercmd_s
 {
@@ -792,6 +989,77 @@ struct __declspec(align(4)) usercmd_s
     unsigned __int8 selectedLocAngle;
     char remoteControlAngles[2];
 };
+static_assert(sizeof(usercmd_s) == 0x28, "");
+static_assert(offsetof(usercmd_s, serverTime) == 0x0, "");
+static_assert(offsetof(usercmd_s, buttons) == 0x4, "");
+static_assert(offsetof(usercmd_s, angles) == 0x8, "");
+static_assert(offsetof(usercmd_s, weapon) == 0x14, "");
+static_assert(offsetof(usercmd_s, primaryWeaponForAltMode) == 0x16, "");
+static_assert(offsetof(usercmd_s, offHandIndex) == 0x18, "");
+static_assert(offsetof(usercmd_s, forwardmove) == 0x1A, "");
+static_assert(offsetof(usercmd_s, rightmove) == 0x1B, "");
+static_assert(offsetof(usercmd_s, meleeChargeYaw) == 0x1C, "");
+static_assert(offsetof(usercmd_s, meleeChargeDist) == 0x20, "");
+static_assert(offsetof(usercmd_s, remoteControlAngles) == 0x24, "");
+
+enum netadrtype_t : __int32
+{
+    NA_BOT = 0x0,
+};
+
+struct netadr_t
+{
+    netadrtype_t type;
+};
+static_assert(offsetof(netadr_t, type) == 0x0, "");
+
+struct netchan_t
+{
+    char pad_0[0x4];
+    int outgoingSequence;
+    char pad_8[0xC];
+    netadr_t remoteAddress;
+};
+static_assert(offsetof(netchan_t, outgoingSequence) == 0x4, "");
+static_assert(offsetof(netchan_t, remoteAddress) == 0x14, "");
+
+struct clientHeader_t
+{
+    int state;
+    char pad_4[0x4];
+    int deltaMessage;
+    char pad_C[0x8];
+    netchan_t netchan;
+};
+static_assert(offsetof(clientHeader_t, state) == 0x0, "");
+static_assert(offsetof(clientHeader_t, deltaMessage) == 0x8, "");
+static_assert(offsetof(clientHeader_t, netchan) == 0x14, "");
+static_assert(offsetof(clientHeader_t, netchan) + offsetof(netchan_t, outgoingSequence) == 0x18, "");
+static_assert(offsetof(clientHeader_t, netchan) + offsetof(netchan_t, remoteAddress) + offsetof(netadr_t, type) == 0x28,
+              "");
+
+struct client_t
+{
+    clientHeader_t header;
+    char pad_2C[0x21294 - sizeof(clientHeader_t)];
+    gentity_s *gentity;
+    char pad_21298[0x97F80 - 0x21298];
+};
+static_assert(sizeof(client_t) == 0x97F80, "");
+static_assert(offsetof(client_t, header) == 0x0, "");
+static_assert(offsetof(client_t, header) + offsetof(clientHeader_t, deltaMessage) == 0x8, "");
+static_assert(offsetof(client_t, gentity) == 0x21294, "");
+
+struct serverStaticHeader_t
+{
+    int time;
+    int timeResidual;
+    int clientCount;
+    client_t *clients;
+};
+static_assert(offsetof(serverStaticHeader_t, time) == 0x0, "");
+static_assert(offsetof(serverStaticHeader_t, clientCount) == 0x8, "");
+static_assert(offsetof(serverStaticHeader_t, clients) == 0xC, "");
 
 struct __declspec(align(128)) clSnapshot_t
 {
@@ -833,15 +1101,6 @@ struct outPacket_t
     int p_realtime;
 };
 
-enum team_t : __int32
-{
-    TEAM_FREE = 0x0,
-    TEAM_AXIS = 0x1,
-    TEAM_ALLIES = 0x2,
-    TEAM_SPECTATOR = 0x3,
-    TEAM_NUM_TEAMS = 0x4,
-};
-
 struct clientState_s
 {
     int clientIndex;
@@ -863,6 +1122,182 @@ struct clientState_s
     unsigned int playerCardTitle;
     unsigned int playerCardNameplate;
 };
+
+enum sessionState_t : __int32
+{
+    SESS_STATE_PLAYING = 0x0,
+    SESS_STATE_DEAD = 0x1,
+    SESS_STATE_SPECTATOR = 0x2,
+    SESS_STATE_INTERMISSION = 0x3,
+};
+
+enum clientConnected_t : __int32
+{
+    CON_DISCONNECTED = 0x0,
+    CON_CONNECTING = 0x1,
+    CON_CONNECTED = 0x2,
+};
+
+struct playerTeamState_t
+{
+    int location;
+};
+
+struct clientSession_t
+{
+    sessionState_t sessionState;
+    int forceSpectatorClient;
+    int killCamEntity;
+    int killCamLookAtEntity;
+    int status_icon;
+    int archiveTime;
+    int score;
+    int deaths;
+    int kills;
+    int assists;
+    unsigned __int16 scriptPersId;
+    clientConnected_t connected;
+    usercmd_s cmd;
+    usercmd_s oldcmd;
+    int localClient;
+    int predictItemPickup;
+    char newnetname[32];
+    int maxHealth;
+    int enterTime;
+    playerTeamState_t teamState;
+    int voteCount;
+    int teamVoteCount;
+    float moveSpeedScaleMultiplier;
+    int viewmodelIndex;
+    int noSpectate;
+    int teamInfo;
+    clientState_s cs;
+    int psOffsetTime;
+    int hasRadar;
+    int isRadarBlocked;
+    int radarMode;
+    int weaponHudIconOverrides[6];
+    unsigned int unusableEntFlags[64];
+    float spectateDefaultPos[3];
+    float spectateDefaultAngles[3];
+};
+static_assert(sizeof(clientSession_t) == 0x2A0, "");
+static_assert(offsetof(clientSession_t, connected) == 0x2C, "");
+static_assert(offsetof(clientSession_t, cmd) == 0x30, "");
+static_assert(offsetof(clientSession_t, cs) == 0xCC, "");
+
+struct viewClamp
+{
+    float start[2];
+    float current[2];
+    float goal[2];
+};
+
+struct viewClampState
+{
+    viewClamp min;
+    viewClamp max;
+    float accelTime;
+    float decelTime;
+    float totalTime;
+    float startTime;
+};
+
+enum hintType_t : __int32
+{
+    HINT_NONE = 0x0,
+    HINT_NOICON = 0x1,
+    HINT_ACTIVATE = 0x2,
+    HINT_HEALTH = 0x3,
+    HINT_FRIENDLY = 0x4,
+    FIRST_WEAPON_HINT = 0x5,
+    LAST_WEAPON_HINT = 0x4B4,
+    HINT_NUM_HINTS = 0x4B5,
+};
+
+struct gclient_s
+{
+    playerState_s ps;
+    clientSession_t sess;
+    int flags;
+    int spectatorClient;
+    int lastCmdTime;
+    int mpviewer;
+    int buttons;
+    int oldbuttons;
+    int latched_buttons;
+    int buttonsSinceLastFrame;
+    float oldOrigin[3];
+    float fGunPitch;
+    float fGunYaw;
+    int damage_blood;
+    int damage_stun;
+    float damage_from[3];
+    int damage_fromWorld;
+    int accurateCount;
+    int accuracy_shots;
+    int accuracy_hits;
+    int inactivityTime;
+    int inactivityWarning;
+    int lastVoiceTime;
+    int switchTeamTime;
+    float currentAimSpreadScale;
+    float prevLinkedInvQuat[4];
+    bool prevLinkAnglesSet;
+    bool link_rotationMovesEyePos;
+    bool link_doCollision;
+    bool link_useTagAnglesForViewAngles;
+    float linkAnglesFrac;
+    viewClampState link_viewClamp;
+    gentity_s *persistantPowerup;
+    int portalID;
+    int dropWeaponTime;
+    int sniperRifleFiredTime;
+    float sniperRifleMuzzleYaw;
+    int PCSpecialPickedUpCount;
+    EntHandle useHoldEntity;
+    int useHoldTime;
+    int useButtonDone;
+    int iLastCompassPlayerInfoEnt;
+    int compassPingTime;
+    int damageTime;
+    float v_dmg_roll;
+    float v_dmg_pitch;
+    float baseAngles[3];
+    float baseOrigin[3];
+    float swayViewAngles[3];
+    float swayOffset[3];
+    float swayAngles[3];
+    float recoilAngles[3];
+    float recoilSpeed[3];
+    float fLastIdleFactor;
+    int weapIdleTime;
+    int lastServerTime;
+    unsigned int lastWeapon;
+    bool previouslyFiring;
+    bool previouslyFiringLeftHand;
+    bool previouslyUsingNightVision;
+    bool previouslySprinting;
+    int visionDuration[5];
+    char visionName[5][64];
+    int lastStand;
+    int lastStandTime;
+    int hudElemLastAssignedSoundID;
+    float lockedTargetOffset[3];
+    int attachShieldTagName;
+    hintType_t hintForcedType;
+    int hintForcedString;
+    int padding;
+};
+static_assert(sizeof(gclient_s) == 0x3700, "");
+static_assert(offsetof(gclient_s, ps) == 0x0, "");
+static_assert(offsetof(gclient_s, sess) == 0x3180, "");
+static_assert(offsetof(gclient_s, flags) == 0x3420, "");
+static_assert(offsetof(gclient_s, buttons) == 0x3430, "");
+static_assert(offsetof(gclient_s, attachShieldTagName) == 0x36F0, "");
+static_assert(offsetof(gclient_s, hintForcedType) == 0x36F4, "");
+static_assert(offsetof(gclient_s, hintForcedString) == 0x36F8, "");
+static_assert(offsetof(gclient_s, padding) == 0x36FC, "");
 
 struct __declspec(align(128)) clientActive_t
 {
@@ -1149,18 +1584,25 @@ static_assert(sizeof(cg_s) == 1039872, "");
 typedef void (*BuiltinFunction)();
 typedef void (*BuiltinMethod)(scr_entref_t);
 
+enum scr_builtin_type_t
+{
+    BUILTIN_ANY = 0x0,
+    BUILTIN_DEVELOPER_ONLY = 0x1,
+};
+static_assert(sizeof(scr_builtin_type_t) == 4, "");
+
 struct BuiltinFunctionDef
 {
     const char *actionString;
-    void (*actionFunc)();
-    int type;
+    BuiltinFunction actionFunc;
+    scr_builtin_type_t type;
 };
 
 struct BuiltinMethodDef
 {
     const char *actionString;
-    void (*actionFunc)(scr_entref_t);
-    int type;
+    BuiltinMethod actionFunc;
+    scr_builtin_type_t type;
 };
 
 enum fieldtype_t : __int32

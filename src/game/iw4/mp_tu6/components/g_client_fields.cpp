@@ -56,7 +56,8 @@ void GScr_AddFieldsForClient_Hook()
 {
     for (int i = 0; fields_extended[i].name != nullptr; i++)
     {
-        Scr_AddClassField(0, fields_extended[i].name, static_cast<unsigned short>(i) | CLIENT_FIELD_MASK);
+        Scr_AddClassField(CLASS_NUM_ENTITY, fields_extended[i].name,
+                          static_cast<unsigned short>(i) | CLIENT_FIELD_MASK);
         DbgPrint("Added client field: %s\n", fields_extended[i].name);
     }
 }
@@ -85,10 +86,10 @@ void Scr_GetClientField(gclient_s *client, unsigned int offset)
 // to handle client fields.
 Detour Scr_GetObjectField_Detour;
 
-void Scr_GetObjectField_Hook(unsigned int classnum, int entnum, int offset)
+void Scr_GetObjectField_Hook(ClassNum classnum, int entnum, int offset)
 {
     // Mimic the client field conditions
-    if (classnum == 0 && (offset & CLIENT_FIELD_MASK) == CLIENT_FIELD_MASK)
+    if (classnum == CLASS_NUM_ENTITY && (offset & CLIENT_FIELD_MASK) == CLIENT_FIELD_MASK)
     {
         // This is a client field
         Scr_GetClientField(&level->clients[entnum], offset & ~CLIENT_FIELD_MASK);

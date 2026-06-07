@@ -5,6 +5,13 @@ namespace iw4
 {
 namespace mp_tu6
 {
+void DisableFastfileAuth()
+{
+    // The game requires fastfiles to be signed in MP, but it has the code to load
+    // unsigned fastfiles in the executable. Disable the auth check gate.
+    *(volatile uint32_t *)0x821B0978 = 0x60000000;
+}
+
 void EnableBouncing()
 {
     // Re-enable bouncing
@@ -14,16 +21,6 @@ void EnableBouncing()
     // .text:8210CB74                 bne       cr6, loc_8210CB24
     *(volatile uint32_t *)0x8210CB70 = 0x60000000;
     *(volatile uint32_t *)0x8210CB74 = 0x60000000;
-}
-
-void DisableIdleGunSway()
-{
-    // No weapon sway when aiming down sights
-    // .text:821185D4                 bl        BG_CalculateViewMovement_Angles_Idle
-    *(volatile uint32_t *)0x821185D4 = 0x60000000;
-
-    // .text:82117B90                 bl        BG_ComputeAndApplyWeaponMovement_IdleAngles
-    *(volatile uint32_t *)0x82117B90 = 0x60000000;
 }
 
 void DisableDvarProtection()
@@ -41,41 +38,15 @@ void DisableDvarProtection()
     *(volatile uint32_t *)0x8230D6EC = 0x60000000;
 }
 
-Detour Weapon_RocketLauncher_Fire_Detour;
-
-gentity_s *Weapon_RocketLauncher_Fire_Hook(gentity_s *ent, unsigned int weaponIndex, double spread, weaponParms *wp,
-                                           weaponParms *gunVel, struct lockonFireParms *lockParms,
-                                           lockonFireParms *magicBullet)
-{
-    // TEMPORARY: don't create an RPG entity to avoid shellshock on screen
-    // const auto result = Weapon_RocketLauncher_Fire_Detour.GetOriginal<decltype(Weapon_RocketLauncher_Fire)>()(
-    //     ent, weaponIndex, spread, wp, gunVel, lockParms, magicBullet);
-
-    // COD4 logic for RPG knockback
-    auto client = ent->client;
-    if (client)
-    {
-        ent->client->ps.velocity[0] = client->ps.velocity[0] - wp->forward[0] * 64.0f;
-        ent->client->ps.velocity[1] = client->ps.velocity[1] - wp->forward[1] * 64.0f;
-        ent->client->ps.velocity[2] = client->ps.velocity[2] - wp->forward[2] * 64.0f;
-    }
-
-    return 0;
-}
-
 patches::patches()
 {
+    DisableFastfileAuth();
     EnableBouncing();
-    DisableIdleGunSway();
     DisableDvarProtection();
-
-    Weapon_RocketLauncher_Fire_Detour = Detour(Weapon_RocketLauncher_Fire, Weapon_RocketLauncher_Fire_Hook);
-    Weapon_RocketLauncher_Fire_Detour.Install();
 }
 
 patches::~patches()
 {
-    Weapon_RocketLauncher_Fire_Detour.Remove();
 }
 } // namespace mp_tu6
 } // namespace iw4

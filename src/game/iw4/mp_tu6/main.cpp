@@ -8,7 +8,9 @@
 #include "components/mpsp.h"
 #include "components/mr.h"
 #include "components/patches.h"
+#include "components/pm.h"
 #include "components/scr_parser.h"
+#include "components/sv_bots.h"
 #include "main.h"
 
 namespace iw4
@@ -28,7 +30,9 @@ IW4_MP_TU6_Plugin::IW4_MP_TU6_Plugin()
     RegisterModule(new mpsp());
     RegisterModule(new MovementRecorder());
     RegisterModule(new patches());
+    RegisterModule(new pm());
     RegisterModule(new scr_parser());
+    RegisterModule(new SVBots());
 }
 
 } // namespace mp_tu6

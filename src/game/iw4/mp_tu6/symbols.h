@@ -6,6 +6,16 @@ namespace iw4
 {
 namespace mp_tu6
 {
+#define IW4_MAX_CLIENTS 18
+#define IW4_ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+
+enum
+{
+    IW4_PITCH = 0,
+    IW4_YAW = 1,
+    IW4_ROLL = 2,
+};
+
 // Functions
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822FDF08);
 
@@ -83,9 +93,17 @@ static Console_Key_t Console_Key = reinterpret_cast<Console_Key_t>(0x821821D0);
 static auto DB_LinkXAssetEntry1 =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
 
-static auto Dvar_RegisterString =
-    reinterpret_cast<dvar_t *(*)(const char *dvarName, const char *value, unsigned __int16 flags,
-                                 const char *description)>(0x8230F010);
+typedef dvar_t *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags,
+                                       const char *description);
+static Dvar_RegisterBool_t Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x8230EE00);
+
+typedef dvar_t *(*Dvar_RegisterFloat_t)(const char *dvarName, double value, double min, double max,
+                                        unsigned __int16 flags, const char *description);
+static Dvar_RegisterFloat_t Dvar_RegisterFloat = reinterpret_cast<Dvar_RegisterFloat_t>(0x8230EE90);
+
+typedef dvar_t *(*Dvar_RegisterString_t)(const char *dvarName, const char *value, unsigned __int16 flags,
+                                         const char *description);
+static Dvar_RegisterString_t Dvar_RegisterString = reinterpret_cast<Dvar_RegisterString_t>(0x8230F010);
 
 static auto Dvar_SetString = reinterpret_cast<void (*)(const dvar_t *dvar, const char *value)>(0x8230F7D8);
 
@@ -132,27 +150,70 @@ static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(const char *filename, const char *extFilename)>(0x8229F2C8);
 
 static auto Scr_AddClassField =
-    reinterpret_cast<void (*)(unsigned int classnum, const char *name, unsigned __int16 offset)>(0x822A9B98);
+    reinterpret_cast<void (*)(ClassNum classnum, const char *name, unsigned __int16 offset)>(0x822A9B98);
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8221B238);
 static auto Scr_SetClientField = reinterpret_cast<void (*)(gclient_s *client, int offset)>(0x8221B290);
 static auto Scr_SetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs)>(0x8225A698);
 static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs)>(0x8225A7B8);
-static auto Scr_GetObjectField = reinterpret_cast<void (*)(unsigned int classnum, int entnum, int offset)>(0x8225ABF0);
+static auto Scr_GetObjectField = reinterpret_cast<void (*)(ClassNum classnum, int entnum, int offset)>(0x8225ABF0);
 
 static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index)>(0x822B33A8);
 static auto Scr_AddInt = reinterpret_cast<void (*)(int value)>(0x822ADD18);
 static auto Scr_GetInt = reinterpret_cast<int (*)(unsigned int index)>(0x822B2D70);
+typedef double (*Scr_GetFloat_t)(unsigned int index);
+static Scr_GetFloat_t Scr_GetFloat = reinterpret_cast<Scr_GetFloat_t>(0x822B30D0);
+typedef void (*Scr_AddUndefined_t)();
+static Scr_AddUndefined_t Scr_AddUndefined = reinterpret_cast<Scr_AddUndefined_t>(0x822ADE98);
+typedef void (*Scr_AddString_t)(const char *value);
+static Scr_AddString_t Scr_AddString = reinterpret_cast<Scr_AddString_t>(0x822ADFF0);
+typedef void (*Scr_AddEntity_t)(gentity_s *ent);
+static Scr_AddEntity_t Scr_AddEntity = reinterpret_cast<Scr_AddEntity_t>(0x82259A60);
 static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue)>(0x822B35B8);
 static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x822AE470);
 static auto GetEntity = reinterpret_cast<gentity_s *(*)(scr_entref_t entref)>(0x8223F4D0);
+typedef gentity_s *(*GetPlayerEntity_t)(scr_entref_t entref);
+static GetPlayerEntity_t GetPlayerEntity = reinterpret_cast<GetPlayerEntity_t>(0x8223F540);
+typedef void (*Scr_ParamError_t)(unsigned int index, const char *error);
+static Scr_ParamError_t Scr_ParamError = reinterpret_cast<Scr_ParamError_t>(0x822AE600);
 static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error)>(0x822AE668);
 
 static auto Scr_RegisterFunction = reinterpret_cast<void (*)(int func, const char *name)>(0x822963C0);
 
-static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x82254C38);
-static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x82254D88);
+static auto Scr_GetFunction =
+    reinterpret_cast<BuiltinFunction (*)(const char **pName, scr_builtin_type_t *type)>(0x82254C38);
+static auto Scr_GetMethod =
+    reinterpret_cast<BuiltinMethod (*)(const char **pName, scr_builtin_type_t *type)>(0x82254D88);
 
 static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x822ADC88);
+
+typedef void (*PlayerCmd_GetGuid_t)(scr_entref_t entref);
+static PlayerCmd_GetGuid_t PlayerCmd_GetGuid = reinterpret_cast<PlayerCmd_GetGuid_t>(0x82223C18);
+
+typedef int *(*G_SelectWeaponIndex_t)(int clientNum, int iWeaponIndex);
+static G_SelectWeaponIndex_t G_SelectWeaponIndex = reinterpret_cast<G_SelectWeaponIndex_t>(0x82261410);
+
+typedef void (*SV_ClientThink_t)(client_t *cl, usercmd_s *cmd);
+static SV_ClientThink_t SV_ClientThink = reinterpret_cast<SV_ClientThink_t>(0x822BC778);
+
+typedef void (*SV_BotUserMove_t)(client_t *cl);
+static SV_BotUserMove_t SV_BotUserMove = reinterpret_cast<SV_BotUserMove_t>(0x822C3208);
+
+typedef BOOL (*SV_IsClientBot_t)(int clientNum);
+static SV_IsClientBot_t SV_IsClientBot = reinterpret_cast<SV_IsClientBot_t>(0x822C3B10);
+
+typedef gentity_s *(*SV_AddTestClient_t)();
+static SV_AddTestClient_t SV_AddTestClient = reinterpret_cast<SV_AddTestClient_t>(0x822BDCB8);
+
+typedef void (*Scr_ShutdownSystem_t)(unsigned __int8 sys);
+static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x822A36E8);
+
+typedef void (*BG_ComputeAndApplyWeaponMovement_IdleAngles_t)(weaponState_t *ws, float *angles);
+static BG_ComputeAndApplyWeaponMovement_IdleAngles_t BG_ComputeAndApplyWeaponMovement_IdleAngles =
+    reinterpret_cast<BG_ComputeAndApplyWeaponMovement_IdleAngles_t>(0x82116638);
+
+typedef void (*BG_CalculateViewMovement_Angles_Idle_t)(viewState_t *vs, float *angles);
+static BG_CalculateViewMovement_Angles_Idle_t BG_CalculateViewMovement_Angles_Idle =
+    reinterpret_cast<BG_CalculateViewMovement_Angles_Idle_t>(0x82118198);
 
 static auto Weapon_RocketLauncher_Fire =
     reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp,
@@ -196,6 +257,7 @@ static auto fields = reinterpret_cast<client_fields_s *>(0x82027518);
 static auto g_entities = reinterpret_cast<gentity_s *>(0x82E2A580);
 static auto level = reinterpret_cast<level_locals_t *>(0x82FF2F08);
 static auto sharedUiInfo = reinterpret_cast<sharedUiInfo_t *>(0x836A3AC0);
+static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x8367A010);
 
 } // namespace mp_tu6
 } // namespace iw4
