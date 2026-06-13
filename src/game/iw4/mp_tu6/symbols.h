@@ -40,6 +40,10 @@ static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const
 static auto Cmd_AddCommandInternal =
     reinterpret_cast<void (*)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd)>(0x82276758);
 
+typedef void (*Cmd_ExecuteSingleCommand_t)(int localClientNum, int controllerIndex, const char *text);
+static Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand =
+    reinterpret_cast<Cmd_ExecuteSingleCommand_t>(0x82277928);
+
 static auto Cmd_Init = reinterpret_cast<void (*)()>(0x82278048);
 
 static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x822804F8);
@@ -49,6 +53,9 @@ static Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x8227F448);
 
 typedef void (*Com_PrintMessage_t)(int channel, const char *msg, int error);
 static Com_PrintMessage_t Com_PrintMessage = reinterpret_cast<Com_PrintMessage_t>(0x8227F370);
+
+typedef void (*Info_SetValueForKey_t)(char *s, const char *key, const char *value);
+static Info_SetValueForKey_t Info_SetValueForKey = reinterpret_cast<Info_SetValueForKey_t>(0x823167D8);
 
 typedef char (*Con_AllowAutoCompleteCycling_t)(char allowed);
 static Con_AllowAutoCompleteCycling_t Con_AllowAutoCompleteCycling =
@@ -92,6 +99,9 @@ static Console_Key_t Console_Key = reinterpret_cast<Console_Key_t>(0x821821D0);
 
 static auto DB_LinkXAssetEntry1 =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
+
+typedef XAssetHeader (*DB_FindXAssetHeader_t)(XAssetType type, const char *name);
+static DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x821E25B0);
 
 typedef dvar_t *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags,
                                        const char *description);
@@ -203,6 +213,9 @@ static SV_IsClientBot_t SV_IsClientBot = reinterpret_cast<SV_IsClientBot_t>(0x82
 
 typedef gentity_s *(*SV_AddTestClient_t)();
 static SV_AddTestClient_t SV_AddTestClient = reinterpret_cast<SV_AddTestClient_t>(0x822BDCB8);
+
+typedef void (*SV_UserinfoChanged_t)(client_t *cl);
+static SV_UserinfoChanged_t SV_UserinfoChanged = reinterpret_cast<SV_UserinfoChanged_t>(0x822BBED8);
 
 typedef void (*Scr_ShutdownSystem_t)(unsigned __int8 sys);
 static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x822A36E8);

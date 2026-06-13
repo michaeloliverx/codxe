@@ -25,10 +25,12 @@ struct BotMovementInfo_t
 };
 
 static BotMovementInfo_t g_botai[IW4_MAX_CLIENTS];
+static char s_pendingBotName[32];
 
 static void CleanBotArray()
 {
     ZeroMemory(&g_botai, sizeof(g_botai));
+    s_pendingBotName[0] = '\0';
 }
 
 static char ClampMove(int value)
@@ -113,6 +115,49 @@ static void SV_BotUserMove_Stub(client_t *cl)
     cl->header.deltaMessage = cl->header.netchan.outgoingSequence - 1;
 
     SV_ClientThink(cl, &cmd);
+}
+
+static void GScr_AddTestClient()
+{
+    if (Scr_GetNumParam() > 1)
+        Scr_Error("Usage: addtestclient(<name>);");
+
+    if (Scr_GetNumParam() == 1)
+    {
+        const char *string = Scr_GetString(0);
+
+        char name[32];
+        int i, j;
+        for (i = 0, j = 0; string && string[i] && j < static_cast<int>(sizeof(name)) - 1; ++i)
+        {
+            if (static_cast<unsigned char>(string[i]) >= 0x20)
+                name[j++] = string[i];
+        }
+
+        name[j] = '\0';
+
+        if (j < 1)
+            Scr_Error("addtestclient: name must be at least 1 character long");
+
+        strncpy(s_pendingBotName, name, sizeof(s_pendingBotName) - 1);
+        s_pendingBotName[sizeof(s_pendingBotName) - 1] = '\0';
+    }
+
+    gentity_s *ent = SV_AddTestClient();
+
+    if (ent && s_pendingBotName[0])
+    {
+        const int clientNum = ent - g_entities;
+        client_t *cl = &svsHeader->clients[clientNum];
+
+        Info_SetValueForKey(cl->userinfo, "name", s_pendingBotName);
+        SV_UserinfoChanged(cl);
+    }
+
+    s_pendingBotName[0] = '\0';
+
+    if (ent)
+        Scr_AddEntity(ent);
 }
 
 struct BotAction_t
@@ -270,6 +315,8 @@ SVBots::SVBots()
 
     SV_BotUserMove_Detour = Detour(SV_BotUserMove, SV_BotUserMove_Stub);
     SV_BotUserMove_Detour.Install();
+
+    Scr_AddFunction("addtestclient", GScr_AddTestClient, BUILTIN_ANY);
 
     Scr_AddMethod("botaction", PlayerCmd_BotAction, BUILTIN_ANY);
     Scr_AddMethod("botstop", PlayerCmd_BotStop, BUILTIN_ANY);

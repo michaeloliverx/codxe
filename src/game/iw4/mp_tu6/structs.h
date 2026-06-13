@@ -1041,14 +1041,23 @@ static_assert(offsetof(clientHeader_t, netchan) + offsetof(netchan_t, remoteAddr
 struct client_t
 {
     clientHeader_t header;
-    char pad_2C[0x21294 - sizeof(clientHeader_t)];
+    const char *dropReason;
+    char pad_30[0x650 - 0x30];
+    char userinfo[1024];
+    char pad_A50[0x21294 - 0xA50];
     gentity_s *gentity;
-    char pad_21298[0x97F80 - 0x21298];
+    char name[32];
+    char clanAbbrev[5];
+    char pad_212BD[0x97F80 - 0x212BD];
 };
 static_assert(sizeof(client_t) == 0x97F80, "");
 static_assert(offsetof(client_t, header) == 0x0, "");
 static_assert(offsetof(client_t, header) + offsetof(clientHeader_t, deltaMessage) == 0x8, "");
+static_assert(offsetof(client_t, dropReason) == 0x2C, "");
+static_assert(offsetof(client_t, userinfo) == 0x650, "");
 static_assert(offsetof(client_t, gentity) == 0x21294, "");
+static_assert(offsetof(client_t, name) == 0x21298, "");
+static_assert(offsetof(client_t, clanAbbrev) == 0x212B8, "");
 
 struct serverStaticHeader_t
 {
@@ -1899,6 +1908,30 @@ struct RawFile
     const char *buffer;
 };
 
+struct StringTableCell
+{
+    const char *string;
+    int hash;
+};
+
+static_assert(sizeof(StringTableCell) == 8, "");
+static_assert(offsetof(StringTableCell, string) == 0x0, "");
+static_assert(offsetof(StringTableCell, hash) == 0x4, "");
+
+struct StringTable
+{
+    const char *name;
+    int columnCount;
+    int rowCount;
+    StringTableCell *values;
+};
+
+static_assert(sizeof(StringTable) == 16, "");
+static_assert(offsetof(StringTable, name) == 0x0, "");
+static_assert(offsetof(StringTable, columnCount) == 0x4, "");
+static_assert(offsetof(StringTable, rowCount) == 0x8, "");
+static_assert(offsetof(StringTable, values) == 0xC, "");
+
 union XAssetHeader
 {
     clipMap_t *clipMap;
@@ -1906,6 +1939,7 @@ union XAssetHeader
     GameWorldMp *gameWorldMp;
     MapEnts *mapEnts;
     RawFile *rawfile;
+    StringTable *stringTable;
     void *data;
 };
 
