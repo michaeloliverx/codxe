@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "g_scr_main.h"
+#include "events.h"
 
 namespace iw4
 {
@@ -7,6 +8,8 @@ namespace mp_tu6
 {
 std::vector<BuiltinFunctionDef *> scr_functions;
 std::vector<BuiltinMethodDef *> scr_methods;
+static FILE *open_script_io_file_handle;
+const int MAX_SCRIPT_STRING_BYTES = 65535;
 
 void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type)
 {
@@ -170,16 +173,39 @@ static void GScr_FileRead()
         Scr_Error("Usage: fileread(<file>)");
 
     const std::string path = BuildScriptFilePath(Scr_GetString(0));
-    std::ifstream file(path.c_str(), std::ios::in | std::ios::binary);
+    FILE *file = fopen(path.c_str(), "rb");
     if (!file)
     {
         Scr_AddUndefined();
         return;
     }
 
-    std::ostringstream contents;
-    contents << file.rdbuf();
-    Scr_AddString(contents.str().c_str());
+    fseek(file, 0, SEEK_END);
+    const long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (file_size < 0)
+    {
+        fclose(file);
+        Scr_AddUndefined();
+        return;
+    }
+
+    const size_t file_size_bytes = static_cast<size_t>(file_size);
+    const size_t bytes_to_read = file_size_bytes < MAX_SCRIPT_STRING_BYTES ? file_size_bytes : MAX_SCRIPT_STRING_BYTES;
+    std::vector<char> buffer(bytes_to_read + 1);
+
+    const size_t bytes_read = fread(buffer.data(), 1, bytes_to_read, file);
+    fclose(file);
+
+    if (bytes_read != bytes_to_read)
+    {
+        Scr_AddUndefined();
+        return;
+    }
+
+    buffer[bytes_read] = '\0';
+    Scr_AddString(buffer.data());
 }
 
 static void GScr_FileExists()
@@ -199,6 +225,83 @@ static void GScr_FileExists()
     Scr_AddInt(1);
 }
 
+static void GScr_OpenFile()
+{
+    if (Scr_GetNumParam() != 2)
+        Scr_Error("Usage: openfile(<file>, <mode>)");
+
+    const char *filename = Scr_GetString(0);
+    const char *mode = Scr_GetString(1);
+
+    if (_stricmp(mode, "read"))
+    {
+        Scr_AddInt(-1);
+        return;
+    }
+
+    if (open_script_io_file_handle)
+    {
+        Scr_AddInt(-1);
+        return;
+    }
+
+    const std::string path = BuildScriptFilePath(filename);
+    open_script_io_file_handle = fopen(path.c_str(), "r");
+    if (!open_script_io_file_handle)
+    {
+        Scr_AddInt(-1);
+        return;
+    }
+
+    Scr_AddInt(1);
+}
+
+static void GScr_ReadStream()
+{
+    if (Scr_GetNumParam() != 0)
+        Scr_Error("Usage: readstream()");
+
+    if (!open_script_io_file_handle)
+    {
+        Scr_AddUndefined();
+        return;
+    }
+
+    char line[4096];
+    if (!fgets(line, sizeof(line), open_script_io_file_handle))
+    {
+        Scr_AddUndefined();
+        return;
+    }
+
+    Scr_AddString(line);
+}
+
+static void CloseScriptIOFile()
+{
+    if (open_script_io_file_handle)
+    {
+        fclose(open_script_io_file_handle);
+        open_script_io_file_handle = nullptr;
+    }
+}
+
+static void GScr_CloseFile()
+{
+    if (Scr_GetNumParam() != 0)
+        Scr_Error("Usage: closefile()");
+
+    if (!open_script_io_file_handle)
+    {
+        Scr_AddInt(-1);
+        return;
+    }
+
+    const int result = fclose(open_script_io_file_handle);
+    open_script_io_file_handle = nullptr;
+    Scr_AddInt(result);
+}
+
 g_scr_main::g_scr_main()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
@@ -212,10 +315,16 @@ g_scr_main::g_scr_main()
     Scr_AddFunction("filewrite", GScr_FileWrite, BUILTIN_ANY);
     Scr_AddFunction("fileread", GScr_FileRead, BUILTIN_ANY);
     Scr_AddFunction("fileexists", GScr_FileExists, BUILTIN_ANY);
+    Scr_AddFunction("openfile", GScr_OpenFile, BUILTIN_ANY);
+    Scr_AddFunction("readstream", GScr_ReadStream, BUILTIN_ANY);
+    Scr_AddFunction("closefile", GScr_CloseFile, BUILTIN_ANY);
+    Events::OnVMShutdown(CloseScriptIOFile);
 }
 
 g_scr_main::~g_scr_main()
 {
+    CloseScriptIOFile();
+
     Scr_GetFunction_Detour.Remove();
 
     Scr_GetMethod_Detour.Remove();
