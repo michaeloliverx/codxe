@@ -58,7 +58,6 @@ void GScr_AddFieldsForClient_Hook()
     {
         Scr_AddClassField(CLASS_NUM_ENTITY, fields_extended[i].name,
                           static_cast<unsigned short>(i) | CLIENT_FIELD_MASK);
-        DbgPrint("Added client field: %s\n", fields_extended[i].name);
     }
 }
 
