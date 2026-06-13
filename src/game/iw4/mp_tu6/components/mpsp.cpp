@@ -202,7 +202,6 @@ std::string ReadTextFile(const std::string &path)
     std::ifstream file(normalized, std::ios::binary);
     if (!file)
     {
-        DbgPrint("ReadTextFile: Failed to open file: %s\n", normalized.c_str());
         return "";
     }
 
