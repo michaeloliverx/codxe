@@ -91,8 +91,13 @@ void Scr_GetObjectField_Hook(ClassNum classnum, int entnum, int offset)
     // Mimic the client field conditions
     if (classnum == CLASS_NUM_ENTITY && (offset & CLIENT_FIELD_MASK) == CLIENT_FIELD_MASK)
     {
-        // This is a client field
-        Scr_GetClientField(&level->clients[entnum], offset & ~CLIENT_FIELD_MASK);
+        const auto ent = &g_entities[entnum];
+        if (!ent->client)
+        {
+            return;
+        }
+
+        Scr_GetClientField(ent->client, offset & ~CLIENT_FIELD_MASK);
         return;
     }
     else
