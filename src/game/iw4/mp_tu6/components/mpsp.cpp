@@ -308,7 +308,7 @@ void override_(MapEnts *asset)
 
 namespace RawFile_
 {
-std::unordered_map<std::string, std::unique_ptr<std::string>> rawfile_buffers;
+std::unordered_map<std::string, std::unique_ptr<char[]>> rawfile_buffers;
 
 void override_(RawFile *asset)
 {
@@ -330,14 +330,40 @@ void override_(RawFile *asset)
     }
 
     const std::string filename = Asset::get_load_dir() + "\\" + asset->name;
-    const std::string buffer = FS::ReadTextFile(filename);
+    const std::string normalized = FS::NormalizePath(filename);
+    FILE *file = fopen(normalized.c_str(), "rb");
 
-    if (buffer.empty())
+    if (!file)
     {
         return;
     }
 
-    // NOTE: It seems that the engine will handle us giving back uncompressed strings (tested at least for .gsc files!)
+    fseek(file, 0, SEEK_END);
+    const long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (file_size <= 0)
+    {
+        fclose(file);
+        return;
+    }
+
+    std::unique_ptr<char[]> buffer(new (std::nothrow) char[file_size + 1]);
+    if (!buffer)
+    {
+        fclose(file);
+        return;
+    }
+
+    const size_t bytes_read = fread(buffer.get(), 1, file_size, file);
+    fclose(file);
+
+    if (bytes_read != static_cast<size_t>(file_size))
+    {
+        return;
+    }
+
+    buffer[bytes_read] = '\0';
 
     DbgPrint("Overriding rawfile asset %s from fastfile %s\n", asset->name, g_load->file->name);
 
@@ -346,15 +372,12 @@ void override_(RawFile *asset)
     {
         rawfile_buffers.erase(itr);
     }
-    rawfile_buffers[asset->name] = make_unique<std::string>();
-    itr = rawfile_buffers.find(asset->name);
-    auto rawfile_buffer = itr->second.get();
-
-    rawfile_buffer->assign(buffer);
+    rawfile_buffers[asset->name] = std::move(buffer);
+    char *rawfile_buffer = rawfile_buffers[asset->name].get();
 
     asset->compressedLen = 0; // Force the engine to treat it as an uncompressed buffer!
-    asset->len = rawfile_buffer->length();
-    asset->buffer = rawfile_buffer->data();
+    asset->len = static_cast<int>(bytes_read);
+    asset->buffer = rawfile_buffer;
 }
 
 } // namespace RawFile_

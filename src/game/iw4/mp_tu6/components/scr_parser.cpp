@@ -32,19 +32,34 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
     std::string overridePath = modBasePath + "\\" + extFilename;
     std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
 
-    // Try to load override file
-    std::string fileContent = filesystem::read_file_to_string(overridePath);
-    if (fileContent.empty())
+    FILE *file = fopen(overridePath.c_str(), "rb");
+    if (!file)
         return callOriginal();
 
-    // Allocate buffer using game's memory allocator
-    char *buffer = (char *)Hunk_AllocateTempMemoryHighInternal(fileContent.size() + 1);
+    fseek(file, 0, SEEK_END);
+    const long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (fileSize <= 0)
+    {
+        fclose(file);
+        return callOriginal();
+    }
+
+    char *buffer = (char *)Hunk_AllocateTempMemoryHighInternal(fileSize + 1);
     if (!buffer)
+    {
+        fclose(file);
+        return callOriginal();
+    }
+
+    const size_t bytesRead = fread(buffer, 1, fileSize, file);
+    fclose(file);
+
+    if (bytesRead != static_cast<size_t>(fileSize))
         return callOriginal();
 
-    // Copy content and null terminate
-    memcpy(buffer, fileContent.c_str(), fileContent.size());
-    buffer[fileContent.size()] = '\0';
+    buffer[bytesRead] = '\0';
 
     DbgPrint("scr_parser: Loaded override script: %s\n", overridePath.c_str());
     return buffer;
