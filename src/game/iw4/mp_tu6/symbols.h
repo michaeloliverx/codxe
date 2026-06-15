@@ -177,6 +177,8 @@ typedef void (*Scr_AddString_t)(const char *value);
 static Scr_AddString_t Scr_AddString = reinterpret_cast<Scr_AddString_t>(0x822ADFF0);
 typedef void (*Scr_AddEntity_t)(gentity_s *ent);
 static Scr_AddEntity_t Scr_AddEntity = reinterpret_cast<Scr_AddEntity_t>(0x82259A60);
+typedef gentity_s *(*Scr_GetEntity_t)(unsigned int index);
+static Scr_GetEntity_t Scr_GetEntity = reinterpret_cast<Scr_GetEntity_t>(0x82259AF8);
 static auto Scr_GetVector = reinterpret_cast<void (*)(unsigned int index, float *vectorValue)>(0x822B35B8);
 static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x822AE470);
 static auto GetEntity = reinterpret_cast<gentity_s *(*)(scr_entref_t entref)>(0x8223F4D0);
@@ -209,6 +211,51 @@ static SV_BotUserMove_t SV_BotUserMove = reinterpret_cast<SV_BotUserMove_t>(0x82
 
 typedef void (*SV_CalcPings_t)();
 static SV_CalcPings_t SV_CalcPings = reinterpret_cast<SV_CalcPings_t>(0x822C2910);
+
+typedef void (*SV_UpdateBots_t)();
+static SV_UpdateBots_t SV_UpdateBots = reinterpret_cast<SV_UpdateBots_t>(0x822C3428);
+
+typedef void (*G_RunFrame_t)(int levelTime);
+static G_RunFrame_t G_RunFrame = reinterpret_cast<G_RunFrame_t>(0x822332E0);
+
+typedef int (*G_RunThink_t)(gentity_s *ent);
+static G_RunThink_t G_RunThink = reinterpret_cast<G_RunThink_t>(0x82232698);
+
+typedef int (*G_LocationalTracePassed_t)(float *start, float *end, int passEntityNum, int passEntityNum1,
+                                         int contentmask, unsigned char *priorityMap);
+static G_LocationalTracePassed_t G_LocationalTracePassed = reinterpret_cast<G_LocationalTracePassed_t>(0x82233930);
+
+typedef void (*G_LocationalTrace_t)(void *results, float *start, float *end, int passEntityNum, int contentmask,
+                                    unsigned char *priorityMap);
+static G_LocationalTrace_t G_LocationalTrace = reinterpret_cast<G_LocationalTrace_t>(0x82233868);
+
+typedef void (*G_SightTrace_t)(int *hitNum, float *start, float *end, int passEntityNum, int contentmask);
+static G_SightTrace_t G_SightTrace = reinterpret_cast<G_SightTrace_t>(0x82233978);
+
+typedef void (*G_XAnimUpdateEnt_t)(gentity_s *ent);
+static G_XAnimUpdateEnt_t G_XAnimUpdateEnt = reinterpret_cast<G_XAnimUpdateEnt_t>(0x822327E0);
+
+typedef void (*G_ClientDoPerFrameNotifies_t)(gentity_s *ent);
+static G_ClientDoPerFrameNotifies_t G_ClientDoPerFrameNotifies =
+    reinterpret_cast<G_ClientDoPerFrameNotifies_t>(0x822328B8);
+
+typedef int *(*G_RunPreThinkForEntities_t)();
+static G_RunPreThinkForEntities_t G_RunPreThinkForEntities = reinterpret_cast<G_RunPreThinkForEntities_t>(0x822330E0);
+
+typedef void (*G_RunFrameForEntity_t)(gentity_s *ent);
+static G_RunFrameForEntity_t G_RunFrameForEntity = reinterpret_cast<G_RunFrameForEntity_t>(0x82232F50);
+
+typedef void (*UpdateLinkInfoForClients_t)(gentity_s *ent);
+static UpdateLinkInfoForClients_t UpdateLinkInfoForClients = reinterpret_cast<UpdateLinkInfoForClients_t>(0x822331C0);
+
+typedef void (*ClientEndFrame_t)(gentity_s *ent);
+static ClientEndFrame_t ClientEndFrame = reinterpret_cast<ClientEndFrame_t>(0x8221A228);
+
+typedef void (*Scr_RunCurrentThreads_t)();
+static Scr_RunCurrentThreads_t Scr_RunCurrentThreads = reinterpret_cast<Scr_RunCurrentThreads_t>(0x822B3BB0);
+
+typedef int *(*SV_PostFrame_t)();
+static SV_PostFrame_t SV_PostFrame = reinterpret_cast<SV_PostFrame_t>(0x822C2F48);
 
 typedef BOOL (*SV_IsClientBot_t)(int clientNum);
 static SV_IsClientBot_t SV_IsClientBot = reinterpret_cast<SV_IsClientBot_t>(0x822C3B10);

@@ -132,6 +132,7 @@ static void GScr_PrintConsole()
 
     const char *text = Scr_GetString(0);
     Com_Printf(0, "%s", text);
+    DbgPrint("%s", text);
 }
 
 static void GScr_FileWrite()

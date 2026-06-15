@@ -61,6 +61,104 @@ static int *G_SelectWeaponIndex_Hook(int clientNum, int iWeaponIndex)
     return G_SelectWeaponIndex_Detour.GetOriginal<G_SelectWeaponIndex_t>()(clientNum, iWeaponIndex);
 }
 
+struct PerfBucket_t
+{
+    unsigned int totalMs;
+    unsigned int maxMs;
+    unsigned int calls;
+};
+
+static PerfBucket_t s_updateBotsPerf;
+static PerfBucket_t s_gRunFramePerf;
+static PerfBucket_t s_postFramePerf;
+static PerfBucket_t s_runThinkPerf;
+static PerfBucket_t s_xAnimPerf;
+static PerfBucket_t s_clientNotifiesPerf;
+static PerfBucket_t s_preThinkPerf;
+static PerfBucket_t s_entityFramePerf;
+static PerfBucket_t s_linkInfoPerf;
+static PerfBucket_t s_clientEndFramePerf;
+static PerfBucket_t s_scrThreadsPerf;
+static unsigned int s_nextPerfPrint;
+
+static void AddPerfSample(PerfBucket_t *bucket, unsigned int elapsed)
+{
+    bucket->totalMs += elapsed;
+    if (elapsed > bucket->maxMs)
+        bucket->maxMs = elapsed;
+
+    ++bucket->calls;
+}
+
+static unsigned int GetPerfAverage(const PerfBucket_t *bucket)
+{
+    if (!bucket->calls)
+        return 0;
+
+    return bucket->totalMs / bucket->calls;
+}
+
+static void ResetPerfBucket(PerfBucket_t *bucket)
+{
+    bucket->totalMs = 0;
+    bucket->maxMs = 0;
+    bucket->calls = 0;
+}
+
+void MaybePrintPerf()
+{
+    const unsigned int now = Sys_Milliseconds();
+    if (!s_nextPerfPrint)
+        s_nextPerfPrint = now + 5000;
+
+    if (now < s_nextPerfPrint)
+        return;
+
+    int bots = 0;
+    for (int i = 0; i < svsHeader->clientCount && i < IW4_MAX_CLIENTS; ++i)
+    {
+        if (SV_IsClientBot(i) != FALSE)
+            ++bots;
+    }
+
+    DbgPrint("[codxe][IW4 TU6][SVPerf] clients=%d bots=%d\n", svsHeader->clientCount, bots);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] updateBots total=%u avg=%u max=%u calls=%u\n", s_updateBotsPerf.totalMs,
+             GetPerfAverage(&s_updateBotsPerf), s_updateBotsPerf.maxMs, s_updateBotsPerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] gRunFrame total=%u avg=%u max=%u calls=%u\n", s_gRunFramePerf.totalMs,
+             GetPerfAverage(&s_gRunFramePerf), s_gRunFramePerf.maxMs, s_gRunFramePerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] postFrame total=%u avg=%u max=%u calls=%u\n", s_postFramePerf.totalMs,
+             GetPerfAverage(&s_postFramePerf), s_postFramePerf.maxMs, s_postFramePerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] runThink total=%u avg=%u max=%u calls=%u\n", s_runThinkPerf.totalMs,
+             GetPerfAverage(&s_runThinkPerf), s_runThinkPerf.maxMs, s_runThinkPerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] xAnim total=%u avg=%u max=%u calls=%u\n", s_xAnimPerf.totalMs,
+             GetPerfAverage(&s_xAnimPerf), s_xAnimPerf.maxMs, s_xAnimPerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] clientNotifies total=%u avg=%u max=%u calls=%u\n", s_clientNotifiesPerf.totalMs,
+             GetPerfAverage(&s_clientNotifiesPerf), s_clientNotifiesPerf.maxMs, s_clientNotifiesPerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] preThink total=%u avg=%u max=%u calls=%u\n", s_preThinkPerf.totalMs,
+             GetPerfAverage(&s_preThinkPerf), s_preThinkPerf.maxMs, s_preThinkPerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] entityFrame total=%u avg=%u max=%u calls=%u\n", s_entityFramePerf.totalMs,
+             GetPerfAverage(&s_entityFramePerf), s_entityFramePerf.maxMs, s_entityFramePerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] linkInfo total=%u avg=%u max=%u calls=%u\n", s_linkInfoPerf.totalMs,
+             GetPerfAverage(&s_linkInfoPerf), s_linkInfoPerf.maxMs, s_linkInfoPerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] clientEndFrame total=%u avg=%u max=%u calls=%u\n", s_clientEndFramePerf.totalMs,
+             GetPerfAverage(&s_clientEndFramePerf), s_clientEndFramePerf.maxMs, s_clientEndFramePerf.calls);
+    DbgPrint("[codxe][IW4 TU6][SVPerf] scrThreads total=%u avg=%u max=%u calls=%u\n", s_scrThreadsPerf.totalMs,
+             GetPerfAverage(&s_scrThreadsPerf), s_scrThreadsPerf.maxMs, s_scrThreadsPerf.calls);
+
+    ResetPerfBucket(&s_updateBotsPerf);
+    ResetPerfBucket(&s_gRunFramePerf);
+    ResetPerfBucket(&s_postFramePerf);
+    ResetPerfBucket(&s_runThinkPerf);
+    ResetPerfBucket(&s_xAnimPerf);
+    ResetPerfBucket(&s_clientNotifiesPerf);
+    ResetPerfBucket(&s_preThinkPerf);
+    ResetPerfBucket(&s_entityFramePerf);
+    ResetPerfBucket(&s_linkInfoPerf);
+    ResetPerfBucket(&s_clientEndFramePerf);
+    ResetPerfBucket(&s_scrThreadsPerf);
+    s_nextPerfPrint = now + 5000;
+}
+
 static Detour SV_BotUserMove_Detour;
 
 static void SV_BotUserMove_Stub(client_t *cl)
@@ -128,6 +226,109 @@ static void SV_CalcPings_Hook()
         if (SV_IsClientBot(i) != FALSE)
             svsHeader->clients[i].ping = 0;
     }
+}
+
+static Detour SV_UpdateBots_Detour;
+
+static void SV_UpdateBots_Hook()
+{
+    const unsigned int start = Sys_Milliseconds();
+    SV_UpdateBots_Detour.GetOriginal<SV_UpdateBots_t>()();
+    AddPerfSample(&s_updateBotsPerf, Sys_Milliseconds() - start);
+}
+
+static Detour G_RunFrame_Detour;
+
+static void G_RunFrame_Hook(int levelTime)
+{
+    const unsigned int start = Sys_Milliseconds();
+    G_RunFrame_Detour.GetOriginal<G_RunFrame_t>()(levelTime);
+    AddPerfSample(&s_gRunFramePerf, Sys_Milliseconds() - start);
+    // MaybePrintPerf();
+}
+
+static Detour SV_PostFrame_Detour;
+
+static int *SV_PostFrame_Hook()
+{
+    const unsigned int start = Sys_Milliseconds();
+    int *result = SV_PostFrame_Detour.GetOriginal<SV_PostFrame_t>()();
+    AddPerfSample(&s_postFramePerf, Sys_Milliseconds() - start);
+    return result;
+}
+
+static Detour G_RunThink_Detour;
+
+static int G_RunThink_Hook(gentity_s *ent)
+{
+    const unsigned int start = Sys_Milliseconds();
+    const int result = G_RunThink_Detour.GetOriginal<G_RunThink_t>()(ent);
+    AddPerfSample(&s_runThinkPerf, Sys_Milliseconds() - start);
+    return result;
+}
+
+static Detour G_XAnimUpdateEnt_Detour;
+
+static void G_XAnimUpdateEnt_Hook(gentity_s *ent)
+{
+    const unsigned int start = Sys_Milliseconds();
+    G_XAnimUpdateEnt_Detour.GetOriginal<G_XAnimUpdateEnt_t>()(ent);
+    AddPerfSample(&s_xAnimPerf, Sys_Milliseconds() - start);
+}
+
+static Detour G_ClientDoPerFrameNotifies_Detour;
+
+static void G_ClientDoPerFrameNotifies_Hook(gentity_s *ent)
+{
+    const unsigned int start = Sys_Milliseconds();
+    G_ClientDoPerFrameNotifies_Detour.GetOriginal<G_ClientDoPerFrameNotifies_t>()(ent);
+    AddPerfSample(&s_clientNotifiesPerf, Sys_Milliseconds() - start);
+}
+
+static Detour G_RunPreThinkForEntities_Detour;
+
+static int *G_RunPreThinkForEntities_Hook()
+{
+    const unsigned int start = Sys_Milliseconds();
+    int *result = G_RunPreThinkForEntities_Detour.GetOriginal<G_RunPreThinkForEntities_t>()();
+    AddPerfSample(&s_preThinkPerf, Sys_Milliseconds() - start);
+    return result;
+}
+
+static Detour G_RunFrameForEntity_Detour;
+
+static void G_RunFrameForEntity_Hook(gentity_s *ent)
+{
+    const unsigned int start = Sys_Milliseconds();
+    G_RunFrameForEntity_Detour.GetOriginal<G_RunFrameForEntity_t>()(ent);
+    AddPerfSample(&s_entityFramePerf, Sys_Milliseconds() - start);
+}
+
+static Detour UpdateLinkInfoForClients_Detour;
+
+static void UpdateLinkInfoForClients_Hook(gentity_s *ent)
+{
+    const unsigned int start = Sys_Milliseconds();
+    UpdateLinkInfoForClients_Detour.GetOriginal<UpdateLinkInfoForClients_t>()(ent);
+    AddPerfSample(&s_linkInfoPerf, Sys_Milliseconds() - start);
+}
+
+static Detour ClientEndFrame_Detour;
+
+static void ClientEndFrame_Hook(gentity_s *ent)
+{
+    const unsigned int start = Sys_Milliseconds();
+    ClientEndFrame_Detour.GetOriginal<ClientEndFrame_t>()(ent);
+    AddPerfSample(&s_clientEndFramePerf, Sys_Milliseconds() - start);
+}
+
+static Detour Scr_RunCurrentThreads_Detour;
+
+static void Scr_RunCurrentThreads_Hook()
+{
+    const unsigned int start = Sys_Milliseconds();
+    Scr_RunCurrentThreads_Detour.GetOriginal<Scr_RunCurrentThreads_t>()();
+    AddPerfSample(&s_scrThreadsPerf, Sys_Milliseconds() - start);
 }
 
 static void GScr_AddTestClient()
@@ -319,6 +520,68 @@ static void PlayerCmd_BotAngles(scr_entref_t entref)
     g_botai[entref.entnum].has_angles = true;
 }
 
+struct BotTrace_t
+{
+    float fraction;
+    float normal[3];
+    int surfaceFlags;
+    int contents;
+    const char *material;
+    int hitType;
+    unsigned short hitId;
+    unsigned short modelIndex;
+    unsigned short partName;
+    unsigned short partGroup;
+    bool allsolid;
+    bool startsolid;
+    bool walkable;
+};
+
+static_assert(offsetof(BotTrace_t, fraction) == 0x0, "");
+static_assert(offsetof(BotTrace_t, surfaceFlags) == 0x10, "");
+static_assert(offsetof(BotTrace_t, hitType) == 0x1C, "");
+static_assert(sizeof(BotTrace_t) == 0x2C, "");
+
+static bool BotCanSeePoint(float *eye, float *point)
+{
+    int sightHit = 0;
+    G_SightTrace(&sightHit, eye, point, 2047, 8394755);
+    if (sightHit != 0)
+        return false;
+
+    BotTrace_t trace;
+    G_LocationalTrace(&trace, eye, point, 2047, 8415281, NULL);
+
+    const int surfaceType = (trace.surfaceFlags >> 20) & 0x1F;
+    return trace.fraction >= 1.0f || surfaceType == 9;
+}
+
+static void PlayerCmd_BotCanSeePlayer(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+
+    if (Scr_GetNumParam() != 6)
+        Scr_Error("Usage: <bot> botCanSeePlayer(<player>, <eye>, <head>, <ankleLe>, <ankleRi>, <useAnkles>);");
+
+    gentity_s *target = Scr_GetEntity(0);
+    if (!target || !target->client)
+        Scr_ParamError(0, "target is not a player");
+
+    float eye[3];
+    float head[3];
+    float ankleLe[3];
+    float ankleRi[3];
+    Scr_GetVector(1, eye);
+    Scr_GetVector(2, head);
+    Scr_GetVector(3, ankleLe);
+    Scr_GetVector(4, ankleRi);
+
+    const bool useAnkles = Scr_GetInt(5) != 0;
+    const bool canSee =
+        BotCanSeePoint(eye, head) || (useAnkles && (BotCanSeePoint(eye, ankleLe) || BotCanSeePoint(eye, ankleRi)));
+    Scr_AddInt(canSee ? 1 : 0);
+}
+
 SVBots::SVBots()
 {
     Events::OnVMShutdown(CleanBotArray);
@@ -332,6 +595,39 @@ SVBots::SVBots()
     SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Hook);
     SV_CalcPings_Detour.Install();
 
+    SV_UpdateBots_Detour = Detour(SV_UpdateBots, SV_UpdateBots_Hook);
+    SV_UpdateBots_Detour.Install();
+
+    G_RunFrame_Detour = Detour(G_RunFrame, G_RunFrame_Hook);
+    G_RunFrame_Detour.Install();
+
+    SV_PostFrame_Detour = Detour(SV_PostFrame, SV_PostFrame_Hook);
+    SV_PostFrame_Detour.Install();
+
+    G_RunThink_Detour = Detour(G_RunThink, G_RunThink_Hook);
+    G_RunThink_Detour.Install();
+
+    G_XAnimUpdateEnt_Detour = Detour(G_XAnimUpdateEnt, G_XAnimUpdateEnt_Hook);
+    G_XAnimUpdateEnt_Detour.Install();
+
+    G_ClientDoPerFrameNotifies_Detour = Detour(G_ClientDoPerFrameNotifies, G_ClientDoPerFrameNotifies_Hook);
+    G_ClientDoPerFrameNotifies_Detour.Install();
+
+    G_RunPreThinkForEntities_Detour = Detour(G_RunPreThinkForEntities, G_RunPreThinkForEntities_Hook);
+    G_RunPreThinkForEntities_Detour.Install();
+
+    G_RunFrameForEntity_Detour = Detour(G_RunFrameForEntity, G_RunFrameForEntity_Hook);
+    G_RunFrameForEntity_Detour.Install();
+
+    UpdateLinkInfoForClients_Detour = Detour(UpdateLinkInfoForClients, UpdateLinkInfoForClients_Hook);
+    UpdateLinkInfoForClients_Detour.Install();
+
+    ClientEndFrame_Detour = Detour(ClientEndFrame, ClientEndFrame_Hook);
+    ClientEndFrame_Detour.Install();
+
+    Scr_RunCurrentThreads_Detour = Detour(Scr_RunCurrentThreads, Scr_RunCurrentThreads_Hook);
+    Scr_RunCurrentThreads_Detour.Install();
+
     Scr_AddFunction("addtestclient", GScr_AddTestClient, BUILTIN_ANY);
 
     Scr_AddMethod("botaction", PlayerCmd_BotAction, BUILTIN_ANY);
@@ -340,6 +636,7 @@ SVBots::SVBots()
     Scr_AddMethod("botmeleeparams", PlayerCmd_BotMeleeParams, BUILTIN_ANY);
     Scr_AddMethod("botremoteangles", PlayerCmd_BotRemoteAngles, BUILTIN_ANY);
     Scr_AddMethod("botangles", PlayerCmd_BotAngles, BUILTIN_ANY);
+    Scr_AddMethod("botcanseeplayer", PlayerCmd_BotCanSeePlayer, BUILTIN_ANY);
 }
 
 SVBots::~SVBots()
@@ -347,6 +644,17 @@ SVBots::~SVBots()
     G_SelectWeaponIndex_Detour.Remove();
     SV_BotUserMove_Detour.Remove();
     SV_CalcPings_Detour.Remove();
+    SV_UpdateBots_Detour.Remove();
+    G_RunFrame_Detour.Remove();
+    SV_PostFrame_Detour.Remove();
+    G_RunThink_Detour.Remove();
+    G_XAnimUpdateEnt_Detour.Remove();
+    G_ClientDoPerFrameNotifies_Detour.Remove();
+    G_RunPreThinkForEntities_Detour.Remove();
+    G_RunFrameForEntity_Detour.Remove();
+    UpdateLinkInfoForClients_Detour.Remove();
+    ClientEndFrame_Detour.Remove();
+    Scr_RunCurrentThreads_Detour.Remove();
 
     CleanBotArray();
 }
