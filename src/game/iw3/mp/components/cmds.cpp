@@ -111,37 +111,10 @@ void ClientCommand_Hook(int clientNum)
         ClientCommand_Detour.GetOriginal<decltype(ClientCommand)>()(clientNum);
 }
 
-Detour Cmd_ExecFromFastFile_Detour;
-
-bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const char *filename)
-{
-    auto callOriginal = [&]()
-    {
-        return Cmd_ExecFromFastFile_Detour.GetOriginal<decltype(Cmd_ExecFromFastFile)>()(localClientNum,
-                                                                                         controllerIndex, filename);
-    };
-
-    // Check if mod is active
-    std::string modBasePath = Config::GetModBasePath();
-    if (modBasePath.empty())
-        return callOriginal();
-
-    std::string contents = filesystem::read_file_to_string(modBasePath + "\\" + filename);
-    if (contents.empty())
-        return callOriginal();
-
-    Com_Printf(CON_CHANNEL_SYSTEM, "execing %s from raw:\\\n", filename);
-    Cbuf_ExecuteBuffer(localClientNum, controllerIndex, contents.c_str());
-    return true;
-}
-
 cmds::cmds()
 {
     ClientCommand_Detour = Detour(ClientCommand, ClientCommand_Hook);
     ClientCommand_Detour.Install();
-
-    Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
-    Cmd_ExecFromFastFile_Detour.Install();
 
     command::add("dumpraw", Cmd_Dumpraw_f);
 }
@@ -149,8 +122,6 @@ cmds::cmds()
 cmds::~cmds()
 {
     ClientCommand_Detour.Remove();
-
-    Cmd_ExecFromFastFile_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw3

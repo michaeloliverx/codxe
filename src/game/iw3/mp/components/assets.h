@@ -6,15 +6,15 @@ namespace iw3
 {
 namespace mp
 {
-class scr_parser : public Module
+class assets : public Module
 {
   public:
-    scr_parser();
-    ~scr_parser();
+    assets();
+    ~assets();
 
     const char *get_name() override
     {
-        return "scr_parser";
+        return "assets";
     };
 };
 } // namespace mp
