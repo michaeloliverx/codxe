@@ -109,8 +109,8 @@ static auto DB_EnumXAssets_FastFile = reinterpret_cast<void (*)(
     XAssetType type, void (*func)(void *asset, void *inData), void *inData, bool includeOverride)>(0x8229ED48);
 static auto DB_FindXAssetEntry =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, const char *name)>(0x8229EB98);
-static auto DB_FindXAssetHeader =
-    reinterpret_cast<XAssetHeader *(*)(const XAssetType type, const char *name)>(0x822A0298);
+typedef XAssetHeader (*DB_FindXAssetHeader_t)(const XAssetType type, const char *name);
+static DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x822A0298);
 static auto DB_GetAllXAssetOfType_FastFile =
     reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x8229E8E0);
 

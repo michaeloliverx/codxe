@@ -103,6 +103,7 @@
       <ClCompile Include="src\game\iw3\mp\components\image_loader.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\stats.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\sv_bots.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\mp\symbols.cpp" />
@@ -222,6 +223,7 @@
       <ClInclude Include="src\game\iw3\mp\components\gsc_methods.h" />
       <ClInclude Include="src\game\iw3\mp\components\pm.h" />
       <ClInclude Include="src\game\iw3\mp\components\scr_parser.h" />
+      <ClInclude Include="src\game\iw3\mp\components\stats.h" />
       <ClInclude Include="src\game\iw3\mp\main.h" />
       <ClInclude Include="src\game\iw3\mp\structs.h" />
       <ClInclude Include="src\game\iw3\mp\symbols.h" />

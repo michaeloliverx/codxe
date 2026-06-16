@@ -15,6 +15,7 @@
 #include "components/mpsp.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
+#include "components/stats.h"
 #include "components/sv_bots.h"
 #include "common/config.h"
 #include "main.h"
@@ -134,6 +135,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new pm());
     RegisterModule(new mpsp());
     RegisterModule(new scr_parser());
+    RegisterModule(new stats());
     RegisterModule(new sv_bots());
 
     Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
