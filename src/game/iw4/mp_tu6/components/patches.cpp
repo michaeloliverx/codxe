@@ -36,6 +36,13 @@ void DisableDvarProtection()
     // Cheat-protected
     // .text:8230D6EC                 b         __restgprlr_27
     *(volatile uint32_t *)0x8230D6EC = 0x60000000;
+
+    // default migration_dvarErrors off to prevent console spam
+    *(volatile uint8_t *)0x822828E7 = 0x0;
+
+    // default loc_warnings off to prevent console spam
+    *(volatile uint8_t *)0x822CBDEB = 0x0;
+
 }
 
 patches::patches()

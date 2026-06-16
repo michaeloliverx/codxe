@@ -908,6 +908,34 @@ static_assert(offsetof(level_locals_t, gentities) == 0x4, "");
 static_assert(offsetof(level_locals_t, num_entities) == 0x8, "");
 static_assert(offsetof(level_locals_t, maxclients) == 0x3A4, "");
 
+enum weapInventoryType_t
+{
+    WEAPINVENTORY_PRIMARY = 0x0,
+    WEAPINVENTORY_OFFHAND = 0x1,
+    WEAPINVENTORY_ITEM = 0x2,
+    WEAPINVENTORY_ALTMODE = 0x3,
+    WEAPINVENTORY_EXCLUSIVE = 0x4,
+    WEAPINVENTORY_SCAVENGER = 0x5,
+    WEAPINVENTORYCOUNT = 0x6,
+};
+
+struct WeaponDef
+{
+    char pad[0x38];
+    weapInventoryType_t inventoryType;
+};
+static_assert(offsetof(WeaponDef, inventoryType) == 0x38, "");
+
+struct WeaponCompleteDef
+{
+    const char *szInternalName;
+    WeaponDef *weapDef;
+    char pad[0x38];
+    int altWeaponIndex;
+};
+static_assert(offsetof(WeaponCompleteDef, weapDef) == 0x4, "");
+static_assert(offsetof(WeaponCompleteDef, altWeaponIndex) == 0x40, "");
+
 struct weaponParms
 {
     float forward[3];

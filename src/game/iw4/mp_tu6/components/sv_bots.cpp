@@ -13,6 +13,7 @@ struct BotMovementInfo_t
     bool active;
     int buttons;
     unsigned short weapon;
+    unsigned short primaryWeaponForAlt;
     bool has_move;
     char forwardmove;
     char rightmove;
@@ -56,7 +57,32 @@ static Detour G_SelectWeaponIndex_Detour;
 static int *G_SelectWeaponIndex_Hook(int clientNum, int iWeaponIndex)
 {
     if (clientNum >= 0 && clientNum < IW4_MAX_CLIENTS)
+    {
         g_botai[clientNum].weapon = static_cast<unsigned short>(iWeaponIndex);
+        g_botai[clientNum].primaryWeaponForAlt = 0;
+
+        const WeaponCompleteDef* def = BG_GetWeaponCompleteDef(iWeaponIndex);
+
+        if (def && def->weapDef->inventoryType == WEAPINVENTORY_ALTMODE)
+        {
+            const playerState_s* ps = &g_entities[clientNum].client->ps;
+            const int numWeaps = BG_GetNumWeapons();
+
+            for (auto i = 1; i < numWeaps; i++)
+            {
+                if (!BG_PlayerHasWeapon(ps, i))
+                    continue;
+
+                const WeaponCompleteDef* thisDef = BG_GetWeaponCompleteDef(i);
+
+                if (!thisDef || thisDef->altWeaponIndex != iWeaponIndex)
+                    continue;
+
+                g_botai[clientNum].primaryWeaponForAlt = static_cast<unsigned short>(i);
+                break;
+            }
+        }
+    }
 
     return G_SelectWeaponIndex_Detour.GetOriginal<G_SelectWeaponIndex_t>()(clientNum, iWeaponIndex);
 }
@@ -89,8 +115,9 @@ static void SV_BotUserMove_Stub(client_t *cl)
     cmd.weapon = g_botai[clientNum].weapon
                      ? g_botai[clientNum].weapon
                      : static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.weapon);
-    cmd.primaryWeaponForAltMode =
-        static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.primaryWeaponForAltMode);
+    cmd.primaryWeaponForAltMode = g_botai[clientNum].primaryWeaponForAlt
+                     ? g_botai[clientNum].primaryWeaponForAlt
+                     : static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.primaryWeaponForAltMode);
     cmd.offHandIndex = static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.offHandIndex);
     cmd.forwardmove = g_botai[clientNum].has_move ? g_botai[clientNum].forwardmove : 0;
     cmd.rightmove = g_botai[clientNum].has_move ? g_botai[clientNum].rightmove : 0;
@@ -278,7 +305,7 @@ static void PlayerCmd_BotMeleeParams(scr_entref_t entref)
         Scr_Error("Usage: <bot> botMeleeParams(<yaw>, <dist>);");
 
     const float yaw = static_cast<float>(Scr_GetFloat(0));
-    const int dist = Scr_GetInt(1);
+    const int dist = static_cast<int>(static_cast<float>(Scr_GetFloat(1)));
 
     g_botai[entref.entnum].melee_charge_yaw = yaw;
     g_botai[entref.entnum].melee_charge_dist = ClampByte(dist);
@@ -331,6 +358,9 @@ SVBots::SVBots()
 
     SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Hook);
     SV_CalcPings_Detour.Install();
+
+    // remove bot check inside of Player_ActivateHoldCmd
+    *(volatile uint32_t *)0x82263658 = 0x60000000;
 
     Scr_AddFunction("addtestclient", GScr_AddTestClient, BUILTIN_ANY);
 

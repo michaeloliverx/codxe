@@ -230,6 +230,18 @@ typedef void (*BG_CalculateViewMovement_Angles_Idle_t)(viewState_t *vs, float *a
 static BG_CalculateViewMovement_Angles_Idle_t BG_CalculateViewMovement_Angles_Idle =
     reinterpret_cast<BG_CalculateViewMovement_Angles_Idle_t>(0x82118198);
 
+typedef WeaponCompleteDef*(*BG_GetWeaponCompleteDef_t)(unsigned int weaponIndex);
+static BG_GetWeaponCompleteDef_t BG_GetWeaponCompleteDef =
+    reinterpret_cast<BG_GetWeaponCompleteDef_t>(0x821142C0);
+
+typedef int(*BG_GetNumWeapons_t)();
+static BG_GetNumWeapons_t BG_GetNumWeapons =
+    reinterpret_cast<BG_GetNumWeapons_t>(0x821143F0);
+
+typedef bool(*BG_PlayerHasWeapon_t)(const playerState_s* ps, unsigned int weaponIndex);
+static BG_PlayerHasWeapon_t BG_PlayerHasWeapon =
+    reinterpret_cast<BG_PlayerHasWeapon_t>(0x820FE5F0);
+
 static auto Weapon_RocketLauncher_Fire =
     reinterpret_cast<gentity_s *(*)(gentity_s * ent, unsigned int weaponIndex, double spread, weaponParms *wp,
                                     weaponParms *gunVel, struct lockonFireParms *lockParms,
