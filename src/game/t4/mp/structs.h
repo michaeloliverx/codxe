@@ -12,6 +12,8 @@ enum XAssetType : __int32
 {
     ASSET_TYPE_IMAGE = 0x9,
     ASSET_TYPE_FONT = 0x15,
+    ASSET_TYPE_RAWFILE = 0x21,
+    ASSET_TYPE_STRINGTABLE = 0x22,
 };
 
 enum MapType : __int32
@@ -71,6 +73,23 @@ struct RawFile
     const char *name;
     int len;
     const char *buffer;
+};
+
+struct StringTable
+{
+    const char *name;
+    int columnCount;
+    int rowCount;
+    const char **values;
+};
+
+struct cmd_function_s
+{
+    cmd_function_s *next;
+    const char *name;
+    const char *autoCompleteDir;
+    const char *autoCompleteExt;
+    void (*function)();
 };
 
 struct Material;
@@ -142,7 +161,7 @@ union XAssetHeader
     // const FxEffectDef *fx;
     // FxImpactTable *impactFx;
     RawFile *rawfile;
-    // StringTable *stringTable;
+    StringTable *stringTable;
     void *data;
 };
 

@@ -11,6 +11,7 @@
 #include "components/image_loader.h"
 #include "components/map.h"
 #include "components/patches.h"
+#include "components/stats.h"
 #include "components/sv_bots.h"
 #include "components/ui.h"
 
@@ -34,6 +35,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     // RegisterModule(new ImageLoader());
     RegisterModule(new Map());
     RegisterModule(new Patches());
+    RegisterModule(new stats());
     RegisterModule(new ui());
 }
 

@@ -62,6 +62,12 @@ static auto Cbuf_ExecuteBuffer =
 typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 static Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x8226FF08);
 
+typedef void (*Cmd_AddCommandInternal_t)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd);
+static Cmd_AddCommandInternal_t Cmd_AddCommandInternal = reinterpret_cast<Cmd_AddCommandInternal_t>(0x822708D0);
+
+typedef void (*Cmd_Init_t)();
+static Cmd_Init_t Cmd_Init = reinterpret_cast<Cmd_Init_t>(0x82271570);
+
 static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
 
 typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
@@ -148,6 +154,9 @@ typedef void *(*Scr_ShutdownSystem_t)(scriptInstance_t inst, int sys, int bCompl
 static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x82345388);
 
 static auto String_Parse = reinterpret_cast<int (*)(const char **p, char *out, int len)>(0x822A8680);
+
+typedef bool (*StringTable_GetAsset_t)(const char *filename, StringTable **tablePtr);
+static StringTable_GetAsset_t StringTable_GetAsset = reinterpret_cast<StringTable_GetAsset_t>(0x822BB280);
 
 static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82284D50);
 typedef void (*SV_BotUserMove_t)(client_t *cl);

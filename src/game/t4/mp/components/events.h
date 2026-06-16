@@ -18,6 +18,7 @@ class Events : public Module
     };
 
     static void OnDvarInit(const std::function<void()> &callback);
+    static void OnCmdInit(const std::function<void()> &callback);
     static void OnVMShutdown(const std::function<void()> &callback);
     static void OnUIRefresh(const std::function<void()> &callback);
 
@@ -25,6 +26,10 @@ class Events : public Module
     static std::vector<std::function<void()>> dvarinit_callbacks;
     static Detour Com_InitDvars_Detour;
     static void Com_InitDvars_Hook();
+
+    static std::vector<std::function<void()>> cmdinit_callbacks;
+    static Detour Cmd_Init_Detour;
+    static void Cmd_Init_Hook();
 
     static std::vector<std::function<void()>> vmshutdown_callbacks;
     static Detour Scr_ShutdownSystem_Detour;

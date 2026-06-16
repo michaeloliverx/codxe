@@ -7,6 +7,7 @@ namespace mp
 {
 
 std::vector<std::function<void()>> Events::dvarinit_callbacks;
+std::vector<std::function<void()>> Events::cmdinit_callbacks;
 std::vector<std::function<void()>> Events::vmshutdown_callbacks;
 std::vector<std::function<void()>> Events::ui_refresh_callbacks;
 
@@ -28,6 +29,25 @@ void Events::OnDvarInit(const std::function<void()> &callback)
 }
 
 Detour Events::Com_InitDvars_Detour;
+
+void Events::Cmd_Init_Hook()
+{
+    Cmd_Init_Detour.GetOriginal<Cmd_Init_t>()();
+
+    for (auto it = cmdinit_callbacks.begin(); it != cmdinit_callbacks.end(); ++it)
+    {
+        (*it)();
+    }
+
+    cmdinit_callbacks.clear();
+}
+
+void Events::OnCmdInit(const std::function<void()> &callback)
+{
+    cmdinit_callbacks.emplace_back(callback);
+}
+
+Detour Events::Cmd_Init_Detour;
 
 void *Events::Scr_ShutdownSystem_Hook(scriptInstance_t inst, int sys, int bComplete)
 {
@@ -70,6 +90,9 @@ Events::Events()
     Com_InitDvars_Detour = Detour(Com_InitDvars, Com_InitDvars_Hook);
     Com_InitDvars_Detour.Install();
 
+    Cmd_Init_Detour = Detour(Cmd_Init, Cmd_Init_Hook);
+    Cmd_Init_Detour.Install();
+
     Scr_ShutdownSystem_Detour = Detour(Scr_ShutdownSystem, Scr_ShutdownSystem_Hook);
     Scr_ShutdownSystem_Detour.Install();
 
@@ -80,10 +103,12 @@ Events::Events()
 Events::~Events()
 {
     Com_InitDvars_Detour.Remove();
+    Cmd_Init_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
     UI_Refresh_Detour.Remove();
 
     dvarinit_callbacks.clear();
+    cmdinit_callbacks.clear();
     vmshutdown_callbacks.clear();
     ui_refresh_callbacks.clear();
 }
