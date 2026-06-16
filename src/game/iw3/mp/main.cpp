@@ -116,6 +116,9 @@ IW3_MP_Plugin::IW3_MP_Plugin()
 {
     DisableFastfileAuth();
 
+    // default loc_warnings off to prevent console spam
+    *(volatile uint8_t *)0x821FB069 = 0xE1;
+
     // Special modules need to be registered first
     RegisterModule(new Config());
     RegisterModule(new Events());
