@@ -42,7 +42,6 @@ void DisableDvarProtection()
 
     // default loc_warnings off to prevent console spam
     *(volatile uint8_t *)0x822CBDEB = 0x0;
-
 }
 
 patches::patches()

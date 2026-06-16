@@ -61,11 +61,11 @@ static int *G_SelectWeaponIndex_Hook(int clientNum, int iWeaponIndex)
         g_botai[clientNum].weapon = static_cast<unsigned short>(iWeaponIndex);
         g_botai[clientNum].primaryWeaponForAlt = 0;
 
-        const WeaponCompleteDef* def = BG_GetWeaponCompleteDef(iWeaponIndex);
+        const WeaponCompleteDef *def = BG_GetWeaponCompleteDef(iWeaponIndex);
 
         if (def && def->weapDef->inventoryType == WEAPINVENTORY_ALTMODE)
         {
-            const playerState_s* ps = &g_entities[clientNum].client->ps;
+            const playerState_s *ps = &g_entities[clientNum].client->ps;
             const int numWeaps = BG_GetNumWeapons();
 
             for (auto i = 1; i < numWeaps; i++)
@@ -73,7 +73,7 @@ static int *G_SelectWeaponIndex_Hook(int clientNum, int iWeaponIndex)
                 if (!BG_PlayerHasWeapon(ps, i))
                     continue;
 
-                const WeaponCompleteDef* thisDef = BG_GetWeaponCompleteDef(i);
+                const WeaponCompleteDef *thisDef = BG_GetWeaponCompleteDef(i);
 
                 if (!thisDef || thisDef->altWeaponIndex != iWeaponIndex)
                     continue;
@@ -115,9 +115,10 @@ static void SV_BotUserMove_Stub(client_t *cl)
     cmd.weapon = g_botai[clientNum].weapon
                      ? g_botai[clientNum].weapon
                      : static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.weapon);
-    cmd.primaryWeaponForAltMode = g_botai[clientNum].primaryWeaponForAlt
-                     ? g_botai[clientNum].primaryWeaponForAlt
-                     : static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.primaryWeaponForAltMode);
+    cmd.primaryWeaponForAltMode =
+        g_botai[clientNum].primaryWeaponForAlt
+            ? g_botai[clientNum].primaryWeaponForAlt
+            : static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.primaryWeaponForAltMode);
     cmd.offHandIndex = static_cast<unsigned short>(level->clients[clientNum].ps.weapCommon.offHandIndex);
     cmd.forwardmove = g_botai[clientNum].has_move ? g_botai[clientNum].forwardmove : 0;
     cmd.rightmove = g_botai[clientNum].has_move ? g_botai[clientNum].rightmove : 0;
