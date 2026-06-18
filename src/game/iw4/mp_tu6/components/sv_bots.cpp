@@ -286,7 +286,8 @@ static void PlayerCmd_BotStop(scr_entref_t entref)
     g_botai[entref.entnum].angles[IW4_YAW] = client->ps.viewangles[IW4_YAW];
     g_botai[entref.entnum].angles[IW4_ROLL] = client->ps.viewangles[IW4_ROLL];
     g_botai[entref.entnum].weapon = static_cast<unsigned short>(client->ps.weapCommon.weapon);
-    g_botai[entref.entnum].primaryWeaponForAlt = static_cast<unsigned short>(client->ps.weapCommon.primaryWeaponForAltMode);
+    g_botai[entref.entnum].primaryWeaponForAlt =
+        static_cast<unsigned short>(client->ps.weapCommon.primaryWeaponForAltMode);
 }
 
 static void PlayerCmd_BotMovement(scr_entref_t entref)
