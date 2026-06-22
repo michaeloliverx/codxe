@@ -6,6 +6,11 @@ namespace
 const DWORD XEXP_FINISH_EXECUTABLE_LOAD_RETAIL = 0x8007AF68;
 const DWORD XEXP_FINISH_EXECUTABLE_LOAD_DEVKIT = 0x800A17C8;
 
+// TODO: make this nicer
+const DWORD IW4_MP_TU6_TIMESTAMP = 0x4BE22338;
+const DWORD IW4_MP_TU6_EXECUTION_VERSION = 0x0000060A;
+const DWORD IW4_MP_TU9_EXECUTION_VERSION = 0x0000090A;
+
 PluginManager *g_plugin_manager = nullptr;
 Detour g_xexp_finish_executable_load_detour;
 bool g_title_terminate_registered = false;
@@ -44,6 +49,40 @@ DWORD ResolveCurrentTimeDateStamp()
     return module != nullptr ? module->TimeDateStamp : 0;
 }
 
+bool SpoofCurrentTitleVersionIfNeeded(DWORD timestamp)
+{
+    // Report MW2 TU6 as TU9 so spoof-enabled consoles can join each other on Xbox Live.
+    if (timestamp != IW4_MP_TU6_TIMESTAMP)
+    {
+        return false;
+    }
+
+    PXEX_EXECUTION_ID execution_id = nullptr;
+    const NTSTATUS status = XamGetExecutionId(&execution_id);
+    if (status != 0 || execution_id == nullptr)
+    {
+        return false;
+    }
+
+    if (!MmIsAddressValid(execution_id) || !MmIsAddressValid(&execution_id->Version))
+    {
+        return false;
+    }
+
+    if (execution_id->TitleID != TITLE_ID_IW4)
+    {
+        return false;
+    }
+
+    if (execution_id->Version != IW4_MP_TU6_EXECUTION_VERSION)
+    {
+        return false;
+    }
+
+    execution_id->Version = IW4_MP_TU9_EXECUTION_VERSION;
+    return true;
+}
+
 void XexpFinishExecutableLoad_Hook(PLDR_DATA_TABLE_ENTRY module, const char *commandLine)
 {
     if (g_plugin_manager != nullptr)
@@ -56,7 +95,12 @@ void XexpFinishExecutableLoad_Hook(PLDR_DATA_TABLE_ENTRY module, const char *com
     if (g_plugin_manager != nullptr)
     {
         const DWORD timestamp = module != nullptr ? module->TimeDateStamp : 0;
+        const bool spoofed_title_version = SpoofCurrentTitleVersionIfNeeded(timestamp);
         g_plugin_manager->OnExecutableLoaded(ResolveCurrentTitleId(), timestamp);
+        if (spoofed_title_version)
+        {
+            xbox::Notify("Title update spoofed: TU6 -> TU9");
+        }
     }
 }
 } // namespace
@@ -85,6 +129,8 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
             g_plugin_manager->OnExecutableLoaded(ResolveCurrentTitleId(), ResolveCurrentTimeDateStamp());
             return TRUE;
         }
+
+        xbox::ApplySystemPatches();
 
         ExRegisterTitleTerminateNotification(&g_title_terminate_registration, TRUE);
         g_title_terminate_registered = true;
