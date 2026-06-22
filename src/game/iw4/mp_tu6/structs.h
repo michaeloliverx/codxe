@@ -56,6 +56,12 @@ enum DvarFlags : std::uint16_t
     DVAR_FLAG_SERVERINFO = 0x10,
 };
 
+enum svscmd_type : __int32
+{
+    SV_CMD_CAN_IGNORE = 0x0,
+    SV_CMD_RELIABLE = 0x1,
+};
+
 struct dvar_t
 {
     const char *name;
@@ -824,6 +830,37 @@ struct blend_ent_t
     float decelTime;
     float startTime;
     float totalTime;
+};
+
+enum entityFlag_t : uint32_t
+{
+    FL_GODMODE = 0x1,
+    FL_DEMI_GODMODE = 0x2,
+    FL_NOTARGET = 0x4,
+    FL_NO_KNOCKBACK = 0x8,
+    FL_NO_RADIUS_DAMAGE = 0x10,
+    FL_SUPPORTS_LINKTO = 0x1000,
+    FL_NO_AUTO_ANIM_UPDATE = 0x2000,
+    FL_GRENADE_TOUCH_DAMAGE = 0x4000,
+    FL_STABLE_MISSILES = 0x20000,
+    FL_REPEAT_ANIM_UPDATE = 0x40000,
+    FL_VEHICLE_TARGET = 0x80000,
+    FL_GROUND_ENT = 0x100000,
+    FL_CURSOR_HINT = 0x200000,
+    FL_MISSILE_ATTRACTOR = 0x800000,
+    FL_WEAPON_BEING_GRABBED = 0x1000000,
+    FL_DELETE = 0x2000000,
+    FL_BOUNCE = 0x4000000,
+    FL_MOVER_SLIDE = 0x8000000,
+};
+
+enum clientFlag_t : uint32_t
+{
+    CF_NOCLIP = 1u << 0,
+    CF_UFO = 1u << 1,
+    CF_FROZEN = 1u << 2,
+    CF_DISABLE_USABILITY = 1u << 3,
+    CF_NO_KNOCKBACK = 1u << 4,
 };
 
 struct gentity_s
@@ -1772,7 +1809,12 @@ enum XAssetType : __int32
 
 struct cplane_s;
 struct cStaticModel_s;
-struct ClipMaterial;
+struct ClipMaterial
+{
+    const char *name;
+    int surfaceFlags;
+    int contentFlags;
+};
 struct cbrushside_t;
 struct cNode_t;
 struct cLeaf_t;

@@ -129,6 +129,7 @@
 
       <ClCompile Include="src\game\iw4\mp_tu6\components\cg.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\clipmap.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\cmds.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\console.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\events.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\g_client_fields.cpp" />
@@ -256,6 +257,7 @@
 
       <ClInclude Include="src\game\iw4\mp_tu6\components\cg.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\clipmap.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\cmds.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\console.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\events.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\g_client_fields.h" />
