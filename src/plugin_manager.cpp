@@ -1,11 +1,6 @@
 #include "pch.h"
 #include "plugin_manager.h"
 
-enum TitleID : DWORD
-{
-    DASHBOARD = 0xFFFE07D1,
-};
-
 template <typename T> std::unique_ptr<Plugin> CreatePlugin()
 {
     return make_unique<T>();
@@ -41,7 +36,7 @@ struct GameInfo
 
 const GameInfo GAME_INFO[] = {
     {
-        0x415607FF,
+        TITLE_ID_QOS,
         0x49E8DEDE, // Fri Apr 17 20:56:14 2009
         "default_mp.xex",
         "",
@@ -49,16 +44,15 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<qos::mp::QOS_MP_Plugin>,
     },
     {
-        0x415607FF,
+        TITLE_ID_QOS,
         0x48D0C2CA, // Wed Sep 17 09:41:46 2008
         "default.xex",
         "",
         "007: Quantum of Solace SP Title Update #2",
         &CreatePlugin<qos::sp::QOS_SP_Plugin>,
     },
-
     {
-        0x415607D1,
+        TITLE_ID_IW2,
         0x4456B8A3, // Tue May  2 02:40:51 2006
         "default_mp.xex",
         "",
@@ -66,7 +60,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<iw2::mp::IW2_MP_Plugin>,
     },
     {
-        0x415607D1,
+        TITLE_ID_IW2,
         0x43E7A218, // Mon Feb  6 19:23:04 2006
         "default.xex",
         "",
@@ -74,7 +68,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<iw2::sp::IW2_SP_Plugin>,
     },
     {
-        0x415607E6,
+        TITLE_ID_IW3,
         0x4A78A577, // Tue Aug  4 22:17:43 2009
         "default_mp.xex",
         "CoD4 MP 1.4 build 79 nightly Tue Aug 04 2009 01:51:14PM xenon",
@@ -82,7 +76,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<iw3::mp::IW3_MP_Plugin>,
     },
     {
-        0x415607E6,
+        TITLE_ID_IW3,
         0x46E1E82F, // Sat Sep  8 01:09:19 2007
         "default.xex",
         "CoD4 1.0 build 472 nightly Fri Sep 07 2007 04:59:49PM xenon",
@@ -90,7 +84,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<iw3::sp::IW3_SP_Plugin>,
     },
     {
-        0x4156081C,
+        TITLE_ID_T4,
         0x4AD7C0EE, // Fri Oct 16 01:40:14 2009
         "default_mp.xex",
         "Call of Duty Multiplayer COD_WaW MP build 5.5.51 CL(0) ZQABUILD1 Thu Oct 15 17:39:03 2009 xenon",
@@ -98,7 +92,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<t4::mp::T4_MP_Plugin>,
     },
     {
-        0x4156081C,
+        TITLE_ID_T4,
         0x4AD7C0DF, // Fri Oct 16 01:39:59 2009
         "default.xex",
         "",
@@ -106,7 +100,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<t4::sp::T4_SP_Plugin>,
     },
     {
-        0x41560817,
+        TITLE_ID_IW4,
         0x4BE22338, // Thu May 6 03:02:32 2010
         "default_mp.xex",
         "IW4 MP 1.4 build 669 latest Wed May 05 2010 06:55:32PM xenon",
@@ -114,7 +108,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<iw4::mp_tu6::IW4_MP_TU6_Plugin>,
     },
     {
-        0x41560817,
+        TITLE_ID_IW4,
         0x5B11C269, // Fri Jun 1 23:02:17 2018
         "default_mp.xex",
         "IW4 MP 1.4 build 163842 Tue Feb 08 16:52:00 2011 xenon",
@@ -122,7 +116,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<iw4::mp::IW4_MP_Plugin>,
     },
     {
-        0x41560817,
+        TITLE_ID_IW4,
         0x5074B056, //  Wed Oct 10 00:16:38 2012
         "default.xex",
         "IW4 1.0 build 125545 Fri Sep 25 22:12:21 2009 xenon",
@@ -130,7 +124,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<iw4::sp::IW4_SP_Plugin>,
     },
     {
-        0x41560855,
+        TITLE_ID_T5,
         0x4E542876, // Tue Aug 23 23:23:50 2011
         "default_mp.xex",
         "",
@@ -138,7 +132,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<t5::mp::T5_MP_Plugin>,
     },
     {
-        0x41560855,
+        TITLE_ID_T5,
         0x4E542875, // Tue Aug 23 23:23:49 2011
         "default.xex",
         "",
@@ -146,7 +140,7 @@ const GameInfo GAME_INFO[] = {
         &CreatePlugin<t5::sp::T5_SP_Plugin>,
     },
     {
-        0x415608CB,
+        TITLE_ID_IW5,
         0x5B10A113, // Fri Jun  1 02:27:47 2018
         "default_mp.xex",
         "IW5 MP 1.8 build 388110 Fri Sep 14 00:04:28 2012 xenon",
@@ -224,7 +218,7 @@ void PluginManager::OnExecutableLoadStarted()
 
 void PluginManager::OnExecutableLoaded(DWORD title_id, DWORD timestamp)
 {
-    if (title_id == DASHBOARD)
+    if (title_id == TITLE_ID_DASHBOARD)
     {
         return;
     }
@@ -238,6 +232,7 @@ void PluginManager::OnExecutableLoaded(DWORD title_id, DWORD timestamp)
     }
 
     DbgPrint("[codxe][PluginManager] Game detected: '%s'.\n", info->friendlyVersion);
+    xbox::Notify(info->friendlyVersion);
     LoadPlugin(info);
 }
 

@@ -21,6 +21,9 @@ static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82275C60);
 
+typedef void (*ClientCommand_t)(int clientNum);
+static ClientCommand_t ClientCommand = reinterpret_cast<ClientCommand_t>(0x822266D0);
+
 typedef void (*CL_CharEvent_t)(int localClientNum, int key);
 static CL_CharEvent_t CL_CharEvent = reinterpret_cast<CL_CharEvent_t>(0x82182EC8);
 
@@ -52,6 +55,9 @@ static Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x8227F448);
 
 typedef void (*Com_PrintMessage_t)(int channel, const char *msg, int error);
 static Com_PrintMessage_t Com_PrintMessage = reinterpret_cast<Com_PrintMessage_t>(0x8227F370);
+
+typedef int (*I_stricmp_t)(const char *s0, const char *s1);
+static I_stricmp_t I_stricmp = reinterpret_cast<I_stricmp_t>(0x82315B70);
 
 typedef void (*Info_SetValueForKey_t)(char *s, const char *key, const char *value);
 static Info_SetValueForKey_t Info_SetValueForKey = reinterpret_cast<Info_SetValueForKey_t>(0x823167D8);
@@ -215,6 +221,12 @@ static SV_IsClientBot_t SV_IsClientBot = reinterpret_cast<SV_IsClientBot_t>(0x82
 
 typedef gentity_s *(*SV_AddTestClient_t)();
 static SV_AddTestClient_t SV_AddTestClient = reinterpret_cast<SV_AddTestClient_t>(0x822BDCB8);
+
+typedef void (*SV_Cmd_ArgvBuffer_t)(int arg, char *buffer, int bufferLength);
+static SV_Cmd_ArgvBuffer_t SV_Cmd_ArgvBuffer = reinterpret_cast<SV_Cmd_ArgvBuffer_t>(0x822760C8);
+
+typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char *text);
+static SV_GameSendServerCommand_t SV_GameSendServerCommand = reinterpret_cast<SV_GameSendServerCommand_t>(0x822BDF00);
 
 typedef void (*SV_UserinfoChanged_t)(client_t *cl);
 static SV_UserinfoChanged_t SV_UserinfoChanged = reinterpret_cast<SV_UserinfoChanged_t>(0x822BBED8);

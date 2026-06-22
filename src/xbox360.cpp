@@ -14,6 +14,19 @@ void *ResolveFunction(const char *moduleName, unsigned int ordinal)
     return GetProcAddress(moduleHandle, reinterpret_cast<const char *>(ordinal));
 }
 
+enum XNotifyQueueUIType
+{
+    XNOTIFYUI_TYPE_GENERIC = 3,
+    XNOTIFYUI_TYPE_EXCLAIM = 34,
+};
+
+typedef int (*XNotifyQueueUI_t)(XNotifyQueueUIType type, DWORD user_index, DWORD areas, const WCHAR *display_text,
+                                void *context_data);
+static XNotifyQueueUI_t XNotifyQueueUI = reinterpret_cast<XNotifyQueueUI_t>(ResolveFunction("xam.xex", 656));
+
+const DWORD XNOTIFY_USER_INDEX_ANY = 0x000000FF;
+const DWORD XNOTIFY_AREA_SYSTEM = 0x00000001;
+
 /**
  * Check if we are running in Xenia Canary.
  *
@@ -41,6 +54,25 @@ Environment DetectEnvironment()
 
     return DetectDevkit() ? ENVIRONMENT_XBOX_DEVKIT : ENVIRONMENT_XBOX_RETAIL;
 }
+
+void CopyAsciiToWide(const char *source, WCHAR *destination, size_t destination_count)
+{
+    if (destination == nullptr || destination_count == 0)
+    {
+        return;
+    }
+
+    size_t i = 0;
+    if (source != nullptr)
+    {
+        for (; source[i] != '\0' && i + 1 < destination_count; i++)
+        {
+            destination[i] = static_cast<unsigned char>(source[i]);
+        }
+    }
+
+    destination[i] = L'\0';
+}
 } // namespace
 
 Environment GetEnvironment()
@@ -63,6 +95,24 @@ const char *GetEnvironmentName(Environment environment)
         assert(false);
         return "Unknown";
     }
+}
+
+void ApplySystemPatches()
+{
+    // Allow XNotifyQueueUI to be called from system threads.
+    *(volatile uint16_t *)0x816A3158 = 0x4800;
+}
+
+void Notify(const char *message)
+{
+    assert(message != nullptr);
+
+    char branded_message[160];
+    _snprintf_s(branded_message, sizeof(branded_message), _TRUNCATE, "CoD Xe: %s", message);
+
+    WCHAR display_text[160];
+    CopyAsciiToWide(branded_message, display_text, ARRAYSIZE(display_text));
+    XNotifyQueueUI(XNOTIFYUI_TYPE_EXCLAIM, XNOTIFY_USER_INDEX_ANY, XNOTIFY_AREA_SYSTEM, display_text, nullptr);
 }
 
 } // namespace xbox
