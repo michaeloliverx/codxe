@@ -93,12 +93,11 @@ class CsvParser
     std::istream &m_input;
 
     // Buffer capacities
-    static const int FIELDBUF_CAP = 1024;
-    static const int INPUTBUF_CAP = 1024 * 128;
+    static const int INPUTBUF_CAP = 4096;
 
     // Buffers
     std::string m_fieldbuf;
-    std::unique_ptr<char[]> m_inputbuf;
+    char m_inputbuf[INPUTBUF_CAP];
 
     // Misc
     bool m_eof;
@@ -106,17 +105,17 @@ class CsvParser
     size_t m_inputbuf_size;
     std::streamoff m_scanposition;
 
+    CsvParser(const CsvParser &);
+    CsvParser &operator=(const CsvParser &);
+
   public:
     // Creates the CSV parser which by default, splits on commas,
     // uses quotes to escape, and handles CSV files that end in either
     // '\r', '\n', or '\r\n'.
     explicit CsvParser(std::istream &input)
         : m_state(State::START_OF_FIELD), m_quote('"'), m_delimiter(','), m_terminator(Term::CRLF), m_input(input),
-          m_inputbuf(new char[INPUTBUF_CAP]()), m_eof(false), m_cursor(INPUTBUF_CAP), m_inputbuf_size(INPUTBUF_CAP),
-          m_scanposition(-INPUTBUF_CAP)
+          m_eof(false), m_cursor(INPUTBUF_CAP), m_inputbuf_size(INPUTBUF_CAP), m_scanposition(-INPUTBUF_CAP)
     {
-        // Reserve space upfront to improve performance
-        m_fieldbuf.reserve(FIELDBUF_CAP);
         if (!m_input.good())
         {
             throw std::runtime_error("Something is wrong with input stream");
@@ -316,7 +315,7 @@ class CsvParser
         {
             m_scanposition += static_cast<std::streamoff>(m_cursor);
             m_cursor = 0;
-            m_input.read(m_inputbuf.get(), INPUTBUF_CAP);
+            m_input.read(m_inputbuf, INPUTBUF_CAP);
 
             // Indicate we hit end of file, and resize
             // input buffer to show that it's not at full capacity
