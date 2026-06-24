@@ -1,13 +1,9 @@
+#include <streambuf>
+
 #include "pch.h"
 #include "assets.h"
+#include "third_party/aria_csv/csv_parser.hpp"
 
-#ifndef INVALID_FILE_ATTRIBUTES
-#define INVALID_FILE_ATTRIBUTES ((DWORD) - 1)
-#endif
-
-#ifndef INVALID_FILE_SIZE
-#define INVALID_FILE_SIZE ((DWORD) - 1)
-#endif
 
 namespace iw3
 {
@@ -34,17 +30,13 @@ struct OverrideCacheEntry
     char name[MAX_PATH];
     void *storage;
     DWORD storage_size;
+    DWORD storage_process_type;
     DWORD payload_size;
     StringTable stringtable;
 };
 
 OverrideCacheEntry *s_override_cache = nullptr;
 size_t s_override_cache_capacity = 0;
-
-const char *ProcessTypeName(DWORD process_type)
-{
-    return process_type == PROC_TYPE_SYSTEM ? "system" : "title";
-}
 
 size_t AlignSize(size_t value, size_t alignment)
 {
@@ -53,25 +45,8 @@ size_t AlignSize(size_t value, size_t alignment)
 
 void *AllocVirtualBlock(size_t size, const char *reason)
 {
-    const DWORD process_type = KeGetCurrentProcessType();
-    DbgPrint("[codxe][assets] VirtualAlloc begin. reason='%s' size=%u processType=%u(%s)\n",
-             reason ? reason : "<null>", static_cast<unsigned int>(size), process_type, ProcessTypeName(process_type));
-
     void *storage = VirtualAlloc(nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    if (storage == nullptr)
-    {
-        const DWORD error = GetLastError();
-        DbgPrint("[codxe][assets] VirtualAlloc failed. reason='%s' size=%u processType=%u(%s) error=0x%08X\n",
-                 reason ? reason : "<null>", static_cast<unsigned int>(size), process_type,
-                 ProcessTypeName(process_type), error);
-    }
-    else
-    {
-        DbgPrint("[codxe][assets] VirtualAlloc end. reason='%s' ptr=%p size=%u processType=%u(%s)\n",
-                 reason ? reason : "<null>", storage, static_cast<unsigned int>(size), process_type,
-                 ProcessTypeName(process_type));
-    }
-
+    UNREFERENCED_PARAMETER(reason);
     return storage;
 }
 
@@ -82,92 +57,44 @@ bool FreeVirtualBlock(void *storage, DWORD size, const char *reason)
         return true;
     }
 
-    const DWORD process_type = KeGetCurrentProcessType();
-    DbgPrint("[codxe][assets] VirtualFree begin. reason='%s' ptr=%p size=%u processType=%u(%s)\n",
-             reason ? reason : "<null>", storage, size, process_type, ProcessTypeName(process_type));
-
     const BOOL result = VirtualFree(storage, 0, MEM_RELEASE);
-    if (!result)
-    {
-        const DWORD error = GetLastError();
-        DbgPrint("[codxe][assets] VirtualFree failed. reason='%s' ptr=%p size=%u processType=%u(%s) error=0x%08X\n",
-                 reason ? reason : "<null>", storage, size, process_type, ProcessTypeName(process_type), error);
-        return false;
-    }
-
-    DbgPrint("[codxe][assets] VirtualFree end. reason='%s' ptr=%p size=%u processType=%u(%s)\n",
-             reason ? reason : "<null>", storage, size, process_type, ProcessTypeName(process_type));
-    return true;
+    UNREFERENCED_PARAMETER(size);
+    UNREFERENCED_PARAMETER(reason);
+    return result != FALSE;
 }
 
-bool ResetCacheEntry(OverrideCacheEntry &entry, DWORD &storage_bytes)
+void ResetCacheEntry(OverrideCacheEntry &entry)
 {
-    bool freed = false;
     if (entry.storage != nullptr)
     {
-        if (FreeVirtualBlock(entry.storage, entry.storage_size, entry.name))
+        const DWORD current_process_type = KeGetCurrentProcessType();
+        if (entry.storage_process_type == 0 || entry.storage_process_type == current_process_type)
         {
-            storage_bytes += entry.storage_size;
-            freed = true;
+            FreeVirtualBlock(entry.storage, entry.storage_size, entry.name);
         }
     }
 
     memset(&entry, 0, sizeof(entry));
-    return freed;
 }
 
 void ClearOverrideCache()
 {
-    DbgPrint("[codxe][assets] ClearOverrideCache begin. cache=%p capacity=%u\n", s_override_cache,
-             static_cast<unsigned int>(s_override_cache_capacity));
-
     if (s_override_cache == nullptr)
     {
-        DbgPrint("[codxe][assets] ClearOverrideCache end. no cache allocated.\n");
         return;
     }
 
-    unsigned int loaded_entries = 0;
-    unsigned int free_attempts = 0;
-    unsigned int free_successes = 0;
-    unsigned int free_failures = 0;
-    DWORD freed_storage_bytes = 0;
     for (size_t i = 0; i < s_override_cache_capacity; ++i)
     {
-        if (s_override_cache[i].state == CACHE_LOADED)
-        {
-            ++loaded_entries;
-        }
-
-        if (s_override_cache[i].storage != nullptr)
-        {
-            ++free_attempts;
-        }
-
-        if (ResetCacheEntry(s_override_cache[i], freed_storage_bytes))
-        {
-            ++free_successes;
-        }
-        else if (free_attempts != free_successes + free_failures)
-        {
-            ++free_failures;
-        }
+        ResetCacheEntry(s_override_cache[i]);
     }
-
-    DbgPrint("[codxe][assets] ClearOverrideCache end. loaded=%u freeAttempts=%u freeSuccesses=%u freeFailures=%u "
-             "storageBytes=%u\n",
-             loaded_entries, free_attempts, free_successes, free_failures, freed_storage_bytes);
 }
 
 bool InitializeOverrideCache()
 {
-    DbgPrint("[codxe][assets] InitializeOverrideCache begin. existing=%p capacity=%u\n", s_override_cache,
-             static_cast<unsigned int>(s_override_cache_capacity));
-
     if (s_override_cache != nullptr)
     {
         ClearOverrideCache();
-        DbgPrint("[codxe][assets] InitializeOverrideCache end. reused existing cache.\n");
         return true;
     }
 
@@ -179,46 +106,31 @@ bool InitializeOverrideCache()
                    "[codxe][assets] Failed to allocate override cache. entries=%u bytes=%u error=0x%08X\n",
                    static_cast<unsigned int>(MAX_OVERRIDE_CACHE_ENTRIES), static_cast<unsigned int>(cache_size),
                    GetLastError());
-        DbgPrint("[codxe][assets] InitializeOverrideCache end. failed bytes=%u error=0x%08X\n",
-                 static_cast<unsigned int>(cache_size), GetLastError());
         s_override_cache_capacity = 0;
         return false;
     }
 
     s_override_cache_capacity = MAX_OVERRIDE_CACHE_ENTRIES;
     memset(s_override_cache, 0, cache_size);
-
-    Com_Printf(CON_CHANNEL_FILES, "[codxe][assets] Override cache allocated. entries=%u bytes=%u storage=%p\n",
-               static_cast<unsigned int>(s_override_cache_capacity), static_cast<unsigned int>(cache_size),
-               s_override_cache);
-    DbgPrint("[codxe][assets] InitializeOverrideCache end. cache=%p bytes=%u\n", s_override_cache,
-             static_cast<unsigned int>(cache_size));
     return true;
 }
 
 void ShutdownOverrideCache()
 {
-    DbgPrint("[codxe][assets] ShutdownOverrideCache begin. cache=%p capacity=%u\n", s_override_cache,
-             static_cast<unsigned int>(s_override_cache_capacity));
-
     const DWORD cache_bytes = static_cast<DWORD>(sizeof(OverrideCacheEntry) * s_override_cache_capacity);
     ClearOverrideCache();
 
     if (s_override_cache != nullptr)
     {
-        if (FreeVirtualBlock(s_override_cache, cache_bytes, "override cache metadata"))
+        if (!FreeVirtualBlock(s_override_cache, cache_bytes, "override cache metadata"))
         {
-            DbgPrint("[codxe][assets] ShutdownOverrideCache freed cache metadata. bytes=%u\n", cache_bytes);
-        }
-        else
-        {
-            DbgPrint("[codxe][assets] ShutdownOverrideCache failed to free cache metadata. bytes=%u\n", cache_bytes);
+            Com_Printf(CON_CHANNEL_FILES, "[codxe][assets] Failed to free override cache metadata. bytes=%u\n",
+                       cache_bytes);
         }
     }
 
     s_override_cache = nullptr;
     s_override_cache_capacity = 0;
-    DbgPrint("[codxe][assets] ShutdownOverrideCache end.\n");
 }
 
 bool CopyAssetName(char *dest, size_t dest_size, const char *name)
@@ -310,6 +222,60 @@ bool BuildAssetPath(char *path, size_t path_size, const char *asset_name, const 
     return true;
 }
 
+bool BuildSourceDisplayPath(char *path, size_t path_size, const char *asset_name, const char *extension = nullptr)
+{
+    if (path == nullptr || path_size == 0)
+    {
+        return false;
+    }
+
+    path[0] = '\0';
+    if (Config::active_mod.empty() || asset_name == nullptr || asset_name[0] == '\0')
+    {
+        return false;
+    }
+
+    if (!AppendPathPart(path, path_size, "mods\\", false))
+    {
+        return false;
+    }
+
+    if (!AppendPathPart(path, path_size, Config::active_mod.c_str(), false))
+    {
+        return false;
+    }
+
+    if (!AppendPathPart(path, path_size, "\\", false))
+    {
+        return false;
+    }
+
+    if (!AppendPathPart(path, path_size, asset_name, true))
+    {
+        return false;
+    }
+
+    if (extension != nullptr && !AppendPathPart(path, path_size, extension, false))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void PrintOverrideApplied(const char *type, const char *asset_name, const char *source)
+{
+    char display_name[MAX_PATH];
+    display_name[0] = '\0';
+    const char *name = asset_name;
+    if (AppendPathPart(display_name, sizeof(display_name), asset_name, true))
+    {
+        name = display_name;
+    }
+
+    Com_Printf(CON_CHANNEL_FILES, "^2codxe^7: %s \"%s\" -> \"%s\"\n", type, name, source);
+}
+
 OverrideCacheEntry *FindCacheEntry(XAssetType type, const char *name)
 {
     if (name == nullptr || name[0] == '\0')
@@ -384,7 +350,7 @@ void *AllocStorage(size_t size, const char *reason)
 bool FileExistsFast(const char *path)
 {
     const DWORD attrs = GetFileAttributesA(path);
-    return attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
+    return attrs != INVALID_FILE_SIZE && (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
 }
 
 bool LoadFileBuffer(const char *path, bool null_terminate, void *&storage, DWORD &storage_size, DWORD &payload_size)
@@ -440,24 +406,6 @@ bool LoadFileBuffer(const char *path, bool null_terminate, void *&storage, DWORD
     return true;
 }
 
-enum CsvReaderState
-{
-    CSV_START_OF_FIELD,
-    CSV_IN_FIELD,
-    CSV_IN_QUOTED_FIELD,
-    CSV_IN_ESCAPED_QUOTE,
-    CSV_END_OF_ROW,
-    CSV_EMPTY
-};
-
-struct CsvReader
-{
-    const char *data;
-    size_t size;
-    size_t cursor;
-    CsvReaderState state;
-};
-
 struct CsvStats
 {
     size_t row_count;
@@ -466,192 +414,19 @@ struct CsvStats
     size_t string_bytes;
 };
 
-bool IsCsvTerminator(char c)
+class MemoryCsvStreamBuf : public std::streambuf
 {
-    return c == '\r' || c == '\n';
-}
+  public:
+    MemoryCsvStreamBuf(const char *data, size_t size)
+    {
+        char *begin = const_cast<char *>(data);
+        setg(begin, begin, begin + size);
+    }
+};
 
-void SkipCsvLfAfterCr(CsvReader &reader, char c)
+bool AddCsvFieldToStats(CsvStats &stats, size_t &current_columns, const std::string &field)
 {
-    if (c == '\r' && reader.cursor < reader.size && reader.data[reader.cursor] == '\n')
-    {
-        ++reader.cursor;
-    }
-}
-
-bool AppendCsvChar(char *output, char *output_end, size_t &field_length, char c)
-{
-    if (field_length >= 0x7FFFFFFF)
-    {
-        return false;
-    }
-
-    if (output != nullptr)
-    {
-        if (output + field_length >= output_end)
-        {
-            return false;
-        }
-
-        output[field_length] = c;
-    }
-
-    ++field_length;
-    return true;
-}
-
-bool TerminateCsvField(char *output, char *output_end, size_t field_length)
-{
-    if (output == nullptr)
-    {
-        return true;
-    }
-
-    if (output + field_length >= output_end)
-    {
-        return false;
-    }
-
-    output[field_length] = '\0';
-    return true;
-}
-
-bool ReadCsvField(CsvReader &reader, char *output, char *output_end, size_t &field_length, bool &row_end,
-                  bool &csv_end)
-{
-    field_length = 0;
-    row_end = false;
-    csv_end = false;
-
-    if (reader.state == CSV_EMPTY)
-    {
-        csv_end = true;
-        return true;
-    }
-
-    if (reader.state == CSV_END_OF_ROW)
-    {
-        reader.state = CSV_START_OF_FIELD;
-        row_end = true;
-        return true;
-    }
-
-    bool field_started = false;
-    for (;;)
-    {
-        if (reader.cursor >= reader.size)
-        {
-            reader.state = CSV_EMPTY;
-            if (!field_started && field_length == 0)
-            {
-                csv_end = true;
-                return true;
-            }
-
-            return TerminateCsvField(output, output_end, field_length);
-        }
-
-        const char c = reader.data[reader.cursor++];
-        field_started = true;
-
-        switch (reader.state)
-        {
-        case CSV_START_OF_FIELD:
-            if (IsCsvTerminator(c))
-            {
-                SkipCsvLfAfterCr(reader, c);
-                reader.state = CSV_END_OF_ROW;
-                return TerminateCsvField(output, output_end, field_length);
-            }
-
-            if (c == '"')
-            {
-                reader.state = CSV_IN_QUOTED_FIELD;
-            }
-            else if (c == ',')
-            {
-                return TerminateCsvField(output, output_end, field_length);
-            }
-            else
-            {
-                reader.state = CSV_IN_FIELD;
-                if (!AppendCsvChar(output, output_end, field_length, c))
-                {
-                    return false;
-                }
-            }
-            break;
-
-        case CSV_IN_FIELD:
-            if (IsCsvTerminator(c))
-            {
-                SkipCsvLfAfterCr(reader, c);
-                reader.state = CSV_END_OF_ROW;
-                return TerminateCsvField(output, output_end, field_length);
-            }
-
-            if (c == ',')
-            {
-                reader.state = CSV_START_OF_FIELD;
-                return TerminateCsvField(output, output_end, field_length);
-            }
-
-            if (!AppendCsvChar(output, output_end, field_length, c))
-            {
-                return false;
-            }
-            break;
-
-        case CSV_IN_QUOTED_FIELD:
-            if (c == '"')
-            {
-                reader.state = CSV_IN_ESCAPED_QUOTE;
-            }
-            else if (!AppendCsvChar(output, output_end, field_length, c))
-            {
-                return false;
-            }
-            break;
-
-        case CSV_IN_ESCAPED_QUOTE:
-            if (IsCsvTerminator(c))
-            {
-                SkipCsvLfAfterCr(reader, c);
-                reader.state = CSV_END_OF_ROW;
-                return TerminateCsvField(output, output_end, field_length);
-            }
-
-            if (c == '"')
-            {
-                reader.state = CSV_IN_QUOTED_FIELD;
-                if (!AppendCsvChar(output, output_end, field_length, c))
-                {
-                    return false;
-                }
-            }
-            else if (c == ',')
-            {
-                reader.state = CSV_START_OF_FIELD;
-                return TerminateCsvField(output, output_end, field_length);
-            }
-            else
-            {
-                reader.state = CSV_IN_FIELD;
-                if (!AppendCsvChar(output, output_end, field_length, c))
-                {
-                    return false;
-                }
-            }
-            break;
-
-        default:
-            return false;
-        }
-    }
-}
-
-bool AddCsvFieldToStats(CsvStats &stats, size_t &current_columns, size_t field_length)
-{
+    const size_t field_length = field.size();
     if (stats.field_count >= 0x7FFFFFFF || field_length > 0x7FFFFFFF ||
         stats.string_bytes > 0x7FFFFFFF - (field_length + 1))
     {
@@ -681,48 +456,8 @@ bool FinishCsvStatsRow(CsvStats &stats, size_t &current_columns)
     return true;
 }
 
-bool ScanStringTableCsvBuffer(const char *data, size_t data_size, CsvStats &stats)
+bool FinalizeCsvStats(CsvStats &stats)
 {
-    memset(&stats, 0, sizeof(stats));
-
-    CsvReader reader = {data, data_size, 0, CSV_START_OF_FIELD};
-    size_t current_columns = 0;
-    for (;;)
-    {
-        size_t field_length = 0;
-        bool row_end = false;
-        bool csv_end = false;
-        if (!ReadCsvField(reader, nullptr, nullptr, field_length, row_end, csv_end))
-        {
-            return false;
-        }
-
-        if (csv_end)
-        {
-            if (current_columns != 0 && !FinishCsvStatsRow(stats, current_columns))
-            {
-                return false;
-            }
-
-            break;
-        }
-
-        if (row_end)
-        {
-            if (!FinishCsvStatsRow(stats, current_columns))
-            {
-                return false;
-            }
-
-            continue;
-        }
-
-        if (!AddCsvFieldToStats(stats, current_columns, field_length))
-        {
-            return false;
-        }
-    }
-
     const size_t cell_count = stats.row_count * stats.column_count;
     if (stats.column_count != 0 && cell_count / stats.column_count != stats.row_count)
     {
@@ -742,6 +477,56 @@ bool ScanStringTableCsvBuffer(const char *data, size_t data_size, CsvStats &stat
 
     stats.string_bytes += padded_empty_fields;
     return true;
+}
+
+bool ScanStringTableCsvBuffer(const char *data, size_t data_size, CsvStats &stats)
+{
+    memset(&stats, 0, sizeof(stats));
+
+    MemoryCsvStreamBuf streambuf(data, data_size);
+    std::istream input(&streambuf);
+
+    try
+    {
+        aria::csv::CsvParser parser(input);
+        size_t current_columns = 0;
+
+        for (;;)
+        {
+            const aria::csv::Field field = parser.next_field();
+            switch (field.type)
+            {
+            case aria::csv::FieldType::CSV_END:
+                if (current_columns != 0 && !FinishCsvStatsRow(stats, current_columns))
+                {
+                    return false;
+                }
+
+                return FinalizeCsvStats(stats);
+
+            case aria::csv::FieldType::ROW_END:
+                if (!FinishCsvStatsRow(stats, current_columns))
+                {
+                    return false;
+                }
+
+                break;
+
+            case aria::csv::FieldType::DATA:
+                if (field.data == nullptr || !AddCsvFieldToStats(stats, current_columns, *field.data))
+                {
+                    return false;
+                }
+
+                break;
+            }
+        }
+    }
+    catch (const std::exception &e)
+    {
+        Com_Printf(CON_CHANNEL_FILES, "[codxe][assets] aria csv scan exception: %s\n", e.what());
+        return false;
+    }
 }
 
 bool WriteEmptyStringCell(const char **values, size_t cell_index, char *&string_cursor, char *string_end)
@@ -779,6 +564,38 @@ bool FinishStringTableRow(const char **values, size_t row_count, size_t column_c
     return true;
 }
 
+bool WriteStringTableField(const std::string &field, const char **values, size_t row_count, size_t column_count,
+                           size_t row_index, size_t &current_column, char *&string_cursor, char *string_end)
+{
+    if (row_index >= row_count || current_column >= column_count)
+    {
+        return false;
+    }
+
+    const size_t field_length = field.size();
+    if (field_length > 0x7FFFFFFF)
+    {
+        return false;
+    }
+
+    const size_t remaining = static_cast<size_t>(string_end - string_cursor);
+    if (remaining < field_length + 1)
+    {
+        return false;
+    }
+
+    values[row_index * column_count + current_column] = string_cursor;
+    if (field_length > 0)
+    {
+        memcpy(string_cursor, field.c_str(), field_length);
+    }
+
+    string_cursor[field_length] = '\0';
+    string_cursor += field_length + 1;
+    ++current_column;
+    return true;
+}
+
 bool FillStringTableCsvBuffer(const char *data, size_t data_size, void *storage, size_t row_count, size_t column_count,
                               size_t values_bytes_aligned, size_t string_bytes)
 {
@@ -791,52 +608,54 @@ bool FillStringTableCsvBuffer(const char *data, size_t data_size, void *storage,
     const char **values = reinterpret_cast<const char **>(storage);
     char *string_cursor = static_cast<char *>(storage) + values_bytes_aligned;
     char *string_end = string_cursor + string_bytes;
-    CsvReader reader = {data, data_size, 0, CSV_START_OF_FIELD};
+    MemoryCsvStreamBuf streambuf(data, data_size);
+    std::istream input(&streambuf);
     size_t row_index = 0;
     size_t current_column = 0;
 
-    for (;;)
+    try
     {
-        char *field_start = string_cursor;
-        size_t field_length = 0;
-        bool row_end = false;
-        bool csv_end = false;
-        if (!ReadCsvField(reader, field_start, string_end, field_length, row_end, csv_end))
-        {
-            return false;
-        }
+        aria::csv::CsvParser parser(input);
 
-        if (csv_end)
+        for (;;)
         {
-            if (current_column != 0 &&
-                !FinishStringTableRow(values, row_count, column_count, row_index, current_column, string_cursor,
-                                      string_end))
+            const aria::csv::Field field = parser.next_field();
+            switch (field.type)
             {
-                return false;
+            case aria::csv::FieldType::CSV_END:
+                if (current_column != 0 && !FinishStringTableRow(values, row_count, column_count, row_index,
+                                                                 current_column, string_cursor, string_end))
+                {
+                    return false;
+                }
+
+                return row_index == row_count;
+
+            case aria::csv::FieldType::ROW_END:
+                if (!FinishStringTableRow(values, row_count, column_count, row_index, current_column, string_cursor,
+                                          string_end))
+                {
+                    return false;
+                }
+
+                break;
+
+            case aria::csv::FieldType::DATA:
+                if (field.data == nullptr ||
+                    !WriteStringTableField(*field.data, values, row_count, column_count, row_index, current_column,
+                                           string_cursor, string_end))
+                {
+                    return false;
+                }
+
+                break;
             }
-
-            return row_index == row_count;
         }
-
-        if (row_end)
-        {
-            if (!FinishStringTableRow(values, row_count, column_count, row_index, current_column, string_cursor,
-                                      string_end))
-            {
-                return false;
-            }
-
-            continue;
-        }
-
-        if (row_index >= row_count || current_column >= column_count)
-        {
-            return false;
-        }
-
-        values[row_index * column_count + current_column] = field_start;
-        string_cursor = field_start + field_length + 1;
-        ++current_column;
+    }
+    catch (const std::exception &e)
+    {
+        Com_Printf(CON_CHANNEL_FILES, "[codxe][assets] aria csv fill exception: %s\n", e.what());
+        return false;
     }
 }
 
@@ -925,17 +744,13 @@ StringTable *LoadStringTableOverride(const char *asset_name)
 
     entry->storage = storage;
     entry->storage_size = static_cast<DWORD>(storage_size);
+    entry->storage_process_type = KeGetCurrentProcessType();
     entry->payload_size = static_cast<DWORD>(storage_size);
     entry->stringtable.name = entry->name;
     entry->stringtable.columnCount = static_cast<int>(stats.column_count);
     entry->stringtable.rowCount = static_cast<int>(stats.row_count);
     entry->stringtable.values = cell_count == 0 ? nullptr : reinterpret_cast<const char **>(storage);
     entry->state = CACHE_LOADED;
-
-    Com_Printf(CON_CHANNEL_FILES,
-               "[codxe][assets] Loaded stringtable override '%s' from '%s'. rows=%u columns=%u storage=%p size=%u\n",
-               asset_name, path, static_cast<unsigned int>(stats.row_count),
-               static_cast<unsigned int>(stats.column_count), entry->storage, entry->storage_size);
 
     return &entry->stringtable;
 }
@@ -971,11 +786,9 @@ OverrideCacheEntry *LoadMapEntsOverride(const char *asset_name)
 
     entry->storage = storage;
     entry->storage_size = storage_size;
+    entry->storage_process_type = KeGetCurrentProcessType();
     entry->payload_size = payload_size;
     entry->state = CACHE_LOADED;
-
-    Com_Printf(CON_CHANNEL_FILES, "[codxe][assets] Loaded map ents override '%s' from '%s'. storage=%p size=%u\n",
-               asset_name, path, entry->storage, entry->payload_size);
 
     return entry;
 }
@@ -996,7 +809,11 @@ void OverrideMapEnts(MapEnts *asset)
     asset->entityString = static_cast<char *>(entry->storage);
     asset->numEntityChars = static_cast<int>(entry->payload_size);
 
-    Com_Printf(CON_CHANNEL_FILES, "[codxe][assets] Override applied. type=mapents name='%s'\n", asset->name);
+    char source[MAX_PATH];
+    if (BuildSourceDisplayPath(source, sizeof(source), asset->name, ".ents"))
+    {
+        PrintOverrideApplied("mapents", asset->name, source);
+    }
 }
 
 void OverrideStringTable(StringTable *asset)
@@ -1016,7 +833,11 @@ void OverrideStringTable(StringTable *asset)
     asset->rowCount = override_asset->rowCount;
     asset->values = override_asset->values;
 
-    Com_Printf(CON_CHANNEL_FILES, "[codxe][assets] Override applied. type=stringtable name='%s'\n", asset->name);
+    char source[MAX_PATH];
+    if (BuildSourceDisplayPath(source, sizeof(source), asset->name))
+    {
+        PrintOverrideApplied("stringtable", asset->name, source);
+    }
 }
 
 XAssetEntry *DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride)
@@ -1041,21 +862,17 @@ XAssetEntry *DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride)
 
 assets::assets()
 {
-    DbgPrint("[codxe][assets] ctor begin.\n");
     InitializeOverrideCache();
 
     DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
     DB_LinkXAssetEntry_Detour.Install();
-    DbgPrint("[codxe][assets] ctor end.\n");
 }
 
 assets::~assets()
 {
-    DbgPrint("[codxe][assets] dtor begin.\n");
     DB_LinkXAssetEntry_Detour.Remove();
 
     ShutdownOverrideCache();
-    DbgPrint("[codxe][assets] dtor end.\n");
 }
 } // namespace mp
 } // namespace iw3
