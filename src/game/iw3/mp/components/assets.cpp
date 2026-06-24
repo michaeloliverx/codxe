@@ -4,7 +4,6 @@
 #include "assets.h"
 #include "third_party/aria_csv/csv_parser.hpp"
 
-
 namespace iw3
 {
 namespace mp
