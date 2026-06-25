@@ -23,13 +23,10 @@
 #include <sstream>
 #include <xtl.h>
 #include <xbox.h>
-#include <xgraphics.h>
 #include <io.h>
 #include <xjson.h>
 #include <rtcapi.h>
 
-#pragma comment(lib, "d3d9ltcg.lib")
-#pragma comment(lib, "xgraphics.lib")
 #pragma comment(lib, "xjson.lib")
 
 // Project-specific includes
