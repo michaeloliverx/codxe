@@ -2,6 +2,7 @@
 #include "common/config.h"
 #include "image_loader.h"
 #include "image/dds_loader.h"
+#include "image/texture_layout.h"
 #include "image/xenos_texture.h"
 
 namespace
@@ -61,64 +62,13 @@ bool ValidateDDSHeader(const game::GfxImage *image, const DDSImage &ddsImage, co
     return true;
 }
 
-size_t CalculateRequiredLinearDataSize(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t firstMipLevel,
-                                       uint32_t levelCount, uint32_t faceCount)
-{
-    size_t requiredSize = 0;
-
-    for (uint32_t localMipLevel = 0; localMipLevel < levelCount; ++localMipLevel)
-    {
-        const uint32_t mipLevel = firstMipLevel + localMipLevel;
-        const uint32_t levelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, mipLevel, format);
-        if (levelSize == 0)
-            return 0;
-
-        requiredSize += static_cast<size_t>(levelSize) * faceCount;
-    }
-
-    return requiredSize;
-}
-
-uint32_t CalculateDDSMipOffset(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t mipLevel)
-{
-    uint32_t offset = 0;
-
-    for (uint32_t currentMip = 0; currentMip < mipLevel; ++currentMip)
-    {
-        const uint32_t levelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, currentMip, format);
-        if (levelSize == 0)
-            return 0;
-
-        offset += levelSize;
-    }
-
-    return offset;
-}
-
-size_t CalculateRequiredMipTextureBytes(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format,
-                                        uint32_t firstMipLevel, uint32_t levelCount, uint32_t faceCount)
-{
-    size_t requiredSize = 0;
-
-    for (uint32_t mipLevel = firstMipLevel; mipLevel < levelCount; ++mipLevel)
-    {
-        const uint32_t levelSize = image::xenos_texture::CalculateTiledLevelSize(width, height, mipLevel, format, 0u);
-        if (levelSize == 0)
-            return 0;
-
-        requiredSize += static_cast<size_t>(levelSize) * faceCount;
-    }
-
-    return requiredSize;
-}
-
 bool Validate2DReplacementData(const game::GfxImage *image, const DDSImage &ddsImage, GPUTEXTUREFORMAT format,
                                uint32_t ddsFirstMipLevel, uint32_t replacementLevelCount, size_t *requiredDDSSize,
                                size_t *requiredTextureBytes)
 {
     const size_t ddsMipOffset =
-        CalculateDDSMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, ddsFirstMipLevel);
-    const size_t requiredLinearSize = CalculateRequiredLinearDataSize(
+        image::CalculateDdsMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, ddsFirstMipLevel);
+    const size_t requiredLinearSize = image::CalculateRequiredLinearDataSize(
         ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, ddsFirstMipLevel, replacementLevelCount, 1u);
     *requiredDDSSize = ddsMipOffset + requiredLinearSize;
     if (requiredLinearSize == 0 || (ddsFirstMipLevel > 0 && ddsMipOffset == 0))
@@ -130,7 +80,7 @@ bool Validate2DReplacementData(const game::GfxImage *image, const DDSImage &ddsI
     const uint32_t baseSize =
         image::xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, 1u);
     const size_t mipBytes =
-        CalculateRequiredMipTextureBytes(image->width, image->height, format, 1u, replacementLevelCount, 1u);
+        image::CalculateRequiredMipTextureBytes(image->width, image->height, format, 1u, replacementLevelCount, 1u);
     *requiredTextureBytes = static_cast<size_t>(baseSize) + mipBytes;
     const int cardMemory = image->cardMemory.platform[0];
     if (cardMemory > 0 && *requiredTextureBytes > static_cast<size_t>(cardMemory))
@@ -218,7 +168,7 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage, uint32_t 
     }
 
     uint32_t ddsOffset =
-        CalculateDDSMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, ddsFirstMipLevel);
+        image::CalculateDdsMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, ddsFirstMipLevel);
 
     for (uint32_t localMipLevel = 0; localMipLevel < nonPackedLevelCount; localMipLevel++)
     {

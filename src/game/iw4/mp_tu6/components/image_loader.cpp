@@ -3,6 +3,7 @@
 #include "events.h"
 #include "image_loader.h"
 #include "image/dds_loader.h"
+#include "image/texture_layout.h"
 #include "image/xenos_texture.h"
 
 #ifndef INVALID_FILE_ATTRIBUTES
@@ -98,62 +99,11 @@ bool ValidateDDSHeader(const game::GfxImage *image, const DDSImage &ddsImage, co
     return true;
 }
 
-size_t CalculateRequiredLinearDataSize(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t firstMipLevel,
-                                       uint32_t levelCount, uint32_t faceCount)
-{
-    size_t requiredSize = 0;
-
-    for (uint32_t localMipLevel = 0; localMipLevel < levelCount; ++localMipLevel)
-    {
-        const uint32_t mipLevel = firstMipLevel + localMipLevel;
-        const uint32_t levelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, mipLevel, format);
-        if (levelSize == 0)
-            return 0;
-
-        requiredSize += static_cast<size_t>(levelSize) * faceCount;
-    }
-
-    return requiredSize;
-}
-
-uint32_t CalculateDDSMipOffset(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t mipLevel)
-{
-    uint32_t offset = 0;
-
-    for (uint32_t currentMip = 0; currentMip < mipLevel; ++currentMip)
-    {
-        const uint32_t levelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, currentMip, format);
-        if (levelSize == 0)
-            return 0;
-
-        offset += levelSize;
-    }
-
-    return offset;
-}
-
-size_t CalculateRequiredMipTextureBytes(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format,
-                                        uint32_t firstMipLevel, uint32_t levelCount, uint32_t faceCount)
-{
-    size_t requiredSize = 0;
-
-    for (uint32_t mipLevel = firstMipLevel; mipLevel < levelCount; ++mipLevel)
-    {
-        const uint32_t levelSize = image::xenos_texture::CalculateTiledLevelSize(width, height, mipLevel, format, 0u);
-        if (levelSize == 0)
-            return 0;
-
-        requiredSize += static_cast<size_t>(levelSize) * faceCount;
-    }
-
-    return requiredSize;
-}
-
 bool Validate2DReplacementData(const game::GfxImage *image, const DDSImage &ddsImage, GPUTEXTUREFORMAT format,
                                uint32_t replacementLevelCount, size_t *requiredDDSSize, size_t *requiredTextureBytes)
 {
     *requiredDDSSize =
-        CalculateRequiredLinearDataSize(image->width, image->height, format, 0u, replacementLevelCount, 1u);
+        image::CalculateRequiredLinearDataSize(image->width, image->height, format, 0u, replacementLevelCount, 1u);
     if (*requiredDDSSize == 0)
         return false;
 
@@ -163,7 +113,7 @@ bool Validate2DReplacementData(const game::GfxImage *image, const DDSImage &ddsI
     const D3DBaseTexture *texture = &image->texture.basemap;
     const uint32_t baseSize = image::xenos_texture::CalculateBaseSize(texture, image->width, image->height, 1u);
     const size_t mipBytes =
-        CalculateRequiredMipTextureBytes(image->width, image->height, format, 1u, replacementLevelCount, 1u);
+        image::CalculateRequiredMipTextureBytes(image->width, image->height, format, 1u, replacementLevelCount, 1u);
 
     *requiredTextureBytes = static_cast<size_t>(baseSize) + mipBytes;
     const int cardMemory = image->cardMemory.platform[0];
@@ -189,8 +139,8 @@ bool ValidateResidentMipCount(const game::GfxImage *image, const DDSImage &ddsIm
 bool ValidateDDSDataSize(const game::GfxImage *image, const DDSImage &ddsImage, GPUTEXTUREFORMAT format,
                          uint32_t mipCount, uint32_t faceCount)
 {
-    const size_t expectedSize = CalculateRequiredLinearDataSize(ddsImage.header.dwWidth, ddsImage.header.dwHeight,
-                                                                format, 0u, mipCount, faceCount);
+    const size_t expectedSize = image::CalculateRequiredLinearDataSize(
+        ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, 0u, mipCount, faceCount);
     if (expectedSize == 0)
     {
         PrintImageError("image '%s' has unsupported DDS dimensions or format\n", image->name);
@@ -519,13 +469,13 @@ bool ValidateStreamReplacementData(const game::GfxImage *image, const DDSImage &
                                    uint32_t startMipLevel, uint32_t levelCount, uint32_t basePitch,
                                    size_t *requiredDDSSize, size_t *requiredTextureBytes)
 {
-    *requiredDDSSize = CalculateRequiredLinearDataSize(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format,
-                                                       startMipLevel, levelCount, 1u);
+    *requiredDDSSize = image::CalculateRequiredLinearDataSize(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format,
+                                                              startMipLevel, levelCount, 1u);
     if (*requiredDDSSize == 0)
         return false;
 
     const uint32_t ddsOffset =
-        CalculateDDSMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, startMipLevel);
+        image::CalculateDdsMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, format, startMipLevel);
     if (static_cast<size_t>(ddsOffset) + *requiredDDSSize > ddsImage.data.size())
         return false;
 
@@ -696,7 +646,7 @@ bool Image_Replace_StreamPart(game::GfxImage *image, const DDSImage &ddsImage, u
     }
 
     uint32_t ddsOffset =
-        CalculateDDSMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, ddsFormat, startMipLevel);
+        image::CalculateDdsMipOffset(ddsImage.header.dwWidth, ddsImage.header.dwHeight, ddsFormat, startMipLevel);
     size_t destinationOffset = 0;
 
     for (uint32_t localMipLevel = 0; localMipLevel < replaceLevelCount; ++localMipLevel)
