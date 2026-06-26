@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "common/config.h"
 #include "image_loader.h"
+#include "image/dds_image.h"
 #include "xenos_texture.h"
 
 namespace
@@ -10,169 +11,18 @@ namespace game = t4::mp;
 const int CON_CHANNEL_ERROR = 1;
 const int CON_CHANNEL_CONSOLEONLY = 7;
 
-const uint32_t DDS_MAGIC = MAKEFOURCC('D', 'D', 'S', ' ');
-const uint32_t DDS_HEADER_SIZE = 124;
-const uint32_t DDS_PIXEL_FORMAT_SIZE = 32;
-const uint32_t DDPF_FOURCC = 0x4;
-
-const uint32_t DXT1_FOURCC = MAKEFOURCC('D', 'X', 'T', '1');
-const uint32_t DXT3_FOURCC = MAKEFOURCC('D', 'X', 'T', '3');
-const uint32_t DXT5_FOURCC = MAKEFOURCC('D', 'X', 'T', '5');
-const uint32_t DXN_FOURCC = MAKEFOURCC('A', 'T', 'I', '2');
-
-const uint32_t DDSCAPS2_CUBEMAP = 0x200;
-const uint32_t DDSCAPS2_CUBEMAP_POSITIVEX = 0x400;
-const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEX = 0x800;
-const uint32_t DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000;
-const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000;
-const uint32_t DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000;
-const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
-const uint32_t DDSCAPS2_CUBEMAP_ALL_FACES = DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
-                                            DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
-                                            DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ;
-
 std::set<std::string> g_streamedImageReplacements;
 
-struct DDSHeader
-{
-    uint32_t magic;
-    uint32_t size;
-    uint32_t flags;
-    uint32_t height;
-    uint32_t width;
-    uint32_t pitchOrLinearSize;
-    uint32_t depth;
-    uint32_t mipMapCount;
-    uint32_t reserved1[11];
-    struct
-    {
-        uint32_t size;
-        uint32_t flags;
-        uint32_t fourCC;
-        uint32_t rgbBitCount;
-        uint32_t rBitMask;
-        uint32_t gBitMask;
-        uint32_t bBitMask;
-        uint32_t aBitMask;
-    } pixelFormat;
-    uint32_t caps;
-    uint32_t caps2;
-    uint32_t caps3;
-    uint32_t caps4;
-    uint32_t reserved2;
-};
-static_assert(sizeof(DDSHeader) == 128, "");
-
-struct DDSImage
-{
-    DDSHeader header;
-    std::vector<uint8_t> data;
-};
-
-void SwapDDSHeaderEndian(DDSHeader &header)
-{
-    header.magic = _byteswap_ulong(header.magic);
-    header.size = _byteswap_ulong(header.size);
-    header.flags = _byteswap_ulong(header.flags);
-    header.height = _byteswap_ulong(header.height);
-    header.width = _byteswap_ulong(header.width);
-    header.pitchOrLinearSize = _byteswap_ulong(header.pitchOrLinearSize);
-    header.depth = _byteswap_ulong(header.depth);
-    header.mipMapCount = _byteswap_ulong(header.mipMapCount);
-
-    for (int i = 0; i < 11; i++)
-        header.reserved1[i] = _byteswap_ulong(header.reserved1[i]);
-
-    header.pixelFormat.size = _byteswap_ulong(header.pixelFormat.size);
-    header.pixelFormat.flags = _byteswap_ulong(header.pixelFormat.flags);
-    header.pixelFormat.fourCC = _byteswap_ulong(header.pixelFormat.fourCC);
-    header.pixelFormat.rgbBitCount = _byteswap_ulong(header.pixelFormat.rgbBitCount);
-    header.pixelFormat.rBitMask = _byteswap_ulong(header.pixelFormat.rBitMask);
-    header.pixelFormat.gBitMask = _byteswap_ulong(header.pixelFormat.gBitMask);
-    header.pixelFormat.bBitMask = _byteswap_ulong(header.pixelFormat.bBitMask);
-    header.pixelFormat.aBitMask = _byteswap_ulong(header.pixelFormat.aBitMask);
-
-    header.caps = _byteswap_ulong(header.caps);
-    header.caps2 = _byteswap_ulong(header.caps2);
-    header.caps3 = _byteswap_ulong(header.caps3);
-    header.caps4 = _byteswap_ulong(header.caps4);
-    header.reserved2 = _byteswap_ulong(header.reserved2);
-}
+typedef image::DdsImage DDSImage;
 
 DDSImage ReadDDSFile(const std::string &filepath)
 {
-    DDSImage ddsImage;
-    std::ifstream file(filepath.c_str(), std::ios::binary);
-
-    if (!file.is_open())
-        return ddsImage;
-
-    file.read(reinterpret_cast<char *>(&ddsImage.header), sizeof(DDSHeader));
-    if (!file || file.gcount() != sizeof(DDSHeader))
-        return DDSImage();
-
-    if (_byteswap_ulong(ddsImage.header.magic) != DDS_MAGIC)
-        return DDSImage();
-
-    SwapDDSHeaderEndian(ddsImage.header);
-
-    file.seekg(0, std::ios::end);
-    const std::streampos fileSize = file.tellg();
-    if (fileSize == std::streampos(-1) || fileSize < static_cast<std::streampos>(sizeof(DDSHeader)))
-        return DDSImage();
-
-    file.seekg(sizeof(DDSHeader), std::ios::beg);
-    const size_t dataSize = static_cast<size_t>(fileSize) - sizeof(DDSHeader);
-
-    ddsImage.data.resize(dataSize);
-    if (dataSize > 0)
-    {
-        file.read(reinterpret_cast<char *>(&ddsImage.data[0]), dataSize);
-        if (!file || static_cast<size_t>(file.gcount()) != dataSize)
-            return DDSImage();
-    }
-
-    return ddsImage;
+    return image::LoadDdsFromFile(filepath);
 }
 
 std::string GetReplacementPath(const char *imageName)
 {
     return Config::GetModBasePath() + "\\images\\" + imageName + ".dds";
-}
-
-bool DDSIsCubemap(const DDSImage &ddsImage)
-{
-    return (ddsImage.header.caps2 & DDSCAPS2_CUBEMAP) != 0 ||
-           (ddsImage.header.caps2 & DDSCAPS2_CUBEMAP_ALL_FACES) == DDSCAPS2_CUBEMAP_ALL_FACES;
-}
-
-uint32_t GetDDSMipCount(const DDSImage &ddsImage)
-{
-    return max(1u, static_cast<uint32_t>(ddsImage.header.mipMapCount));
-}
-
-bool GetDDSFormat(const DDSImage &ddsImage, GPUTEXTUREFORMAT *format)
-{
-    if ((ddsImage.header.pixelFormat.flags & DDPF_FOURCC) == 0)
-        return false;
-
-    switch (ddsImage.header.pixelFormat.fourCC)
-    {
-    case DXT1_FOURCC:
-        *format = GPUTEXTUREFORMAT_DXT1;
-        return true;
-    case DXT3_FOURCC:
-        *format = GPUTEXTUREFORMAT_DXT2_3;
-        return true;
-    case DXT5_FOURCC:
-        *format = GPUTEXTUREFORMAT_DXT4_5;
-        return true;
-    case DXN_FOURCC:
-        *format = GPUTEXTUREFORMAT_DXN;
-        return true;
-    default:
-        return false;
-    }
 }
 
 bool ValidateDDSHeader(const game::GfxImage *image, const DDSImage &ddsImage, const std::string &path,
@@ -185,14 +35,15 @@ bool ValidateDDSHeader(const game::GfxImage *image, const DDSImage &ddsImage, co
         return false;
     }
 
-    if (ddsImage.header.size != DDS_HEADER_SIZE || ddsImage.header.pixelFormat.size != DDS_PIXEL_FORMAT_SIZE)
+    if (ddsImage.header.size != image::DDS_HEADER_SIZE ||
+        ddsImage.header.pixelFormat.size != image::DDS_PIXEL_FORMAT_SIZE)
     {
         game::Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' has an invalid DDS header: size=%u pixelFormatSize=%u\n",
                              image->name, ddsImage.header.size, ddsImage.header.pixelFormat.size);
         return false;
     }
 
-    if (!GetDDSFormat(ddsImage, ddsFormat))
+    if (!ddsImage.GetGpuFormat(ddsFormat))
     {
         game::Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' has an unsupported DDS format: flags=0x%X fourCC=0x%X\n",
                              image->name, ddsImage.header.pixelFormat.flags, ddsImage.header.pixelFormat.fourCC);
@@ -317,7 +168,7 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage, uint32_t 
     const uint32_t mipTailBaseLevel = image->texture.basemap->Format.PackedMips != 0
                                           ? xenos_texture::GetMipTailBaseLevel(image->width, image->height)
                                           : levelCount;
-    const uint32_t ddsMipCount = GetDDSMipCount(ddsImage);
+    const uint32_t ddsMipCount = ddsImage.GetMipCount();
     if (ddsFirstMipLevel >= ddsMipCount)
     {
         game::Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' replacement DDS has no mip %u: mipCount=%u\n", image->name,
@@ -514,7 +365,7 @@ void Image_Replace(game::GfxImage *image)
     if (!ValidateDDSHeader(image, ddsImage, replacementPath, &ddsFormat))
         return;
 
-    const bool ddsIsCubemap = DDSIsCubemap(ddsImage);
+    const bool ddsIsCubemap = ddsImage.IsCubemap();
     const bool ddsMatchesImageDimensions =
         image->width == ddsImage.header.width && image->height == ddsImage.header.height;
     const bool ddsMatchesStreamDimensions = image->streaming && image->mapType == game::MAPTYPE_2D && !ddsIsCubemap &&
@@ -541,7 +392,7 @@ void Image_Replace(game::GfxImage *image)
             return;
         }
 
-        const uint32_t ddsMipCount = GetDDSMipCount(ddsImage);
+        const uint32_t ddsMipCount = ddsImage.GetMipCount();
         if (ddsMipCount < 2u)
         {
             game::Com_PrintError(CON_CHANNEL_ERROR,
@@ -671,7 +522,7 @@ bool R_StreamLoadImageReplacement(game::GfxImage *image, double imageDistSq)
 
     const uint32_t streamWidth = static_cast<uint32_t>(image->width) * 2u;
     const uint32_t streamHeight = static_cast<uint32_t>(image->height) * 2u;
-    if (DDSIsCubemap(ddsImage) || ddsImage.header.width != streamWidth || ddsImage.header.height != streamHeight)
+    if (ddsImage.IsCubemap() || ddsImage.header.width != streamWidth || ddsImage.header.height != streamHeight)
     {
         game::Com_PrintError(CON_CHANNEL_ERROR,
                              "R_StreamLoadImageReplacement: Image '%s' dimensions do not match streamed mip: "
@@ -680,12 +531,12 @@ bool R_StreamLoadImageReplacement(game::GfxImage *image, double imageDistSq)
         return true;
     }
 
-    if (GetDDSMipCount(ddsImage) < 2u)
+    if (ddsImage.GetMipCount() < 2u)
     {
         game::Com_PrintError(CON_CHANNEL_ERROR,
                              "R_StreamLoadImageReplacement: Image '%s' replacement DDS must include stream and "
                              "resident mips: mipCount=%u\n",
-                             image->name, GetDDSMipCount(ddsImage));
+                             image->name, ddsImage.GetMipCount());
         return true;
     }
 
