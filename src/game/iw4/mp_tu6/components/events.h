@@ -16,6 +16,8 @@ class Events : public Module
     static void OnDvarInit(const std::function<void()> &callback);
     static void OnCG_DrawActive(const std::function<void()> &callback);
     static void OnCmdInit(const std::function<void()> &callback);
+    static void OnDBLinkXAssetPre(
+        const std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)> &callback);
     static void OnVMShutdown(const std::function<void()> &callback);
 
   private:
@@ -30,6 +32,12 @@ class Events : public Module
     static std::vector<std::function<void()>> cmdinit_callbacks;
     static Detour Cmd_Init_Detour;
     static void Cmd_Init_Hook();
+
+    static std::vector<std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)>>
+        db_linkxasset_pre_callbacks;
+    static Detour DB_LinkXAssetEntry1_Detour;
+    static iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetType type,
+                                                                       iw4::mp_tu6::XAssetHeader *header);
 
     static std::vector<std::function<void()>> vmshutdown_callbacks;
     static Detour Scr_ShutdownSystem_Detour;

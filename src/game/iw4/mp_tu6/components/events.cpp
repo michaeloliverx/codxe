@@ -63,6 +63,27 @@ void Events::OnCmdInit(const std::function<void()> &callback)
 
 Detour Events::Cmd_Init_Detour;
 
+std::vector<std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)>>
+    Events::db_linkxasset_pre_callbacks;
+Detour Events::DB_LinkXAssetEntry1_Detour;
+
+iw4::mp_tu6::XAssetEntryPoolEntry *Events::DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetType type,
+                                                                    iw4::mp_tu6::XAssetHeader *header)
+{
+    for (auto it = db_linkxasset_pre_callbacks.begin(); it != db_linkxasset_pre_callbacks.end(); ++it)
+    {
+        (*it)(type, header);
+    }
+
+    return DB_LinkXAssetEntry1_Detour.GetOriginal<decltype(iw4::mp_tu6::DB_LinkXAssetEntry1)>()(type, header);
+}
+
+void Events::OnDBLinkXAssetPre(
+    const std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)> &callback)
+{
+    db_linkxasset_pre_callbacks.emplace_back(callback);
+}
+
 std::vector<std::function<void()>> Events::vmshutdown_callbacks;
 
 void Events::Scr_ShutdownSystem_Hook(unsigned __int8 sys)
@@ -93,6 +114,9 @@ Events::Events()
     Cmd_Init_Detour = Detour(iw4::mp_tu6::Cmd_Init, Cmd_Init_Hook);
     Cmd_Init_Detour.Install();
 
+    DB_LinkXAssetEntry1_Detour = Detour(iw4::mp_tu6::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
+    DB_LinkXAssetEntry1_Detour.Install();
+
     Scr_ShutdownSystem_Detour = Detour(iw4::mp_tu6::Scr_ShutdownSystem, Scr_ShutdownSystem_Hook);
     Scr_ShutdownSystem_Detour.Install();
 }
@@ -102,10 +126,12 @@ Events::~Events()
     Com_InitDvars_Detour.Remove();
     CG_DrawActive_Detour.Remove();
     Cmd_Init_Detour.Remove();
+    DB_LinkXAssetEntry1_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
 
     com_initdvars_callbacks.clear();
     cg_drawactive_callbacks.clear();
     cmdinit_callbacks.clear();
+    db_linkxasset_pre_callbacks.clear();
     vmshutdown_callbacks.clear();
 }

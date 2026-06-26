@@ -146,6 +146,10 @@ static Key_SetCatcher_t Key_SetCatcher = reinterpret_cast<Key_SetCatcher_t>(0x82
 typedef Material *(*Material_RegisterHandle_t)(const char *name);
 static Material_RegisterHandle_t Material_RegisterHandle = reinterpret_cast<Material_RegisterHandle_t>(0x823C2FF8);
 
+typedef void (*ImageCache_InitImage_t)(GfxImage *image, GfxImage *remoteImage, unsigned __int8 *pixels,
+                                       unsigned int imagePartIndex);
+static ImageCache_InitImage_t ImageCache_InitImage = reinterpret_cast<ImageCache_InitImage_t>(0x823DE448);
+
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_t *dvar)>(0x823DDD78);
 
 typedef void (*R_AddCmdDrawStretchPic_t)(float x, float y, float w, float h, float s0, float t0, float s1, float t1,
