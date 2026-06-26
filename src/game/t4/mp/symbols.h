@@ -44,9 +44,13 @@ const int NUM_BSP_OR_DYNAMIC_SPAWNS = 6;
 static auto s_bspOrDynamicSpawns = reinterpret_cast<SpawnFuncEntry *>(0x82035D30);
 
 // Functions
+struct StreamAllocBlockInfo;
+
 static auto CG_BoldGameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC88);
 static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82159560);
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC68);
+typedef void (*CG_RegisterGraphics_t)(int localClientNum, const char *mapname);
+static CG_RegisterGraphics_t CG_RegisterGraphics = reinterpret_cast<CG_RegisterGraphics_t>(0x8216F338);
 static auto CG_Init =
     reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(
         0x82171A30);
@@ -72,6 +76,8 @@ static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x82
 
 typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
 static Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x82271BE0);
+typedef void (*Com_PrintError_t)(int channel, const char *fmt, ...);
+static Com_PrintError_t Com_PrintError = reinterpret_cast<Com_PrintError_t>(0x82271D00);
 
 static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x82272BF8);
 
@@ -112,6 +118,18 @@ static auto R_AddCmdDrawText =
     reinterpret_cast<void (*)(const char *text, int fontSize, Font_s *font, float x, float y, float scaleX,
                               float scaleY, float rotation, const float *color, int flags)>(0x82401C30);
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_s *dvar)>(0x8240D860);
+typedef void (*R_StreamLoadImage_t)(GfxImage *image, double imageDistSq);
+static R_StreamLoadImage_t R_StreamLoadImage = reinterpret_cast<R_StreamLoadImage_t>(0x82410190);
+typedef int (*RB_StreamQueueCommandSetHighMip_t)(GfxImage *image, unsigned __int8 *pixels);
+static RB_StreamQueueCommandSetHighMip_t RB_StreamQueueCommandSetHighMip =
+    reinterpret_cast<RB_StreamQueueCommandSetHighMip_t>(0x82428320);
+typedef int (*R_StreamAlloc_Alloc_t)(unsigned int size, int priority, StreamAllocBlockInfo **block,
+                                     unsigned int *streamSlot);
+static R_StreamAlloc_Alloc_t R_StreamAlloc_Alloc = reinterpret_cast<R_StreamAlloc_Alloc_t>(0x82436728);
+typedef void (*R_StreamAlloc_SetImage_t)(StreamAllocBlockInfo *block, __int16 streamSlot, GfxImage *image);
+static R_StreamAlloc_SetImage_t R_StreamAlloc_SetImage = reinterpret_cast<R_StreamAlloc_SetImage_t>(0x82436A08);
+typedef unsigned int *r_streamBufferBase_t;
+static r_streamBufferBase_t r_streamBufferBase = reinterpret_cast<r_streamBufferBase_t>(0x85F03DCC);
 
 static auto ScriptEnt_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName)>(0x82244B50);
 static auto Scr_AddArray = reinterpret_cast<void (*)(scriptInstance_t inst)>(0x82345C80);
