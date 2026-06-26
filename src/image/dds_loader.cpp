@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "image/dds_loader.h"
+#include "utils/endian.h"
 
 namespace image
 {
@@ -9,31 +10,31 @@ const size_t DDS_FILE_HEADER_SIZE = sizeof(uint32_t) + sizeof(DDS_HEADER);
 
 void SwapDDSHeaderEndian(DDS_HEADER &header)
 {
-    header.dwSize = _byteswap_ulong(header.dwSize);
-    header.dwFlags = _byteswap_ulong(header.dwFlags);
-    header.dwHeight = _byteswap_ulong(header.dwHeight);
-    header.dwWidth = _byteswap_ulong(header.dwWidth);
-    header.dwPitchOrLinearSize = _byteswap_ulong(header.dwPitchOrLinearSize);
-    header.dwDepth = _byteswap_ulong(header.dwDepth);
-    header.dwMipMapCount = _byteswap_ulong(header.dwMipMapCount);
+    utils::endian::ByteSwap(header.dwSize);
+    utils::endian::ByteSwap(header.dwFlags);
+    utils::endian::ByteSwap(header.dwHeight);
+    utils::endian::ByteSwap(header.dwWidth);
+    utils::endian::ByteSwap(header.dwPitchOrLinearSize);
+    utils::endian::ByteSwap(header.dwDepth);
+    utils::endian::ByteSwap(header.dwMipMapCount);
 
     for (int i = 0; i < 11; i++)
-        header.dwReserved1[i] = _byteswap_ulong(header.dwReserved1[i]);
+        utils::endian::ByteSwap(header.dwReserved1[i]);
 
-    header.ddspf.dwSize = _byteswap_ulong(header.ddspf.dwSize);
-    header.ddspf.dwFlags = _byteswap_ulong(header.ddspf.dwFlags);
-    header.ddspf.dwFourCC = _byteswap_ulong(header.ddspf.dwFourCC);
-    header.ddspf.dwRGBBitCount = _byteswap_ulong(header.ddspf.dwRGBBitCount);
-    header.ddspf.dwRBitMask = _byteswap_ulong(header.ddspf.dwRBitMask);
-    header.ddspf.dwGBitMask = _byteswap_ulong(header.ddspf.dwGBitMask);
-    header.ddspf.dwBBitMask = _byteswap_ulong(header.ddspf.dwBBitMask);
-    header.ddspf.dwABitMask = _byteswap_ulong(header.ddspf.dwABitMask);
+    utils::endian::ByteSwap(header.ddspf.dwSize);
+    utils::endian::ByteSwap(header.ddspf.dwFlags);
+    utils::endian::ByteSwap(header.ddspf.dwFourCC);
+    utils::endian::ByteSwap(header.ddspf.dwRGBBitCount);
+    utils::endian::ByteSwap(header.ddspf.dwRBitMask);
+    utils::endian::ByteSwap(header.ddspf.dwGBitMask);
+    utils::endian::ByteSwap(header.ddspf.dwBBitMask);
+    utils::endian::ByteSwap(header.ddspf.dwABitMask);
 
-    header.dwCaps = _byteswap_ulong(header.dwCaps);
-    header.dwCaps2 = _byteswap_ulong(header.dwCaps2);
-    header.dwCaps3 = _byteswap_ulong(header.dwCaps3);
-    header.dwCaps4 = _byteswap_ulong(header.dwCaps4);
-    header.dwReserved2 = _byteswap_ulong(header.dwReserved2);
+    utils::endian::ByteSwap(header.dwCaps);
+    utils::endian::ByteSwap(header.dwCaps2);
+    utils::endian::ByteSwap(header.dwCaps3);
+    utils::endian::ByteSwap(header.dwCaps4);
+    utils::endian::ByteSwap(header.dwReserved2);
 }
 
 bool IsValidDdsImage(const DdsImage &image)
@@ -123,7 +124,8 @@ DdsImage LoadDdsFromFile(const std::string &path)
     if (!file || file.gcount() != sizeof(magic))
         return DdsImage();
 
-    if (_byteswap_ulong(magic) != DDS_MAGIC)
+    utils::endian::ByteSwap(magic);
+    if (magic != DDS_MAGIC)
         return DdsImage();
 
     file.read(reinterpret_cast<char *>(&image.header), sizeof(DDS_HEADER));
