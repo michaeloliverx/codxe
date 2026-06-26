@@ -144,10 +144,12 @@ void Image_Dump(const GfxImage *image)
         image::WriteDdsHeader(file, header);
 
         const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
-        const uint32_t faceSize =
+        const uint32_t linearFaceSize =
             image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0u, format);
+        const uint32_t tiledFaceSize = image::xenos_texture::CalculateTiledLevelSize(
+            image->width, image->height, 0u, format, image->texture.basemap->Format.Pitch);
         const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(image->width, 0u, format);
-        if (faceSize == 0 || rowPitch == 0)
+        if (linearFaceSize == 0 || tiledFaceSize == 0 || rowPitch == 0)
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported cube map format %d!\n", format);
             return;
@@ -156,18 +158,28 @@ void Image_Dump(const GfxImage *image)
         // TODO: handle mip levels per face for cubemaps
         for (int i = 0; i < 6; i++)
         {
-            unsigned char *face_pixels = image->pixels + (i * faceSize); // Offset for each face
+            const size_t faceOffset = static_cast<size_t>(i) * tiledFaceSize;
+            if (faceOffset + tiledFaceSize > image->baseSize)
+            {
+                Com_PrintError(CON_CHANNEL_ERROR,
+                               "Image_Dump: Cube image '%s' pixel data is too small: have=%u need=%u\n", image->name,
+                               image->baseSize, static_cast<unsigned int>(faceOffset + tiledFaceSize));
+                return;
+            }
 
-            std::vector<uint8_t> swappedFace(face_pixels, face_pixels + faceSize);
+            unsigned char *face_pixels = image->pixels + faceOffset; // Offset for each face
+
+            std::vector<uint8_t> swappedFace(face_pixels, face_pixels + tiledFaceSize);
             image::xenos_texture::ApplyGpuEndian(swappedFace.data(), swappedFace.size(),
                                                  static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
             // Create buffer for linear texture data
-            std::vector<uint8_t> linearFace(faceSize);
+            std::vector<uint8_t> linearFace(linearFaceSize);
 
             if (!image::xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
                                                           image->texture.basemap->Format.Pitch, linearFace.data(),
-                                                          rowPitch, swappedFace.data()))
+                                                          linearFace.size(), rowPitch, swappedFace.data(),
+                                                          swappedFace.size()))
             {
                 Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile cube image '%s' face %d\n", image->name,
                                i);
@@ -184,25 +196,36 @@ void Image_Dump(const GfxImage *image)
         // TODO: write mip levels
         image::WriteDdsHeader(file, header);
 
-        std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
-
-        image::xenos_texture::ApplyGpuEndian(pixelData.data(), pixelData.size(),
-                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
-
-        // Create a linear data buffer to hold the untiled texture
-        std::vector<uint8_t> linearData(image->baseSize);
-
         auto format = image->texture.basemap->Format.DataFormat;
+        const uint32_t linearLevelSize =
+            image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0u, format);
+        const uint32_t tiledLevelSize = image::xenos_texture::CalculateTiledLevelSize(
+            image->width, image->height, 0u, format, image->texture.basemap->Format.Pitch);
         const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(image->width, 0u, format);
-        if (rowPitch == 0)
+        if (linearLevelSize == 0 || tiledLevelSize == 0 || rowPitch == 0)
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
             return;
         }
 
+        if (image->baseSize < tiledLevelSize)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Image '%s' pixel data is too small: have=%u need=%u\n",
+                           image->name, image->baseSize, tiledLevelSize);
+            return;
+        }
+
+        std::vector<uint8_t> pixelData(image->pixels, image->pixels + tiledLevelSize);
+
+        image::xenos_texture::ApplyGpuEndian(pixelData.data(), pixelData.size(),
+                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+
+        // Create a linear data buffer to hold the untiled texture
+        std::vector<uint8_t> linearData(linearLevelSize);
+
         if (!image::xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
-                                                      image->texture.basemap->Format.Pitch, linearData.data(), rowPitch,
-                                                      pixelData.data()))
+                                                      image->texture.basemap->Format.Pitch, linearData.data(),
+                                                      linearData.size(), rowPitch, pixelData.data(), pixelData.size()))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile image '%s'\n", image->name);
             return;
@@ -285,12 +308,14 @@ void Cmd_imagedump()
 
         auto width = image->width * 2;
         auto height = image->height * 2;
-        auto baseSize = width * height * 4;
-
         auto format = image->texture.basemap->Format.DataFormat;
+        const uint32_t linearLevelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, 0u, format);
+        const uint32_t tiledLevelSize = image::xenos_texture::CalculateTiledLevelSize(width, height, 0u, format, 0u);
+
         image::DDS_HEADER header;
-        if (!image::CreateDdsHeader(header, width, height, image->depth, 1u, baseSize, image::DDSCAPS_TEXTURE, 0u,
-                                    format))
+        if (linearLevelSize == 0 || tiledLevelSize == 0 ||
+            !image::CreateDdsHeader(header, width, height, image->depth, 1u, linearLevelSize, image::DDSCAPS_TEXTURE,
+                                    0u, format))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
             return;
@@ -320,12 +345,21 @@ void Cmd_imagedump()
             continue;
         }
 
+        if (buffer.size() < tiledLevelSize)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR,
+                           "Image_Dump: Highmip image '%s' pixel data is too small: have=%u need=%u\n",
+                           assetName.c_str(), static_cast<unsigned int>(buffer.size()), tiledLevelSize);
+            continue;
+        }
+
         // Create a buffer for linear texture data
-        std::vector<uint8_t> linearData(buffer.size());
+        std::vector<uint8_t> linearData(linearLevelSize);
         std::vector<uint8_t> bufferAsUint8(buffer.begin(), buffer.end());
 
         if (!image::xenos_texture::UntileTextureLevel(width, height, 0, static_cast<uint32_t>(format), 0,
-                                                      linearData.data(), rowPitch, bufferAsUint8.data()))
+                                                      linearData.data(), linearData.size(), rowPitch,
+                                                      bufferAsUint8.data(), bufferAsUint8.size()))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile highmip image '%s'\n", assetName.c_str());
             continue;
