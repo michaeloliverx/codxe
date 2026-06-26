@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+namespace image
+{
 namespace xenos_texture
 {
 struct TextureFormatInfo
@@ -39,3 +41,4 @@ bool UntileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint
                         void *destination, size_t destinationSize, uint32_t destinationRowPitch, const void *source,
                         size_t sourceSize);
 } // namespace xenos_texture
+} // namespace image

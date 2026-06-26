@@ -1,6 +1,8 @@
 #include "pch.h"
-#include "xenos_texture.h"
+#include "image/xenos_texture.h"
 
+namespace image
+{
 namespace
 {
 struct TextureLevelLayout
@@ -373,3 +375,4 @@ bool UntileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint
     return true;
 }
 } // namespace xenos_texture
+} // namespace image

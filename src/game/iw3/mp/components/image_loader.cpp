@@ -2,7 +2,7 @@
 #include "common/config.h"
 #include "command.h"
 #include "image_loader.h"
-#include "xenos_texture.h"
+#include "image/xenos_texture.h"
 
 // Forgive me for this dreadful code. It was hacked together until semi working and not touched since.
 // TODO: refactor and generalise for the other games.
@@ -237,7 +237,7 @@ size_t CalculateRequiredLinearDataSize(uint32_t width, uint32_t height, GPUTEXTU
     for (uint32_t localMipLevel = 0; localMipLevel < levelCount; ++localMipLevel)
     {
         const uint32_t mipLevel = firstMipLevel + localMipLevel;
-        const uint32_t levelSize = xenos_texture::CalculateLinearLevelSize(width, height, mipLevel, format);
+        const uint32_t levelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, mipLevel, format);
         if (levelSize == 0)
             return 0;
 
@@ -253,7 +253,7 @@ uint32_t CalculateDDSMipOffset(uint32_t width, uint32_t height, GPUTEXTUREFORMAT
 
     for (uint32_t currentMip = 0; currentMip < mipLevel; ++currentMip)
     {
-        const uint32_t levelSize = xenos_texture::CalculateLinearLevelSize(width, height, currentMip, format);
+        const uint32_t levelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, currentMip, format);
         if (levelSize == 0)
             return 0;
 
@@ -270,7 +270,7 @@ size_t CalculateRequiredMipTextureBytes(uint32_t width, uint32_t height, GPUTEXT
 
     for (uint32_t mipLevel = firstMipLevel; mipLevel < levelCount; ++mipLevel)
     {
-        const uint32_t levelSize = xenos_texture::CalculateTiledLevelSize(width, height, mipLevel, format, 0u);
+        const uint32_t levelSize = image::xenos_texture::CalculateTiledLevelSize(width, height, mipLevel, format, 0u);
         if (levelSize == 0)
             return 0;
 
@@ -295,7 +295,8 @@ bool Validate2DReplacementData(const iw3::mp::GfxImage *image, const DDSImage &d
     if (ddsImage.data.size() < *requiredDDSSize)
         return false;
 
-    const uint32_t baseSize = xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, 1u);
+    const uint32_t baseSize =
+        image::xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, 1u);
     const size_t mipBytes =
         CalculateRequiredMipTextureBytes(image->width, image->height, format, 1u, replacementLevelCount, 1u);
     *requiredTextureBytes = static_cast<size_t>(baseSize) + mipBytes;
@@ -361,13 +362,13 @@ void Image_DbgPrint(const GfxImage *image)
         break;
     }
 
-    const xenos_texture::TextureFormatInfo *formatInfo =
-        xenos_texture::GetTextureFormatInfo(image->texture.basemap->Format.DataFormat);
-    const uint32_t MipTailBaseLevel = xenos_texture::GetMipTailBaseLevel(image->width, image->height);
-    const uint32_t MipLevelCount = xenos_texture::GetTextureLevelCount(image->texture.basemap);
+    const image::xenos_texture::TextureFormatInfo *formatInfo =
+        image::xenos_texture::GetTextureFormatInfo(image->texture.basemap->Format.DataFormat);
+    const uint32_t MipTailBaseLevel = image::xenos_texture::GetMipTailBaseLevel(image->width, image->height);
+    const uint32_t MipLevelCount = image::xenos_texture::GetTextureLevelCount(image->texture.basemap);
     const uint32_t faceCount = image->mapType == MAPTYPE_CUBE ? 6u : 1u;
     const uint32_t BaseSize =
-        xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, faceCount);
+        image::xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, faceCount);
     const uint32_t bitsPerPixel = formatInfo != NULL ? formatInfo->bitsPerPixel : 0u;
     const uint32_t bytesPerBlock = formatInfo != NULL ? formatInfo->bytesPerBlock : 0u;
 
@@ -404,7 +405,7 @@ void Image_Dump(const GfxImage *image)
 
     const uint32_t faceCount = image->mapType == MAPTYPE_CUBE ? 6u : 1u;
     uint32_t BaseSize =
-        xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, faceCount);
+        image::xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, faceCount);
 
     DDSHeader header;
     memset(&header, 0, sizeof(DDSHeader));
@@ -415,7 +416,7 @@ void Image_Dump(const GfxImage *image)
     header.height = _byteswap_ulong(image->height);
     header.width = _byteswap_ulong(image->width);
     header.depth = _byteswap_ulong(image->depth);
-    header.mipMapCount = _byteswap_ulong(xenos_texture::GetTextureLevelCount(image->texture.basemap));
+    header.mipMapCount = _byteswap_ulong(image::xenos_texture::GetTextureLevelCount(image->texture.basemap));
 
     auto format = image->texture.basemap->Format.DataFormat;
     switch (format)
@@ -524,15 +525,15 @@ void Image_Dump(const GfxImage *image)
             unsigned char *face_pixels = image->pixels + (i * face_size); // Offset for each face
 
             std::vector<uint8_t> swappedFace(face_pixels, face_pixels + face_size);
-            xenos_texture::ApplyGpuEndian(swappedFace.data(), swappedFace.size(),
-                                          static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+            image::xenos_texture::ApplyGpuEndian(swappedFace.data(), swappedFace.size(),
+                                                 static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
             // Create buffer for linear texture data
             std::vector<uint8_t> linearFace(face_size);
 
-            if (!xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
-                                                   image->texture.basemap->Format.Pitch, linearFace.data(), rowPitch,
-                                                   swappedFace.data()))
+            if (!image::xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
+                                                          image->texture.basemap->Format.Pitch, linearFace.data(),
+                                                          rowPitch, swappedFace.data()))
             {
                 Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile cube image '%s' face %d\n", image->name,
                                i);
@@ -551,8 +552,8 @@ void Image_Dump(const GfxImage *image)
 
         std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
 
-        xenos_texture::ApplyGpuEndian(pixelData.data(), pixelData.size(),
-                                      static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+        image::xenos_texture::ApplyGpuEndian(pixelData.data(), pixelData.size(),
+                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
         // Create a linear data buffer to hold the untiled texture
         std::vector<uint8_t> linearData(image->baseSize);
@@ -584,9 +585,9 @@ void Image_Dump(const GfxImage *image)
             return;
         }
 
-        if (!xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
-                                               image->texture.basemap->Format.Pitch, linearData.data(), rowPitch,
-                                               pixelData.data()))
+        if (!image::xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
+                                                      image->texture.basemap->Format.Pitch, linearData.data(), rowPitch,
+                                                      pixelData.data()))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile image '%s'\n", image->name);
             return;
@@ -752,8 +753,8 @@ void Cmd_imagedump()
 
         output_file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
 
-        xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
-                                      static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+        image::xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
+                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
         // Calculate row pitch based on format
         uint32_t rowPitch;
@@ -786,8 +787,8 @@ void Cmd_imagedump()
         std::vector<uint8_t> linearData(buffer.size());
         std::vector<uint8_t> bufferAsUint8(buffer.begin(), buffer.end());
 
-        if (!xenos_texture::UntileTextureLevel(width, height, 0, static_cast<uint32_t>(format), 0, linearData.data(),
-                                               rowPitch, bufferAsUint8.data()))
+        if (!image::xenos_texture::UntileTextureLevel(width, height, 0, static_cast<uint32_t>(format), 0,
+                                                      linearData.data(), rowPitch, bufferAsUint8.data()))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile highmip image '%s'\n", assetName.c_str());
             continue;
@@ -809,9 +810,9 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage, uint32_t ddsFir
     }
 
     const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
-    const uint32_t levelCount = xenos_texture::GetTextureLevelCount(image->texture.basemap);
+    const uint32_t levelCount = image::xenos_texture::GetTextureLevelCount(image->texture.basemap);
     const uint32_t mipTailBaseLevel = image->texture.basemap->Format.PackedMips != 0
-                                          ? xenos_texture::GetMipTailBaseLevel(image->width, image->height)
+                                          ? image::xenos_texture::GetMipTailBaseLevel(image->width, image->height)
                                           : levelCount;
     const uint32_t ddsMipCount = GetDDSMipCount(ddsImage);
     if (ddsFirstMipLevel >= ddsMipCount)
@@ -823,9 +824,9 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage, uint32_t ddsFir
 
     const uint32_t replaceLevelCount = min(levelCount, ddsMipCount - ddsFirstMipLevel);
     const uint32_t nonPackedLevelCount = max(1u, min(replaceLevelCount, mipTailBaseLevel));
-    unsigned char *baseData = xenos_texture::GetTextureBase(image->texture.basemap, image->pixels);
-    unsigned char *mipData =
-        xenos_texture::GetTextureMipBase(image->texture.basemap, baseData, image->width, image->height, format, 1u);
+    unsigned char *baseData = image::xenos_texture::GetTextureBase(image->texture.basemap, image->pixels);
+    unsigned char *mipData = image::xenos_texture::GetTextureMipBase(image->texture.basemap, baseData, image->width,
+                                                                     image->height, format, 1u);
 
     size_t requiredDDSSize = 0;
     size_t requiredTextureBytes = 0;
@@ -864,10 +865,10 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage, uint32_t ddsFir
     for (uint32_t localMipLevel = 0; localMipLevel < nonPackedLevelCount; localMipLevel++)
     {
         const uint32_t ddsMipLevel = ddsFirstMipLevel + localMipLevel;
-        uint32_t rowPitch = xenos_texture::CalculateLinearRowPitch(ddsImage.header.width, ddsMipLevel, format);
-        uint32_t ddsMipLevelSize =
-            xenos_texture::CalculateLinearLevelSize(ddsImage.header.width, ddsImage.header.height, ddsMipLevel, format);
-        uint32_t tiledMipLevelSize = xenos_texture::CalculateTiledLevelSize(
+        uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(ddsImage.header.width, ddsMipLevel, format);
+        uint32_t ddsMipLevelSize = image::xenos_texture::CalculateLinearLevelSize(
+            ddsImage.header.width, ddsImage.header.height, ddsMipLevel, format);
+        uint32_t tiledMipLevelSize = image::xenos_texture::CalculateTiledLevelSize(
             image->width, image->height, localMipLevel, format, image->texture.basemap->Format.Pitch);
 
         if (ddsMipLevelSize == 0 || tiledMipLevelSize == 0 || rowPitch == 0)
@@ -888,21 +889,21 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage, uint32_t ddsFir
         std::vector<uint8_t> levelData(ddsImage.data.begin() + ddsOffset,
                                        ddsImage.data.begin() + ddsOffset + ddsMipLevelSize);
 
-        xenos_texture::ApplyGpuEndian(levelData.data(), levelData.size(),
-                                      static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+        image::xenos_texture::ApplyGpuEndian(levelData.data(), levelData.size(),
+                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
         unsigned char *destination = baseData;
         if (localMipLevel > 0)
         {
-            destination = mipData + xenos_texture::CalculateMipLevelOffset(image->width, image->height, localMipLevel,
-                                                                           format, 1u);
+            destination = mipData + image::xenos_texture::CalculateMipLevelOffset(image->width, image->height,
+                                                                                  localMipLevel, format, 1u);
         }
 
         std::vector<uint8_t> tiledData(tiledMipLevelSize);
 
-        if (!xenos_texture::TileTextureLevel(image->width, image->height, localMipLevel, format,
-                                             image->texture.basemap->Format.Pitch, tiledData.data(), tiledData.size(),
-                                             levelData.data(), levelData.size(), rowPitch))
+        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, localMipLevel, format,
+                                                    image->texture.basemap->Format.Pitch, tiledData.data(),
+                                                    tiledData.size(), levelData.data(), levelData.size(), rowPitch))
         {
             Com_PrintError(
                 CON_CHANNEL_ERROR,
@@ -929,13 +930,13 @@ bool Image_Replace_Cube(GfxImage *image, const DDSImage &ddsImage)
 
     const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
 
-    unsigned int face_size = xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0, format);
-    unsigned int rowPitch = xenos_texture::CalculateLinearRowPitch(image->width, 0, format);
-    unsigned int tiledFaceSize = xenos_texture::CalculateTiledLevelSize(image->width, image->height, 0, format,
-                                                                        image->texture.basemap->Format.Pitch);
+    unsigned int face_size = image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0, format);
+    unsigned int rowPitch = image::xenos_texture::CalculateLinearRowPitch(image->width, 0, format);
+    unsigned int tiledFaceSize = image::xenos_texture::CalculateTiledLevelSize(image->width, image->height, 0, format,
+                                                                               image->texture.basemap->Format.Pitch);
     unsigned int tiledBaseSize =
-        xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, 6u);
-    unsigned char *baseData = xenos_texture::GetTextureBase(image->texture.basemap, image->pixels);
+        image::xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, 6u);
+    unsigned char *baseData = image::xenos_texture::GetTextureBase(image->texture.basemap, image->pixels);
 
     if (face_size == 0 || rowPitch == 0 || tiledFaceSize == 0 || tiledBaseSize < tiledFaceSize * 6u)
     {
@@ -981,9 +982,9 @@ bool Image_Replace_Cube(GfxImage *image, const DDSImage &ddsImage)
         // Create a buffer for the tiled texture data
         std::vector<uint8_t> tiledData(tiledFaceSize);
 
-        if (!xenos_texture::TileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
-                                             image->texture.basemap->Format.Pitch, tiledData.data(), tiledData.size(),
-                                             face_pixels, face_size, rowPitch))
+        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
+                                                    image->texture.basemap->Format.Pitch, tiledData.data(),
+                                                    tiledData.size(), face_pixels, face_size, rowPitch))
         {
             Com_PrintError(
                 CON_CHANNEL_ERROR,
@@ -992,8 +993,8 @@ bool Image_Replace_Cube(GfxImage *image, const DDSImage &ddsImage)
             return false;
         }
 
-        xenos_texture::ApplyGpuEndian(tiledData.data(), tiledData.size(),
-                                      static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+        image::xenos_texture::ApplyGpuEndian(tiledData.data(), tiledData.size(),
+                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
         // Copy the data to the image
         memcpy(face_destination, tiledData.data(), tiledFaceSize);
@@ -1091,7 +1092,8 @@ void Image_Replace(GfxImage *image)
 
     if (image->mapType == MAPTYPE_CUBE && !ddsIsCubemap)
     {
-        const uint32_t faceSize = xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0, ddsFormat);
+        const uint32_t faceSize =
+            image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0, ddsFormat);
         if (faceSize == 0 || ddsImage.data.size() < static_cast<size_t>(faceSize) * 6u)
         {
             Com_PrintError(CON_CHANNEL_ERROR,
@@ -1242,11 +1244,11 @@ bool R_StreamLoadHighMipReplacement(const char *filename, unsigned int bytesToRe
             return false;
         }
 
-        const uint32_t sourceSize =
-            xenos_texture::CalculateLinearLevelSize(ddsImage.header.width, ddsImage.header.height, 0u, ddsFormat);
-        const uint32_t rowPitch = xenos_texture::CalculateLinearRowPitch(ddsImage.header.width, 0u, ddsFormat);
-        const uint32_t tiledSize =
-            xenos_texture::CalculateTiledLevelSize(ddsImage.header.width, ddsImage.header.height, 0u, ddsFormat, 0u);
+        const uint32_t sourceSize = image::xenos_texture::CalculateLinearLevelSize(
+            ddsImage.header.width, ddsImage.header.height, 0u, ddsFormat);
+        const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(ddsImage.header.width, 0u, ddsFormat);
+        const uint32_t tiledSize = image::xenos_texture::CalculateTiledLevelSize(
+            ddsImage.header.width, ddsImage.header.height, 0u, ddsFormat, 0u);
 
         if (sourceSize == 0 || rowPitch == 0 || tiledSize == 0)
         {
@@ -1273,11 +1275,11 @@ bool R_StreamLoadHighMipReplacement(const char *filename, unsigned int bytesToRe
         }
 
         std::vector<uint8_t> buffer(ddsImage.data.begin(), ddsImage.data.begin() + sourceSize);
-        xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
-                                      static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+        image::xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
+                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
-        if (!xenos_texture::TileTextureLevel(ddsImage.header.width, ddsImage.header.height, 0u, ddsFormat, 0u, outData,
-                                             bytesToRead, buffer.data(), buffer.size(), rowPitch))
+        if (!image::xenos_texture::TileTextureLevel(ddsImage.header.width, ddsImage.header.height, 0u, ddsFormat, 0u,
+                                                    outData, bytesToRead, buffer.data(), buffer.size(), rowPitch))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "R_StreamLoadHighMipReplacement: Failed to tile image '%s'\n",
                            asset_name.c_str());
