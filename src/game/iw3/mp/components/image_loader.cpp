@@ -77,17 +77,163 @@ namespace iw3
 {
 namespace mp
 {
-void Image_Dump(const GfxImage *image)
+namespace
+{
+const char *HIGHMIP_DIR = "D:\\highmip";
+
+std::string GetSanitizedImageName(const char *imageName)
+{
+    if (imageName == NULL)
+        return std::string();
+
+    std::string sanitizedName = imageName;
+    sanitizedName.erase(
+        std::remove_if(sanitizedName.begin(), sanitizedName.end(), [](char c) { return c == '*'; }),
+        sanitizedName.end());
+    return sanitizedName;
+}
+
+std::string GetImageDumpPath(const char *imageName)
+{
+    return std::string(DUMP_DIR) + "\\images\\" + GetSanitizedImageName(imageName) + ".dds";
+}
+
+bool ReadBinaryFile(const std::string &path, std::vector<uint8_t> *buffer)
+{
+    std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
+    if (!file)
+        return false;
+
+    const std::streamsize size = file.tellg();
+    if (size < 0)
+        return false;
+
+    file.seekg(0, std::ios::beg);
+    buffer->resize(static_cast<size_t>(size));
+    if (size == 0)
+        return true;
+
+    return file.read(reinterpret_cast<char *>(buffer->data()), size) != 0;
+}
+
+std::map<std::string, std::string> CollectHighMipFiles()
+{
+    std::map<std::string, std::string> highMipFiles;
+    const std::vector<std::string> files = filesystem::list_files_in_directory(HIGHMIP_DIR);
+    for (size_t i = 0; i < files.size(); ++i)
+    {
+        const std::string assetName = extract_filename(files[i].c_str());
+        highMipFiles[assetName] = std::string(HIGHMIP_DIR) + "\\" + files[i];
+    }
+
+    return highMipFiles;
+}
+
+std::string FindHighMipPathForImage(const std::map<std::string, std::string> &highMipFiles, const char *imageName)
+{
+    if (imageName == NULL)
+        return std::string();
+
+    std::map<std::string, std::string>::const_iterator highMip = highMipFiles.find(imageName);
+    if (highMip != highMipFiles.end())
+        return highMip->second;
+
+    const std::string sanitizedName = GetSanitizedImageName(imageName);
+    highMip = highMipFiles.find(sanitizedName);
+    if (highMip != highMipFiles.end())
+        return highMip->second;
+
+    return std::string();
+}
+
+bool Image_DumpHighMip(const GfxImage *image, const std::string &highMipPath)
+{
+    if (image->mapType != MAPTYPE_2D)
+        return false;
+
+    std::vector<uint8_t> highMipData;
+    if (!ReadBinaryFile(highMipPath, &highMipData))
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to read highmip file for image '%s': %s\n", image->name,
+                       highMipPath.c_str());
+        return false;
+    }
+
+    const uint32_t width = static_cast<uint32_t>(image->width) * 2u;
+    const uint32_t height = static_cast<uint32_t>(image->height) * 2u;
+    const uint32_t format = image->texture.basemap->Format.DataFormat;
+    const uint32_t linearLevelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, 0u, format);
+    const uint32_t tiledLevelSize = image::xenos_texture::CalculateTiledLevelSize(width, height, 0u, format, 0u);
+    const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(width, 0u, format);
+    if (linearLevelSize == 0 || tiledLevelSize == 0 || rowPitch == 0)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported highmip texture format %u for image '%s'\n", format,
+                       image->name);
+        return false;
+    }
+
+    if (highMipData.size() < tiledLevelSize)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR,
+                       "Image_Dump: Highmip image '%s' pixel data is too small: have=%u need=%u\n", image->name,
+                       static_cast<unsigned int>(highMipData.size()), tiledLevelSize);
+        return false;
+    }
+
+    image::DDS_HEADER header;
+    if (!image::CreateDdsHeader(header, width, height, image->depth, 1u, linearLevelSize, image::DDSCAPS_TEXTURE, 0u,
+                                format))
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported highmip texture format %u for image '%s'\n", format,
+                       image->name);
+        return false;
+    }
+
+    const std::string outputPath = GetImageDumpPath(image->name);
+    std::ofstream outputFile(outputPath.c_str(), std::ios::binary);
+    if (!outputFile)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", outputPath.c_str());
+        return false;
+    }
+
+    image::WriteDdsHeader(outputFile, header);
+
+    std::vector<uint8_t> tiledData(highMipData.begin(), highMipData.begin() + tiledLevelSize);
+    image::xenos_texture::ApplyGpuEndian(tiledData.data(), tiledData.size(),
+                                         static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
+
+    std::vector<uint8_t> linearData(linearLevelSize);
+    if (!image::xenos_texture::UntileTextureLevel(width, height, 0u, format, 0u, linearData.data(), linearData.size(),
+                                                  rowPitch, tiledData.data(), tiledData.size()))
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile highmip image '%s'\n", image->name);
+        return false;
+    }
+
+    outputFile.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
+    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumped highmip image '%s'\n", image->name);
+    return true;
+}
+} // namespace
+
+void Image_Dump(const GfxImage *image, const std::string &highMipPath)
 {
     // TODO: cleanup empty files if failed
-
-    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image '%s'\n", image->name);
 
     if (!image)
     {
         Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Null GfxImage!\n");
         return;
     }
+
+    if (image->name == NULL)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Image has no name!\n");
+        return;
+    }
+
+    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image '%s'\n", image->name);
 
     if (!image->pixels || image->baseSize == 0)
     {
@@ -100,6 +246,9 @@ void Image_Dump(const GfxImage *image)
         Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported map type %d!\n", image->mapType);
         return;
     }
+
+    if (!highMipPath.empty() && Image_DumpHighMip(image, highMipPath))
+        return;
 
     const uint32_t faceCount = image->mapType == MAPTYPE_CUBE ? 6u : 1u;
     uint32_t BaseSize =
@@ -123,16 +272,9 @@ void Image_Dump(const GfxImage *image)
         return;
     }
 
-    std::string filename = std::string(DUMP_DIR) + "\\" + "images";
-    std::string sanitized_name = image->name;
+    const std::string filename = GetImageDumpPath(image->name);
 
-    // Remove invalid characters
-    sanitized_name.erase(std::remove_if(sanitized_name.begin(), sanitized_name.end(), [](char c) { return c == '*'; }),
-                         sanitized_name.end());
-
-    filename += "\\" + sanitized_name + ".dds";
-
-    std::ofstream file(filename, std::ios::binary);
+    std::ofstream file(filename.c_str(), std::ios::binary);
     if (!file)
     {
         Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", filename.c_str());
@@ -257,118 +399,14 @@ void Cmd_imagedump()
     CreateDirectoryA(DUMP_DIR, 0);
     CreateDirectoryA((std::string(DUMP_DIR) + "\\images").c_str(), 0);
 
+    const std::map<std::string, std::string> highMipFiles = CollectHighMipFiles();
     for (unsigned int i = 0; i < imageList.count; i++)
     {
         auto image = imageList.image[i];
-        Image_Dump(image);
-    }
-
-    auto highmips = filesystem::list_files_in_directory("D:\\highmip");
-    for (size_t i = 0; i < highmips.size(); ++i)
-    {
-        const std::string &filepath = "D:\\highmip\\" + highmips[i];
-        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping highmip file: %s\n", filepath.c_str());
-        std::string assetName = extract_filename(filepath.c_str());
-        auto asset = DB_FindXAssetEntry(ASSET_TYPE_IMAGE, assetName.c_str());
-        if (!asset)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' not found in asset list!\n", assetName.c_str());
+        if (image == NULL)
             continue;
-        }
 
-        auto image = asset->entry.asset.header.image;
-
-        std::ifstream input_file(filepath,
-                                 std::ios::binary | std::ios::ate); // Open file in binary mode and seek to end
-        if (!input_file)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", filepath.c_str());
-            continue;
-        }
-
-        std::streamsize size = input_file.tellg();
-        if (size < 0)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to determine file size: %s\n", filepath.c_str());
-            continue;
-        }
-
-        input_file.seekg(0, std::ios::beg);
-        std::vector<uint8_t> buffer(static_cast<size_t>(size));
-
-        if (input_file.read(reinterpret_cast<char *>(buffer.data()), size))
-        {
-            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Read %d bytes from file.\n", size);
-        }
-        else
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Error reading file: %s\n", filepath.c_str());
-            continue;
-        }
-
-        auto width = image->width * 2;
-        auto height = image->height * 2;
-        auto format = image->texture.basemap->Format.DataFormat;
-        const uint32_t linearLevelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, 0u, format);
-        const uint32_t tiledLevelSize = image::xenos_texture::CalculateTiledLevelSize(width, height, 0u, format, 0u);
-
-        image::DDS_HEADER header;
-        if (linearLevelSize == 0 || tiledLevelSize == 0 ||
-            !image::CreateDdsHeader(header, width, height, image->depth, 1u, linearLevelSize, image::DDSCAPS_TEXTURE,
-                                    0u, format))
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
-            return;
-        }
-
-        // TODO: add sanity checks for format, size, etc.
-        // TODO: handle filenames with unsupported characters for Windows
-
-        auto output_filepath = std::string(DUMP_DIR) + "\\highmip\\" + assetName + ".dds";
-
-        std::ofstream output_file(output_filepath, std::ios::binary);
-        if (!output_file)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", output_filepath.c_str());
-            return;
-        }
-
-        image::WriteDdsHeader(output_file, header);
-
-        image::xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
-                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
-
-        const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(width, 0u, format);
-        if (rowPitch == 0)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
-            continue;
-        }
-
-        if (buffer.size() < tiledLevelSize)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR,
-                           "Image_Dump: Highmip image '%s' pixel data is too small: have=%u need=%u\n",
-                           assetName.c_str(), static_cast<unsigned int>(buffer.size()), tiledLevelSize);
-            continue;
-        }
-
-        // Create a buffer for linear texture data
-        std::vector<uint8_t> linearData(linearLevelSize);
-        std::vector<uint8_t> bufferAsUint8(buffer.begin(), buffer.end());
-
-        if (!image::xenos_texture::UntileTextureLevel(width, height, 0, static_cast<uint32_t>(format), 0,
-                                                      linearData.data(), linearData.size(), rowPitch,
-                                                      bufferAsUint8.data(), bufferAsUint8.size()))
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile highmip image '%s'\n", assetName.c_str());
-            continue;
-        }
-
-        output_file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
-        output_file.close();
-
-        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumped highmip file: %s\n", output_filepath.c_str());
+        Image_Dump(image, FindHighMipPathForImage(highMipFiles, image->name));
     }
 }
 
