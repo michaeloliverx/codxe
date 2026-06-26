@@ -154,7 +154,7 @@ bool Image_DumpHighMip(const GfxImage *image, const std::string &highMipPath)
     std::vector<uint8_t> highMipData;
     if (!ReadBinaryFile(highMipPath, &highMipData))
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to read highmip file for image '%s': %s\n", image->name,
+        Com_PrintError(CON_CHANNEL_ERROR, "Could not read highmip for image '%s': %s\n", image->name,
                        highMipPath.c_str());
         return false;
     }
@@ -167,16 +167,14 @@ bool Image_DumpHighMip(const GfxImage *image, const std::string &highMipPath)
     const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(width, 0u, format);
     if (linearLevelSize == 0 || tiledLevelSize == 0 || rowPitch == 0)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported highmip texture format %u for image '%s'\n", format,
-                       image->name);
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': unsupported highmip format %u\n", image->name, format);
         return false;
     }
 
     if (highMipData.size() < tiledLevelSize)
     {
-        Com_PrintError(CON_CHANNEL_ERROR,
-                       "Image_Dump: Highmip image '%s' pixel data is too small: have=%u need=%u\n", image->name,
-                       static_cast<unsigned int>(highMipData.size()), tiledLevelSize);
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': highmip data is too small (have %u, need %u)\n",
+                       image->name, static_cast<unsigned int>(highMipData.size()), tiledLevelSize);
         return false;
     }
 
@@ -184,8 +182,7 @@ bool Image_DumpHighMip(const GfxImage *image, const std::string &highMipPath)
     if (!image::CreateDdsHeader(header, width, height, image->depth, 1u, linearLevelSize, image::DDSCAPS_TEXTURE, 0u,
                                 format))
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported highmip texture format %u for image '%s'\n", format,
-                       image->name);
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': unsupported highmip format %u\n", image->name, format);
         return false;
     }
 
@@ -193,7 +190,7 @@ bool Image_DumpHighMip(const GfxImage *image, const std::string &highMipPath)
     std::ofstream outputFile(outputPath.c_str(), std::ios::binary);
     if (!outputFile)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", outputPath.c_str());
+        Com_PrintError(CON_CHANNEL_ERROR, "Could not create DDS for image '%s': %s\n", image->name, outputPath.c_str());
         return false;
     }
 
@@ -207,12 +204,12 @@ bool Image_DumpHighMip(const GfxImage *image, const std::string &highMipPath)
     if (!image::xenos_texture::UntileTextureLevel(width, height, 0u, format, 0u, linearData.data(), linearData.size(),
                                                   rowPitch, tiledData.data(), tiledData.size()))
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile highmip image '%s'\n", image->name);
+        Com_PrintError(CON_CHANNEL_ERROR, "Could not decode highmip for image '%s'\n", image->name);
         return false;
     }
 
     outputFile.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
-    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumped highmip image '%s'\n", image->name);
+    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumped image '%s' (highmip)\n", image->name);
     return true;
 }
 } // namespace
@@ -223,27 +220,26 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
 
     if (!image)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Null GfxImage!\n");
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image: null asset\n");
         return;
     }
 
     if (image->name == NULL)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Image has no name!\n");
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image: missing name\n");
         return;
     }
 
-    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image '%s'\n", image->name);
-
     if (!image->pixels || image->baseSize == 0)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Image '%s' has no valid pixel data!\n", image->name);
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': no pixel data\n", image->name);
         return;
     }
 
     if (image->mapType != MAPTYPE_2D && image->mapType != MAPTYPE_CUBE)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported map type %d!\n", image->mapType);
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': unsupported map type %d\n", image->name,
+                       image->mapType);
         return;
     }
 
@@ -268,7 +264,7 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
                                 image::xenos_texture::GetTextureLevelCount(image->texture.basemap), BaseSize,
                                 image::DDSCAPS_TEXTURE | image::DDSCAPS_MIPMAP, caps2, format))
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': unsupported texture format %d\n", image->name, format);
         return;
     }
 
@@ -277,7 +273,7 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
     std::ofstream file(filename.c_str(), std::ios::binary);
     if (!file)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", filename.c_str());
+        Com_PrintError(CON_CHANNEL_ERROR, "Could not create DDS for image '%s': %s\n", image->name, filename.c_str());
         return;
     }
 
@@ -293,7 +289,8 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
         const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(image->width, 0u, format);
         if (linearFaceSize == 0 || tiledFaceSize == 0 || rowPitch == 0)
         {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported cube map format %d!\n", format);
+            Com_PrintError(CON_CHANNEL_ERROR, "Skipping cubemap '%s': unsupported texture format %d\n", image->name,
+                           format);
             return;
         }
 
@@ -303,9 +300,9 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
             const size_t faceOffset = static_cast<size_t>(i) * tiledFaceSize;
             if (faceOffset + tiledFaceSize > image->baseSize)
             {
-                Com_PrintError(CON_CHANNEL_ERROR,
-                               "Image_Dump: Cube image '%s' pixel data is too small: have=%u need=%u\n", image->name,
-                               image->baseSize, static_cast<unsigned int>(faceOffset + tiledFaceSize));
+                Com_PrintError(CON_CHANNEL_ERROR, "Skipping cubemap '%s': pixel data is too small (have %u, need %u)\n",
+                               image->name, image->baseSize,
+                               static_cast<unsigned int>(faceOffset + tiledFaceSize));
                 return;
             }
 
@@ -323,8 +320,7 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
                                                           linearFace.size(), rowPitch, swappedFace.data(),
                                                           swappedFace.size()))
             {
-                Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile cube image '%s' face %d\n", image->name,
-                               i);
+                Com_PrintError(CON_CHANNEL_ERROR, "Could not decode cubemap '%s' face %d\n", image->name, i);
                 return;
             }
 
@@ -332,6 +328,7 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
         }
 
         file.close();
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumped image '%s'\n", image->name);
     }
     else if (image->mapType == MAPTYPE_2D)
     {
@@ -346,13 +343,14 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
         const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(image->width, 0u, format);
         if (linearLevelSize == 0 || tiledLevelSize == 0 || rowPitch == 0)
         {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
+            Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': unsupported texture format %d\n", image->name,
+                           format);
             return;
         }
 
         if (image->baseSize < tiledLevelSize)
         {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Image '%s' pixel data is too small: have=%u need=%u\n",
+            Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': pixel data is too small (have %u, need %u)\n",
                            image->name, image->baseSize, tiledLevelSize);
             return;
         }
@@ -369,17 +367,19 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
                                                       image->texture.basemap->Format.Pitch, linearData.data(),
                                                       linearData.size(), rowPitch, pixelData.data(), pixelData.size()))
         {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile image '%s'\n", image->name);
+            Com_PrintError(CON_CHANNEL_ERROR, "Could not decode image '%s'\n", image->name);
             return;
         }
 
         file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
 
         file.close();
+        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumped image '%s'\n", image->name);
     }
     else
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported map type %d!\n", image->mapType);
+        Com_PrintError(CON_CHANNEL_ERROR, "Skipping image '%s': unsupported map type %d\n", image->name,
+                       image->mapType);
         return;
     }
 }
