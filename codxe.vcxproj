@@ -79,7 +79,10 @@
       </ClCompile>
 
       <ClCompile Include="src\common\config.cpp" />
-      <ClCompile Include="src\xenos_texture.cpp" />
+      <ClCompile Include="src\image\dds_loader.cpp" />
+      <ClCompile Include="src\image\dds_writer.cpp" />
+      <ClCompile Include="src\image\xenos_texture.cpp" />
+      <ClCompile Include="src\utils\endian.cpp" />
 
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
@@ -205,7 +208,11 @@
 
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
-      <ClInclude Include="src\xenos_texture.h" />
+      <ClInclude Include="src\image\dds_loader.h" />
+      <ClInclude Include="src\image\dds_types.h" />
+      <ClInclude Include="src\image\dds_writer.h" />
+      <ClInclude Include="src\image\xenos_texture.h" />
+      <ClInclude Include="src\utils\endian.h" />
 
       <ClInclude Include="src\game\iw2\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw2\sp\main.h" />

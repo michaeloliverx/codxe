@@ -3,8 +3,8 @@
 #include "command.h"
 #include "image_loader.h"
 #include "image/dds_loader.h"
+#include "image/dds_writer.h"
 #include "image/xenos_texture.h"
-#include "utils/endian.h"
 
 // Forgive me for this dreadful code. It was hacked together until semi working and not touched since.
 // TODO: refactor and generalise for the other games.
@@ -26,115 +26,6 @@ std::string extract_filename(const char *filename)
     size_t end = (lastDot == std::string::npos || lastDot < start) ? path.length() : lastDot;
 
     return path.substr(start, end - start);
-}
-
-void ByteSwapDDSPixelFormat(image::DDS_PIXELFORMAT &pixelFormat)
-{
-    utils::endian::ByteSwap(pixelFormat.dwSize);
-    utils::endian::ByteSwap(pixelFormat.dwFlags);
-    utils::endian::ByteSwap(pixelFormat.dwFourCC);
-    utils::endian::ByteSwap(pixelFormat.dwRGBBitCount);
-    utils::endian::ByteSwap(pixelFormat.dwRBitMask);
-    utils::endian::ByteSwap(pixelFormat.dwGBitMask);
-    utils::endian::ByteSwap(pixelFormat.dwBBitMask);
-    utils::endian::ByteSwap(pixelFormat.dwABitMask);
-}
-
-void ByteSwapDDSHeader(image::DDS_HEADER &header)
-{
-    utils::endian::ByteSwap(header.dwSize);
-    utils::endian::ByteSwap(header.dwFlags);
-    utils::endian::ByteSwap(header.dwHeight);
-    utils::endian::ByteSwap(header.dwWidth);
-    utils::endian::ByteSwap(header.dwPitchOrLinearSize);
-    utils::endian::ByteSwap(header.dwDepth);
-    utils::endian::ByteSwap(header.dwMipMapCount);
-
-    for (int i = 0; i < 11; i++)
-        utils::endian::ByteSwap(header.dwReserved1[i]);
-
-    ByteSwapDDSPixelFormat(header.ddspf);
-    utils::endian::ByteSwap(header.dwCaps);
-    utils::endian::ByteSwap(header.dwCaps2);
-    utils::endian::ByteSwap(header.dwCaps3);
-    utils::endian::ByteSwap(header.dwCaps4);
-    utils::endian::ByteSwap(header.dwReserved2);
-}
-
-void WriteDDSHeader(std::ofstream &file, image::DDS_HEADER header)
-{
-    uint32_t magic = image::DDS_MAGIC;
-    utils::endian::ByteSwap(magic);
-    ByteSwapDDSHeader(header);
-
-    file.write(reinterpret_cast<const char *>(&magic), sizeof(magic));
-    file.write(reinterpret_cast<const char *>(&header), sizeof(header));
-}
-
-bool PopulateDDSPixelFormat(image::DDS_PIXELFORMAT &pixelFormat, uint32_t gpuFormat)
-{
-    memset(&pixelFormat, 0, sizeof(pixelFormat));
-    pixelFormat.dwSize = image::DDS_PIXEL_FORMAT_SIZE;
-
-    switch (gpuFormat)
-    {
-    case GPUTEXTUREFORMAT_DXT1:
-        pixelFormat.dwFlags = image::DDPF_FOURCC;
-        pixelFormat.dwFourCC = image::DXT1_FOURCC;
-        return true;
-    case GPUTEXTUREFORMAT_DXT2_3:
-        pixelFormat.dwFlags = image::DDPF_FOURCC;
-        pixelFormat.dwFourCC = image::DXT3_FOURCC;
-        return true;
-    case GPUTEXTUREFORMAT_DXT4_5:
-        pixelFormat.dwFlags = image::DDPF_FOURCC;
-        pixelFormat.dwFourCC = image::DXT5_FOURCC;
-        return true;
-    case GPUTEXTUREFORMAT_DXN:
-        pixelFormat.dwFlags = image::DDPF_FOURCC;
-        pixelFormat.dwFourCC = image::DXN_FOURCC;
-        return true;
-    case GPUTEXTUREFORMAT_8:
-        pixelFormat.dwFlags = image::DDPF_LUMINANCE;
-        pixelFormat.dwRGBBitCount = 8;
-        pixelFormat.dwRBitMask = 0x000000FF;
-        return true;
-    case GPUTEXTUREFORMAT_8_8:
-        pixelFormat.dwFlags = image::DDPF_LUMINANCE | image::DDPF_ALPHAPIXELS;
-        pixelFormat.dwRGBBitCount = 16;
-        pixelFormat.dwRBitMask = 0x000000FF;
-        pixelFormat.dwGBitMask = 0x0000FF00;
-        return true;
-    case GPUTEXTUREFORMAT_8_8_8_8:
-        pixelFormat.dwFlags = image::DDPF_RGB | image::DDPF_ALPHAPIXELS;
-        pixelFormat.dwRGBBitCount = 32;
-        pixelFormat.dwRBitMask = 0x00FF0000;
-        pixelFormat.dwGBitMask = 0x0000FF00;
-        pixelFormat.dwBBitMask = 0x000000FF;
-        pixelFormat.dwABitMask = 0xFF000000;
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool PopulateDDSHeader(image::DDS_HEADER &header, uint32_t width, uint32_t height, uint32_t depth,
-                       uint32_t mipMapCount, uint32_t pitchOrLinearSize, uint32_t caps, uint32_t caps2,
-                       uint32_t gpuFormat)
-{
-    memset(&header, 0, sizeof(header));
-    header.dwSize = image::DDS_HEADER_SIZE;
-    header.dwFlags = image::DDSD_CAPS | image::DDSD_HEIGHT | image::DDSD_WIDTH | image::DDSD_PIXELFORMAT |
-                     image::DDSD_LINEARSIZE;
-    header.dwHeight = height;
-    header.dwWidth = width;
-    header.dwPitchOrLinearSize = pitchOrLinearSize;
-    header.dwDepth = depth;
-    header.dwMipMapCount = mipMapCount;
-    header.dwCaps = caps;
-    header.dwCaps2 = caps2;
-
-    return PopulateDDSPixelFormat(header.ddspf, gpuFormat);
 }
 
 size_t CalculateRequiredLinearDataSize(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t firstMipLevel,
@@ -326,7 +217,7 @@ void Image_Dump(const GfxImage *image)
     }
 
     image::DDS_HEADER header;
-    if (!PopulateDDSHeader(header, image->width, image->height, image->depth,
+    if (!image::CreateDdsHeader(header, image->width, image->height, image->depth,
                            image::xenos_texture::GetTextureLevelCount(image->texture.basemap), BaseSize,
                            image::DDSCAPS_TEXTURE | image::DDSCAPS_MIPMAP, caps2, format))
     {
@@ -352,7 +243,7 @@ void Image_Dump(const GfxImage *image)
 
     if (image->mapType == MAPTYPE_CUBE)
     {
-        WriteDDSHeader(file, header);
+        image::WriteDdsHeader(file, header);
 
         unsigned int face_size = 0;
         unsigned int rowPitch = 0;
@@ -402,7 +293,7 @@ void Image_Dump(const GfxImage *image)
     else if (image->mapType == MAPTYPE_2D)
     {
         // TODO: write mip levels
-        WriteDDSHeader(file, header);
+        image::WriteDdsHeader(file, header);
 
         std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
 
@@ -531,7 +422,7 @@ void Cmd_imagedump()
 
         auto format = image->texture.basemap->Format.DataFormat;
         image::DDS_HEADER header;
-        if (!PopulateDDSHeader(header, width, height, image->depth, 1u, baseSize, image::DDSCAPS_TEXTURE, 0u, format))
+        if (!image::CreateDdsHeader(header, width, height, image->depth, 1u, baseSize, image::DDSCAPS_TEXTURE, 0u, format))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
             return;
@@ -549,7 +440,7 @@ void Cmd_imagedump()
             return;
         }
 
-        WriteDDSHeader(output_file, header);
+        image::WriteDdsHeader(output_file, header);
 
         image::xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
                                              static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
