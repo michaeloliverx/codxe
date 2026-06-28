@@ -23,7 +23,8 @@ namespace game = iw4::mp_tu6;
 
 const uint32_t STREAM_PIXEL_SIZE_MASK = 0x3FFFFFF;
 const uint32_t MAX_STREAM_COMPRESSED_SIZE = 64u * 1024u * 1024u;
-const uint32_t STREAM_REPLACEMENT_SCRATCH_SIZE = 1024u * 1024u;
+const uint32_t DDS_FILE_HEADER_SIZE = sizeof(uint32_t) + sizeof(image::DDS_HEADER);
+const uint32_t REPLACEMENT_ROW_SCRATCH_SIZE = 64u * 1024u;
 
 typedef image::DdsImage DDSImage;
 
@@ -45,8 +46,60 @@ struct ZlibStream
 static_assert(sizeof(ZlibStream) == 48, "");
 
 game::dvar_t *dump_assets = nullptr;
-unsigned char *g_streamReplacementScratch = nullptr;
-uint32_t g_streamReplacementScratchSize = 0;
+unsigned char g_replacementRowScratch[REPLACEMENT_ROW_SCRATCH_SIZE];
+
+struct DdsDataFile
+{
+    HANDLE handle;
+    std::string path;
+    uint32_t dataSize;
+
+    DdsDataFile(const std::string &filePath, uint32_t fileDataSize)
+        : handle(CreateFileA(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)),
+          path(filePath), dataSize(fileDataSize)
+    {
+    }
+
+    ~DdsDataFile()
+    {
+        if (handle != INVALID_HANDLE_VALUE)
+            CloseHandle(handle);
+    }
+
+    bool IsValid() const
+    {
+        return handle != INVALID_HANDLE_VALUE;
+    }
+
+    bool SeekData(uint32_t dataOffset, uint32_t size) const
+    {
+        if (dataOffset > dataSize || size > dataSize - dataOffset)
+        {
+            game::Com_Printf(0, "DDS range outside file '%s': dataOffset=%u size=%u dataSize=%u\n", path.c_str(),
+                             dataOffset, size, dataSize);
+            return false;
+        }
+
+        const DWORD fileOffset = static_cast<DWORD>(DDS_FILE_HEADER_SIZE) + dataOffset;
+        SetLastError(NO_ERROR);
+        const DWORD seekResult = SetFilePointer(handle, fileOffset, nullptr, FILE_BEGIN);
+        if (seekResult == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+        {
+            game::Com_Printf(0, "DDS seek failed '%s': offset=%u error=0x%08X\n", path.c_str(), fileOffset,
+                             GetLastError());
+            return false;
+        }
+
+        return true;
+    }
+};
+
+struct DdsRowReadState
+{
+    DdsDataFile *file;
+    GPUENDIAN endian;
+};
 
 uint32_t PtrToUint(const void *ptr)
 {
@@ -77,41 +130,55 @@ void PrintImageInfo(const char *format, ...)
     game::Com_Printf(0, "%s", buffer);
 }
 
-unsigned char *GetStreamReplacementScratch(uint32_t size)
+bool ReadDdsTileRow(uint32_t rowIndex, unsigned char *rowBuffer, uint32_t rowPitch, void *userData)
 {
-    if (size == 0)
-        return nullptr;
+    DdsRowReadState *state = static_cast<DdsRowReadState *>(userData);
+    if (state == nullptr || state->file == nullptr || rowBuffer == nullptr || rowPitch == 0)
+        return false;
 
-    if (g_streamReplacementScratch != nullptr)
-        return size <= g_streamReplacementScratchSize ? g_streamReplacementScratch : nullptr;
-
-    const uint32_t scratchSize = max(size, STREAM_REPLACEMENT_SCRATCH_SIZE);
-    g_streamReplacementScratch = static_cast<unsigned char *>(game::Hunk_AllocateTempMemoryHighInternal(scratchSize));
-    if (g_streamReplacementScratch == nullptr)
+    DWORD bytesRead = 0;
+    if (!ReadFile(state->file->handle, rowBuffer, rowPitch, &bytesRead, nullptr) || bytesRead != rowPitch)
     {
-        PrintImageError("failed to allocate stream replacement scratch: size=%u\n", scratchSize);
-        return nullptr;
+        PrintImageError("DDS row read failed '%s': row=%u size=%u actual=%u error=0x%08X\n",
+                        state->file->path.c_str(), rowIndex, rowPitch, bytesRead, GetLastError());
+        return false;
     }
 
-    g_streamReplacementScratchSize = scratchSize;
-    return g_streamReplacementScratch;
+    image::xenos_texture::ApplyGpuEndian(rowBuffer, rowPitch, state->endian);
+    return true;
 }
 
-bool ReadDdsRangeToScratch(const std::string &replacementPath, uint32_t dataOffset, uint32_t size,
-                           unsigned char **scratch)
+bool TileDdsLevelToTexture(DdsDataFile &ddsFile, uint32_t dataOffset, uint32_t expectedDataSize,
+                           uint32_t sourceWidth, uint32_t sourceHeight, uint32_t sourceMipLevel,
+                           uint32_t destinationWidth, uint32_t destinationHeight, uint32_t destinationMipLevel,
+                           GPUTEXTUREFORMAT format, uint32_t basePitch, unsigned char *destination,
+                           uint32_t destinationSize, GPUENDIAN endian)
 {
-    if (scratch == nullptr)
+    if (destination == nullptr || destinationSize == 0)
         return false;
 
-    *scratch = GetStreamReplacementScratch(size);
-    if (*scratch == nullptr)
+    const uint32_t sourceRowPitch =
+        image::xenos_texture::CalculateLinearRowPitch(sourceWidth, sourceMipLevel, format);
+    const uint32_t sourceLevelSize =
+        image::xenos_texture::CalculateLinearLevelSize(sourceWidth, sourceHeight, sourceMipLevel, format);
+    if (sourceRowPitch == 0 || sourceLevelSize == 0 || sourceLevelSize != expectedDataSize)
+        return false;
+
+    if (sourceRowPitch > sizeof(g_replacementRowScratch))
     {
-        PrintImageError("stream replacement scratch is too small: requested=%u available=%u\n", size,
-                        g_streamReplacementScratchSize);
+        PrintImageError("DDS row scratch too small '%s': rowPitch=%u scratch=%u\n", ddsFile.path.c_str(),
+                        sourceRowPitch, static_cast<unsigned int>(sizeof(g_replacementRowScratch)));
         return false;
     }
 
-    return image::LoadDdsDataRangeFromFile(replacementPath, dataOffset, *scratch, size);
+    if (!ddsFile.SeekData(dataOffset, expectedDataSize))
+        return false;
+
+    DdsRowReadState rowState = {&ddsFile, endian};
+    memset(destination, 0, destinationSize);
+    return image::xenos_texture::TileTextureLevelFromRows(
+        destinationWidth, destinationHeight, destinationMipLevel, format, basePitch, destination, destinationSize,
+        sourceRowPitch, g_replacementRowScratch, sizeof(g_replacementRowScratch), ReadDdsTileRow, &rowState);
 }
 
 bool ImageFileExists(const std::string &path)
@@ -128,11 +195,6 @@ std::string GetReplacementDirectory()
 std::string GetUserReplacementDirectory()
 {
     return std::string(USERRAW_DIR) + "\\images";
-}
-
-bool ReadDDSFile(const std::string &filepath, DDSImage *out)
-{
-    return image::LoadDdsFromFile(filepath, out);
 }
 
 bool ReadDDSHeader(const std::string &filepath, DDSImage *out, uint32_t *dataSize)
@@ -182,19 +244,7 @@ bool ValidateDDSHeaderFields(const game::GfxImage *image, const DDSImage &ddsIma
     return true;
 }
 
-bool ValidateDDSHeader(const game::GfxImage *image, const DDSImage &ddsImage, const std::string &path,
-                       GPUTEXTUREFORMAT *ddsFormat)
-{
-    if (ddsImage.data.empty())
-    {
-        PrintImageError("failed to load DDS for image '%s': %s\n", image->name, path.c_str());
-        return false;
-    }
-
-    return ValidateDDSHeaderFields(image, ddsImage, ddsFormat);
-}
-
-bool Validate2DReplacementData(const game::GfxImage *image, const DDSImage &ddsImage, GPUTEXTUREFORMAT format,
+bool Validate2DReplacementData(const game::GfxImage *image, GPUTEXTUREFORMAT format, size_t ddsDataSize,
                                uint32_t replacementLevelCount, size_t *requiredDDSSize, size_t *requiredTextureBytes)
 {
     *requiredDDSSize =
@@ -202,7 +252,7 @@ bool Validate2DReplacementData(const game::GfxImage *image, const DDSImage &ddsI
     if (*requiredDDSSize == 0)
         return false;
 
-    if (ddsImage.data.size() < *requiredDDSSize)
+    if (ddsDataSize < *requiredDDSSize)
         return false;
 
     const D3DBaseTexture *texture = &image->texture.basemap;
@@ -253,20 +303,14 @@ bool ValidateDDSDataSize(const game::GfxImage *image, const image::DDS_HEADER &h
     return true;
 }
 
-bool ValidateDDSDataSize(const game::GfxImage *image, const DDSImage &ddsImage, GPUTEXTUREFORMAT format,
-                         uint32_t mipCount, uint32_t faceCount)
-{
-    return ValidateDDSDataSize(image, ddsImage.header, ddsImage.data.size(), format, mipCount, faceCount);
-}
-
-bool ValidateCubeReplacementData(const game::GfxImage *image, const DDSImage &ddsImage, GPUTEXTUREFORMAT format,
+bool ValidateCubeReplacementData(const game::GfxImage *image, size_t ddsDataSize, GPUTEXTUREFORMAT format,
                                  uint32_t faceSize, uint32_t tiledBaseSize, size_t *requiredDDSSize)
 {
     *requiredDDSSize = static_cast<size_t>(faceSize) * 6u;
     if (faceSize == 0 || *requiredDDSSize == 0)
         return false;
 
-    if (ddsImage.data.size() != *requiredDDSSize)
+    if (ddsDataSize != *requiredDDSSize)
         return false;
 
     const int cardMemory = image->cardMemory.platform[0];
@@ -785,7 +829,7 @@ void RegisterDvars()
     dump_assets = game::Dvar_RegisterBool("dump_assets", Config::dump_assets, 0, "Dump assets as they are loaded.");
 }
 
-bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
+bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage, DdsDataFile &ddsFile, uint32_t ddsDataSize)
 {
     if (image->mapType != game::MAPTYPE_2D)
     {
@@ -801,7 +845,7 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
                                           : levelCount;
     if (!ValidateResidentMipCount(image, ddsImage, levelCount))
         return false;
-    if (!ValidateDDSDataSize(image, ddsImage, format, levelCount, 1u))
+    if (!ValidateDDSDataSize(image, ddsImage.header, ddsDataSize, format, levelCount, 1u))
         return false;
 
     const uint32_t nonPackedLevelCount = max(1u, min(levelCount, mipTailBaseLevel));
@@ -811,7 +855,7 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
 
     size_t requiredDDSSize = 0;
     size_t requiredTextureBytes = 0;
-    if (!Validate2DReplacementData(image, ddsImage, format, nonPackedLevelCount, &requiredDDSSize,
+    if (!Validate2DReplacementData(image, format, ddsDataSize, nonPackedLevelCount, &requiredDDSSize,
                                    &requiredTextureBytes))
     {
         if (requiredDDSSize == 0)
@@ -819,10 +863,10 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
             PrintImageError("image '%s' has unsupported replacement format %u\n", image->name,
                             static_cast<uint32_t>(format));
         }
-        else if (ddsImage.data.size() < requiredDDSSize)
+        else if (ddsDataSize < requiredDDSSize)
         {
             PrintImageError("image '%s' DDS data is too small: have=%u need=%u for %u mip levels\n", image->name,
-                            static_cast<unsigned int>(ddsImage.data.size()), static_cast<unsigned int>(requiredDDSSize),
+                            static_cast<unsigned int>(ddsDataSize), static_cast<unsigned int>(requiredDDSSize),
                             nonPackedLevelCount);
         }
         else
@@ -858,16 +902,11 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
             return false;
         }
 
-        if (static_cast<size_t>(ddsOffset) + ddsMipLevelSize > ddsImage.data.size())
+        if (static_cast<size_t>(ddsOffset) + ddsMipLevelSize > ddsDataSize)
         {
             PrintImageError("image '%s' mip level %u exceeds DDS data size\n", image->name, mipLevel);
             return false;
         }
-
-        image::DdsByteVector levelData(ddsImage.data.begin() + ddsOffset,
-                                       ddsImage.data.begin() + ddsOffset + ddsMipLevelSize);
-        image::xenos_texture::ApplyGpuEndian(&levelData[0], levelData.size(),
-                                             static_cast<GPUENDIAN>(texture->Format.Endian));
 
         unsigned char *destination = baseData;
         if (mipLevel > 0)
@@ -876,23 +915,21 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
                                                                                   format, 1u);
         }
 
-        image::DdsByteVector tiledData(tiledMipLevelSize);
-        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, mipLevel, format,
-                                                    texture->Format.Pitch, &tiledData[0], tiledData.size(),
-                                                    &levelData[0], levelData.size(), rowPitch))
+        if (!TileDdsLevelToTexture(ddsFile, ddsOffset, ddsMipLevelSize, image->width, image->height, mipLevel,
+                                   image->width, image->height, mipLevel, format, texture->Format.Pitch, destination,
+                                   tiledMipLevelSize, static_cast<GPUENDIAN>(texture->Format.Endian)))
         {
             PrintImageError("failed to tile image '%s' mip level %u\n", image->name, mipLevel);
             return false;
         }
 
-        memcpy(destination, &tiledData[0], tiledMipLevelSize);
         ddsOffset += ddsMipLevelSize;
     }
 
     return true;
 }
 
-bool Image_Replace_Cube(game::GfxImage *image, const DDSImage &ddsImage)
+bool Image_Replace_Cube(game::GfxImage *image, const DDSImage &ddsImage, DdsDataFile &ddsFile, uint32_t ddsDataSize)
 {
     if (image->mapType != game::MAPTYPE_CUBE)
     {
@@ -929,17 +966,16 @@ bool Image_Replace_Cube(game::GfxImage *image, const DDSImage &ddsImage)
         return false;
     }
 
-    if (!ValidateDDSDataSize(image, ddsImage, format, 1u, 6u))
+    if (!ValidateDDSDataSize(image, ddsImage.header, ddsDataSize, format, 1u, 6u))
         return false;
 
     size_t requiredDDSSize = 0;
-    if (!ValidateCubeReplacementData(image, ddsImage, format, faceSize, tiledBaseSize, &requiredDDSSize))
+    if (!ValidateCubeReplacementData(image, ddsDataSize, format, faceSize, tiledBaseSize, &requiredDDSSize))
     {
-        if (ddsImage.data.size() < requiredDDSSize)
+        if (ddsDataSize < requiredDDSSize)
         {
             PrintImageError("image '%s' DDS is too small for 6 cube faces: have=%u need=%u\n", image->name,
-                            static_cast<unsigned int>(ddsImage.data.size()),
-                            static_cast<unsigned int>(requiredDDSSize));
+                            static_cast<unsigned int>(ddsDataSize), static_cast<unsigned int>(requiredDDSSize));
         }
         else
         {
@@ -952,26 +988,22 @@ bool Image_Replace_Cube(game::GfxImage *image, const DDSImage &ddsImage)
 
     for (uint32_t faceIndex = 0; faceIndex < 6u; ++faceIndex)
     {
-        const unsigned char *facePixels = &ddsImage.data[faceIndex * faceSize];
+        const uint32_t faceOffset = faceIndex * faceSize;
         unsigned char *faceDestination = baseData + (faceIndex * tiledFaceSize);
-        image::DdsByteVector tiledData(tiledFaceSize);
 
-        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, 0u, format, texture->Format.Pitch,
-                                                    &tiledData[0], tiledData.size(), facePixels, faceSize, rowPitch))
+        if (!TileDdsLevelToTexture(ddsFile, faceOffset, faceSize, image->width, image->height, 0u, image->width,
+                                   image->height, 0u, format, texture->Format.Pitch, faceDestination, tiledFaceSize,
+                                   static_cast<GPUENDIAN>(texture->Format.Endian)))
         {
             PrintImageError("failed to tile cube image '%s' face %u\n", image->name, faceIndex);
             return false;
         }
-
-        image::xenos_texture::ApplyGpuEndian(&tiledData[0], tiledData.size(),
-                                             static_cast<GPUENDIAN>(texture->Format.Endian));
-        memcpy(faceDestination, &tiledData[0], tiledFaceSize);
     }
 
     return true;
 }
 
-bool ValidateReplacementShape(const game::GfxImage *image, const DDSImage &ddsImage)
+bool ValidateReplacementShape(const game::GfxImage *image, const DDSImage &ddsImage, uint32_t ddsDataSize)
 {
     const bool ddsIsCubemap = ddsImage.IsCubemap();
 
@@ -989,7 +1021,7 @@ bool ValidateReplacementShape(const game::GfxImage *image, const DDSImage &ddsIm
 
         const uint32_t faceSize = image::xenos_texture::CalculateLinearLevelSize(
             ddsImage.header.dwWidth, ddsImage.header.dwHeight, 0u, ddsFormat);
-        if (faceSize == 0 || ddsImage.data.size() < static_cast<size_t>(faceSize) * 6u)
+        if (faceSize == 0 || ddsDataSize < static_cast<size_t>(faceSize) * 6u)
         {
             PrintImageError("image '%s' is a cubemap but replacement DDS is not a valid 6-face cubemap\n", image->name);
             return false;
@@ -1018,9 +1050,15 @@ void Image_Replace(game::GfxImage *image)
     }
 
     DDSImage ddsImage;
-    ReadDDSFile(replacementPath, &ddsImage);
+    uint32_t ddsDataSize = 0;
+    if (!ReadDDSHeader(replacementPath, &ddsImage, &ddsDataSize))
+    {
+        PrintImageError("failed to load DDS header for image '%s': %s\n", image->name, replacementPath.c_str());
+        return;
+    }
+
     GPUTEXTUREFORMAT ddsFormat;
-    if (!ValidateDDSHeader(image, ddsImage, replacementPath, &ddsFormat))
+    if (!ValidateDDSHeaderFields(image, ddsImage, &ddsFormat))
         return;
 
     if (image->width != ddsImage.header.dwWidth || image->height != ddsImage.header.dwHeight)
@@ -1030,14 +1068,22 @@ void Image_Replace(game::GfxImage *image)
         return;
     }
 
-    if (!ValidateReplacementShape(image, ddsImage))
+    if (!ValidateReplacementShape(image, ddsImage, ddsDataSize))
         return;
+
+    DdsDataFile ddsFile(replacementPath, ddsDataSize);
+    if (!ddsFile.IsValid())
+    {
+        PrintImageError("failed to open DDS data for image '%s': %s error=0x%08X\n", image->name,
+                        replacementPath.c_str(), GetLastError());
+        return;
+    }
 
     bool replaced = false;
     if (image->mapType == game::MAPTYPE_2D)
-        replaced = Image_Replace_2D(image, ddsImage);
+        replaced = Image_Replace_2D(image, ddsImage, ddsFile, ddsDataSize);
     else if (image->mapType == game::MAPTYPE_CUBE)
-        replaced = Image_Replace_Cube(image, ddsImage);
+        replaced = Image_Replace_Cube(image, ddsImage, ddsFile, ddsDataSize);
     else
         PrintImageError("image '%s' is not a 2D or cube map\n", image->name);
 
@@ -1094,7 +1140,7 @@ bool ValidateStreamReplacementData(const game::GfxImage *image, const DDSImage &
     return true;
 }
 
-bool Image_Replace_StreamCubePart(game::GfxImage *image, const std::string &replacementPath, const DDSImage &ddsImage,
+bool Image_Replace_StreamCubePart(game::GfxImage *image, DdsDataFile &ddsFile, const DDSImage &ddsImage,
                                   size_t ddsDataSize, GPUTEXTUREFORMAT ddsFormat, uint32_t imagePartIndex)
 {
     if (imagePartIndex != 0u)
@@ -1146,32 +1192,21 @@ bool Image_Replace_StreamCubePart(game::GfxImage *image, const std::string &repl
     for (uint32_t faceIndex = 0; faceIndex < 6u; ++faceIndex)
     {
         const uint32_t faceOffset = faceIndex * faceSize;
-        unsigned char *faceData = nullptr;
-        if (!ReadDdsRangeToScratch(replacementPath, faceOffset, faceSize, &faceData))
-        {
-            PrintImageError("failed to read streamed cube image '%s' face %u: offset=%u size=%u\n", image->name,
-                            faceIndex, faceOffset, faceSize);
-            return false;
-        }
-
         unsigned char *faceDestination = image->pixels + static_cast<size_t>(faceIndex) * tiledFaceSize;
-        memset(faceDestination, 0, tiledFaceSize);
 
-        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, 0u, ddsFormat, 0u, faceDestination,
-                                                    tiledFaceSize, faceData, faceSize, rowPitch))
+        if (!TileDdsLevelToTexture(ddsFile, faceOffset, faceSize, image->width, image->height, 0u, image->width,
+                                   image->height, 0u, ddsFormat, 0u, faceDestination, tiledFaceSize,
+                                   static_cast<GPUENDIAN>(image->texture.basemap.Format.Endian)))
         {
             PrintImageError("failed to tile streamed cube image '%s' face %u\n", image->name, faceIndex);
             return false;
         }
-
-        image::xenos_texture::ApplyGpuEndian(faceDestination, tiledFaceSize,
-                                             static_cast<GPUENDIAN>(image->texture.basemap.Format.Endian));
     }
 
     return true;
 }
 
-bool Image_Replace_StreamPart(game::GfxImage *image, const std::string &replacementPath, const DDSImage &ddsImage,
+bool Image_Replace_StreamPart(game::GfxImage *image, DdsDataFile &ddsFile, const DDSImage &ddsImage,
                               size_t ddsDataSize, uint32_t imagePartIndex)
 {
     if (image == nullptr || image->name == nullptr || imagePartIndex >= 4u)
@@ -1189,7 +1224,7 @@ bool Image_Replace_StreamPart(game::GfxImage *image, const std::string &replacem
         return false;
 
     if (image->mapType == game::MAPTYPE_CUBE)
-        return Image_Replace_StreamCubePart(image, replacementPath, ddsImage, ddsDataSize, ddsFormat, imagePartIndex);
+        return Image_Replace_StreamCubePart(image, ddsFile, ddsImage, ddsDataSize, ddsFormat, imagePartIndex);
 
     if (image->mapType != game::MAPTYPE_2D)
     {
@@ -1279,23 +1314,12 @@ bool Image_Replace_StreamPart(game::GfxImage *image, const std::string &replacem
             return false;
         }
 
-        unsigned char *levelData = nullptr;
-        if (!ReadDdsRangeToScratch(replacementPath, ddsOffset, ddsMipLevelSize, &levelData))
-        {
-            PrintImageError("failed to read streamed image '%s' part %u mip %u: offset=%u size=%u\n", image->name,
-                            imagePartIndex, localMipLevel, ddsOffset, ddsMipLevelSize);
-            return false;
-        }
-
-        image::xenos_texture::ApplyGpuEndian(levelData, ddsMipLevelSize,
-                                             static_cast<GPUENDIAN>(image->texture.basemap.Format.Endian));
-
         unsigned char *destination = image->pixels + destinationOffset;
-        memset(destination, 0, tiledMipLevelSize);
 
-        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, localMipLevel, ddsFormat,
-                                                    streamBasePitch, destination, tiledMipLevelSize, levelData,
-                                                    ddsMipLevelSize, rowPitch))
+        if (!TileDdsLevelToTexture(ddsFile, ddsOffset, ddsMipLevelSize, ddsImage.header.dwWidth,
+                                   ddsImage.header.dwHeight, globalMipLevel, image->width, image->height,
+                                   localMipLevel, ddsFormat, streamBasePitch, destination, tiledMipLevelSize,
+                                   static_cast<GPUENDIAN>(image->texture.basemap.Format.Endian)))
         {
             PrintImageError("failed to tile streamed image '%s' part %u mip %u\n", image->name, imagePartIndex,
                             localMipLevel);
@@ -1331,7 +1355,15 @@ void TryReplaceStreamPart(game::GfxImage *image, uint32_t imagePartIndex)
         return;
     }
 
-    if (Image_Replace_StreamPart(image, replacementPath, ddsImage, ddsDataSize, imagePartIndex))
+    DdsDataFile ddsFile(replacementPath, ddsDataSize);
+    if (!ddsFile.IsValid())
+    {
+        PrintImageError("failed to open DDS data for streamed image '%s': %s error=0x%08X\n", image->name,
+                        replacementPath.c_str(), GetLastError());
+        return;
+    }
+
+    if (Image_Replace_StreamPart(image, ddsFile, ddsImage, ddsDataSize, imagePartIndex))
         PrintImageInfo("replaced image '%s' (streamed part %u)\n", image->name, imagePartIndex);
 }
 
@@ -1378,6 +1410,4 @@ image_loader::~image_loader()
 {
     ImageCache_InitImage_Detour.Remove();
     dump_assets = nullptr;
-    g_streamReplacementScratch = nullptr;
-    g_streamReplacementScratchSize = 0;
 }

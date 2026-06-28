@@ -330,6 +330,47 @@ bool TileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32
     return true;
 }
 
+bool TileTextureLevelFromRows(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat,
+                              uint32_t basePitch, void *destination, size_t destinationSize,
+                              uint32_t sourceRowPitch, unsigned char *rowBuffer, size_t rowBufferSize,
+                              TileTextureRowReader rowReader, void *userData)
+{
+    const TextureFormatInfo *formatInfo = GetTextureFormatInfo(gpuFormat);
+    if (formatInfo == NULL || destination == NULL || rowBuffer == NULL || rowReader == NULL || sourceRowPitch == 0)
+        return false;
+
+    const TextureLevelLayout layout = CalculateLevelLayout(width, height, mipLevel, *formatInfo, basePitch);
+    if (sourceRowPitch < layout.widthBlocks * formatInfo->bytesPerBlock || rowBufferSize < sourceRowPitch)
+        return false;
+
+    const uint32_t log2BytesPerBlock = CalculateLog2BytesPerBlock(formatInfo->bytesPerBlock);
+    unsigned char *destinationBytes = static_cast<unsigned char *>(destination);
+
+    for (uint32_t y = 0; y < layout.heightBlocks; ++y)
+    {
+        if (!rowReader(y, rowBuffer, sourceRowPitch, userData))
+            return false;
+
+        const uint32_t destinationRowOffset = TiledOffset2DRow(y, layout.storedWidthBlocks, log2BytesPerBlock);
+
+        for (uint32_t x = 0; x < layout.widthBlocks; ++x)
+        {
+            uint32_t tiledOffset = TiledOffset2DColumn(x, y, log2BytesPerBlock, destinationRowOffset);
+            tiledOffset >>= log2BytesPerBlock;
+
+            const size_t sourceOffset = static_cast<size_t>(x) * formatInfo->bytesPerBlock;
+            const size_t destinationOffset = static_cast<size_t>(tiledOffset) * formatInfo->bytesPerBlock;
+            if (sourceOffset + formatInfo->bytesPerBlock > rowBufferSize ||
+                destinationOffset + formatInfo->bytesPerBlock > destinationSize)
+                return false;
+
+            memcpy(destinationBytes + destinationOffset, rowBuffer + sourceOffset, formatInfo->bytesPerBlock);
+        }
+    }
+
+    return true;
+}
+
 bool UntileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat, uint32_t basePitch,
                         void *destination, uint32_t destinationRowPitch, const void *source)
 {

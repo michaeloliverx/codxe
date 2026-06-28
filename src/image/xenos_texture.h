@@ -16,6 +16,8 @@ struct TextureFormatInfo
     uint32_t bitsPerPixel;
 };
 
+typedef bool (*TileTextureRowReader)(uint32_t rowIndex, unsigned char *rowBuffer, uint32_t rowPitch, void *userData);
+
 const TextureFormatInfo *GetTextureFormatInfo(uint32_t gpuFormat);
 void ApplyGpuEndian(void *data, size_t size, GPUENDIAN endianType);
 uint32_t GetTextureLevelCount(const D3DBaseTexture *texture);
@@ -35,6 +37,10 @@ bool TileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32
 bool TileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat, uint32_t basePitch,
                       void *destination, size_t destinationSize, const void *source, size_t sourceSize,
                       uint32_t sourceRowPitch);
+bool TileTextureLevelFromRows(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat,
+                              uint32_t basePitch, void *destination, size_t destinationSize,
+                              uint32_t sourceRowPitch, unsigned char *rowBuffer, size_t rowBufferSize,
+                              TileTextureRowReader rowReader, void *userData);
 bool UntileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat, uint32_t basePitch,
                         void *destination, uint32_t destinationRowPitch, const void *source);
 bool UntileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat, uint32_t basePitch,
