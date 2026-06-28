@@ -65,6 +65,7 @@ Detour Events::Cmd_Init_Detour;
 
 std::vector<std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)>>
     Events::db_linkxasset_pre_callbacks;
+std::vector<std::function<void(iw4::mp_tu6::XAssetEntryPoolEntry *)>> Events::db_linkxasset_post_callbacks;
 Detour Events::DB_LinkXAssetEntry1_Detour;
 
 iw4::mp_tu6::XAssetEntryPoolEntry *Events::DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetType type,
@@ -75,13 +76,26 @@ iw4::mp_tu6::XAssetEntryPoolEntry *Events::DB_LinkXAssetEntry1_Hook(iw4::mp_tu6:
         (*it)(type, header);
     }
 
-    return DB_LinkXAssetEntry1_Detour.GetOriginal<decltype(iw4::mp_tu6::DB_LinkXAssetEntry1)>()(type, header);
+    iw4::mp_tu6::XAssetEntryPoolEntry *entry =
+        DB_LinkXAssetEntry1_Detour.GetOriginal<decltype(iw4::mp_tu6::DB_LinkXAssetEntry1)>()(type, header);
+
+    for (auto it = db_linkxasset_post_callbacks.begin(); it != db_linkxasset_post_callbacks.end(); ++it)
+    {
+        (*it)(entry);
+    }
+
+    return entry;
 }
 
 void Events::OnDBLinkXAssetPre(
     const std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)> &callback)
 {
     db_linkxasset_pre_callbacks.emplace_back(callback);
+}
+
+void Events::OnDBLinkXAssetPost(const std::function<void(iw4::mp_tu6::XAssetEntryPoolEntry *)> &callback)
+{
+    db_linkxasset_post_callbacks.emplace_back(callback);
 }
 
 std::vector<std::function<void()>> Events::vmshutdown_callbacks;
@@ -133,5 +147,6 @@ Events::~Events()
     cg_drawactive_callbacks.clear();
     cmdinit_callbacks.clear();
     db_linkxasset_pre_callbacks.clear();
+    db_linkxasset_post_callbacks.clear();
     vmshutdown_callbacks.clear();
 }

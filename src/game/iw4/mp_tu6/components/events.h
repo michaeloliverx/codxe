@@ -18,6 +18,7 @@ class Events : public Module
     static void OnCmdInit(const std::function<void()> &callback);
     static void OnDBLinkXAssetPre(
         const std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)> &callback);
+    static void OnDBLinkXAssetPost(const std::function<void(iw4::mp_tu6::XAssetEntryPoolEntry *)> &callback);
     static void OnVMShutdown(const std::function<void()> &callback);
 
   private:
@@ -35,6 +36,7 @@ class Events : public Module
 
     static std::vector<std::function<void(iw4::mp_tu6::XAssetType &, iw4::mp_tu6::XAssetHeader *)>>
         db_linkxasset_pre_callbacks;
+    static std::vector<std::function<void(iw4::mp_tu6::XAssetEntryPoolEntry *)>> db_linkxasset_post_callbacks;
     static Detour DB_LinkXAssetEntry1_Detour;
     static iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetType type,
                                                                        iw4::mp_tu6::XAssetHeader *header);

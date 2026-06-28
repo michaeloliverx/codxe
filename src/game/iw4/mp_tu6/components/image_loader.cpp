@@ -43,23 +43,11 @@ struct ZlibStream
 };
 static_assert(sizeof(ZlibStream) == 48, "");
 
-game::cmd_function_s Cmd_ImageDump_VAR;
+game::dvar_t *dump_assets = nullptr;
 
 uint32_t PtrToUint(const void *ptr)
 {
     return static_cast<uint32_t>(reinterpret_cast<UINT_PTR>(ptr));
-}
-
-bool IsPlausibleAlignedPointer(const void *ptr)
-{
-    const uint32_t value = PtrToUint(ptr);
-    return value >= 0x10000u && value < 0xF0000000u && (value & 0x3u) == 0;
-}
-
-bool IsPlausiblePointer(const void *ptr)
-{
-    const uint32_t value = PtrToUint(ptr);
-    return value >= 0x10000u && value < 0xF0000000u;
 }
 
 void PrintImageError(const char *format, ...)
@@ -264,38 +252,9 @@ uint32_t GetImageLevelCount(const game::GfxImage *image, bool streamed)
     return levelCount;
 }
 
-bool IsImageShapeSane(const game::GfxImage *image)
-{
-    if (image == NULL || !IsPlausibleAlignedPointer(image))
-        return false;
-
-    if (image->name == NULL || !IsPlausiblePointer(image->name) || image->name[0] == '\0')
-        return false;
-
-    if (image->mapType != game::MAPTYPE_2D && image->mapType != game::MAPTYPE_CUBE)
-        return false;
-
-    if (image->width == 0 || image->height == 0 || image->width > 8192u || image->height > 8192u)
-        return false;
-
-    if (image->depth == 0 || image->depth > 6u)
-        return false;
-
-    if (image->levelCount == 0 || image->levelCount > 16u)
-        return false;
-
-    if (image::xenos_texture::GetTextureFormatInfo(GetImageGpuFormat(image)) == NULL)
-        return false;
-
-    if (image->cardMemory.platform[0] < 0 || image->cardMemory.platform[0] > 128 * 1024 * 1024)
-        return false;
-
-    return true;
-}
-
 std::string GetSanitizedImageName(const char *imageName)
 {
-    if (imageName == NULL)
+    if (imageName == nullptr)
         return std::string();
 
     std::string sanitizedName;
@@ -328,37 +287,37 @@ std::string GetImageDumpPath(const char *imageName, const char *zoneName)
 
 void EnsureImageDumpDirectory(const char *zoneName)
 {
-    CreateDirectoryA(DUMP_DIR, NULL);
+    CreateDirectoryA(DUMP_DIR, nullptr);
 
     const std::string zoneDirectory = std::string(DUMP_DIR) + "\\" + GetDumpZoneName(zoneName);
-    CreateDirectoryA(zoneDirectory.c_str(), NULL);
-    CreateDirectoryA((zoneDirectory + "\\images").c_str(), NULL);
+    CreateDirectoryA(zoneDirectory.c_str(), nullptr);
+    CreateDirectoryA((zoneDirectory + "\\images").c_str(), nullptr);
 }
 
 const char *GetZoneName(uint32_t zoneIndex)
 {
     if (zoneIndex >= game::g_zoneCount)
-        return NULL;
+        return nullptr;
 
     const char *zoneName = game::g_zones[zoneIndex].file.name;
     if (zoneName[0] == '\0')
-        return NULL;
+        return nullptr;
 
     return zoneName;
 }
 
 bool ReadFileRange(const std::string &path, uint32_t offset, uint32_t size, std::vector<uint8_t> *buffer)
 {
-    if (buffer == NULL || size == 0)
+    if (buffer == nullptr || size == 0)
         return false;
 
-    HANDLE file = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                              FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE file = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE)
         return false;
 
     SetLastError(NO_ERROR);
-    const DWORD seekResult = SetFilePointer(file, offset, NULL, FILE_BEGIN);
+    const DWORD seekResult = SetFilePointer(file, offset, nullptr, FILE_BEGIN);
     if (seekResult == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
     {
         CloseHandle(file);
@@ -368,7 +327,7 @@ bool ReadFileRange(const std::string &path, uint32_t offset, uint32_t size, std:
     buffer->assign(size, 0);
 
     DWORD bytesRead = 0;
-    const BOOL readOk = ReadFile(file, &(*buffer)[0], size, &bytesRead, NULL);
+    const BOOL readOk = ReadFile(file, &(*buffer)[0], size, &bytesRead, nullptr);
     CloseHandle(file);
 
     if (!readOk || bytesRead != size)
@@ -382,7 +341,7 @@ bool ReadFileRange(const std::string &path, uint32_t offset, uint32_t size, std:
 
 bool GetImagePoolIndex(const game::GfxImage *image, uint32_t *imageIndex)
 {
-    if (image == NULL || imageIndex == NULL)
+    if (image == nullptr || imageIndex == nullptr)
         return false;
 
     const uint32_t imageAddress = PtrToUint(image);
@@ -403,14 +362,14 @@ const game::GfxSubImageStream *GetImageStreamSources(const game::GfxImage *image
 {
     uint32_t imageIndex = 0;
     if (!GetImagePoolIndex(image, &imageIndex))
-        return NULL;
+        return nullptr;
 
     return game::g_imageStreams[imageIndex].part;
 }
 
 bool GetImageFilePath(const game::GfxSubImageStream &source, std::string *path)
 {
-    if (path == NULL || source.file == NULL || !IsPlausibleAlignedPointer(source.file) || source.file->name[0] == '\0')
+    if (path == nullptr || source.file == nullptr || source.file->name[0] == '\0')
         return false;
 
     char filePath[MAX_PATH];
@@ -425,7 +384,7 @@ unsigned __int8 *__fastcall ImageZlibAlloc(unsigned __int8 *opaque, unsigned int
     (void)opaque;
 
     if (items == 0 || size == 0 || items > 0xFFFFFFFFu / size)
-        return NULL;
+        return nullptr;
 
     return static_cast<unsigned __int8 *>(malloc(items * size));
 }
@@ -439,7 +398,7 @@ void __fastcall ImageZlibFree(unsigned __int8 *opaque, unsigned __int8 *ptr)
 bool InflateImageStream(const std::vector<uint8_t> &compressedData, uint32_t expectedSize,
                         std::vector<uint8_t> *inflatedData)
 {
-    if (inflatedData == NULL || compressedData.empty() || expectedSize == 0)
+    if (inflatedData == nullptr || compressedData.empty() || expectedSize == 0)
         return false;
 
     inflatedData->assign(expectedSize, 0);
@@ -501,7 +460,7 @@ bool WriteUntiledLevel(std::ofstream &file, const game::GfxImage *image, uint32_
 
 bool Dump2DImage(const game::GfxImage *image, bool streamed, const char *zoneName)
 {
-    if (image->pixels == NULL || image->cardMemory.platform[0] <= 0)
+    if (image->pixels == nullptr || image->cardMemory.platform[0] <= 0)
         return false;
 
     const GPUTEXTUREFORMAT format = GetImageGpuFormat(image);
@@ -566,7 +525,7 @@ bool Dump2DImage(const game::GfxImage *image, bool streamed, const char *zoneNam
 
 bool DumpCubeImage(const game::GfxImage *image, bool streamed, const char *zoneName)
 {
-    if (image->pixels == NULL || image->cardMemory.platform[0] <= 0)
+    if (image->pixels == nullptr || image->cardMemory.platform[0] <= 0)
         return false;
 
     const GPUTEXTUREFORMAT format = GetImageGpuFormat(image);
@@ -653,11 +612,11 @@ bool DumpStreamPartFromData(const game::GfxImage *image, uint32_t imagePartIndex
 
 bool TryReadStreamPartPixels(const game::GfxImage *image, uint32_t imagePartIndex, std::vector<uint8_t> *pixelData)
 {
-    if (imagePartIndex >= 4u || pixelData == NULL)
+    if (imagePartIndex >= 4u || pixelData == nullptr)
         return false;
 
     const game::GfxSubImageStream *sources = GetImageStreamSources(image);
-    if (sources == NULL)
+    if (sources == nullptr)
         return false;
 
     const game::GfxImageStreamData &streamData = image->streams[imagePartIndex];
@@ -686,7 +645,7 @@ bool TryReadStreamPartPixels(const game::GfxImage *image, uint32_t imagePartInde
 
 bool TryDumpStreamPartEager(const game::GfxImage *image, uint32_t imagePartIndex, const char *zoneName)
 {
-    if (imagePartIndex >= 4u || !IsImageShapeSane(image))
+    if (imagePartIndex >= 4u)
         return false;
 
     const game::GfxImageStreamData &streamData = image->streams[imagePartIndex];
@@ -702,9 +661,6 @@ bool TryDumpStreamPartEager(const game::GfxImage *image, uint32_t imagePartIndex
 
 bool TryDumpStreamedImageEager(const game::GfxImage *image, const char *zoneName)
 {
-    if (!IsImageShapeSane(image))
-        return false;
-
     bool usedParts[4] = {false, false, false, false};
 
     for (uint32_t attempt = 0; attempt < 4u; ++attempt)
@@ -743,9 +699,6 @@ bool TryDumpStreamedImageEager(const game::GfxImage *image, const char *zoneName
 
 bool Image_Dump(game::GfxImage *image, const char *zoneName)
 {
-    if (!IsImageShapeSane(image))
-        return false;
-
     if (ImageHasStreamedParts(image))
         return TryDumpStreamedImageEager(image, zoneName);
 
@@ -758,47 +711,9 @@ bool Image_Dump(game::GfxImage *image, const char *zoneName)
     return false;
 }
 
-void Cmd_ImageDump_f()
+void RegisterDvars()
 {
-    CreateDirectoryA(DUMP_DIR, NULL);
-    PrintImageInfo("Dumping images by zone to %s\n", DUMP_DIR);
-
-    uint32_t dumpedCount = 0;
-    uint32_t skippedCount = 0;
-    std::set<std::string> visitedImages;
-
-    for (uint32_t entryIndex = 0; entryIndex < game::g_assetEntryPoolSize; ++entryIndex)
-    {
-        const game::XAssetEntryPoolEntry *poolEntry = &game::g_assetEntryPool[entryIndex];
-        const game::XAssetEntry &entry = poolEntry->entry;
-        if (entry.asset.type != game::ASSET_TYPE_IMAGE)
-            continue;
-
-        game::GfxImage *image = entry.asset.header.image;
-        if (!IsImageShapeSane(image))
-            continue;
-
-        const char *zoneName = GetZoneName(entry.zoneIndex);
-        const std::string imageKey = GetDumpZoneName(zoneName) + "\\" + image->name;
-        if (visitedImages.find(imageKey) != visitedImages.end())
-            continue;
-
-        visitedImages.insert(imageKey);
-        if (Image_Dump(image, zoneName))
-            ++dumpedCount;
-        else
-            ++skippedCount;
-    }
-
-    PrintImageInfo("Image dump complete: dumped %u images", dumpedCount);
-    if (skippedCount != 0)
-        PrintImageInfo(" (%u skipped)", skippedCount);
-    PrintImageInfo("\n");
-}
-
-void RegisterCommands()
-{
-    game::Cmd_AddCommandInternal("imagedump", Cmd_ImageDump_f, &Cmd_ImageDump_VAR);
+    dump_assets = game::Dvar_RegisterBool("dump_assets", false, 0, "Dump image assets as they are linked");
 }
 
 bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
@@ -851,7 +766,7 @@ bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
         return false;
     }
 
-    if (baseData == NULL || mipData == NULL)
+    if (baseData == nullptr || mipData == nullptr)
     {
         PrintImageError("image '%s' has no valid texture memory\n", image->name);
         return false;
@@ -932,7 +847,7 @@ bool Image_Replace_Cube(game::GfxImage *image, const DDSImage &ddsImage)
         return false;
     }
 
-    if (baseData == NULL)
+    if (baseData == nullptr)
     {
         PrintImageError("image '%s' has no valid cube texture memory\n", image->name);
         return false;
@@ -1017,7 +932,7 @@ bool ValidateReplacementShape(const game::GfxImage *image, const DDSImage &ddsIm
 
 void Image_Replace(game::GfxImage *image)
 {
-    if (image == NULL || image->name == NULL)
+    if (image == nullptr || image->name == nullptr)
         return;
 
     const std::string replacementPath = GetReplacementPath(image->name);
@@ -1027,7 +942,7 @@ void Image_Replace(game::GfxImage *image)
     if (ImageHasStreamedParts(image))
         return;
 
-    if (image->pixels == NULL || image->cardMemory.platform[0] <= 0)
+    if (image->pixels == nullptr || image->cardMemory.platform[0] <= 0)
     {
         PrintImageError("image '%s' replacement exists but resident texture memory is not available\n", image->name);
         return;
@@ -1180,10 +1095,10 @@ bool Image_Replace_StreamCubePart(game::GfxImage *image, const DDSImage &ddsImag
 
 bool Image_Replace_StreamPart(game::GfxImage *image, const DDSImage &ddsImage, uint32_t imagePartIndex)
 {
-    if (image == NULL || image->name == NULL || imagePartIndex >= 4u)
+    if (image == nullptr || image->name == nullptr || imagePartIndex >= 4u)
         return false;
 
-    if (image->pixels == NULL)
+    if (image->pixels == nullptr)
     {
         PrintImageError("streamed image '%s' part %u replacement exists but pixel memory is not available\n",
                         image->name, imagePartIndex);
@@ -1311,7 +1226,7 @@ bool Image_Replace_StreamPart(game::GfxImage *image, const DDSImage &ddsImage, u
 
 void TryReplaceStreamPart(game::GfxImage *image, uint32_t imagePartIndex)
 {
-    if (image == NULL || image->name == NULL)
+    if (image == nullptr || image->name == nullptr)
         return;
 
     const std::string replacementPath = GetReplacementPath(image->name);
@@ -1330,8 +1245,21 @@ void TryReplaceStreamPart(game::GfxImage *image, uint32_t imagePartIndex)
 
 void OnDBLinkXAssetPre(game::XAssetType &type, game::XAssetHeader *header)
 {
-    if (type == game::ASSET_TYPE_IMAGE && header != NULL)
+    if (type == game::ASSET_TYPE_IMAGE && header != nullptr)
         Image_Replace(header->image);
+}
+
+void OnDBLinkXAssetPost(game::XAssetEntryPoolEntry *poolEntry)
+{
+    if (dump_assets == nullptr || !dump_assets->current.enabled || poolEntry == nullptr)
+        return;
+
+    const game::XAssetEntry &entry = poolEntry->entry;
+    if (entry.asset.type != game::ASSET_TYPE_IMAGE)
+        return;
+
+    game::GfxImage *image = entry.asset.header.image;
+    Image_Dump(image, GetZoneName(entry.zoneIndex));
 }
 
 Detour ImageCache_InitImage_Detour;
@@ -1346,8 +1274,9 @@ void ImageCache_InitImage_Hook(game::GfxImage *image, game::GfxImage *remoteImag
 
 image_loader::image_loader()
 {
+    Events::OnDvarInit(RegisterDvars);
     Events::OnDBLinkXAssetPre(OnDBLinkXAssetPre);
-    Events::OnCmdInit(RegisterCommands);
+    Events::OnDBLinkXAssetPost(OnDBLinkXAssetPost);
 
     ImageCache_InitImage_Detour = Detour(iw4::mp_tu6::ImageCache_InitImage, ImageCache_InitImage_Hook);
     ImageCache_InitImage_Detour.Install();
@@ -1356,4 +1285,5 @@ image_loader::image_loader()
 image_loader::~image_loader()
 {
     ImageCache_InitImage_Detour.Remove();
+    dump_assets = nullptr;
 }
