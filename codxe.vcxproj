@@ -81,6 +81,7 @@
       <ClCompile Include="src\common\config.cpp" />
       <ClCompile Include="src\image\dds_loader.cpp" />
       <ClCompile Include="src\image\dds_writer.cpp" />
+      <ClCompile Include="src\image\texture_layout.cpp" />
       <ClCompile Include="src\image\xenos_texture.cpp" />
       <ClCompile Include="src\utils\endian.cpp" />
 
@@ -211,6 +212,7 @@
       <ClInclude Include="src\image\dds_loader.h" />
       <ClInclude Include="src\image\dds_types.h" />
       <ClInclude Include="src\image\dds_writer.h" />
+      <ClInclude Include="src\image\texture_layout.h" />
       <ClInclude Include="src\image\xenos_texture.h" />
       <ClInclude Include="src\utils\endian.h" />
 

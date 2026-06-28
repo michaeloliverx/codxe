@@ -1,10 +1,87 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <new>
 #include <vector>
 
 namespace image
 {
+template <typename T> class VirtualAllocAllocator
+{
+  public:
+    typedef T value_type;
+    typedef T *pointer;
+    typedef const T *const_pointer;
+    typedef T &reference;
+    typedef const T &const_reference;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+
+    template <typename U> struct rebind
+    {
+        typedef VirtualAllocAllocator<U> other;
+    };
+
+    VirtualAllocAllocator()
+    {
+    }
+
+    template <typename U> VirtualAllocAllocator(const VirtualAllocAllocator<U> &)
+    {
+    }
+
+    pointer allocate(size_type count, const void * = nullptr)
+    {
+        if (count == 0)
+            return nullptr;
+
+        if (count > max_size())
+            throw std::bad_alloc();
+
+        void *memory = VirtualAlloc(nullptr, count * sizeof(T), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        if (memory == nullptr)
+            throw std::bad_alloc();
+
+        return static_cast<pointer>(memory);
+    }
+
+    void deallocate(pointer memory, size_type)
+    {
+        if (memory != nullptr)
+            VirtualFree(memory, 0, MEM_RELEASE);
+    }
+
+    void construct(pointer memory, const_reference value)
+    {
+        new (memory) T(value);
+    }
+
+    void destroy(pointer memory)
+    {
+        memory->~T();
+    }
+
+    size_type max_size() const
+    {
+        return static_cast<size_type>(-1) / sizeof(T);
+    }
+};
+
+template <typename T, typename U>
+bool operator==(const VirtualAllocAllocator<T> &, const VirtualAllocAllocator<U> &)
+{
+    return true;
+}
+
+template <typename T, typename U>
+bool operator!=(const VirtualAllocAllocator<T> &, const VirtualAllocAllocator<U> &)
+{
+    return false;
+}
+
+typedef std::vector<uint8_t, VirtualAllocAllocator<uint8_t>> DdsByteVector;
+
 enum DDS_CONSTANTS
 {
     DDS_MAGIC = MAKEFOURCC('D', 'D', 'S', ' '),
@@ -98,7 +175,7 @@ static_assert(sizeof(DDS_HEADER) == DDS_HEADER_SIZE, "");
 struct DdsImage
 {
     DDS_HEADER header;
-    std::vector<uint8_t> data;
+    DdsByteVector data;
 
     bool IsCubemap() const;
     uint32_t GetMipCount() const;
