@@ -15,7 +15,7 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename, co
                                                                                        archive);
     };
 
-    if (Config::dump_rawfile)
+    if (Config::dump_assets)
     {
         DbgPrint("GSCLoader: Dumping script %s\n", extFilename);
         auto contents = callOriginal();

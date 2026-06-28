@@ -12,7 +12,7 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
     auto callOriginal = [&]()
     { return Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(filename, extFilename); };
 
-    if (Config::dump_rawfile)
+    if (Config::dump_assets)
     {
         auto contents = callOriginal();
         // Dump the script to a file

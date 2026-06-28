@@ -713,7 +713,7 @@ bool Image_Dump(game::GfxImage *image, const char *zoneName)
 
 void RegisterDvars()
 {
-    dump_assets = game::Dvar_RegisterBool("dump_assets", false, 0, "Dump image assets as they are linked");
+    dump_assets = game::Dvar_RegisterBool("dump_assets", Config::dump_assets, 0, "Dump assets as they are loaded.");
 }
 
 bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)

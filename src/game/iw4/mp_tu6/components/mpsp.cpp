@@ -232,6 +232,11 @@ void dump(MapEnts *asset)
 {
     std::string buffer;
 
+    if (!Config::dump_assets)
+    {
+        return;
+    }
+
     if (!asset || !asset->name || asset->name[0] == '\0')
     {
         return;

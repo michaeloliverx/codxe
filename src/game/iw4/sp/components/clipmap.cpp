@@ -18,7 +18,7 @@ void Load_clipMap_t_Hook(bool atStreamStart)
     auto mapEnts = (*varclipMap_t)->mapEnts;
 
     // Dump map entities if enabled
-    if (Config::dump_map_ents)
+    if (Config::dump_assets)
     {
         std::string dumpPath = va("%s\\%s.ents", DUMP_DIR, mapEnts->name); // IW4x naming convention
         std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
