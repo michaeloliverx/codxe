@@ -4,6 +4,7 @@
 
 extern const char *CONFIG_PATH;
 extern const char *MOD_DIR;
+extern const char *USERRAW_DIR;
 extern const char *DUMP_DIR;
 
 bool DirectoryExists(const char *path);

@@ -11,6 +11,7 @@
 
 const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
 const char *MOD_DIR = "game:\\_codxe\\mods";
+const char *USERRAW_DIR = "game:\\_codxe\\userraw";
 const char *DUMP_DIR = "game:\\_codxe\\dump";
 
 // Default values

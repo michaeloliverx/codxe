@@ -97,6 +97,15 @@ std::string GetImageDumpPath(const char *imageName)
     return std::string(DUMP_DIR) + "\\images\\" + GetSanitizedImageName(imageName) + ".dds";
 }
 
+std::string GetImageReplacementPath(const char *imageName)
+{
+    const std::string userPath = std::string(USERRAW_DIR) + "\\images\\" + imageName + ".dds";
+    if (filesystem::file_exists(userPath))
+        return userPath;
+
+    return Config::GetModBasePath() + "\\images\\" + imageName + ".dds";
+}
+
 bool ReadBinaryFile(const std::string &path, std::vector<uint8_t> *buffer)
 {
     std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
@@ -612,8 +621,7 @@ bool Image_Replace_Cube(GfxImage *image, const image::DdsImage &ddsImage)
 
 void Image_Replace(GfxImage *image)
 {
-    const std::string replacement_base_dir = Config::GetModBasePath() + "\\images";
-    const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
+    const std::string replacement_path = GetImageReplacementPath(image->name);
 
     if (!filesystem::file_exists(replacement_path))
     {
@@ -899,7 +907,7 @@ bool R_StreamLoadHighMipReplacement(const char *filename, unsigned int bytesToRe
         return true;
     };
 
-    const std::string combined_path = Config::GetModBasePath() + "\\images" + "\\" + asset_name + ".dds";
+    const std::string combined_path = GetImageReplacementPath(asset_name.c_str());
     if (filesystem::file_exists(combined_path) && tryReplaceHighMipDDS(combined_path, true))
     {
         return true;

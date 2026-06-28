@@ -23,6 +23,10 @@ DDSImage ReadDDSFile(const std::string &filepath)
 
 std::string GetReplacementPath(const char *imageName)
 {
+    const std::string userPath = std::string(USERRAW_DIR) + "\\images\\" + imageName + ".dds";
+    if (filesystem::file_exists(userPath))
+        return userPath;
+
     return Config::GetModBasePath() + "\\images\\" + imageName + ".dds";
 }
 

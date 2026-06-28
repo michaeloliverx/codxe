@@ -85,6 +85,11 @@ std::string GetReplacementDirectory()
     return Config::GetModBasePath() + "\\images";
 }
 
+std::string GetUserReplacementDirectory()
+{
+    return std::string(USERRAW_DIR) + "\\images";
+}
+
 DDSImage ReadDDSFile(const std::string &filepath)
 {
     return image::LoadDdsFromFile(filepath);
@@ -92,6 +97,10 @@ DDSImage ReadDDSFile(const std::string &filepath)
 
 std::string GetReplacementPath(const char *imageName)
 {
+    const std::string userPath = GetUserReplacementDirectory() + "\\" + imageName + ".dds";
+    if (ImageFileExists(userPath))
+        return userPath;
+
     return GetReplacementDirectory() + "\\" + imageName + ".dds";
 }
 
