@@ -79,6 +79,11 @@
       </ClCompile>
 
       <ClCompile Include="src\common\config.cpp" />
+      <ClCompile Include="src\image\dds_loader.cpp" />
+      <ClCompile Include="src\image\dds_writer.cpp" />
+      <ClCompile Include="src\image\texture_layout.cpp" />
+      <ClCompile Include="src\image\xenos_texture.cpp" />
+      <ClCompile Include="src\utils\endian.cpp" />
 
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
@@ -134,6 +139,7 @@
       <ClCompile Include="src\game\iw4\mp_tu6\components\events.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\g_client_fields.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\image_loader.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\mr.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\patches.cpp" />
@@ -203,6 +209,12 @@
 
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
+      <ClInclude Include="src\image\dds_loader.h" />
+      <ClInclude Include="src\image\dds_types.h" />
+      <ClInclude Include="src\image\dds_writer.h" />
+      <ClInclude Include="src\image\texture_layout.h" />
+      <ClInclude Include="src\image\xenos_texture.h" />
+      <ClInclude Include="src\utils\endian.h" />
 
       <ClInclude Include="src\game\iw2\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw2\sp\main.h" />
@@ -262,6 +274,7 @@
       <ClInclude Include="src\game\iw4\mp_tu6\components\events.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\g_client_fields.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\g_scr_main.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\image_loader.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\mpsp.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\mr.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\patches.h" />

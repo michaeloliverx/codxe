@@ -2,10 +2,6 @@
 
 #include "pch.h"
 
-namespace t4
-{
-namespace mp
-{
 class image_loader : public Module
 {
   public:
@@ -17,5 +13,3 @@ class image_loader : public Module
         return "image_loader";
     };
 };
-} // namespace mp
-} // namespace t4

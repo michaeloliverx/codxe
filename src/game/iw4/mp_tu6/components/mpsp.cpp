@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "mpsp.h"
+#include "events.h"
 #include "unordered_map"
 
 namespace iw4
@@ -29,37 +30,6 @@ bool is_mp_fastfile(const char *name)
 }
 
 struct internal_state;
-
-struct Sys_File
-{
-    void *handle;
-    int startOffset;
-};
-
-struct DBFile
-{
-    Sys_File handle;
-    char name[64];
-};
-
-struct XBlock
-{
-    unsigned __int8 *data;
-    unsigned int size;
-};
-
-struct XZoneMemory
-{
-    XBlock blocks[6];
-};
-
-struct XZone
-{
-    DBFile file;
-    int flags;
-    int allocType;
-    XZoneMemory mem;
-};
 
 struct _OVERLAPPED
 {
@@ -112,7 +82,6 @@ const char **g_assetNames = reinterpret_cast<const char **>(0x82442298);
 int *g_poolSize = reinterpret_cast<int *>(0x82442588);
 const DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82678600);
 const unsigned int *g_zoneIndex = reinterpret_cast<const unsigned int *>(0x827ADAE4);
-const XZone *g_zones = reinterpret_cast<XZone *>(0x829D8048);
 GameWorldMp *gameWorldMp = reinterpret_cast<GameWorldMp *>(0x82DFD010);
 
 typedef int (*Com_sprintf_t)(char *dest, unsigned int size, const char *fmt, ...);
@@ -263,6 +232,11 @@ void dump(MapEnts *asset)
 {
     std::string buffer;
 
+    if (!Config::dump_assets)
+    {
+        return;
+    }
+
     if (!asset || !asset->name || asset->name[0] == '\0')
     {
         return;
@@ -384,8 +358,7 @@ void override_(RawFile *asset)
 
 } // namespace Asset
 
-Detour DB_LinkXAssetEntry1_Detour;
-XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(XAssetType type, XAssetHeader *header)
+void OnDBLinkXAssetPre(XAssetType &type, XAssetHeader *header)
 {
     XAsset xasset;
     xasset.type = type;
@@ -453,10 +426,6 @@ XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(XAssetType type, XAssetHeader *he
             DB_SetXAssetName(&xasset, ",CGAME_UNKNOWN");
         }
     }
-
-    XAssetEntryPoolEntry *entry = DB_LinkXAssetEntry1_Detour.GetOriginal<DB_LinkXAssetEntry1_t>()(type, header);
-
-    return entry;
 }
 
 void DB_ReallocXAssetPool(XAssetType type, unsigned int newSize)
@@ -535,8 +504,7 @@ mpsp::mpsp()
 #endif
 
     // Modify some assets before linking
-    DB_LinkXAssetEntry1_Detour = Detour(DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
-    DB_LinkXAssetEntry1_Detour.Install();
+    ::Events::OnDBLinkXAssetPre(OnDBLinkXAssetPre);
 
     // Rewrite some strings on the fly
     Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
@@ -549,8 +517,6 @@ mpsp::~mpsp()
 #ifndef NDEBUG
     CL_ConsolePrint_Detour.Remove();
 #endif
-
-    DB_LinkXAssetEntry1_Detour.Remove();
 
     Com_sprintf_Detour.Remove();
 }

@@ -146,6 +146,19 @@ static Key_SetCatcher_t Key_SetCatcher = reinterpret_cast<Key_SetCatcher_t>(0x82
 typedef Material *(*Material_RegisterHandle_t)(const char *name);
 static Material_RegisterHandle_t Material_RegisterHandle = reinterpret_cast<Material_RegisterHandle_t>(0x823C2FF8);
 
+typedef void (*ImageCache_InitImage_t)(GfxImage *image, GfxImage *remoteImage, unsigned __int8 *pixels,
+                                       unsigned int imagePartIndex);
+static ImageCache_InitImage_t ImageCache_InitImage = reinterpret_cast<ImageCache_InitImage_t>(0x823DE448);
+
+typedef int (*Zlib_InflateInit_t)(void *stream, const char *version, int streamSize);
+static Zlib_InflateInit_t Zlib_InflateInit = reinterpret_cast<Zlib_InflateInit_t>(0x82344E90);
+
+typedef int (*Zlib_Inflate_t)(void *stream, int flush);
+static Zlib_Inflate_t Zlib_Inflate = reinterpret_cast<Zlib_Inflate_t>(0x82344EA0);
+
+typedef int (*Zlib_InflateEnd_t)(void *stream);
+static Zlib_InflateEnd_t Zlib_InflateEnd = reinterpret_cast<Zlib_InflateEnd_t>(0x82344CB8);
+
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_t *dvar)>(0x823DDD78);
 
 typedef void (*R_AddCmdDrawStretchPic_t)(float x, float y, float w, float h, float s0, float t0, float s1, float t1,
@@ -290,6 +303,13 @@ static auto CL_CreateNewCommands = reinterpret_cast<void (*)(int localClientNum)
 
 static auto cm = reinterpret_cast<clipMap_t *>(0x83052680);
 static auto fields = reinterpret_cast<client_fields_s *>(0x82027518);
+static auto g_assetEntryPool = reinterpret_cast<XAssetEntryPoolEntry *>(0x82839700);
+static const unsigned int g_assetEntryPoolSize = 34000;
+static auto g_gfxImagePool = reinterpret_cast<GfxImage *>(0x828C058C);
+static const unsigned int g_gfxImagePoolSize = 0xE00;
+static auto g_imageStreams = reinterpret_cast<GfxImageStream *>(0x82C91600);
+static auto g_zones = reinterpret_cast<XZone *>(0x829D8048);
+static const unsigned int g_zoneCount = 33;
 static auto g_entities = reinterpret_cast<gentity_s *>(0x82E2A580);
 static auto level = reinterpret_cast<level_locals_t *>(0x82FF2F08);
 static auto sharedUiInfo = reinterpret_cast<sharedUiInfo_t *>(0x836A3AC0);

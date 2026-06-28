@@ -11,12 +11,12 @@
 
 const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
 const char *MOD_DIR = "game:\\_codxe\\mods";
+const char *USERRAW_DIR = "game:\\_codxe\\userraw";
 const char *DUMP_DIR = "game:\\_codxe\\dump";
 
 // Default values
 std::string Config::active_mod = "";
-bool Config::dump_rawfile = false;
-bool Config::dump_map_ents = false;
+bool Config::dump_assets = false;
 std::string Config::mod_base_path = "";
 
 namespace
@@ -203,8 +203,7 @@ Config::~Config()
     // Reset to defaults on cleanup
     active_mod = "";
     mod_base_path = "";
-    dump_rawfile = false;
-    dump_map_ents = false;
+    dump_assets = false;
     DbgPrint("[codxe][Config] Configuration unloaded\n");
 }
 
@@ -243,13 +242,9 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
                 wcstombs(narrowValue, valueBuffer, sizeof(narrowValue));
                 active_mod = narrowValue;
             }
-            else if (wcscmp(propertyName, L"dump_rawfile") == 0)
+            else if (wcscmp(propertyName, L"dump_assets") == 0)
             {
-                dump_rawfile = (jsonTokenType == Json_True);
-            }
-            else if (wcscmp(propertyName, L"dump_map_ents") == 0)
-            {
-                dump_map_ents = (jsonTokenType == Json_True);
+                dump_assets = (jsonTokenType == Json_True);
             }
             else
             {
@@ -262,8 +257,7 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
 
     DbgPrint("[codxe][Config] Configuration loaded:\n");
     DbgPrint("  Active Mod: %s\n", active_mod.c_str());
-    DbgPrint("  Dump Raw Scripts: %s\n", dump_rawfile ? "true" : "false");
-    DbgPrint("  Dump Map Entities: %s\n", dump_map_ents ? "true" : "false");
+    DbgPrint("  Dump Assets: %s\n", dump_assets ? "true" : "false");
 
     if (!active_mod.empty())
     {

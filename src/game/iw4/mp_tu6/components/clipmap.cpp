@@ -6,10 +6,7 @@
 iw4::mp_tu6::dvar_t *noclip_brushes = nullptr;
 std::vector<int> original_brush_contents;
 
-Detour DB_LinkXAssetEntry1_Detour;
-
-iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetType type,
-                                                            iw4::mp_tu6::XAssetHeader *header)
+void OnDBLinkXAssetPre(iw4::mp_tu6::XAssetType &type, iw4::mp_tu6::XAssetHeader *header)
 {
     // Register once
     // TODO: Move to dvar init event
@@ -18,9 +15,6 @@ iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetT
         noclip_brushes = iw4::mp_tu6::Dvar_RegisterString(
             "noclip_brushes", "", 0x10, "Brush indices to disable playerclip. Use '*' for all, '' to restore");
     }
-
-    iw4::mp_tu6::XAssetEntryPoolEntry *entry =
-        DB_LinkXAssetEntry1_Detour.GetOriginal<decltype(iw4::mp_tu6::DB_LinkXAssetEntry1)>()(type, header);
 
     if (type == iw4::mp_tu6::ASSET_TYPE_CLIPMAP_MP)
     {
@@ -34,8 +28,6 @@ iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetT
                 header->clipMap->brushContents[i]; // Assuming this is the field you want to save
         }
     }
-
-    return entry;
 }
 
 void RestoreBrushContents()
@@ -133,8 +125,7 @@ void DisablePlayerClipOnIntersectingBrushes(iw4::mp_tu6::scr_entref_t entref)
 
 clipmap::clipmap()
 {
-    DB_LinkXAssetEntry1_Detour = Detour(iw4::mp_tu6::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
-    DB_LinkXAssetEntry1_Detour.Install();
+    Events::OnDBLinkXAssetPre(OnDBLinkXAssetPre);
 
     iw4::mp_tu6::Scr_AddMethod("disableplayercliponintersectingbrushes", DisablePlayerClipOnIntersectingBrushes,
                                iw4::mp_tu6::BUILTIN_ANY);
@@ -179,5 +170,4 @@ clipmap::clipmap()
 
 clipmap::~clipmap()
 {
-    DB_LinkXAssetEntry1_Detour.Remove();
 }

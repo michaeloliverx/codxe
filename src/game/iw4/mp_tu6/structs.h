@@ -1807,6 +1807,99 @@ enum XAssetType : __int32
     ASSET_TYPE_ASSETLIST = 0x2A,
 };
 
+enum MapType : unsigned __int8
+{
+    MAPTYPE_NONE = 0x0,
+    MAPTYPE_INVALID1 = 0x1,
+    MAPTYPE_1D = 0x2,
+    MAPTYPE_2D = 0x3,
+    MAPTYPE_3D = 0x4,
+    MAPTYPE_CUBE = 0x5,
+    MAPTYPE_COUNT = 0x6,
+};
+
+struct Picmip
+{
+    unsigned __int8 platform[2];
+};
+
+struct CardMemory
+{
+    int platform[1];
+};
+
+struct GfxTexture
+{
+    D3DBaseTexture basemap;
+};
+static_assert(sizeof(GfxTexture) == 0x34, "");
+
+struct GfxImageStreamData
+{
+    unsigned __int16 width;
+    unsigned __int16 height;
+    unsigned int pixelSize;
+};
+static_assert(sizeof(GfxImageStreamData) == 0x8, "");
+
+struct GfxImage
+{
+    GfxTexture texture;
+    unsigned __int8 semantic;
+    unsigned __int8 category;
+    bool cached;
+    unsigned __int8 flags;
+    MapType mapType;
+    Picmip picmip;
+    bool noPicmip;
+    CardMemory cardMemory;
+    unsigned __int16 width;
+    unsigned __int16 height;
+    unsigned __int16 depth;
+    unsigned __int8 levelCount;
+    bool streaming;
+    unsigned __int8 *pixels;
+    GfxImageStreamData streams[4];
+    const char *name;
+};
+static_assert(sizeof(GfxImage) == 0x70, "");
+static_assert(offsetof(GfxImage, texture) == 0x0, "");
+static_assert(offsetof(GfxImage, mapType) == 0x38, "");
+static_assert(offsetof(GfxImage, cardMemory) == 0x3C, "");
+static_assert(offsetof(GfxImage, width) == 0x40, "");
+static_assert(offsetof(GfxImage, pixels) == 0x48, "");
+static_assert(offsetof(GfxImage, streams) == 0x4C, "");
+static_assert(offsetof(GfxImage, name) == 0x6C, "");
+
+struct Sys_File
+{
+    void *handle;
+    int startOffset;
+};
+static_assert(sizeof(Sys_File) == 0x8, "");
+
+struct DBFile
+{
+    Sys_File handle;
+    char name[64];
+};
+static_assert(sizeof(DBFile) == 0x48, "");
+static_assert(offsetof(DBFile, name) == 0x8, "");
+
+struct GfxSubImageStream
+{
+    unsigned int fileOffset;
+    unsigned int fileOffsetEnd;
+    DBFile *file;
+};
+static_assert(sizeof(GfxSubImageStream) == 0xC, "");
+
+struct GfxImageStream
+{
+    GfxSubImageStream part[4];
+};
+static_assert(sizeof(GfxImageStream) == 0x30, "");
+
 struct cplane_s;
 struct cStaticModel_s;
 struct ClipMaterial
@@ -2007,6 +2100,7 @@ static_assert(offsetof(StringTable, values) == 0xC, "");
 
 union XAssetHeader
 {
+    GfxImage *image;
     clipMap_t *clipMap;
     GameWorldSp *gameWorldSp;
     GameWorldMp *gameWorldMp;
@@ -2022,6 +2116,30 @@ struct XAsset
     XAssetHeader header;
 };
 
+struct XBlock
+{
+    unsigned __int8 *data;
+    unsigned int size;
+};
+static_assert(sizeof(XBlock) == 0x8, "");
+
+struct XZoneMemory
+{
+    XBlock blocks[6];
+};
+static_assert(sizeof(XZoneMemory) == 0x30, "");
+
+struct XZone
+{
+    DBFile file;
+    int flags;
+    int allocType;
+    XZoneMemory mem;
+};
+static_assert(sizeof(XZone) == 0x80, "");
+static_assert(offsetof(XZone, file) == 0x0, "");
+static_assert(offsetof(XZone, mem) == 0x50, "");
+
 struct __declspec(align(4)) XAssetEntry
 {
     XAsset asset;
@@ -2030,12 +2148,15 @@ struct __declspec(align(4)) XAssetEntry
     unsigned __int16 nextHash;
     unsigned __int16 nextOverride;
 };
+static_assert(sizeof(XAssetEntry) == 0x10, "");
+static_assert(offsetof(XAssetEntry, zoneIndex) == 0x8, "");
 
 union XAssetEntryPoolEntry
 {
     XAssetEntry entry;
     XAssetEntryPoolEntry *next;
 };
+static_assert(sizeof(XAssetEntryPoolEntry) == 0x10, "");
 
 } // namespace mp_tu6
 } // namespace iw4

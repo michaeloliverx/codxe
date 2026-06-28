@@ -32,7 +32,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new GSCFunctions());
     RegisterModule(new SVBots());
     RegisterModule(new GSCLoader());
-    // RegisterModule(new ImageLoader());
+    RegisterModule(new image_loader());
     RegisterModule(new Map());
     RegisterModule(new Patches());
     RegisterModule(new stats());

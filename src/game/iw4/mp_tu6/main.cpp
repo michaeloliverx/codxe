@@ -6,6 +6,7 @@
 #include "components/events.h"
 #include "components/g_client_fields.h"
 #include "components/g_scr_main.h"
+#include "components/image_loader.h"
 #include "components/mpsp.h"
 #include "components/mr.h"
 #include "components/patches.h"
@@ -30,6 +31,7 @@ IW4_MP_TU6_Plugin::IW4_MP_TU6_Plugin()
     RegisterModule(new console());
     RegisterModule(new g_client_fields());
     RegisterModule(new g_scr_main());
+    RegisterModule(new image_loader());
     RegisterModule(new mpsp());
     RegisterModule(new MovementRecorder());
     RegisterModule(new patches());
