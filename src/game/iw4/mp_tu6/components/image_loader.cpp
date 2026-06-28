@@ -3,20 +3,64 @@
 #include "events.h"
 #include "image_loader.h"
 #include "image/dds_loader.h"
+#include "image/dds_writer.h"
 #include "image/texture_layout.h"
 #include "image/xenos_texture.h"
 
+#include <fstream>
+
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD) - 1)
+#endif
+
+#ifdef PtrToUint
+#undef PtrToUint
 #endif
 
 namespace
 {
 namespace game = iw4::mp_tu6;
 
-const uint32_t IW4_STREAM_PIXEL_SIZE_MASK = 0x3FFFFFF;
+const uint32_t STREAM_PIXEL_SIZE_MASK = 0x3FFFFFF;
+const uint32_t MAX_STREAM_COMPRESSED_SIZE = 64u * 1024u * 1024u;
 
 typedef image::DdsImage DDSImage;
+
+struct ZlibStream
+{
+    unsigned __int8 *next_in;
+    unsigned int avail_in;
+    unsigned int total_in;
+    unsigned __int8 *next_out;
+    unsigned int avail_out;
+    unsigned int total_out;
+    char *msg;
+    void *state;
+    unsigned __int8 *(__fastcall *zalloc)(unsigned __int8 *opaque, unsigned int items, unsigned int size);
+    void(__fastcall *zfree)(unsigned __int8 *opaque, unsigned __int8 *ptr);
+    unsigned __int8 *opaque;
+    int data_type;
+};
+static_assert(sizeof(ZlibStream) == 48, "");
+
+game::cmd_function_s Cmd_ImageDump_VAR;
+
+uint32_t PtrToUint(const void *ptr)
+{
+    return static_cast<uint32_t>(reinterpret_cast<UINT_PTR>(ptr));
+}
+
+bool IsPlausibleAlignedPointer(const void *ptr)
+{
+    const uint32_t value = PtrToUint(ptr);
+    return value >= 0x10000u && value < 0xF0000000u && (value & 0x3u) == 0;
+}
+
+bool IsPlausiblePointer(const void *ptr)
+{
+    const uint32_t value = PtrToUint(ptr);
+    return value >= 0x10000u && value < 0xF0000000u;
+}
 
 void PrintImageError(const char *format, ...)
 {
@@ -182,11 +226,579 @@ bool ImageHasStreamedParts(const game::GfxImage *image)
 
     for (uint32_t imagePartIndex = 0; imagePartIndex < 4u; ++imagePartIndex)
     {
-        if ((image->streams[imagePartIndex].pixelSize & IW4_STREAM_PIXEL_SIZE_MASK) != 0)
+        if ((image->streams[imagePartIndex].pixelSize & STREAM_PIXEL_SIZE_MASK) != 0)
             return true;
     }
 
     return false;
+}
+
+GPUTEXTUREFORMAT GetImageGpuFormat(const game::GfxImage *image)
+{
+    return static_cast<GPUTEXTUREFORMAT>(image->texture.basemap.Format.DataFormat);
+}
+
+uint32_t GetImageBasePitch(const game::GfxImage *image, bool streamed)
+{
+    if (streamed)
+        return 0u;
+
+    return image->texture.basemap.Format.Pitch;
+}
+
+GPUENDIAN GetImageEndian(const game::GfxImage *image)
+{
+    return static_cast<GPUENDIAN>(image->texture.basemap.Format.Endian);
+}
+
+uint32_t GetImageLevelCount(const game::GfxImage *image, bool streamed)
+{
+    uint32_t levelCount = max(1u, static_cast<uint32_t>(image->levelCount));
+
+    if (!streamed && image->texture.basemap.Format.PackedMips != 0)
+    {
+        const uint32_t mipTailBaseLevel = image::xenos_texture::GetMipTailBaseLevel(image->width, image->height);
+        levelCount = max(1u, min(levelCount, mipTailBaseLevel));
+    }
+
+    return levelCount;
+}
+
+bool IsImageShapeSane(const game::GfxImage *image)
+{
+    if (image == NULL || !IsPlausibleAlignedPointer(image))
+        return false;
+
+    if (image->name == NULL || !IsPlausiblePointer(image->name) || image->name[0] == '\0')
+        return false;
+
+    if (image->mapType != game::MAPTYPE_2D && image->mapType != game::MAPTYPE_CUBE)
+        return false;
+
+    if (image->width == 0 || image->height == 0 || image->width > 8192u || image->height > 8192u)
+        return false;
+
+    if (image->depth == 0 || image->depth > 6u)
+        return false;
+
+    if (image->levelCount == 0 || image->levelCount > 16u)
+        return false;
+
+    if (image::xenos_texture::GetTextureFormatInfo(GetImageGpuFormat(image)) == NULL)
+        return false;
+
+    if (image->cardMemory.platform[0] < 0 || image->cardMemory.platform[0] > 128 * 1024 * 1024)
+        return false;
+
+    return true;
+}
+
+std::string GetSanitizedImageName(const char *imageName)
+{
+    if (imageName == NULL)
+        return std::string();
+
+    std::string sanitizedName;
+    for (const char *current = imageName; *current != '\0'; ++current)
+    {
+        const char c = *current;
+        if (c == '*')
+            continue;
+
+        if (c == '/' || c == '\\' || c == ':' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
+            sanitizedName.push_back('_');
+        else
+            sanitizedName.push_back(c);
+    }
+
+    return sanitizedName;
+}
+
+std::string GetDumpZoneName(const char *zoneName)
+{
+    const std::string sanitizedZoneName = GetSanitizedImageName(zoneName);
+    return sanitizedZoneName.empty() ? "unknown" : sanitizedZoneName;
+}
+
+std::string GetImageDumpPath(const char *imageName, const char *zoneName)
+{
+    return std::string(DUMP_DIR) + "\\" + GetDumpZoneName(zoneName) + "\\images\\" + GetSanitizedImageName(imageName) +
+           ".dds";
+}
+
+void EnsureImageDumpDirectory(const char *zoneName)
+{
+    CreateDirectoryA(DUMP_DIR, NULL);
+
+    const std::string zoneDirectory = std::string(DUMP_DIR) + "\\" + GetDumpZoneName(zoneName);
+    CreateDirectoryA(zoneDirectory.c_str(), NULL);
+    CreateDirectoryA((zoneDirectory + "\\images").c_str(), NULL);
+}
+
+const char *GetZoneName(uint32_t zoneIndex)
+{
+    if (zoneIndex >= game::g_zoneCount)
+        return NULL;
+
+    const char *zoneName = game::g_zones[zoneIndex].file.name;
+    if (zoneName[0] == '\0')
+        return NULL;
+
+    return zoneName;
+}
+
+bool ReadFileRange(const std::string &path, uint32_t offset, uint32_t size, std::vector<uint8_t> *buffer)
+{
+    if (buffer == NULL || size == 0)
+        return false;
+
+    HANDLE file = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+        return false;
+
+    SetLastError(NO_ERROR);
+    const DWORD seekResult = SetFilePointer(file, offset, NULL, FILE_BEGIN);
+    if (seekResult == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+    {
+        CloseHandle(file);
+        return false;
+    }
+
+    buffer->assign(size, 0);
+
+    DWORD bytesRead = 0;
+    const BOOL readOk = ReadFile(file, &(*buffer)[0], size, &bytesRead, NULL);
+    CloseHandle(file);
+
+    if (!readOk || bytesRead != size)
+    {
+        buffer->clear();
+        return false;
+    }
+
+    return true;
+}
+
+bool GetImagePoolIndex(const game::GfxImage *image, uint32_t *imageIndex)
+{
+    if (image == NULL || imageIndex == NULL)
+        return false;
+
+    const uint32_t imageAddress = PtrToUint(image);
+    const uint32_t poolAddress = PtrToUint(game::g_gfxImagePool);
+    const uint32_t poolSize = sizeof(game::GfxImage) * game::g_gfxImagePoolSize;
+    if (imageAddress < poolAddress || imageAddress >= poolAddress + poolSize)
+        return false;
+
+    const uint32_t imageOffset = imageAddress - poolAddress;
+    if ((imageOffset % sizeof(game::GfxImage)) != 0)
+        return false;
+
+    *imageIndex = imageOffset / sizeof(game::GfxImage);
+    return true;
+}
+
+const game::GfxSubImageStream *GetImageStreamSources(const game::GfxImage *image)
+{
+    uint32_t imageIndex = 0;
+    if (!GetImagePoolIndex(image, &imageIndex))
+        return NULL;
+
+    return game::g_imageStreams[imageIndex].part;
+}
+
+bool GetImageFilePath(const game::GfxSubImageStream &source, std::string *path)
+{
+    if (path == NULL || source.file == NULL || !IsPlausibleAlignedPointer(source.file) || source.file->name[0] == '\0')
+        return false;
+
+    char filePath[MAX_PATH];
+    _snprintf(filePath, sizeof(filePath), "game:\\%s.pak", source.file->name);
+    filePath[sizeof(filePath) - 1] = '\0';
+    *path = filePath;
+    return true;
+}
+
+unsigned __int8 *__fastcall ImageZlibAlloc(unsigned __int8 *opaque, unsigned int items, unsigned int size)
+{
+    (void)opaque;
+
+    if (items == 0 || size == 0 || items > 0xFFFFFFFFu / size)
+        return NULL;
+
+    return static_cast<unsigned __int8 *>(malloc(items * size));
+}
+
+void __fastcall ImageZlibFree(unsigned __int8 *opaque, unsigned __int8 *ptr)
+{
+    (void)opaque;
+    free(ptr);
+}
+
+bool InflateImageStream(const std::vector<uint8_t> &compressedData, uint32_t expectedSize,
+                        std::vector<uint8_t> *inflatedData)
+{
+    if (inflatedData == NULL || compressedData.empty() || expectedSize == 0)
+        return false;
+
+    inflatedData->assign(expectedSize, 0);
+    ZlibStream stream;
+    memset(&stream, 0, sizeof(stream));
+
+    stream.next_in = const_cast<unsigned __int8 *>(&compressedData[0]);
+    stream.avail_in = static_cast<unsigned int>(compressedData.size());
+    stream.next_out = &(*inflatedData)[0];
+    stream.avail_out = expectedSize;
+    stream.zalloc = ImageZlibAlloc;
+    stream.zfree = ImageZlibFree;
+
+    int result = game::Zlib_InflateInit(&stream, "1.1.4", sizeof(stream));
+    if (result == 0)
+    {
+        const int inflateResult = game::Zlib_Inflate(&stream, 4);
+        if (inflateResult == 1)
+        {
+            result = game::Zlib_InflateEnd(&stream);
+        }
+        else
+        {
+            game::Zlib_InflateEnd(&stream);
+            result = inflateResult != 0 ? inflateResult : -5;
+        }
+    }
+
+    if (result != 0 || stream.total_out == 0 || stream.total_out > expectedSize)
+    {
+        inflatedData->clear();
+        return false;
+    }
+
+    inflatedData->resize(stream.total_out);
+    return true;
+}
+
+bool WriteUntiledLevel(std::ofstream &file, const game::GfxImage *image, uint32_t width, uint32_t height,
+                       uint32_t mipLevel, GPUTEXTUREFORMAT format, uint32_t basePitch, const unsigned char *tiledPixels,
+                       uint32_t tiledSize, GPUENDIAN endian)
+{
+    const uint32_t linearLevelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, mipLevel, format);
+    const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(width, mipLevel, format);
+    if (linearLevelSize == 0 || rowPitch == 0 || tiledSize == 0)
+        return false;
+
+    std::vector<uint8_t> tiledData(tiledPixels, tiledPixels + tiledSize);
+    image::xenos_texture::ApplyGpuEndian(&tiledData[0], tiledData.size(), endian);
+
+    std::vector<uint8_t> linearData(linearLevelSize);
+    if (!image::xenos_texture::UntileTextureLevel(width, height, mipLevel, format, basePitch, &linearData[0],
+                                                  linearData.size(), rowPitch, &tiledData[0], tiledData.size()))
+        return false;
+
+    file.write(reinterpret_cast<const char *>(&linearData[0]), linearData.size());
+    return true;
+}
+
+bool Dump2DImage(const game::GfxImage *image, bool streamed, const char *zoneName)
+{
+    if (image->pixels == NULL || image->cardMemory.platform[0] <= 0)
+        return false;
+
+    const GPUTEXTUREFORMAT format = GetImageGpuFormat(image);
+    const uint32_t levelCount = GetImageLevelCount(image, streamed);
+    const uint32_t basePitch = GetImageBasePitch(image, streamed);
+    const GPUENDIAN endian = GetImageEndian(image);
+    const uint32_t linearBaseSize =
+        image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0u, format);
+    const uint32_t tiledBaseSize =
+        image::xenos_texture::CalculateTiledLevelSize(image->width, image->height, 0u, format, basePitch);
+    if (linearBaseSize == 0 || tiledBaseSize == 0)
+        return false;
+
+    const size_t requiredBytes =
+        static_cast<size_t>(tiledBaseSize) +
+        image::CalculateRequiredMipTextureBytes(image->width, image->height, format, 1u, levelCount, 1u);
+    if (requiredBytes > static_cast<size_t>(image->cardMemory.platform[0]))
+        return false;
+
+    image::DDS_HEADER header;
+    const uint32_t caps =
+        image::DDSCAPS_TEXTURE | (levelCount > 1u ? image::DDSCAPS_COMPLEX | image::DDSCAPS_MIPMAP : 0u);
+    if (!image::CreateDdsHeader(header, image->width, image->height, image->depth, levelCount, linearBaseSize, caps, 0u,
+                                format))
+        return false;
+
+    if (levelCount > 1u)
+        header.dwFlags |= image::DDSD_MIPMAPCOUNT;
+
+    EnsureImageDumpDirectory(zoneName);
+    const std::string filename = GetImageDumpPath(image->name, zoneName);
+    std::ofstream file(filename.c_str(), std::ios::binary);
+    if (!file)
+    {
+        PrintImageError("Could not create DDS for image '%s': %s\n", image->name, filename.c_str());
+        return false;
+    }
+
+    image::WriteDdsHeader(file, header);
+
+    const unsigned char *baseData = image->pixels;
+    const unsigned char *mipData = baseData + tiledBaseSize;
+    for (uint32_t mipLevel = 0; mipLevel < levelCount; ++mipLevel)
+    {
+        const uint32_t tiledLevelSize =
+            image::xenos_texture::CalculateTiledLevelSize(image->width, image->height, mipLevel, format, basePitch);
+        const unsigned char *source = baseData;
+        if (mipLevel > 0)
+        {
+            source = mipData +
+                     image::xenos_texture::CalculateMipLevelOffset(image->width, image->height, mipLevel, format, 1u);
+        }
+
+        if (!WriteUntiledLevel(file, image, image->width, image->height, mipLevel, format, basePitch, source,
+                               tiledLevelSize, endian))
+            return false;
+    }
+
+    PrintImageInfo("Dumped image '%s'%s\n", image->name, streamed ? " (streamed)" : "");
+    return true;
+}
+
+bool DumpCubeImage(const game::GfxImage *image, bool streamed, const char *zoneName)
+{
+    if (image->pixels == NULL || image->cardMemory.platform[0] <= 0)
+        return false;
+
+    const GPUTEXTUREFORMAT format = GetImageGpuFormat(image);
+    const uint32_t basePitch = GetImageBasePitch(image, streamed);
+    const GPUENDIAN endian = GetImageEndian(image);
+    const uint32_t linearFaceSize =
+        image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0u, format);
+    const uint32_t tiledFaceSize =
+        image::xenos_texture::CalculateTiledLevelSize(image->width, image->height, 0u, format, basePitch);
+    if (linearFaceSize == 0 || tiledFaceSize == 0)
+        return false;
+
+    const size_t requiredBytes = static_cast<size_t>(tiledFaceSize) * 6u;
+    if (requiredBytes > static_cast<size_t>(image->cardMemory.platform[0]))
+        return false;
+
+    const uint32_t caps2 = image::DDSCAPS2_CUBEMAP | image::DDSCAPS2_CUBEMAP_POSITIVEX |
+                           image::DDSCAPS2_CUBEMAP_NEGATIVEX | image::DDSCAPS2_CUBEMAP_POSITIVEY |
+                           image::DDSCAPS2_CUBEMAP_NEGATIVEY | image::DDSCAPS2_CUBEMAP_POSITIVEZ |
+                           image::DDSCAPS2_CUBEMAP_NEGATIVEZ;
+
+    image::DDS_HEADER header;
+    if (!image::CreateDdsHeader(header, image->width, image->height, image->depth, 1u, linearFaceSize,
+                                image::DDSCAPS_TEXTURE | image::DDSCAPS_COMPLEX, caps2, format))
+        return false;
+
+    EnsureImageDumpDirectory(zoneName);
+    const std::string filename = GetImageDumpPath(image->name, zoneName);
+    std::ofstream file(filename.c_str(), std::ios::binary);
+    if (!file)
+    {
+        PrintImageError("Could not create DDS for image '%s': %s\n", image->name, filename.c_str());
+        return false;
+    }
+
+    image::WriteDdsHeader(file, header);
+
+    for (uint32_t faceIndex = 0; faceIndex < 6u; ++faceIndex)
+    {
+        const unsigned char *source = image->pixels + static_cast<size_t>(faceIndex) * tiledFaceSize;
+        if (!WriteUntiledLevel(file, image, image->width, image->height, 0u, format, basePitch, source, tiledFaceSize,
+                               endian))
+            return false;
+    }
+
+    PrintImageInfo("Dumped image '%s'%s\n", image->name, streamed ? " (streamed)" : "");
+    return true;
+}
+
+uint32_t GetStreamPartLevelCount(const game::GfxImage *image, uint32_t imagePartIndex)
+{
+    const uint32_t streamLevelCount = image->streams[imagePartIndex].pixelSize >> 26;
+    if (streamLevelCount != 0)
+        return streamLevelCount;
+
+    return max(1u, static_cast<uint32_t>(image->levelCount));
+}
+
+bool DumpStreamPartFromData(const game::GfxImage *image, uint32_t imagePartIndex, const char *zoneName,
+                            const std::vector<uint8_t> &pixelData)
+{
+    if (imagePartIndex >= 4u || pixelData.empty())
+        return false;
+
+    const game::GfxImageStreamData &streamData = image->streams[imagePartIndex];
+    if (streamData.width == 0 || streamData.height == 0)
+        return false;
+
+    game::GfxImage streamImage = *image;
+    streamImage.width = streamData.width;
+    streamImage.height = streamData.height;
+    streamImage.levelCount = static_cast<unsigned char>(GetStreamPartLevelCount(image, imagePartIndex));
+    streamImage.cardMemory.platform[0] = static_cast<int>(pixelData.size());
+    streamImage.pixels = const_cast<unsigned char *>(&pixelData[0]);
+
+    if (streamImage.mapType == game::MAPTYPE_2D)
+        return Dump2DImage(&streamImage, true, zoneName);
+
+    if (streamImage.mapType == game::MAPTYPE_CUBE)
+        return DumpCubeImage(&streamImage, true, zoneName);
+
+    return false;
+}
+
+bool TryReadStreamPartPixels(const game::GfxImage *image, uint32_t imagePartIndex, std::vector<uint8_t> *pixelData)
+{
+    if (imagePartIndex >= 4u || pixelData == NULL)
+        return false;
+
+    const game::GfxSubImageStream *sources = GetImageStreamSources(image);
+    if (sources == NULL)
+        return false;
+
+    const game::GfxImageStreamData &streamData = image->streams[imagePartIndex];
+    const uint32_t expectedSize = streamData.pixelSize & STREAM_PIXEL_SIZE_MASK;
+    if (expectedSize == 0)
+        return false;
+
+    const game::GfxSubImageStream &source = sources[imagePartIndex];
+    if (source.fileOffsetEnd <= source.fileOffset)
+        return false;
+
+    const uint32_t compressedSize = source.fileOffsetEnd - source.fileOffset;
+    if (compressedSize > MAX_STREAM_COMPRESSED_SIZE)
+        return false;
+
+    std::string imageFilePath;
+    if (!GetImageFilePath(source, &imageFilePath))
+        return false;
+
+    std::vector<uint8_t> compressedData;
+    if (!ReadFileRange(imageFilePath, source.fileOffset, compressedSize, &compressedData))
+        return false;
+
+    return InflateImageStream(compressedData, expectedSize, pixelData);
+}
+
+bool TryDumpStreamPartEager(const game::GfxImage *image, uint32_t imagePartIndex, const char *zoneName)
+{
+    if (imagePartIndex >= 4u || !IsImageShapeSane(image))
+        return false;
+
+    const game::GfxImageStreamData &streamData = image->streams[imagePartIndex];
+    if ((streamData.pixelSize & STREAM_PIXEL_SIZE_MASK) == 0)
+        return false;
+
+    std::vector<uint8_t> pixelData;
+    if (!TryReadStreamPartPixels(image, imagePartIndex, &pixelData))
+        return false;
+
+    return DumpStreamPartFromData(image, imagePartIndex, zoneName, pixelData);
+}
+
+bool TryDumpStreamedImageEager(const game::GfxImage *image, const char *zoneName)
+{
+    if (!IsImageShapeSane(image))
+        return false;
+
+    bool usedParts[4] = {false, false, false, false};
+
+    for (uint32_t attempt = 0; attempt < 4u; ++attempt)
+    {
+        uint32_t bestPart = 4u;
+        uint32_t bestArea = 0;
+
+        for (uint32_t imagePartIndex = 0; imagePartIndex < 4u; ++imagePartIndex)
+        {
+            if (usedParts[imagePartIndex])
+                continue;
+
+            const game::GfxImageStreamData &streamData = image->streams[imagePartIndex];
+            if ((streamData.pixelSize & STREAM_PIXEL_SIZE_MASK) == 0)
+                continue;
+
+            const uint32_t imageArea =
+                static_cast<uint32_t>(streamData.width) * static_cast<uint32_t>(streamData.height);
+            if (bestPart == 4u || imageArea > bestArea)
+            {
+                bestPart = imagePartIndex;
+                bestArea = imageArea;
+            }
+        }
+
+        if (bestPart == 4u)
+            break;
+
+        usedParts[bestPart] = true;
+        if (TryDumpStreamPartEager(image, bestPart, zoneName))
+            return true;
+    }
+
+    return false;
+}
+
+bool Image_Dump(game::GfxImage *image, const char *zoneName)
+{
+    if (!IsImageShapeSane(image))
+        return false;
+
+    if (ImageHasStreamedParts(image))
+        return TryDumpStreamedImageEager(image, zoneName);
+
+    if (image->mapType == game::MAPTYPE_2D)
+        return Dump2DImage(image, false, zoneName);
+
+    if (image->mapType == game::MAPTYPE_CUBE)
+        return DumpCubeImage(image, false, zoneName);
+
+    return false;
+}
+
+void Cmd_ImageDump_f()
+{
+    CreateDirectoryA(DUMP_DIR, NULL);
+    PrintImageInfo("Dumping images by zone to %s\n", DUMP_DIR);
+
+    uint32_t dumpedCount = 0;
+    uint32_t skippedCount = 0;
+    std::set<std::string> visitedImages;
+
+    for (uint32_t entryIndex = 0; entryIndex < game::g_assetEntryPoolSize; ++entryIndex)
+    {
+        const game::XAssetEntryPoolEntry *poolEntry = &game::g_assetEntryPool[entryIndex];
+        const game::XAssetEntry &entry = poolEntry->entry;
+        if (entry.asset.type != game::ASSET_TYPE_IMAGE)
+            continue;
+
+        game::GfxImage *image = entry.asset.header.image;
+        if (!IsImageShapeSane(image))
+            continue;
+
+        const char *zoneName = GetZoneName(entry.zoneIndex);
+        const std::string imageKey = GetDumpZoneName(zoneName) + "\\" + image->name;
+        if (visitedImages.find(imageKey) != visitedImages.end())
+            continue;
+
+        visitedImages.insert(imageKey);
+        if (Image_Dump(image, zoneName))
+            ++dumpedCount;
+        else
+            ++skippedCount;
+    }
+
+    PrintImageInfo("Image dump complete: dumped %u images", dumpedCount);
+    if (skippedCount != 0)
+        PrintImageInfo(" (%u skipped)", skippedCount);
+    PrintImageInfo("\n");
+}
+
+void RegisterCommands()
+{
+    game::Cmd_AddCommandInternal("imagedump", Cmd_ImageDump_f, &Cmd_ImageDump_VAR);
 }
 
 bool Image_Replace_2D(game::GfxImage *image, const DDSImage &ddsImage)
@@ -735,6 +1347,7 @@ void ImageCache_InitImage_Hook(game::GfxImage *image, game::GfxImage *remoteImag
 image_loader::image_loader()
 {
     Events::OnDBLinkXAssetPre(OnDBLinkXAssetPre);
+    Events::OnCmdInit(RegisterCommands);
 
     ImageCache_InitImage_Detour = Detour(iw4::mp_tu6::ImageCache_InitImage, ImageCache_InitImage_Hook);
     ImageCache_InitImage_Detour.Install();

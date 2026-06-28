@@ -71,7 +71,7 @@ bool PopulateDdsPixelFormat(DDS_PIXELFORMAT &pixelFormat, uint32_t gpuFormat)
         pixelFormat.dwFlags = DDPF_LUMINANCE | DDPF_ALPHAPIXELS;
         pixelFormat.dwRGBBitCount = 16;
         pixelFormat.dwRBitMask = 0x000000FF;
-        pixelFormat.dwGBitMask = 0x0000FF00;
+        pixelFormat.dwABitMask = 0x0000FF00;
         return true;
     case GPUTEXTUREFORMAT_8_8_8_8:
         pixelFormat.dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;
@@ -92,16 +92,29 @@ bool CreateDdsHeader(DDS_HEADER &header, uint32_t width, uint32_t height, uint32
 {
     memset(&header, 0, sizeof(header));
     header.dwSize = DDS_HEADER_SIZE;
-    header.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE;
     header.dwHeight = height;
     header.dwWidth = width;
-    header.dwPitchOrLinearSize = pitchOrLinearSize;
     header.dwDepth = depth;
     header.dwMipMapCount = mipMapCount;
     header.dwCaps = caps;
     header.dwCaps2 = caps2;
 
-    return PopulateDdsPixelFormat(header.ddspf, gpuFormat);
+    if (!PopulateDdsPixelFormat(header.ddspf, gpuFormat))
+        return false;
+
+    header.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
+    if ((header.ddspf.dwFlags & DDPF_FOURCC) != 0)
+    {
+        header.dwFlags |= DDSD_LINEARSIZE;
+        header.dwPitchOrLinearSize = pitchOrLinearSize;
+    }
+    else
+    {
+        header.dwFlags |= DDSD_PITCH;
+        header.dwPitchOrLinearSize = (width * header.ddspf.dwRGBBitCount + 7u) / 8u;
+    }
+
+    return true;
 }
 
 void WriteDdsHeader(std::ofstream &file, DDS_HEADER header)

@@ -1871,6 +1871,35 @@ static_assert(offsetof(GfxImage, pixels) == 0x48, "");
 static_assert(offsetof(GfxImage, streams) == 0x4C, "");
 static_assert(offsetof(GfxImage, name) == 0x6C, "");
 
+struct Sys_File
+{
+    void *handle;
+    int startOffset;
+};
+static_assert(sizeof(Sys_File) == 0x8, "");
+
+struct DBFile
+{
+    Sys_File handle;
+    char name[64];
+};
+static_assert(sizeof(DBFile) == 0x48, "");
+static_assert(offsetof(DBFile, name) == 0x8, "");
+
+struct GfxSubImageStream
+{
+    unsigned int fileOffset;
+    unsigned int fileOffsetEnd;
+    DBFile *file;
+};
+static_assert(sizeof(GfxSubImageStream) == 0xC, "");
+
+struct GfxImageStream
+{
+    GfxSubImageStream part[4];
+};
+static_assert(sizeof(GfxImageStream) == 0x30, "");
+
 struct cplane_s;
 struct cStaticModel_s;
 struct ClipMaterial
@@ -2087,6 +2116,30 @@ struct XAsset
     XAssetHeader header;
 };
 
+struct XBlock
+{
+    unsigned __int8 *data;
+    unsigned int size;
+};
+static_assert(sizeof(XBlock) == 0x8, "");
+
+struct XZoneMemory
+{
+    XBlock blocks[6];
+};
+static_assert(sizeof(XZoneMemory) == 0x30, "");
+
+struct XZone
+{
+    DBFile file;
+    int flags;
+    int allocType;
+    XZoneMemory mem;
+};
+static_assert(sizeof(XZone) == 0x80, "");
+static_assert(offsetof(XZone, file) == 0x0, "");
+static_assert(offsetof(XZone, mem) == 0x50, "");
+
 struct __declspec(align(4)) XAssetEntry
 {
     XAsset asset;
@@ -2095,12 +2148,15 @@ struct __declspec(align(4)) XAssetEntry
     unsigned __int16 nextHash;
     unsigned __int16 nextOverride;
 };
+static_assert(sizeof(XAssetEntry) == 0x10, "");
+static_assert(offsetof(XAssetEntry, zoneIndex) == 0x8, "");
 
 union XAssetEntryPoolEntry
 {
     XAssetEntry entry;
     XAssetEntryPoolEntry *next;
 };
+static_assert(sizeof(XAssetEntryPoolEntry) == 0x10, "");
 
 } // namespace mp_tu6
 } // namespace iw4

@@ -87,9 +87,8 @@ std::string GetSanitizedImageName(const char *imageName)
         return std::string();
 
     std::string sanitizedName = imageName;
-    sanitizedName.erase(
-        std::remove_if(sanitizedName.begin(), sanitizedName.end(), [](char c) { return c == '*'; }),
-        sanitizedName.end());
+    sanitizedName.erase(std::remove_if(sanitizedName.begin(), sanitizedName.end(), [](char c) { return c == '*'; }),
+                        sanitizedName.end());
     return sanitizedName;
 }
 
@@ -301,8 +300,7 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
             if (faceOffset + tiledFaceSize > image->baseSize)
             {
                 Com_PrintError(CON_CHANNEL_ERROR, "Skipping cubemap '%s': pixel data is too small (have %u, need %u)\n",
-                               image->name, image->baseSize,
-                               static_cast<unsigned int>(faceOffset + tiledFaceSize));
+                               image->name, image->baseSize, static_cast<unsigned int>(faceOffset + tiledFaceSize));
                 return;
             }
 
@@ -315,10 +313,9 @@ void Image_Dump(const GfxImage *image, const std::string &highMipPath)
             // Create buffer for linear texture data
             std::vector<uint8_t> linearFace(linearFaceSize);
 
-            if (!image::xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
-                                                          image->texture.basemap->Format.Pitch, linearFace.data(),
-                                                          linearFace.size(), rowPitch, swappedFace.data(),
-                                                          swappedFace.size()))
+            if (!image::xenos_texture::UntileTextureLevel(
+                    image->width, image->height, 0, static_cast<uint32_t>(format), image->texture.basemap->Format.Pitch,
+                    linearFace.data(), linearFace.size(), rowPitch, swappedFace.data(), swappedFace.size()))
             {
                 Com_PrintError(CON_CHANNEL_ERROR, "Could not decode cubemap '%s' face %d\n", image->name, i);
                 return;

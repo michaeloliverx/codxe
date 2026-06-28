@@ -92,7 +92,7 @@ bool DdsImage::GetGpuFormat(GPUTEXTUREFORMAT *format) const
         }
 
         if ((header.ddspf.dwFlags & DDPF_ALPHAPIXELS) != 0 && header.ddspf.dwRGBBitCount == 16 &&
-            header.ddspf.dwRBitMask == 0x000000FF && header.ddspf.dwGBitMask == 0x0000FF00)
+            header.ddspf.dwRBitMask == 0x000000FF && header.ddspf.dwABitMask == 0x0000FF00)
         {
             *format = GPUTEXTUREFORMAT_8_8;
             return true;

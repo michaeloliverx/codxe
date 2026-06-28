@@ -31,37 +31,6 @@ bool is_mp_fastfile(const char *name)
 
 struct internal_state;
 
-struct Sys_File
-{
-    void *handle;
-    int startOffset;
-};
-
-struct DBFile
-{
-    Sys_File handle;
-    char name[64];
-};
-
-struct XBlock
-{
-    unsigned __int8 *data;
-    unsigned int size;
-};
-
-struct XZoneMemory
-{
-    XBlock blocks[6];
-};
-
-struct XZone
-{
-    DBFile file;
-    int flags;
-    int allocType;
-    XZoneMemory mem;
-};
-
 struct _OVERLAPPED
 {
     unsigned int Internal;
@@ -113,7 +82,6 @@ const char **g_assetNames = reinterpret_cast<const char **>(0x82442298);
 int *g_poolSize = reinterpret_cast<int *>(0x82442588);
 const DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82678600);
 const unsigned int *g_zoneIndex = reinterpret_cast<const unsigned int *>(0x827ADAE4);
-const XZone *g_zones = reinterpret_cast<XZone *>(0x829D8048);
 GameWorldMp *gameWorldMp = reinterpret_cast<GameWorldMp *>(0x82DFD010);
 
 typedef int (*Com_sprintf_t)(char *dest, unsigned int size, const char *fmt, ...);
