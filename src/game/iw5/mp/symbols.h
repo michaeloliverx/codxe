@@ -19,7 +19,8 @@ static auto level = reinterpret_cast<level_locals_t *>(0x82FDA080);
 
 static auto sharedUiInfo = reinterpret_cast<sharedUiInfo_t *>(0x836EE5B0);
 
-static auto svs_clients = reinterpret_cast<client_t *>(0x836C6310);
+static auto svs_numclients = reinterpret_cast<int *>(0x836C630C);
+static auto svs_clients = reinterpret_cast<client_t **>(0x836C6310);
 
 // Function pointers
 
@@ -45,6 +46,12 @@ static auto Scr_ErrorInternal = reinterpret_cast<Scr_ErrorInternal_t>(0x822BD368
 static auto Scr_GetInt = reinterpret_cast<Scr_GetInt_t>(0x822BEB30);
 static auto Scr_GetMethod = reinterpret_cast<Scr_GetMethod_t>(0x822661A0);
 static auto Scr_GetString = reinterpret_cast<Scr_GetString_t>(0x822BF108);
+static auto SL_GetString = reinterpret_cast<Sl_GetString_t>(0x822B5CC8);
+static auto Scr_GetNumParam = reinterpret_cast<Scr_GetNumParam_t>(0x822BFA70);
+static auto Scr_AddString = reinterpret_cast<void (*)(char *value)>(0x822BFC68);
+static auto Scr_NotifyNum =
+    reinterpret_cast<void (*)(int entnum, unsigned int classnum, unsigned int stringValue, unsigned int paramcount)>(
+        0x822BE548);
 
 static auto ScrPlace_GetActivePlacement = reinterpret_cast<ScrPlace_GetActivePlacement_t>(0x821A69E8);
 
@@ -57,6 +64,18 @@ static auto UI_DrawBuildNumber = reinterpret_cast<UI_DrawBuildNumber_t>(0x822ECA
 static auto UI_DrawText = reinterpret_cast<UI_DrawText_t>(0x822EC490);
 
 static auto Weapon_RocketLauncher_Fire = reinterpret_cast<Weapon_RocketLauncher_Fire_t>(0x82271710);
+
+static auto G_IRand = reinterpret_cast<int (*)(int min, int max)>(0x8226FC80);
+static auto GetProtocolVersion = reinterpret_cast<int (*)()>(0x8232A320);
+static auto BG_NetDataChecksum = reinterpret_cast<int (*)()>(0x820E0B50);
+static auto SV_Cmd_TokenizeString = reinterpret_cast<void (*)(const char *text)>(0x822889F0);
+static auto SV_DirectConnect = reinterpret_cast<void (*)(netadr_t from, int client)>(0x822C8AB0);
+static auto SV_Cmd_EndTokenizedString = reinterpret_cast<void (*)()>(0x82288A10);
+static auto SV_SendClientGameState = reinterpret_cast<void (*)(client_t *cl)>(0x822C6DD0);
+static auto SV_ClientEnterWorld = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x822C6F50);
+
+static auto SV_DropClient = reinterpret_cast<SV_DropClient_t>(0x822C66A8);
+
 
 } // namespace mp
 } // namespace iw5

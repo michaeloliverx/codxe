@@ -4,6 +4,7 @@
 #include "patches.h"
 #include "pm.h"
 #include "script.h"
+#include "bots.h"
 
 namespace iw5
 {
@@ -205,6 +206,7 @@ IW5_MP_Plugin::IW5_MP_Plugin()
     RegisterModule(new patches());
     RegisterModule(new PlayerMovement());
     RegisterModule(new Script());
+    RegisterModule(new Bots());
 
     DB_FindXAssetHeader_Detour = Detour(DB_FindXAssetHeader, DB_FindXAssetHeader_Hook);
     DB_FindXAssetHeader_Detour.Install();

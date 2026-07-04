@@ -1087,12 +1087,20 @@ struct client_t
     gentity_s *gentity;
     char pad1[67772];
     int bIsSplitscreenClient;
-    char pad2[224928];
+    char pad2[13830];
+    uint16_t scriptId;
+    char pad3[4];
+    int bIsTestClient;
+    char pad4[211088];
 };
 static_assert(sizeof(client_t) == 428928, "");
+static_assert(offsetof(client_t, header) == 0, "");
 static_assert(offsetof(client_t, userinfo) == 1636, "");
 static_assert(offsetof(client_t, gentity) == 136220, "");
 static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
+static_assert(offsetof(client_t, scriptId) == 217830, "");
+static_assert(offsetof(client_t, bIsTestClient) == 217836, "");
+
 
 enum trType_t : __int32
 {
@@ -1898,6 +1906,15 @@ struct ScreenPlacement
     float subScreenLeft;
 };
 
+// Custom Structs
+
+struct SpawnBotOptions
+{
+    int entNum;
+    int level;
+    int prestige;
+};
+
 // Function typedefs
 
 typedef void (*CG_GameMessage_t)(LocalClientNum_t localClientNum, const char *msg);
@@ -1923,6 +1940,8 @@ typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
 typedef int (*Scr_GetInt_t)(unsigned int index);
 typedef unsigned int (*Scr_GetMethod_t)(const char **pName, int *type);
 typedef const char *(*Scr_GetString_t)(unsigned int index);
+typedef int (*Sl_GetString_t)(const char* string, int user);
+typedef unsigned int (*Scr_GetNumParam_t)();
 
 typedef const ScreenPlacement *(*ScrPlace_GetActivePlacement_t)(const LocalClientNum_t localClientNum);
 
@@ -1937,6 +1956,8 @@ typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text,
 typedef gentity_s *(*Weapon_RocketLauncher_Fire_t)(gentity_s *ent, const Weapon *weapon, double spread, weaponParms *wp,
                                                    weaponParms *gunVel, missileFireParms *fireParms,
                                                    missileFireParms *magicBullet, bool a8);
+
+typedef void (*SV_DropClient_t)(client_t *cl, const char *reason, bool tellThem);
 
 } // namespace mp
 } // namespace iw5

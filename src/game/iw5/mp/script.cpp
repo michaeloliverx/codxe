@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "script.h"
+#include "bots.h"
 
 namespace iw5
 {
@@ -152,6 +153,8 @@ Script::Script()
     Scr_AddMethod("getentityflags", PlayerCmd_GetEntityFlags);
 
     Scr_AddMethod("disablebrushcollisionatorigin", DisableBrushCollisionAtOrigin);
+
+    Scr_AddMethod("spawnbot", SpawnBot);
 
     PlayerCmd_GetViewmodel_Detour = Detour(PlayerCmd_GetViewmodel, PlayerCmd_GetViewmodel_Hook);
     PlayerCmd_GetViewmodel_Detour.Install();

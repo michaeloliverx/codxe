@@ -5,6 +5,7 @@ import shutil
 # Configuration
 SOLUTION_FILE = "codxe.sln"
 MSBUILD_PATH = r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
+MSBUILD_ARGS = ["/m", "/p:BuildInParallel=true"]
 BINARY_PATH = r"build\Release\bin\codxe.xex"
 STAGING_DIR = r"build\staging"
 RESOURCES_PATH = r"resources"
@@ -43,7 +44,8 @@ with open(VERSION_HEADER_PATH, "w") as version_file:
     version_file.write("#pragma once\n\n")
     version_file.write(f"#define BUILD_NUMBER {BUILD_NUMBER}\n")
 
-result = subprocess.run([MSBUILD_PATH, SOLUTION_FILE])
+print("Building solution with parallel MSBuild jobs...")
+result = subprocess.run([MSBUILD_PATH, SOLUTION_FILE, *MSBUILD_ARGS])
 if result.returncode != 0:
     print("ERROR: Build failed.")
     exit(result.returncode)
