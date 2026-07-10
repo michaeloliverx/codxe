@@ -126,29 +126,13 @@ namespace iw5
             SV_DirectConnect(botAddress, firstAvailableSlot - 1);
             SV_Cmd_EndTokenizedString();
 
-            // we need to ensure the slot is created before carrying on... maybe this should be around addbot instead?
+            // SV_DirectConnect processes the connection synchronously, so the
+            // client slot state is set by the time it returns. No polling needed.
             auto *clients = *svs_clients;
-            bool joined = false;
-            const int waitCycles = 100;
 
-            for (int t = 0; t < waitCycles; ++t)
+            if (!clients || clients[firstAvailableSlot].header.state < 1)
             {
-                if (!clients)
-                    break;
-
-                if (clients[firstAvailableSlot].header.state >= 1)
-                {
-                    joined = true;
-                    break;
-                }
-
-                Sleep(50);
-                clients = *svs_clients; // get latest pointer to clients
-            }
-
-            if (!joined)
-            {
-                DbgPrint("AddBot: client did not become active for slot %d, aborting\n", firstAvailableSlot);
+                DbgPrint("AddBot: client slot %d not active after SV_DirectConnect, aborting\n", firstAvailableSlot);
                 return;
             }
 
