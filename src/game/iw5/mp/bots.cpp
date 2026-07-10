@@ -126,8 +126,6 @@ namespace iw5
             SV_DirectConnect(botAddress, firstAvailableSlot - 1);
             SV_Cmd_EndTokenizedString();
 
-            // SV_DirectConnect processes the connection synchronously, so the
-            // client slot state is set by the time it returns. No polling needed.
             auto *clients = *svs_clients;
 
             if (!clients || clients[firstAvailableSlot].header.state < 1)
