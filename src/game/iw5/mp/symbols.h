@@ -76,6 +76,5 @@ static auto SV_ClientEnterWorld = reinterpret_cast<void (*)(client_t *cl, usercm
 
 static auto SV_DropClient = reinterpret_cast<SV_DropClient_t>(0x822C66A8);
 
-
 } // namespace mp
 } // namespace iw5

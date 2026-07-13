@@ -1101,7 +1101,6 @@ static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
 static_assert(offsetof(client_t, scriptId) == 217830, "");
 static_assert(offsetof(client_t, bIsTestClient) == 217836, "");
 
-
 enum trType_t : __int32
 {
     TR_STATIONARY = 0x0,
@@ -1940,7 +1939,7 @@ typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
 typedef int (*Scr_GetInt_t)(unsigned int index);
 typedef unsigned int (*Scr_GetMethod_t)(const char **pName, int *type);
 typedef const char *(*Scr_GetString_t)(unsigned int index);
-typedef int (*Sl_GetString_t)(const char* string, int user);
+typedef int (*Sl_GetString_t)(const char *string, int user);
 typedef unsigned int (*Scr_GetNumParam_t)();
 
 typedef const ScreenPlacement *(*ScrPlace_GetActivePlacement_t)(const LocalClientNum_t localClientNum);
