@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "components/branding.h"
 #include "components/events.h"
+#include "components/fastfiles.h"
 #include "components/patches.h"
 #include "components/pm.h"
 #include "main.h"
@@ -13,6 +14,7 @@ namespace mp
 IW4_MP_Plugin::IW4_MP_Plugin()
 {
     RegisterModule(new Events());
+    RegisterModule(new fastfiles());
     RegisterModule(new Branding());
     RegisterModule(new patches());
     RegisterModule(new pm());

@@ -2027,6 +2027,7 @@ struct __declspec(align(4)) XAssetEntry
     XAsset asset;
     unsigned __int8 zoneIndex;
     volatile unsigned __int8 inuseMask;
+    bool printedMissingAsset;
     unsigned __int16 nextHash;
     unsigned __int16 nextOverride;
 };
@@ -2036,6 +2037,10 @@ union XAssetEntryPoolEntry
     XAssetEntry entry;
     XAssetEntryPoolEntry *next;
 };
+
+static_assert(sizeof(XAssetEntry) == 0x10, "");
+static_assert(offsetof(XAssetEntry, nextHash) == 0xC, "");
+static_assert(offsetof(XAssetEntry, nextOverride) == 0xE, "");
 
 } // namespace mp_tu6
 } // namespace iw4

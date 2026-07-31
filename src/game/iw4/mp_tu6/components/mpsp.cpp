@@ -113,6 +113,7 @@ int *g_poolSize = reinterpret_cast<int *>(0x82442588);
 const DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82678600);
 const unsigned int *g_zoneIndex = reinterpret_cast<const unsigned int *>(0x827ADAE4);
 const XZone *g_zones = reinterpret_cast<XZone *>(0x829D8048);
+const XAssetEntryPoolEntry *g_assetEntryPool = reinterpret_cast<const XAssetEntryPoolEntry *>(0x82839700);
 GameWorldMp *gameWorldMp = reinterpret_cast<GameWorldMp *>(0x82DFD010);
 
 typedef int (*Com_sprintf_t)(char *dest, unsigned int size, const char *fmt, ...);
@@ -393,68 +394,116 @@ XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(XAssetType type, XAssetHeader *he
 
     const char *asset_name = DB_GetXAssetName(&xasset);
 
-    // Before linking
-    switch (type)
-    {
-    case ASSET_TYPE_MAP_ENTS:
-        Asset::MapEnts_::dump(header->mapEnts);
-        Asset::MapEnts_::override_(header->mapEnts);
-        break;
-    case ASSET_TYPE_RAWFILE:
-        Asset::RawFile_::override_(header->rawfile);
-        break;
-    }
+    const char *asset_type_name = g_assetNames[type];
+    // const char *asset_name = DB_GetXAssetName(&xasset);
+    const char *zone_name = g_zones[*g_zoneIndex].file.name;
+    const bool is_asset_reference = asset_name && asset_name[0] == ',';
 
-    // Hijacks the referenced asset mechanism so that DB_AllocXAssetEntry
-    // is never called thus never increasing the asset pool for those assets.
-    // Make the assumption that these assets will not be used.
-    if (!is_mp_fastfile(g_load->file->name))
-    {
-        switch (type)
-        {
-        case ASSET_TYPE_SOUND:
-            DB_SetXAssetName(&xasset, ",null");
-            break;
-        case ASSET_TYPE_LOADED_SOUND:
-            DB_SetXAssetName(&xasset, ",null");
-            break;
-        case ASSET_TYPE_FX:
-            DB_SetXAssetName(&xasset, ",misc/missing_fx");
-            break;
-        case ASSET_TYPE_XMODEL:
-            if (strncmp(asset_name, "viewmodel_", 10) == 0 && strncmp(asset_name, "viewmodel_base_viewhands", 24) != 0)
-            {
-                DbgPrint("referenced asset hack viewmodel_base_viewhands\n");
-                DB_SetXAssetName(&xasset, ",viewmodel_base_viewhands");
-            }
-            else if (strncmp(asset_name, "weapon_", 7) == 0)
-            {
-                DbgPrint("referenced asset hack ASSET_TYPE_XMODEL weapon_\n");
-                DB_SetXAssetName(&xasset, ",void");
-            }
-            break;
-        case ASSET_TYPE_MATERIAL:
-            if (strncmp(asset_name, "mc/mtl_weapon_", 14) == 0)
-            {
-                DbgPrint("referenced asset hack ASSET_TYPE_MATERIAL mc/mtl_weapon_\n");
-                DB_SetXAssetName(&xasset, ",$default");
-            }
-            if (strncmp(asset_name, "hud_", 4) == 0)
-            {
-                DbgPrint("referenced asset hack ASSET_TYPE_MATERIAL hud_\n");
-                DB_SetXAssetName(&xasset, ",$default");
-            }
-            break;
-        case ASSET_TYPE_GAMEWORLD_SP:
-            type = ASSET_TYPE_GAMEWORLD_MP;
-            header->gameWorldMp->g_glassData = header->gameWorldSp->g_glassData;
-            break;
-        case ASSET_TYPE_LOCALIZE_ENTRY:
-            DB_SetXAssetName(&xasset, ",CGAME_UNKNOWN");
-        }
-    }
+    DbgPrint("[DB_LinkXAssetEntry1] %-24s | %-16s (%d) | %s\n", zone_name, asset_type_name, type, asset_name);
+
+    const unsigned int incoming_zone_index = *g_zoneIndex;
+    void *incoming_asset_data = header->data;
+
+    // // Before linking
+    // switch (type)
+    // {
+    // case ASSET_TYPE_MAP_ENTS:
+    //     Asset::MapEnts_::dump(header->mapEnts);
+    //     Asset::MapEnts_::override_(header->mapEnts);
+    //     break;
+    // case ASSET_TYPE_RAWFILE:
+    //     Asset::RawFile_::override_(header->rawfile);
+    //     break;
+    // }
+
+    // // Hijacks the referenced asset mechanism so that DB_AllocXAssetEntry
+    // // is never called thus never increasing the asset pool for those assets.
+    // // Make the assumption that these assets will not be used.
+    // if (!is_mp_fastfile(g_load->file->name))
+    // {
+    //     switch (type)
+    //     {
+    //     case ASSET_TYPE_SOUND:
+    //         DB_SetXAssetName(&xasset, ",null");
+    //         break;
+    //     case ASSET_TYPE_LOADED_SOUND:
+    //         DB_SetXAssetName(&xasset, ",null");
+    //         break;
+    //     case ASSET_TYPE_FX:
+    //         DB_SetXAssetName(&xasset, ",misc/missing_fx");
+    //         break;
+    //     case ASSET_TYPE_XMODEL:
+    //         if (strncmp(asset_name, "viewmodel_", 10) == 0 && strncmp(asset_name, "viewmodel_base_viewhands", 24) !=
+    //         0)
+    //         {
+    //             DbgPrint("referenced asset hack viewmodel_base_viewhands\n");
+    //             DB_SetXAssetName(&xasset, ",viewmodel_base_viewhands");
+    //         }
+    //         else if (strncmp(asset_name, "weapon_", 7) == 0)
+    //         {
+    //             DbgPrint("referenced asset hack ASSET_TYPE_XMODEL weapon_\n");
+    //             DB_SetXAssetName(&xasset, ",void");
+    //         }
+    //         break;
+    //     case ASSET_TYPE_MATERIAL:
+    //         if (strncmp(asset_name, "mc/mtl_weapon_", 14) == 0)
+    //         {
+    //             DbgPrint("referenced asset hack ASSET_TYPE_MATERIAL mc/mtl_weapon_\n");
+    //             DB_SetXAssetName(&xasset, ",$default");
+    //         }
+    //         if (strncmp(asset_name, "hud_", 4) == 0)
+    //         {
+    //             DbgPrint("referenced asset hack ASSET_TYPE_MATERIAL hud_\n");
+    //             DB_SetXAssetName(&xasset, ",$default");
+    //         }
+    //         break;
+    //     case ASSET_TYPE_GAMEWORLD_SP:
+    //         type = ASSET_TYPE_GAMEWORLD_MP;
+    //         header->gameWorldMp->g_glassData = header->gameWorldSp->g_glassData;
+    //         break;
+    //     case ASSET_TYPE_LOCALIZE_ENTRY:
+    //         DB_SetXAssetName(&xasset, ",CGAME_UNKNOWN");
+    //     }
+    // }
 
     XAssetEntryPoolEntry *entry = DB_LinkXAssetEntry1_Detour.GetOriginal<DB_LinkXAssetEntry1_t>()(type, header);
+
+    const unsigned int active_zone_index = entry->entry.zoneIndex;
+
+    if (is_asset_reference && active_zone_index == 0)
+    {
+        DbgPrint("[codxe][assets] UNRESOLVED reference at link time: source=%s | type=%s (%d) | target=%s | "
+                 "using default asset\n",
+                 zone_name, asset_type_name, type, asset_name + 1);
+    }
+
+    const bool active_is_incoming_zone = active_zone_index == incoming_zone_index;
+    const bool linked_header_is_active = entry->entry.asset.header.data == header->data;
+
+    if (!active_is_incoming_zone || !linked_header_is_active)
+    {
+        const int incoming_zone_flags = g_zones[incoming_zone_index].flags;
+        const int active_zone_flags = g_zones[active_zone_index].flags;
+        const char *active_zone_name = g_zones[active_zone_index].file.name;
+        const char *action = linked_header_is_active ? "existing-retained" : "override-linked";
+
+        DbgPrint("[DB_LinkXAssetEntry1:RESOLVE] %-16s | %s | incoming=%s(z=%u flags=0x%X src=%p linked=%p) "
+                 "active=%s(z=%u flags=0x%X data=%p) nextOverride=%u\n",
+                 asset_type_name, action, zone_name, incoming_zone_index, incoming_zone_flags, incoming_asset_data,
+                 header->data, active_zone_name, active_zone_index, active_zone_flags, entry->entry.asset.header.data,
+                 entry->entry.nextOverride);
+
+        if (!linked_header_is_active && entry->entry.nextOverride != 0)
+        {
+            const XAssetEntry &override_entry = g_assetEntryPool[entry->entry.nextOverride].entry;
+            const unsigned int override_zone_index = override_entry.zoneIndex;
+
+            DbgPrint("[DB_LinkXAssetEntry1:OVERRIDE] head=%u zone=%s(z=%u flags=0x%X data=%p) returnedMatchesHead=%d\n",
+                     entry->entry.nextOverride, g_zones[override_zone_index].file.name, override_zone_index,
+                     g_zones[override_zone_index].flags, override_entry.asset.header.data,
+                     override_entry.asset.header.data == header->data);
+        }
+    }
 
     return entry;
 }
@@ -526,33 +575,32 @@ void Patch_ImageCache_OOM()
 
 mpsp::mpsp()
 {
-    Patch_ImageCache_OOM();
+    // Patch_ImageCache_OOM();
 
-// Debug-only: intercept internal console printing to also forward output to stdout
-#ifndef NDEBUG
+    // Debug-only: intercept internal console printing to also forward output to stdout
+
+    // DB_ReallocXAssetPool(ASSET_TYPE_IMAGE, 4200); // 3584
+
     CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
     CL_ConsolePrint_Detour.Install();
-#endif
 
-    // Modify some assets before linking
-    DB_LinkXAssetEntry1_Detour = Detour(DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
-    DB_LinkXAssetEntry1_Detour.Install();
+    // // Modify some assets before linking
+    // DB_LinkXAssetEntry1_Detour = Detour(DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
+    // DB_LinkXAssetEntry1_Detour.Install();
 
-    // Rewrite some strings on the fly
-    Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
-    Com_sprintf_Detour.Install();
+    // // Rewrite some strings on the fly
+    // Com_sprintf_Detour = Detour(Com_sprintf, Com_sprintf_Hook);
+    // Com_sprintf_Detour.Install();
 }
 
 mpsp::~mpsp()
 {
 
-#ifndef NDEBUG
     CL_ConsolePrint_Detour.Remove();
-#endif
 
-    DB_LinkXAssetEntry1_Detour.Remove();
+    // DB_LinkXAssetEntry1_Detour.Remove();
 
-    Com_sprintf_Detour.Remove();
+    // Com_sprintf_Detour.Remove();
 }
 
 } // namespace mp_tu6
