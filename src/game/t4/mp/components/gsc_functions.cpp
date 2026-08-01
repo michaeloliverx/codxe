@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gsc_functions.h"
+#include "sv_bots.h"
 
 namespace t4
 {
@@ -230,6 +231,7 @@ static struct
     const char *name;
     BuiltinFunction handler;
 } gsc_functions[] = {
+    {"addtestclient", GScr_AddTestClient},
     {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint},
     {"fs_testfile", GScr_FS_TestFile},
     {"fs_fopen", GScr_FS_FOpen},

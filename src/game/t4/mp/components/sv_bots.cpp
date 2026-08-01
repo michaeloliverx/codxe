@@ -21,6 +21,7 @@ struct BotMovementInfo_t
 };
 
 static BotMovementInfo_t g_botai[T4_MAX_CLIENTS];
+static char s_pendingBotName[32];
 
 static void CleanBotArray()
 {
@@ -58,6 +59,49 @@ static unsigned char ClampByte(int value)
     if (value > 255)
         return 255;
     return static_cast<unsigned char>(value);
+}
+
+Detour SV_UserinfoChanged_Detour;
+
+void SV_UserinfoChanged_Hook(client_t *cl)
+{
+    if (s_pendingBotName[0] && cl->header.netchan.remoteAddress.type == NA_BOT && cl->header.state == CS_CONNECTED)
+        Info_SetValueForKey(cl->userinfo, "name", s_pendingBotName);
+
+    SV_UserinfoChanged_Detour.GetOriginal<SV_UserinfoChanged_t>()(cl);
+}
+
+void GScr_AddTestClient()
+{
+    const unsigned int parameterCount = Scr_GetNumParam(SCRIPTINSTANCE_SERVER);
+    if (parameterCount > 1)
+        Scr_Error("Usage: addtestclient(<name>);", SCRIPTINSTANCE_SERVER);
+
+    if (parameterCount == 1)
+    {
+        const char *string = Scr_GetString(0, SCRIPTINSTANCE_SERVER);
+
+        char name[32];
+        int i, j;
+        for (i = 0, j = 0; string && string[i] && j < static_cast<int>(sizeof(name)) - 1; ++i)
+        {
+            if (static_cast<unsigned char>(string[i]) >= 0x20)
+                name[j++] = string[i];
+        }
+        name[j] = '\0';
+
+        if (j < 1)
+            Scr_Error("addtestclient: name must be at least 1 character long", SCRIPTINSTANCE_SERVER);
+
+        strncpy(s_pendingBotName, name, sizeof(s_pendingBotName) - 1);
+        s_pendingBotName[sizeof(s_pendingBotName) - 1] = '\0';
+    }
+
+    gentity_s *ent = SV_AddTestClient();
+    s_pendingBotName[0] = '\0';
+
+    if (ent)
+        Scr_AddEntity(ent, SCRIPTINSTANCE_SERVER);
 }
 
 Detour G_SelectWeaponIndex_Detour;
@@ -240,6 +284,9 @@ SVBots::SVBots()
 
     SV_BotUserMove_Detour = Detour(SV_BotUserMove, SV_BotUserMove_Stub);
     SV_BotUserMove_Detour.Install();
+
+    SV_UserinfoChanged_Detour = Detour(SV_UserinfoChanged, SV_UserinfoChanged_Hook);
+    SV_UserinfoChanged_Detour.Install();
 }
 
 SVBots::~SVBots()
@@ -249,7 +296,10 @@ SVBots::~SVBots()
 
     SV_BotUserMove_Detour.Remove();
 
+    SV_UserinfoChanged_Detour.Remove();
+
     CleanBotArray();
+    s_pendingBotName[0] = '\0';
 }
 
 } // namespace mp
