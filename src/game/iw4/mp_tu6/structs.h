@@ -8,6 +8,81 @@ namespace iw4
 namespace mp_tu6
 {
 
+struct internal_state;
+
+struct Sys_File
+{
+    void *handle;
+    int startOffset;
+};
+
+struct DBFile
+{
+    Sys_File handle;
+    char name[64];
+};
+
+struct XBlock
+{
+    unsigned __int8 *data;
+    unsigned int size;
+};
+
+struct XZoneMemory
+{
+    XBlock blocks[6];
+};
+
+struct XZone
+{
+    DBFile file;
+    int flags;
+    int allocType;
+    XZoneMemory mem;
+};
+
+struct _OVERLAPPED
+{
+    unsigned int Internal;
+    unsigned int InternalHigh;
+    unsigned int Offset;
+    unsigned int OffsetHigh;
+    void *hEvent;
+};
+
+struct z_stream_s
+{
+    unsigned __int8 *next_in;
+    unsigned int avail_in;
+    unsigned int total_in;
+    unsigned __int8 *next_out;
+    unsigned int avail_out;
+    unsigned int total_out;
+    char *msg;
+    internal_state *state;
+    unsigned __int8 *(__fastcall *zalloc)(unsigned __int8 *, unsigned int, unsigned int);
+    void(__fastcall *zfree)(unsigned __int8 *, unsigned __int8 *);
+    unsigned __int8 *opaque;
+    int data_type;
+};
+
+struct DB_LoadData
+{
+    DBFile *file;
+    int outstandingRead;
+    unsigned __int8 *fileBuffer;
+    unsigned int readSize;
+    unsigned int completedReadSize;
+    unsigned int offset;
+    unsigned __int8 *start_in;
+    _OVERLAPPED overlapped;
+    unsigned int readError;
+    z_stream_s stream;
+    unsigned int lookaheadReadSize;
+    unsigned int lookaheadOffset;
+    unsigned int lookaheadClearAvailIn;
+};
+
 union DvarValue
 {
     bool enabled;
@@ -2027,6 +2102,7 @@ struct __declspec(align(4)) XAssetEntry
     XAsset asset;
     unsigned __int8 zoneIndex;
     volatile unsigned __int8 inuseMask;
+    bool printedMissingAsset;
     unsigned __int16 nextHash;
     unsigned __int16 nextOverride;
 };
@@ -2036,6 +2112,10 @@ union XAssetEntryPoolEntry
     XAssetEntry entry;
     XAssetEntryPoolEntry *next;
 };
+
+static_assert(sizeof(XAssetEntry) == 0x10, "");
+static_assert(offsetof(XAssetEntry, nextHash) == 0xC, "");
+static_assert(offsetof(XAssetEntry, nextOverride) == 0xE, "");
 
 } // namespace mp_tu6
 } // namespace iw4

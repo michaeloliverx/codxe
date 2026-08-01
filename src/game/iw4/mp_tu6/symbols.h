@@ -50,6 +50,9 @@ static auto Cmd_Init = reinterpret_cast<void (*)()>(0x82278048);
 
 static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x822804F8);
 
+typedef int (*Com_sprintf_t)(char *dest, unsigned int size, const char *fmt, ...);
+static Com_sprintf_t Com_sprintf = reinterpret_cast<Com_sprintf_t>(0x82315F20);
+
 typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
 static Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x8227F448);
 
@@ -104,6 +107,19 @@ static Console_Key_t Console_Key = reinterpret_cast<Console_Key_t>(0x821821D0);
 
 static auto DB_LinkXAssetEntry1 =
     reinterpret_cast<XAssetEntryPoolEntry *(*)(XAssetType type, XAssetHeader *header)>(0x821DE528);
+
+typedef int (*DB_GetXAssetSizeHandlerFunc)();
+static DB_GetXAssetSizeHandlerFunc *DB_GetXAssetSizeHandler =
+    reinterpret_cast<DB_GetXAssetSizeHandlerFunc *>(0x82442490);
+
+typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
+static DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x821AEFD8);
+
+typedef void (*DB_SetXAssetName_t)(XAsset *asset, const char *name);
+static DB_SetXAssetName_t DB_SetXAssetName = reinterpret_cast<DB_SetXAssetName_t>(0x821AEFF8);
+
+typedef void (*DB_LoadXFile_t)(XZoneMemory *zoneMem, DBFile *file);
+static DB_LoadXFile_t DB_LoadXFile = reinterpret_cast<DB_LoadXFile_t>(0x821AFCB8);
 
 typedef XAssetHeader (*DB_FindXAssetHeader_t)(XAssetType type, const char *name);
 static DB_FindXAssetHeader_t DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x821E25B0);
@@ -277,6 +293,15 @@ static auto UI_DrawText =
 static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x823160A8);
 
 // Data
+static auto DB_XAssetPool = reinterpret_cast<void **>(0x82442828);
+static auto g_assetNames = reinterpret_cast<const char **>(0x82442298);
+static auto g_poolSize = reinterpret_cast<int *>(0x82442588);
+static auto g_load = reinterpret_cast<const DB_LoadData *>(0x82678600);
+static auto g_zoneIndex = reinterpret_cast<const unsigned int *>(0x827ADAE4);
+static auto g_zones = reinterpret_cast<const XZone *>(0x829D8048);
+static auto g_assetEntryPool = reinterpret_cast<const XAssetEntryPoolEntry *>(0x82839700);
+static auto gameWorldMp = reinterpret_cast<GameWorldMp *>(0x82DFD010);
+
 static auto cgArray = reinterpret_cast<cg_s **>(0x824C5B64);
 static auto clients = reinterpret_cast<clientActive_t **>(0x825A8B6C);
 static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x825A5918);

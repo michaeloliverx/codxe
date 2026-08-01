@@ -5,6 +5,17 @@ namespace iw4
 {
 namespace mp_tu6
 {
+
+Detour CL_ConsolePrint_Detour;
+
+void CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, unsigned int duration,
+                          unsigned int pixelWidth, int flags)
+{
+    DbgPrint("[CL_ConsolePrint] %s", txt);
+
+    CL_ConsolePrint_Detour.GetOriginal<CL_ConsolePrint_t>()(localClientNum, channel, txt, duration, pixelWidth, flags);
+}
+
 void DisableFastfileAuth()
 {
     // The game requires fastfiles to be signed in MP, but it has the code to load
@@ -46,6 +57,11 @@ void DisableDvarProtection()
 
 patches::patches()
 {
+#ifndef NDEBUG
+    CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
+    CL_ConsolePrint_Detour.Install();
+#endif
+
     DisableFastfileAuth();
     EnableBouncing();
     DisableDvarProtection();
@@ -53,6 +69,9 @@ patches::patches()
 
 patches::~patches()
 {
+#ifndef NDEBUG
+    CL_ConsolePrint_Detour.Remove();
+#endif
 }
 } // namespace mp_tu6
 } // namespace iw4
