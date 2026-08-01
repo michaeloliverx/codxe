@@ -25,6 +25,7 @@ void PlayerCmd_BotMeleeParams(scr_entref_t entref);
 void PlayerCmd_BotAngles(scr_entref_t entref);
 void PlayerCmd_IsBot(scr_entref_t entref);
 void PlayerCmd_IsHost(scr_entref_t entref);
+void GScr_AddTestClient();
 
 } // namespace mp
 } // namespace t4

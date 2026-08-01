@@ -1026,19 +1026,22 @@ static_assert(offsetof(clientHeader_t, netchan.remoteAddress.type) == 0x20, "");
 struct client_t
 {
     clientHeader_t header; // OFS: 0x0
-    char pad[0x20EF4 - sizeof(clientHeader_t)];
+    char pad[0x6DC - sizeof(clientHeader_t)];
+    char userinfo[1024]; // OFS: 0x6DC SIZE: 0x400
+    char pad1[0x20EF4 - 0xADC];
     usercmd_s lastUsercmd; // OFS: 0x20EF4 SIZE: 0x2C
-    char pad1[1032];       //
+    char pad2[1032];       //
     char name[32];         // OFS: 0x21328 SIZE: 0x20
-    char pad2[172];        //
+    char pad3[172];        //
     gentity_s *gentity;    // OFS: 0x213F4 SIZE: 0x4
-    char pad3[12];         //
+    char pad4[12];         //
     int nextSnapshotTime;  // OFS: 0x21404 SIZE: 0x4
-    char pad4[614948];     // padding to reach end of struct
+    char pad5[614948];     // padding to reach end of struct
 };
 
 static_assert(sizeof(client_t) == 751148, "");
 static_assert(offsetof(client_t, header) == 0x0, "");
+static_assert(offsetof(client_t, userinfo) == 0x6DC, "");
 static_assert(offsetof(client_t, lastUsercmd) == 0x20EF4, "");
 static_assert(offsetof(client_t, name) == 0x21328, "");
 static_assert(offsetof(client_t, gentity) == 0x213F4, "");

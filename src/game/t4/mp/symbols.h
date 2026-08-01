@@ -95,6 +95,9 @@ static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName,
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8220A270);
 static auto GScr_AllocString = reinterpret_cast<int (*)(const char *s)>(0x8222D368);
 
+typedef void (*Info_SetValueForKey_t)(char *s, const char *key, const char *value);
+static Info_SetValueForKey_t Info_SetValueForKey = reinterpret_cast<Info_SetValueForKey_t>(0x822C3FE0);
+
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822B9CC0);
 
 static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x821E4220);
@@ -119,6 +122,7 @@ static auto Scr_AddClassField =
     reinterpret_cast<void (*)(unsigned int classnum, const char *name, unsigned __int16 offset, scriptInstance_t inst)>(
         0x823414F0);
 static auto Scr_AddInt = reinterpret_cast<void (*)(int value, scriptInstance_t inst)>(0x82345668);
+static auto Scr_AddEntity = reinterpret_cast<void (*)(gentity_s *ent, scriptInstance_t inst)>(0x82253F68);
 typedef void (*Scr_AddString_t)(const char *value, scriptInstance_t inst);
 static Scr_AddString_t Scr_AddString = reinterpret_cast<Scr_AddString_t>(0x823459A8);
 typedef void (*Scr_AddUndefined_t)(scriptInstance_t inst);
@@ -159,6 +163,8 @@ typedef bool (*StringTable_GetAsset_t)(const char *filename, StringTable **table
 static StringTable_GetAsset_t StringTable_GetAsset = reinterpret_cast<StringTable_GetAsset_t>(0x822BB280);
 
 static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82284D50);
+typedef gentity_s *(*SV_AddTestClient_t)();
+static SV_AddTestClient_t SV_AddTestClient = reinterpret_cast<SV_AddTestClient_t>(0x82285D20);
 typedef void (*SV_BotUserMove_t)(client_t *cl);
 static SV_BotUserMove_t SV_BotUserMove = reinterpret_cast<SV_BotUserMove_t>(0x8228AB98);
 static auto SV_GameSendServerCommand =
@@ -166,6 +172,8 @@ static auto SV_GameSendServerCommand =
 static auto SV_LinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82290C38);
 static auto SV_SetBrushModel = reinterpret_cast<int (*)(gentity_s *ent)>(0x82286190);
 static auto SV_UnlinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82290BF0);
+typedef void (*SV_UserinfoChanged_t)(client_t *cl);
+static SV_UserinfoChanged_t SV_UserinfoChanged = reinterpret_cast<SV_UserinfoChanged_t>(0x822844A0);
 static auto Sys_SnapVector = reinterpret_cast<void (*)(float *v)>(0x822EA5A0);
 
 bool SV_IsClientBot(unsigned int clientNum);
