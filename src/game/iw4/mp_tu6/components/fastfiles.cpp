@@ -16,6 +16,7 @@ const char *const CODXE_UI_FILENAME = "codxe_ui_mp.ff";
 const char *const CODXE_UI_RELATIVE_PATH = "_codxe\\zone\\codxe_ui_mp.ff";
 const char *const CODXE_UI_PATH = "game:\\_codxe\\zone\\codxe_ui_mp.ff";
 const char *const CODXE_ZONE_RELATIVE_DIRECTORY = "_codxe\\zone\\";
+const char *const CODXE_IMAGEFILE_FILENAME = "imagefile5.pak";
 const char *const GAME_DEVICE_PREFIX = "game:\\";
 const char *const FASTFILE_EXTENSION = ".ff";
 const unsigned int MAX_ZONE_COUNT = 32;
@@ -270,6 +271,19 @@ SysFile Sys_CreateFile_Hook(const char *dir, const char *filename)
         DbgPrint("[codxe][fastfiles] Redirecting %s to %s (dir=%s)\n", CODXE_UI_FILENAME, CODXE_UI_RELATIVE_PATH,
                  dir ? dir : "(null)");
         return original(dir, CODXE_UI_RELATIVE_PATH);
+    }
+
+    if (filename && std::strcmp(filename, CODXE_IMAGEFILE_FILENAME) == 0)
+    {
+        const std::string relativePath = std::string(CODXE_ZONE_RELATIVE_DIRECTORY) + filename;
+        const std::string devicePath = std::string(GAME_DEVICE_PREFIX) + relativePath;
+
+        if (FileExists(devicePath.c_str()))
+        {
+            DbgPrint("[codxe][fastfiles] Redirecting Codxe imagefile %s to %s (dir=%s)\n", filename,
+                     relativePath.c_str(), dir ? dir : "(null)");
+            return original(dir, relativePath.c_str());
+        }
     }
 
     if (IsSafeFastfileName(filename))
