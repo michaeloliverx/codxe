@@ -767,6 +767,8 @@ struct __declspec(align(32)) playerState_s
     int diveDirection;
     int stunTime;
 };
+static_assert(offsetof(playerState_s, weapCommon.offHand) == 868, "");
+static_assert(offsetof(playerState_s, weapCommon.weapon) == 880, "");
 
 enum sessionState_t : __int32
 {
@@ -801,6 +803,15 @@ struct __declspec(align(2)) usercmd_s
     char remoteControlMove[3];
 };
 static_assert(sizeof(usercmd_s) == 44, "");
+static_assert(offsetof(usercmd_s, serverTime) == 0, "");
+static_assert(offsetof(usercmd_s, buttons) == 4, "");
+static_assert(offsetof(usercmd_s, angles) == 8, "");
+static_assert(offsetof(usercmd_s, weapon) == 20, "");
+static_assert(offsetof(usercmd_s, offHand) == 24, "");
+static_assert(offsetof(usercmd_s, forwardmove) == 28, "");
+static_assert(offsetof(usercmd_s, meleeChargeEnt) == 32, "");
+static_assert(offsetof(usercmd_s, meleeChargeDist) == 34, "");
+static_assert(offsetof(usercmd_s, remoteControlAngles) == 38, "");
 
 struct playerTeamState_t
 {
@@ -1016,6 +1027,7 @@ struct netadr_t
     unsigned __int16 port;
     netsrc_t localNetID;
 };
+static_assert(sizeof(netadr_t) == 16, "");
 
 struct netProfilePacket_t
 {
@@ -1083,9 +1095,15 @@ struct client_t
     clientHeader_t header;
     const char *dropReason;
     char *userinfo;
-    char pad01[134580];
+    char pad01a[133116];
+    int reliableSequence;
+    int reliableAcknowledge;
+    int reliableSent;
+    char pad01b[1452];
     gentity_s *gentity;
-    char pad1[67772];
+    char pad1a[116];
+    int lastPacketTime;
+    char pad1b[67652];
     int bIsSplitscreenClient;
     char pad2[13830];
     uint16_t scriptId;
@@ -1096,7 +1114,11 @@ struct client_t
 static_assert(sizeof(client_t) == 428928, "");
 static_assert(offsetof(client_t, header) == 0, "");
 static_assert(offsetof(client_t, userinfo) == 1636, "");
+static_assert(offsetof(client_t, reliableSequence) == 134756, "");
+static_assert(offsetof(client_t, reliableAcknowledge) == 134760, "");
+static_assert(offsetof(client_t, reliableSent) == 134764, "");
 static_assert(offsetof(client_t, gentity) == 136220, "");
+static_assert(offsetof(client_t, lastPacketTime) == 136340, "");
 static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
 static_assert(offsetof(client_t, scriptId) == 217830, "");
 static_assert(offsetof(client_t, bIsTestClient) == 217836, "");
@@ -1905,19 +1927,12 @@ struct ScreenPlacement
     float subScreenLeft;
 };
 
-// Custom Structs
-
-struct SpawnBotOptions
-{
-    int entNum;
-    int level;
-    int prestige;
-};
-
 // Function typedefs
 
 typedef void (*CG_GameMessage_t)(LocalClientNum_t localClientNum, const char *msg);
 
+typedef void (*CL_ConsolePrint_t)(LocalClientNum_t localClientNum, int channel, const char *txt,
+                                  unsigned int duration, unsigned int pixelWidth, int flags);
 typedef Font_s *(*CL_RegisterFont_t)(const char *fontName, int imageTrack);
 
 typedef XAssetEntry *(*DB_FindXAssetEntry_t)(XAssetType type, const char *name);

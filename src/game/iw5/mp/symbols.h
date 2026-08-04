@@ -26,6 +26,7 @@ static auto svs_clients = reinterpret_cast<client_t **>(0x836C6310);
 
 static auto CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x82127BF8);
 
+static auto CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x82168BB8);
 static auto CL_RegisterFont = reinterpret_cast<CL_RegisterFont_t>(0x82174F88);
 
 static auto DB_FindXAssetEntry = reinterpret_cast<DB_FindXAssetEntry_t>(0x821EE920);
@@ -44,6 +45,10 @@ static auto Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x822BFAB8);
 static auto GetEntity = reinterpret_cast<GetEntity_t>(0x82251470);
 static auto Scr_ErrorInternal = reinterpret_cast<Scr_ErrorInternal_t>(0x822BD368);
 static auto Scr_GetInt = reinterpret_cast<Scr_GetInt_t>(0x822BEB30);
+static auto Scr_GetFloat = reinterpret_cast<float (*)(unsigned int index)>(0x822BEDD8);
+static auto Scr_AddEntityNum = reinterpret_cast<void (*)(int entnum, unsigned int classnum)>(0x822BFBD0);
+static auto Scr_RegisterFunction = reinterpret_cast<void (*)(int func, int type, unsigned int name)>(0x822B13E8);
+static auto Scr_GetFunction = reinterpret_cast<unsigned int (*)(const char **pName, int *type)>(0x822660E8);
 static auto Scr_GetMethod = reinterpret_cast<Scr_GetMethod_t>(0x822661A0);
 static auto Scr_GetString = reinterpret_cast<Scr_GetString_t>(0x822BF108);
 static auto SL_GetString = reinterpret_cast<Sl_GetString_t>(0x822B5CC8);
@@ -69,10 +74,11 @@ static auto G_IRand = reinterpret_cast<int (*)(int min, int max)>(0x8226FC80);
 static auto GetProtocolVersion = reinterpret_cast<int (*)()>(0x8232A320);
 static auto BG_NetDataChecksum = reinterpret_cast<int (*)()>(0x820E0B50);
 static auto SV_Cmd_TokenizeString = reinterpret_cast<void (*)(const char *text)>(0x822889F0);
-static auto SV_DirectConnect = reinterpret_cast<void (*)(netadr_t from, int client)>(0x822C8AB0);
+static auto SV_DirectConnect = reinterpret_cast<void (*)(netadr_t from)>(0x822C8AB0);
 static auto SV_Cmd_EndTokenizedString = reinterpret_cast<void (*)()>(0x82288A10);
 static auto SV_SendClientGameState = reinterpret_cast<void (*)(client_t *cl)>(0x822C6DD0);
 static auto SV_ClientEnterWorld = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x822C6F50);
+static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x822C7D60);
 
 static auto SV_DropClient = reinterpret_cast<SV_DropClient_t>(0x822C66A8);
 

@@ -5,206 +5,412 @@ namespace iw5
 {
 namespace mp
 {
+namespace
+{
+const int IW5_MAX_CLIENTS = 18;
+const unsigned short ENTITYNUM_NONE = 2047;
+
+#define IW5_ANGLE2SHORT(x) ((int)((x) * 65536.0f / 360.0f) & 65535)
+
+enum CmdButton
+{
+    CMD_BUTTON_ATTACK = 1 << 0,
+    CMD_BUTTON_SPRINT = 1 << 1,
+    CMD_BUTTON_MELEE = 1 << 2,
+    CMD_BUTTON_ACTIVATE = 1 << 3,
+    CMD_BUTTON_RELOAD = 1 << 4,
+    CMD_BUTTON_USE_RELOAD = 1 << 5,
+    CMD_BUTTON_LEAN_LEFT = 1 << 6,
+    CMD_BUTTON_LEAN_RIGHT = 1 << 7,
+    CMD_BUTTON_PRONE = 1 << 8,
+    CMD_BUTTON_CROUCH = 1 << 9,
+    CMD_BUTTON_UP = 1 << 10,
+    CMD_BUTTON_ADS = 1 << 11,
+    CMD_BUTTON_BREATH = 1 << 13,
+    CMD_BUTTON_FRAG = 1 << 14,
+    CMD_BUTTON_OFFHAND_SECONDARY = 1 << 15,
+    CMD_BUTTON_THROW = 1 << 19,
+    CMD_BUTTON_REMOTE = 1 << 20,
+};
+
+struct BotMovementInfo
+{
+    bool active;
+    int buttons;
+    bool hasMove;
+    char forwardMove;
+    char rightMove;
+    bool hasAngles;
+    float angles[3];
+    bool hasRemoteAngles;
+    char remoteAngles[2];
+    unsigned short meleeChargeEnt;
+    unsigned char meleeChargeDist;
+};
+
+struct BotAction
+{
+    const char *name;
+    int button;
+};
+
+BotMovementInfo g_botai[IW5_MAX_CLIENTS];
 dvar_t *sv_maxClients = nullptr;
-static dvar_t *ResolveSvMaxClients()
+unsigned int g_botPort = 0;
+
+const BotAction BOT_ACTIONS[] = {
+    {"gostand", CMD_BUTTON_UP},
+    {"gocrouch", CMD_BUTTON_CROUCH},
+    {"goprone", CMD_BUTTON_PRONE},
+    {"fire", CMD_BUTTON_ATTACK},
+    {"attack", CMD_BUTTON_ATTACK},
+    {"melee", CMD_BUTTON_MELEE},
+    {"frag", CMD_BUTTON_FRAG},
+    {"smoke", CMD_BUTTON_OFFHAND_SECONDARY},
+    {"reload", CMD_BUTTON_RELOAD},
+    {"sprint", CMD_BUTTON_SPRINT},
+    {"leanleft", CMD_BUTTON_LEAN_LEFT},
+    {"leanright", CMD_BUTTON_LEAN_RIGHT},
+    {"ads", CMD_BUTTON_ADS | CMD_BUTTON_THROW},
+    {"speed_throw", CMD_BUTTON_ADS | CMD_BUTTON_THROW},
+    {"holdbreath", CMD_BUTTON_BREATH},
+    {"usereload", CMD_BUTTON_USE_RELOAD},
+    {"activate", CMD_BUTTON_ACTIVATE},
+    {"use", CMD_BUTTON_ACTIVATE},
+    {"remote", CMD_BUTTON_REMOTE},
+    {"crouch", CMD_BUTTON_CROUCH},
+    {"prone", CMD_BUTTON_PRONE},
+};
+
+char ClampMove(int value)
 {
-    if (sv_maxClients == nullptr)
-    {
+    if (value < -127)
+        return -127;
+    if (value > 127)
+        return 127;
+    return static_cast<char>(value);
+}
+
+unsigned char ClampByte(int value)
+{
+    if (value < 0)
+        return 0;
+    if (value > 255)
+        return 255;
+    return static_cast<unsigned char>(value);
+}
+
+unsigned short ClampEntityNum(int value)
+{
+    if (value < 0 || value > ENTITYNUM_NONE)
+        return ENTITYNUM_NONE;
+    return static_cast<unsigned short>(value);
+}
+
+int GetMaxClients()
+{
+    if (!sv_maxClients)
         sv_maxClients = Dvar_FindMalleableVar("sv_maxclients");
-    }
-    return sv_maxClients;
+
+    if (!sv_maxClients)
+        return 0;
+
+    const int maxClients = sv_maxClients->current.integer;
+    return maxClients < IW5_MAX_CLIENTS ? maxClients : IW5_MAX_CLIENTS;
 }
 
-static bool CanAddBot()
+BotMovementInfo *GetBotInfo(scr_entref_t entref)
 {
-    auto count = 0;
-
-    ResolveSvMaxClients();
-
-    auto *clients = *svs_clients;
-
-    if (sv_maxClients == nullptr)
+    if (entref.classnum != 0 || entref.entnum >= IW5_MAX_CLIENTS || !g_entities[entref.entnum].client)
     {
-        DbgPrint("CanAddBot: sv_maxClients dvar is null\n");
-        return false;
+        Scr_ErrorInternal();
+        return nullptr;
     }
 
-    for (auto i = 0; i < sv_maxClients->current.integer; ++i)
-    {
-        client_t *client = &clients[i];
-
-        if (client->header.state >= 1)
-        {
-            ++count;
-        }
-    }
-
-    return count < sv_maxClients->current.integer;
+    return &g_botai[entref.entnum];
 }
 
-static int GetAvailableClientSlot()
+gentity_s *AddTestClient()
 {
-    auto *clients = *svs_clients;
-
-    if (sv_maxClients == nullptr)
+    client_t *clients = *svs_clients;
+    const int maxClients = GetMaxClients();
+    DbgPrint("[codxe][IW5][Bots] AddTestClient begin: clients=%p maxClients=%d\n", clients, maxClients);
+    if (!clients || maxClients <= 0)
     {
-        DbgPrint("GetAvailableClientSlot: sv_maxClients is null\n");
-        return -1;
+        DbgPrint("[codxe][IW5][Bots] AddTestClient abort: client array unavailable\n");
+        return nullptr;
     }
 
-    for (auto i = 1; i < sv_maxClients->current.integer; ++i)
+    int clientNum = 0;
+    for (; clientNum < maxClients; ++clientNum)
     {
-        client_t *client = &clients[i];
-        auto state = client->header.state;
-        if (state < 1)
-        {
-            return i;
-        }
+        if (clients[clientNum].header.state == CON_DISCONNECTED)
+            break;
     }
 
-    return -1;
-}
-
-static char *GetBotName(int slot)
-{
-    int id = slot >= 0 ? slot : *svs_numclients;
-    return va("Bot_%d", id);
-}
-
-static uint32_t SpawnBotThread(SpawnBotOptions *opts)
-{
-    Sleep(150);
-
-    Scr_AddString("autoassign");
-    Scr_AddString("team_marinesopfor");
-    Scr_NotifyNum(opts->entNum, 0, SL_GetString("menuresponse", 0), 2);
-
-    Sleep(200);
-
-    Scr_AddString("class0");
-    Scr_AddString("changeclass");
-    Scr_NotifyNum(opts->entNum, 0, SL_GetString("menuresponse", 0), 2);
-
-    auto ent = &g_entities[opts->entNum];
-    ent->client->sess.cs.rank = opts->level;
-    ent->client->sess.cs.prestige = opts->prestige;
-
-    delete opts;
-
-    return 0;
-}
-
-static void AddBot()
-{
-    if (!CanAddBot())
+    if (clientNum == maxClients)
     {
-        DbgPrint("Cannot add bot, max clients reached\n");
-        return;
+        DbgPrint("[codxe][IW5][Bots] AddTestClient abort: no free client slot\n");
+        return nullptr;
     }
 
-    auto firstAvailableSlot = GetAvailableClientSlot();
+    DbgPrint("[codxe][IW5][Bots] AddTestClient selected slot %d\n", clientNum);
 
-    auto botName = GetBotName(firstAvailableSlot);
-    auto xuid1 = G_IRand(0, INT_MAX);
-    auto xuid2 = G_IRand(0, INT_MAX);
-
-    auto botLevel = G_IRand(0, 79);
-    auto botPrestige = G_IRand(0, 20);
-
-    auto connectString =
-        va("connect bot%d "
-           "\"\\rate\\20000\\name\\%s\\natType\\1\\rank\\%d\\prestige\\%d\\ec_usingTag\\0\\ec_usingTitle\\0\\ec_"
-           "TitleBg\\0\\ec_"
-           "Level\\0\\ptd_prestige_black_ops\\0\\ptd_rank_black_ops\\0\\ptd_prestige_mw2\\0\\ptd_rank_"
-           "mw2\\0\\ptd_prestige_world_at_war\\0\\ptd_rank_world_at_war\\0\\ptd_prestige_mw\\0\\ptd_rank_"
-           "mw\\0\\protocol\\%i\\checksum\\%i\\challenge\\0\\statver\\26 "
-           "3648679816\\invited\\1\\xuid\\%08x%08x\\onlineStats\\0\\migrating\\0\"",
-           firstAvailableSlot - 1, botName, botLevel, botPrestige, GetProtocolVersion(), BG_NetDataChecksum(), xuid1,
-           xuid2);
+    const unsigned int botPort = g_botPort++;
+    const int xuidHigh = G_IRand(0, INT_MAX);
+    const int xuidLow = G_IRand(0, INT_MAX);
+    const char *connectString =
+        va("connect bot%u "
+           "\"snaps\\20\\rate\\5000\\name\\Bot_%d\\natType\\1\\protocol\\%i\\checksum\\%i\\challenge\\0\\statver\\26 "
+           "3648679816\\invited\\1\\xuid\\%08x%08x\\onlineStats\\0\\migrating\\0\\qport\\%u\"",
+           botPort, clientNum, GetProtocolVersion(), BG_NetDataChecksum(), xuidHigh, xuidLow, botPort);
 
     netadr_t botAddress = {};
     botAddress.type = NA_BOT;
+    botAddress.port = static_cast<unsigned short>(botPort);
+    // IW5 ignores the port when comparing non-IP addresses. Give each bot a
+    // distinct localNetID so Party_FindFirstMemberAtAddr does not treat every
+    // NA_BOT connection as the first bot reconnecting.
+    botAddress.localNetID = static_cast<netsrc_t>(NS_INVALID_NETSRC + clientNum + 1);
 
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: tokenizing connect string (port=%u localNetID=%d)\n",
+             clientNum, botPort, botAddress.localNetID);
     SV_Cmd_TokenizeString(connectString);
-    SV_DirectConnect(botAddress, firstAvailableSlot - 1);
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: entering SV_DirectConnect\n", clientNum);
+    SV_DirectConnect(botAddress);
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: SV_DirectConnect returned\n", clientNum);
     SV_Cmd_EndTokenizedString();
 
-    auto *clients = *svs_clients;
-
-    if (!clients || clients[firstAvailableSlot].header.state < 1)
+    client_t *client = &clients[clientNum];
+    if (client->header.state == CON_DISCONNECTED || !client->gentity)
     {
-        DbgPrint("AddBot: client slot %d not active after SV_DirectConnect, aborting\n", firstAvailableSlot);
-        return;
+        DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d abort: state=%d gentity=%p\n", clientNum,
+                 client->header.state, client->gentity);
+        return nullptr;
     }
 
-    client_t *pClient = &clients[firstAvailableSlot];
-    pClient->scriptId = 1023;
-    pClient->bIsTestClient = 1;
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d connected: state=%d gentity=%p\n", clientNum,
+             client->header.state, client->gentity);
+
+    client->scriptId = 1023;
+    client->bIsTestClient = 1;
+    client->gentity->s.number = clientNum;
 
     usercmd_s cmd = {};
-    SV_SendClientGameState(pClient);
-    SV_ClientEnterWorld(pClient, &cmd);
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: entering SV_SendClientGameState\n", clientNum);
+    SV_SendClientGameState(client);
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: entering SV_ClientEnterWorld\n", clientNum);
+    SV_ClientEnterWorld(client, &cmd);
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: SV_ClientEnterWorld returned state=%d\n", clientNum,
+             client->header.state);
 
-    SpawnBotOptions *botOpts = new SpawnBotOptions();
-    botOpts->entNum = pClient->gentity->s.number;
-    botOpts->level = botLevel;
-    botOpts->prestige = botPrestige;
-
-    CreateThread(nullptr, 0, reinterpret_cast<PTHREAD_START_ROUTINE>(SpawnBotThread), botOpts, 0, nullptr);
+    ZeroMemory(&g_botai[clientNum], sizeof(g_botai[clientNum]));
+    g_botai[clientNum].meleeChargeEnt = ENTITYNUM_NONE;
+    DbgPrint("[codxe][IW5][Bots] AddTestClient complete: slot=%d entity=%d\n", clientNum,
+             client->gentity->s.number);
+    return client->gentity;
 }
 
-void SpawnBot(scr_entref_t entref)
+Detour SV_ClientThink_Detour;
+
+void SV_ClientThink_Hook(client_t *client, usercmd_s *cmd)
 {
-    if (!CanAddBot())
+    // IW5's normal SV_UpdateBots path builds its usercmd inline, so SV_BotUserMove is not a reliable control seam.
+    client_t *clients = *svs_clients;
+    if (!client || !cmd || !clients)
     {
-        DbgPrint("Cannot add bot, max clients reached\n");
+        SV_ClientThink_Detour.GetOriginal<decltype(SV_ClientThink)>()(client, cmd);
         return;
     }
 
-    if (GetAvailableClientSlot() == -1)
+    const int clientNum = client - clients;
+    if (clientNum < 0 || clientNum >= GetMaxClients() || client->header.netchan.remoteAddress.type != NA_BOT)
     {
-        DbgPrint("Cannot add bot, no available client slots\n");
+        SV_ClientThink_Detour.GetOriginal<decltype(SV_ClientThink)>()(client, cmd);
         return;
     }
 
-    auto count = 1;
-
-    auto numParams = Scr_GetNumParam();
-
-    if (numParams > 1)
+    // Test clients do not send network packets back to the server, so they
+    // never acknowledge reliable server commands through the normal path.
+    client->reliableAcknowledge = client->reliableSequence;
+    client->lastPacketTime = cmd->serverTime;
+    if (!g_botai[clientNum].active)
     {
-        count = Scr_GetInt(1);
+        SV_ClientThink_Detour.GetOriginal<decltype(SV_ClientThink)>()(client, cmd);
+        return;
     }
 
-    auto numBots = min(count, (int)*svs_numclients);
+    const BotMovementInfo &bot = g_botai[clientNum];
+    const playerState_s &ps = level->clients[clientNum].ps;
+    usercmd_s botCmd = {};
+    botCmd.serverTime = cmd->serverTime;
+    botCmd.buttons = bot.buttons;
+    botCmd.weapon = ps.weapCommon.weapon;
+    botCmd.offHand = ps.weapCommon.offHand;
+    botCmd.forwardmove = bot.hasMove ? bot.forwardMove : 0;
+    botCmd.rightmove = bot.hasMove ? bot.rightMove : 0;
+    botCmd.meleeChargeEnt = bot.meleeChargeEnt;
+    botCmd.meleeChargeDist = bot.meleeChargeDist;
 
-    DbgPrint("Spawning %d bot(s)\n", numBots);
-
-    for (auto i = 0; i < numBots; ++i)
+    if (bot.hasAngles)
     {
-        // can this all happen too fast?
-        AddBot();
+        for (int i = 0; i < 3; ++i)
+            botCmd.angles[i] = IW5_ANGLE2SHORT(bot.angles[i] - ps.delta_angles[i]);
     }
+
+    if (bot.hasRemoteAngles)
+    {
+        botCmd.remoteControlAngles[0] = bot.remoteAngles[0];
+        botCmd.remoteControlAngles[1] = bot.remoteAngles[1];
+    }
+
+    SV_ClientThink_Detour.GetOriginal<decltype(SV_ClientThink)>()(client, &botCmd);
+}
+} // namespace
+
+void ResetBotState()
+{
+    ZeroMemory(g_botai, sizeof(g_botai));
+    for (int i = 0; i < IW5_MAX_CLIENTS; ++i)
+        g_botai[i].meleeChargeEnt = ENTITYNUM_NONE;
 }
 
-Detour SV_DropClient_Detour;
-static void SV_DropClient_Hook(client_t *cl, const char *reason, bool tellThem)
+void GScr_AddTestClient()
 {
-    if (cl->bIsTestClient == 1)
-        return;
+    gentity_s *entity = AddTestClient();
+    if (entity)
+        Scr_AddEntityNum(entity->s.number, 0);
+}
 
-    SV_DropClient_Detour.GetOriginal<SV_DropClient_t>()(cl, reason, tellThem);
+void PlayerCmd_BotAction(scr_entref_t entref)
+{
+    // Parameter 0 is the selector consumed by the getviewmodel trampoline.
+    BotMovementInfo *bot = GetBotInfo(entref);
+    if (!bot || Scr_GetNumParam() != 2)
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    const char *action = Scr_GetString(1);
+    if (!action || (action[0] != '+' && action[0] != '-'))
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    for (size_t i = 0; i < ARRAYSIZE(BOT_ACTIONS); ++i)
+    {
+        if (_stricmp(&action[1], BOT_ACTIONS[i].name) == 0)
+        {
+            if (action[0] == '+')
+                bot->buttons |= BOT_ACTIONS[i].button;
+            else
+                bot->buttons &= ~BOT_ACTIONS[i].button;
+
+            bot->active = true;
+            return;
+        }
+    }
+
+    Scr_ErrorInternal();
+}
+
+void PlayerCmd_BotStop(scr_entref_t entref)
+{
+    BotMovementInfo *bot = GetBotInfo(entref);
+    if (!bot || Scr_GetNumParam() != 1)
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    bot->buttons = 0;
+    bot->active = true;
+    bot->hasMove = false;
+    bot->hasRemoteAngles = false;
+    bot->meleeChargeEnt = ENTITYNUM_NONE;
+    bot->meleeChargeDist = 0;
+
+    const playerState_s &ps = level->clients[entref.entnum].ps;
+    for (int i = 0; i < 3; ++i)
+        bot->angles[i] = ps.viewangles[i];
+}
+
+void PlayerCmd_BotMovement(scr_entref_t entref)
+{
+    BotMovementInfo *bot = GetBotInfo(entref);
+    if (!bot || Scr_GetNumParam() != 3)
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    const int forwardMove = Scr_GetInt(1);
+    const int rightMove = Scr_GetInt(2);
+
+    bot->forwardMove = ClampMove(forwardMove);
+    bot->rightMove = ClampMove(rightMove);
+    bot->active = true;
+    bot->hasMove = true;
+}
+
+void PlayerCmd_BotMeleeParams(scr_entref_t entref)
+{
+    BotMovementInfo *bot = GetBotInfo(entref);
+    if (!bot || Scr_GetNumParam() != 3)
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    bot->meleeChargeEnt = ClampEntityNum(Scr_GetInt(1));
+    bot->meleeChargeDist = ClampByte(static_cast<int>(Scr_GetFloat(2)));
+    bot->active = true;
+}
+
+void PlayerCmd_BotRemoteAngles(scr_entref_t entref)
+{
+    BotMovementInfo *bot = GetBotInfo(entref);
+    if (!bot || Scr_GetNumParam() != 3)
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    bot->remoteAngles[0] = ClampMove(static_cast<int>(Scr_GetFloat(1)));
+    bot->remoteAngles[1] = ClampMove(static_cast<int>(Scr_GetFloat(2)));
+    bot->active = true;
+    bot->hasRemoteAngles = true;
+}
+
+void PlayerCmd_BotAngles(scr_entref_t entref)
+{
+    BotMovementInfo *bot = GetBotInfo(entref);
+    if (!bot || Scr_GetNumParam() != 4)
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    for (int i = 0; i < 3; ++i)
+        bot->angles[i] = Scr_GetFloat(i + 1);
+
+    bot->active = true;
+    bot->hasAngles = true;
 }
 
 Bots::Bots()
 {
-    SV_DropClient_Detour = Detour(SV_DropClient, SV_DropClient_Hook);
-    SV_DropClient_Detour.Install();
+    ResetBotState();
+    SV_ClientThink_Detour = Detour(SV_ClientThink, SV_ClientThink_Hook);
+    SV_ClientThink_Detour.Install();
 }
 
 Bots::~Bots()
 {
-    SV_DropClient_Detour.Remove();
+    SV_ClientThink_Detour.Remove();
+    ResetBotState();
 }
 } // namespace mp
 } // namespace iw5

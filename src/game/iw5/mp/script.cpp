@@ -7,17 +7,7 @@ namespace iw5
 namespace mp
 {
 
-std::map<std::string, BuiltinFunction> scr_functions;
 std::map<std::string, BuiltinMethod> scr_methods;
-
-void Scr_AddFunction(const std::string &name, BuiltinFunction func)
-{
-    auto result = scr_functions.insert(std::make_pair(name, func));
-    if (!result.second)
-    {
-        throw std::runtime_error("Function '" + name + "' already exists");
-    }
-}
 
 void Scr_AddMethod(const std::string &name, const BuiltinMethod func)
 {
@@ -128,17 +118,36 @@ void RemoveBrushCollisions()
 }
 
 Detour PlayerCmd_GetViewmodel_Detour;
+Detour Scr_GetFunction_Detour;
+
+unsigned int Scr_GetFunction_Hook(const char **pName, int *type)
+{
+    const char *requestedName = pName && *pName ? *pName : nullptr;
+    const unsigned int result = Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
+
+    if (requestedName && !result)
+        DbgPrint("[codxe][IW5][GSC] unresolved builtin function '%s'\n", requestedName);
+
+    if (!pName)
+    {
+        ResetBotState();
+        // Retail registers addtestclient (0xEE), but its implementation is empty.
+        Scr_RegisterFunction(reinterpret_cast<int>(GScr_AddTestClient), 0, 0xEE);
+        DbgPrint("[codxe][IW5][Bots] registered addtestclient token 0xEE at %p\n", GScr_AddTestClient);
+    }
+
+    return result;
+}
 
 void PlayerCmd_GetViewmodel_Hook(scr_entref_t entref)
 {
-    const char *s1 = Scr_GetString(0);
-    const std::string arg1 = (s1 ? std::string(s1) : std::string());
-    DbgPrint("arg1=%s\n", arg1.c_str());
-    auto it = scr_methods.find(arg1);
-    if (it != scr_methods.end())
+    if (Scr_GetNumParam() > 0)
     {
-        DbgPrint("Found function '%s', calling it\n", arg1.c_str());
-        return it->second(entref);
+        const char *selector = Scr_GetString(0);
+        const std::string name = selector ? selector : "";
+        auto it = scr_methods.find(name);
+        if (it != scr_methods.end())
+            return it->second(entref);
     }
 
     PlayerCmd_GetViewmodel_Detour.GetOriginal<PlayerCmd_GetViewmodel_t>()(entref);
@@ -154,7 +163,14 @@ Script::Script()
 
     Scr_AddMethod("disablebrushcollisionatorigin", DisableBrushCollisionAtOrigin);
 
-    Scr_AddMethod("spawnbot", SpawnBot);
+    Scr_AddMethod("botaction", PlayerCmd_BotAction);
+    Scr_AddMethod("botstop", PlayerCmd_BotStop);
+    Scr_AddMethod("botmovement", PlayerCmd_BotMovement);
+    Scr_AddMethod("botmeleeparams", PlayerCmd_BotMeleeParams);
+    Scr_AddMethod("botremoteangles", PlayerCmd_BotRemoteAngles);
+    Scr_AddMethod("botangles", PlayerCmd_BotAngles);
+    Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
+    Scr_GetFunction_Detour.Install();
 
     PlayerCmd_GetViewmodel_Detour = Detour(PlayerCmd_GetViewmodel, PlayerCmd_GetViewmodel_Hook);
     PlayerCmd_GetViewmodel_Detour.Install();
@@ -163,6 +179,7 @@ Script::Script()
 Script::~Script()
 {
     PlayerCmd_GetViewmodel_Detour.Remove();
+    Scr_GetFunction_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw5

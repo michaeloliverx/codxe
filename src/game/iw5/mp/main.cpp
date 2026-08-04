@@ -13,9 +13,66 @@ namespace mp
 
 std::set<std::string> g_loaded_scripts;
 
+const unsigned int GSC_BYTECODE_ARENA_SIZE = 256 * 1024;
+unsigned __int8 *g_gsc_bytecode_arena = nullptr;
+unsigned int g_gsc_bytecode_arena_used = 0;
+
+unsigned __int8 *AllocateGSCBytecode(unsigned int size)
+{
+    if (!g_gsc_bytecode_arena)
+    {
+        const bool is_xenia = xbox::GetEnvironment() == xbox::ENVIRONMENT_XENIA;
+        g_gsc_bytecode_arena = PMem_AllocFromSource_NoDebug(GSC_BYTECODE_ARENA_SIZE, 4,
+                                                            // 0 crashes on hardware, 2 crashes on Xenia.
+                                                            is_xenia ? 0 : 2, PMEM_SOURCE_SCRIPT);
+        DbgPrint("[codxe][IW5][GSCLoader] bytecode arena=[%p, %p)\n", g_gsc_bytecode_arena,
+                 g_gsc_bytecode_arena + GSC_BYTECODE_ARENA_SIZE);
+    }
+
+    const unsigned int offset = (g_gsc_bytecode_arena_used + 3) & ~3u;
+    if (offset > GSC_BYTECODE_ARENA_SIZE || size > GSC_BYTECODE_ARENA_SIZE - offset)
+    {
+        DbgPrint("[codxe][IW5][GSCLoader] bytecode arena exhausted: requested=%u used=%u capacity=%u\n", size,
+                 g_gsc_bytecode_arena_used, GSC_BYTECODE_ARENA_SIZE);
+        return nullptr;
+    }
+
+    unsigned __int8 *bytecode = g_gsc_bytecode_arena + offset;
+    g_gsc_bytecode_arena_used = offset + size;
+    return bytecode;
+}
+
 bool ContainsScript(const std::string &name)
 {
     return g_loaded_scripts.find(name) != g_loaded_scripts.end();
+}
+
+bool ShouldLoadWaypointScript(const char *name)
+{
+    std::string scriptName = name ? name : "";
+    std::replace(scriptName.begin(), scriptName.end(), '\\', '/');
+
+    const std::string waypointPrefix = "scripts/mp/mp_";
+    if (scriptName.compare(0, waypointPrefix.size(), waypointPrefix) != 0)
+        return true;
+
+    const size_t fileNameOffset = scriptName.find('/', waypointPrefix.size());
+    if (fileNameOffset == std::string::npos || scriptName.compare(fileNameOffset + 1, 4, "wps_") != 0)
+        return true;
+
+    const dvar_t *mapname = Dvar_FindMalleableVar("mapname");
+    if (!mapname || !mapname->current.string || !mapname->current.string[0])
+    {
+        DbgPrint("[codxe][IW5][GSCLoader] skipping waypoint '%s': mapname is unavailable\n", name);
+        return false;
+    }
+
+    const std::string currentMapPrefix = std::string("scripts/mp/") + mapname->current.string + "/";
+    const bool shouldLoad = scriptName.compare(0, currentMapPrefix.size(), currentMapPrefix) == 0;
+    if (!shouldLoad)
+        DbgPrint("[codxe][IW5][GSCLoader] skipping waypoint '%s' for map '%s'\n", name, mapname->current.string);
+
+    return shouldLoad;
 }
 
 // Swap byte order for 32-bit integers
@@ -140,6 +197,9 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
 {
     if (type == ASSET_TYPE_SCRIPTFILE)
     {
+        if (!ShouldLoadWaypointScript(name))
+            return DB_FindXAssetHeader_Detour.GetOriginal<DB_FindXAssetHeader_t>()(type, name, allowCreateDefault);
+
         std::string modBasePath = Config::GetModBasePath();
         std::string overridePath = modBasePath + "\\" + name + ".gscbin";
         std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
@@ -153,9 +213,12 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
             }
             else
             {
-                // Create a new
-                ScriptFile *scriptfile =
-                    (ScriptFile *)PMem_AllocFromSource_NoDebug(sizeof(ScriptFile), 4, 0, PMEM_SOURCE_SCRIPT);
+                DbgPrint("[codxe][IW5][GSCLoader] loading '%s': compressed=%u bytecode=%u total=%u\n", name,
+                         gscbin.compressedLen, gscbin.bytecodeLen, gscbin.compressedLen + gscbin.bytecodeLen);
+
+                // ProcessScript treats these as persistent writable data. Keeping them on the heap avoids
+                // consuming a 64 KiB script page for each small allocation.
+                ScriptFile *scriptfile = static_cast<ScriptFile *>(malloc(sizeof(ScriptFile)));
                 memset(scriptfile, 0, sizeof(ScriptFile));
 
                 scriptfile->name = name;
@@ -163,19 +226,25 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
                 scriptfile->len = gscbin.len;
                 scriptfile->bytecodeLen = gscbin.bytecodeLen;
 
-                char *buffer = (char *)PMem_AllocFromSource_NoDebug(gscbin.buffer.size(), 4, 0, PMEM_SOURCE_SCRIPT);
+                char *buffer = static_cast<char *>(malloc(gscbin.buffer.size()));
                 memcpy(buffer, gscbin.buffer.data(), gscbin.buffer.size());
                 scriptfile->buffer = buffer;
 
-                const bool is_xenia = xbox::GetEnvironment() == xbox::ENVIRONMENT_XENIA;
-                unsigned __int8 *bytecode = PMem_AllocFromSource_NoDebug(gscbin.bytecode.size(), 4,
-                                                                         // 0 Crashes on hardware, 2 crashes on Xenia
-                                                                         // Don't know why, but this works around it
-                                                                         is_xenia ? 0 : 2, PMEM_SOURCE_SCRIPT);
+                unsigned __int8 *bytecode = AllocateGSCBytecode(gscbin.bytecodeLen);
+                if (!bytecode)
+                {
+                    free(buffer);
+                    free(scriptfile);
+                    return DB_FindXAssetHeader_Detour.GetOriginal<DB_FindXAssetHeader_t>()(type, name,
+                                                                                          allowCreateDefault);
+                }
                 memcpy(bytecode, gscbin.bytecode.data(), gscbin.bytecode.size());
                 scriptfile->bytecode = bytecode;
 
                 g_loaded_scripts.insert(name);
+
+                DbgPrint("[codxe][IW5][GSCLoader] loaded '%s': buffer=%p bytecode=[%p, %p)\n", name, buffer,
+                         bytecode, bytecode + gscbin.bytecodeLen);
 
                 return (XAssetHeader *)scriptfile;
             }
