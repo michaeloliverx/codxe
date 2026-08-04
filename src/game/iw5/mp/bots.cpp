@@ -37,6 +37,7 @@ struct BotMovementInfo
 {
     bool active;
     int buttons;
+    Weapon weapon;
     bool hasMove;
     char forwardMove;
     char rightMove;
@@ -57,6 +58,16 @@ struct BotAction
 BotMovementInfo g_botai[IW5_MAX_CLIENTS];
 dvar_t *sv_maxClients = nullptr;
 unsigned int g_botPort = 0;
+
+Detour G_SelectWeapon_Detour;
+
+int *G_SelectWeapon_Hook(int clientNum, Weapon weapon)
+{
+    if (clientNum >= 0 && clientNum < IW5_MAX_CLIENTS)
+        g_botai[clientNum].weapon = weapon;
+
+    return G_SelectWeapon_Detour.GetOriginal<G_SelectWeapon_t>()(clientNum, weapon);
+}
 
 const BotAction BOT_ACTIONS[] = {
     {"gostand", CMD_BUTTON_UP},
@@ -240,12 +251,19 @@ void SV_ClientThink_Hook(client_t *client, usercmd_s *cmd)
         return;
     }
 
-    const BotMovementInfo &bot = g_botai[clientNum];
+    BotMovementInfo &bot = g_botai[clientNum];
     const playerState_s &ps = level->clients[clientNum].ps;
+
+    // The player's current weapon is temporarily cleared while mantling. A
+    // real client keeps sending its selected weapon in usercmd, so preserve
+    // the last non-empty selection for test clients as well.
+    if (ps.weapCommon.weapon.data != 0)
+        bot.weapon = ps.weapCommon.weapon;
+
     usercmd_s botCmd = {};
     botCmd.serverTime = cmd->serverTime;
     botCmd.buttons = bot.buttons;
-    botCmd.weapon = ps.weapCommon.weapon;
+    botCmd.weapon = bot.weapon.data != 0 ? bot.weapon : ps.weapCommon.weapon;
     botCmd.offHand = ps.weapCommon.offHand;
     botCmd.forwardmove = bot.hasMove ? bot.forwardMove : 0;
     botCmd.rightmove = bot.hasMove ? bot.rightMove : 0;
@@ -403,12 +421,16 @@ void PlayerCmd_BotAngles(scr_entref_t entref)
 Bots::Bots()
 {
     ResetBotState();
+    G_SelectWeapon_Detour = Detour(G_SelectWeapon, G_SelectWeapon_Hook);
+    G_SelectWeapon_Detour.Install();
+
     SV_ClientThink_Detour = Detour(SV_ClientThink, SV_ClientThink_Hook);
     SV_ClientThink_Detour.Install();
 }
 
 Bots::~Bots()
 {
+    G_SelectWeapon_Detour.Remove();
     SV_ClientThink_Detour.Remove();
     ResetBotState();
 }

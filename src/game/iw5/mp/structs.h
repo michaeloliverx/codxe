@@ -1973,5 +1973,7 @@ typedef gentity_s *(*Weapon_RocketLauncher_Fire_t)(gentity_s *ent, const Weapon 
 
 typedef void (*SV_DropClient_t)(client_t *cl, const char *reason, bool tellThem);
 
+typedef int *(*G_SelectWeapon_t)(int clientNum, Weapon weapon);
+
 } // namespace mp
 } // namespace iw5

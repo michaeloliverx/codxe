@@ -79,6 +79,7 @@ static auto SV_Cmd_EndTokenizedString = reinterpret_cast<void (*)()>(0x82288A10)
 static auto SV_SendClientGameState = reinterpret_cast<void (*)(client_t *cl)>(0x822C6DD0);
 static auto SV_ClientEnterWorld = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x822C6F50);
 static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x822C7D60);
+static auto G_SelectWeapon = reinterpret_cast<G_SelectWeapon_t>(0x82272800);
 
 static auto SV_DropClient = reinterpret_cast<SV_DropClient_t>(0x822C66A8);
 
