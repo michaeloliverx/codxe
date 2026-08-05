@@ -1103,7 +1103,9 @@ struct client_t
     gentity_s *gentity;
     char pad1a[116];
     int lastPacketTime;
-    char pad1b[67652];
+    char pad1b[16];
+    int ping;
+    char pad1c[67632];
     int bIsSplitscreenClient;
     char pad2[13830];
     uint16_t scriptId;
@@ -1119,6 +1121,7 @@ static_assert(offsetof(client_t, reliableAcknowledge) == 134760, "");
 static_assert(offsetof(client_t, reliableSent) == 134764, "");
 static_assert(offsetof(client_t, gentity) == 136220, "");
 static_assert(offsetof(client_t, lastPacketTime) == 136340, "");
+static_assert(offsetof(client_t, ping) == 136360, "");
 static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
 static_assert(offsetof(client_t, scriptId) == 217830, "");
 static_assert(offsetof(client_t, bIsTestClient) == 217836, "");

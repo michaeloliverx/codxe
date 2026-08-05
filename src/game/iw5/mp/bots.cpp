@@ -222,6 +222,7 @@ gentity_s *AddTestClient()
 }
 
 Detour SV_ClientThink_Detour;
+Detour SV_CalcPings_Detour;
 
 void SV_ClientThink_Hook(client_t *client, usercmd_s *cmd)
 {
@@ -282,6 +283,22 @@ void SV_ClientThink_Hook(client_t *client, usercmd_s *cmd)
     }
 
     SV_ClientThink_Detour.GetOriginal<decltype(SV_ClientThink)>()(client, &botCmd);
+}
+
+void SV_CalcPings_Hook()
+{
+    SV_CalcPings_Detour.GetOriginal<decltype(SV_CalcPings)>()();
+
+    client_t *clients = *svs_clients;
+    const int maxClients = GetMaxClients();
+    if (!clients)
+        return;
+
+    for (int i = 0; i < maxClients; ++i)
+    {
+        if (clients[i].header.netchan.remoteAddress.type == NA_BOT)
+            clients[i].ping = 0;
+    }
 }
 } // namespace
 
@@ -425,12 +442,17 @@ Bots::Bots()
 
     SV_ClientThink_Detour = Detour(SV_ClientThink, SV_ClientThink_Hook);
     SV_ClientThink_Detour.Install();
+
+    // Test clients have no ping samples, so replace the stock 999 ping to show full connection bars.
+    SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Hook);
+    SV_CalcPings_Detour.Install();
 }
 
 Bots::~Bots()
 {
     G_SelectWeapon_Detour.Remove();
     SV_ClientThink_Detour.Remove();
+    SV_CalcPings_Detour.Remove();
     ResetBotState();
 }
 } // namespace mp
