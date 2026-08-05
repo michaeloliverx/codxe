@@ -5,13 +5,14 @@
 #include "pm.h"
 #include "script.h"
 #include "bots.h"
+#include "events.h"
 
 namespace iw5
 {
 namespace mp
 {
 
-std::set<std::string> g_loaded_scripts;
+std::map<std::string, ScriptFile *> g_loaded_scripts;
 
 const unsigned int GSC_BYTECODE_ARENA_SIZE = 256 * 1024;
 unsigned __int8 *g_gsc_bytecode_arena = nullptr;
@@ -45,6 +46,29 @@ unsigned __int8 *AllocateGSCBytecode(unsigned int size)
 bool ContainsScript(const std::string &name)
 {
     return g_loaded_scripts.find(name) != g_loaded_scripts.end();
+}
+
+void ResetLoadedScripts(bool freeScripts)
+{
+    if (!freeScripts)
+        return;
+
+    const unsigned int scriptCount = static_cast<unsigned int>(g_loaded_scripts.size());
+    const unsigned int bytecodeUsed = g_gsc_bytecode_arena_used;
+
+    for (auto it = g_loaded_scripts.begin(); it != g_loaded_scripts.end(); ++it)
+    {
+        ScriptFile *scriptfile = it->second;
+        free(const_cast<char *>(scriptfile->buffer));
+        free(scriptfile);
+    }
+
+    g_loaded_scripts.clear();
+    g_gsc_bytecode_arena = nullptr;
+    g_gsc_bytecode_arena_used = 0;
+
+    DbgPrint("[codxe][IW5][GSCLoader] VM reset: released %u scripts and invalidated %u bytecode bytes\n", scriptCount,
+             bytecodeUsed);
 }
 
 bool ShouldLoadWaypointScript(const char *name)
@@ -197,6 +221,10 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
 {
     if (type == ASSET_TYPE_SCRIPTFILE)
     {
+        auto loadedScript = g_loaded_scripts.find(name);
+        if (loadedScript != g_loaded_scripts.end())
+            return reinterpret_cast<XAssetHeader *>(loadedScript->second);
+
         if (!ShouldLoadWaypointScript(name))
             return DB_FindXAssetHeader_Detour.GetOriginal<DB_FindXAssetHeader_t>()(type, name, allowCreateDefault);
 
@@ -236,15 +264,15 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
                     free(buffer);
                     free(scriptfile);
                     return DB_FindXAssetHeader_Detour.GetOriginal<DB_FindXAssetHeader_t>()(type, name,
-                                                                                          allowCreateDefault);
+                                                                                           allowCreateDefault);
                 }
                 memcpy(bytecode, gscbin.bytecode.data(), gscbin.bytecode.size());
                 scriptfile->bytecode = bytecode;
 
-                g_loaded_scripts.insert(name);
+                g_loaded_scripts[name] = scriptfile;
 
-                DbgPrint("[codxe][IW5][GSCLoader] loaded '%s': buffer=%p bytecode=[%p, %p)\n", name, buffer,
-                         bytecode, bytecode + gscbin.bytecodeLen);
+                DbgPrint("[codxe][IW5][GSCLoader] loaded '%s': buffer=%p bytecode=[%p, %p)\n", name, buffer, bytecode,
+                         bytecode + gscbin.bytecodeLen);
 
                 return (XAssetHeader *)scriptfile;
             }
@@ -271,6 +299,7 @@ bool DB_IsXAssetDefault_Hook(XAssetType type, const char *name)
 IW5_MP_Plugin::IW5_MP_Plugin()
 {
     RegisterModule(new Config());
+    RegisterModule(new Events());
     RegisterModule(new Branding());
     RegisterModule(new patches());
     RegisterModule(new PlayerMovement());
@@ -282,10 +311,13 @@ IW5_MP_Plugin::IW5_MP_Plugin()
 
     DB_IsXAssetDefault_Detour = Detour(DB_IsXAssetDefault, DB_IsXAssetDefault_Hook);
     DB_IsXAssetDefault_Detour.Install();
+
+    Events::OnVMShutdown(ResetLoadedScripts);
 }
 
 IW5_MP_Plugin::~IW5_MP_Plugin()
 {
+    ResetLoadedScripts(true);
     DB_FindXAssetHeader_Detour.Remove();
     DB_IsXAssetDefault_Detour.Remove();
 }

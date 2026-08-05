@@ -184,8 +184,8 @@ gentity_s *AddTestClient()
     // NA_BOT connection as the first bot reconnecting.
     botAddress.localNetID = static_cast<netsrc_t>(NS_INVALID_NETSRC + clientNum + 1);
 
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: tokenizing connect string (port=%u localNetID=%d)\n",
-             clientNum, botPort, botAddress.localNetID);
+    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: tokenizing connect string (port=%u localNetID=%d)\n", clientNum,
+             botPort, botAddress.localNetID);
     SV_Cmd_TokenizeString(connectString);
     DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: entering SV_DirectConnect\n", clientNum);
     SV_DirectConnect(botAddress);
@@ -217,8 +217,7 @@ gentity_s *AddTestClient()
 
     ZeroMemory(&g_botai[clientNum], sizeof(g_botai[clientNum]));
     g_botai[clientNum].meleeChargeEnt = ENTITYNUM_NONE;
-    DbgPrint("[codxe][IW5][Bots] AddTestClient complete: slot=%d entity=%d\n", clientNum,
-             client->gentity->s.number);
+    DbgPrint("[codxe][IW5][Bots] AddTestClient complete: slot=%d entity=%d\n", clientNum, client->gentity->s.number);
     return client->gentity;
 }
 

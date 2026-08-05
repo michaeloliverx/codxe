@@ -1931,8 +1931,8 @@ struct ScreenPlacement
 
 typedef void (*CG_GameMessage_t)(LocalClientNum_t localClientNum, const char *msg);
 
-typedef void (*CL_ConsolePrint_t)(LocalClientNum_t localClientNum, int channel, const char *txt,
-                                  unsigned int duration, unsigned int pixelWidth, int flags);
+typedef void (*CL_ConsolePrint_t)(LocalClientNum_t localClientNum, int channel, const char *txt, unsigned int duration,
+                                  unsigned int pixelWidth, int flags);
 typedef Font_s *(*CL_RegisterFont_t)(const char *fontName, int imageTrack);
 
 typedef XAssetEntry *(*DB_FindXAssetEntry_t)(XAssetType type, const char *name);
@@ -1948,7 +1948,10 @@ typedef void (*Jump_Start_t)(pmove_t *pm, pml_t *pml, double height);
 typedef unsigned __int8 *(*PMem_AllocFromSource_NoDebug_t)(unsigned int size, unsigned int alignment, unsigned int type,
                                                            PMem_Source source);
 
+typedef void (*G_ShutdownGame_t)(int freeScripts);
+
 typedef void (*Scr_AddInt_t)(int value);
+typedef void (*Scr_AddUndefined_t)();
 typedef void (*Scr_ErrorInternal_t)();
 typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
 typedef int (*Scr_GetInt_t)(unsigned int index);

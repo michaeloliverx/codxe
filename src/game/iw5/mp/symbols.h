@@ -37,11 +37,14 @@ static auto DB_IsXAssetDefault = reinterpret_cast<DB_IsXAssetDefault_t>(0x821EEE
 
 static auto Dvar_FindMalleableVar = reinterpret_cast<Dvar_FindMalleableVar_t>(0x8232E100);
 
+static auto G_ShutdownGame = reinterpret_cast<G_ShutdownGame_t>(0x82244378);
+
 static auto Jump_Start = reinterpret_cast<Jump_Start_t>(0x820DAF00);
 
 static auto PMem_AllocFromSource_NoDebug = reinterpret_cast<PMem_AllocFromSource_NoDebug_t>(0x823335F0);
 
 static auto Scr_AddInt = reinterpret_cast<Scr_AddInt_t>(0x822BFAB8);
+static auto Scr_AddUndefined = reinterpret_cast<Scr_AddUndefined_t>(0x822BFB60);
 static auto GetEntity = reinterpret_cast<GetEntity_t>(0x82251470);
 static auto Scr_ErrorInternal = reinterpret_cast<Scr_ErrorInternal_t>(0x822BD368);
 static auto Scr_GetInt = reinterpret_cast<Scr_GetInt_t>(0x822BEB30);

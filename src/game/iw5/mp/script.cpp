@@ -7,6 +7,190 @@ namespace iw5
 namespace mp
 {
 
+namespace
+{
+static const int MAX_SCRIPT_FILE_HANDLES = 8;
+static const unsigned int GSC_TOKEN_OPENFILE = 0x99;
+static const unsigned int GSC_TOKEN_CLOSEFILE = 0x9A;
+static const unsigned int GSC_TOKEN_FPRINTLN = 0x9B;
+static const unsigned int GSC_TOKEN_FREADLN = 0x9D;
+
+struct ScriptFileHandle
+{
+    FILE *file;
+};
+
+ScriptFileHandle script_file_handles[MAX_SCRIPT_FILE_HANDLES];
+
+std::string BuildScriptFilePath(const char *filename)
+{
+    std::string relative_path = filename ? filename : "";
+    std::replace(relative_path.begin(), relative_path.end(), '/', '\\');
+
+    const std::string mod_base_path = Config::GetModBasePath();
+    if (mod_base_path.empty())
+        return relative_path;
+
+    return mod_base_path + "\\" + relative_path;
+}
+
+void EnsureParentDirectory(const std::string &path)
+{
+    char directory[MAX_PATH];
+    strncpy(directory, path.c_str(), sizeof(directory) - 1);
+    directory[sizeof(directory) - 1] = '\0';
+
+    char *last_slash = strrchr(directory, '\\');
+    if (last_slash)
+    {
+        *last_slash = '\0';
+        filesystem::create_nested_dirs(directory);
+    }
+}
+
+void CloseAllScriptFiles()
+{
+    for (int i = 0; i < MAX_SCRIPT_FILE_HANDLES; ++i)
+    {
+        if (script_file_handles[i].file)
+        {
+            fclose(script_file_handles[i].file);
+            script_file_handles[i].file = nullptr;
+        }
+    }
+}
+
+void GScr_OpenFile()
+{
+    if (Scr_GetNumParam() != 2)
+    {
+        DbgPrint("[codxe][IW5][GSC] openfile expects 2 parameters\n");
+        Scr_ErrorInternal();
+        return;
+    }
+
+    const char *mode = Scr_GetString(1);
+    const char *file_mode = nullptr;
+    if (!_stricmp(mode, "read"))
+        file_mode = "rt";
+    else if (!_stricmp(mode, "write"))
+        file_mode = "wt";
+    else if (!_stricmp(mode, "append"))
+        file_mode = "at";
+    else
+    {
+        DbgPrint("[codxe][IW5][GSC] openfile received invalid mode '%s'\n", mode);
+        Scr_AddInt(0);
+        return;
+    }
+
+    const char *filename = Scr_GetString(0);
+    const std::string path = BuildScriptFilePath(filename);
+    if (file_mode[0] == 'w' || file_mode[0] == 'a')
+        EnsureParentDirectory(path);
+
+    for (int i = 0; i < MAX_SCRIPT_FILE_HANDLES; ++i)
+    {
+        if (!script_file_handles[i].file)
+        {
+            script_file_handles[i].file = fopen(path.c_str(), file_mode);
+            if (!script_file_handles[i].file)
+            {
+                Scr_AddInt(0);
+                return;
+            }
+
+            Scr_AddInt(i + 1);
+            return;
+        }
+    }
+
+    DbgPrint("[codxe][IW5][GSC] openfile exhausted its file handles\n");
+    Scr_AddInt(0);
+}
+
+void GScr_CloseFile()
+{
+    if (Scr_GetNumParam() != 1)
+    {
+        DbgPrint("[codxe][IW5][GSC] closefile expects 1 parameter\n");
+        Scr_ErrorInternal();
+        return;
+    }
+
+    const int handle = Scr_GetInt(0);
+    if (handle < 1 || handle > MAX_SCRIPT_FILE_HANDLES)
+    {
+        DbgPrint("[codxe][IW5][GSC] closefile received invalid handle %d\n", handle);
+        Scr_AddInt(0);
+        return;
+    }
+
+    ScriptFileHandle &slot = script_file_handles[handle - 1];
+    if (!slot.file)
+    {
+        Scr_AddInt(0);
+        return;
+    }
+
+    const int result = fclose(slot.file);
+    slot.file = nullptr;
+    Scr_AddInt(result == 0);
+}
+
+void GScr_ReadLine()
+{
+    if (Scr_GetNumParam() != 1)
+    {
+        DbgPrint("[codxe][IW5][GSC] freadln expects 1 parameter\n");
+        Scr_ErrorInternal();
+        return;
+    }
+
+    const int handle = Scr_GetInt(0);
+    if (handle < 1 || handle > MAX_SCRIPT_FILE_HANDLES || !script_file_handles[handle - 1].file)
+    {
+        DbgPrint("[codxe][IW5][GSC] freadln received invalid handle %d\n", handle);
+        Scr_AddUndefined();
+        return;
+    }
+
+    char line[4096];
+    if (!fgets(line, sizeof(line), script_file_handles[handle - 1].file))
+    {
+        Scr_AddUndefined();
+        return;
+    }
+
+    size_t length = strlen(line);
+    while (length && (line[length - 1] == '\n' || line[length - 1] == '\r'))
+        line[--length] = '\0';
+
+    Scr_AddString(line);
+}
+
+void GScr_WriteLine()
+{
+    if (Scr_GetNumParam() != 2)
+    {
+        DbgPrint("[codxe][IW5][GSC] fprintln expects 2 parameters\n");
+        Scr_ErrorInternal();
+        return;
+    }
+
+    const int handle = Scr_GetInt(0);
+    if (handle < 1 || handle > MAX_SCRIPT_FILE_HANDLES || !script_file_handles[handle - 1].file)
+    {
+        DbgPrint("[codxe][IW5][GSC] fprintln received invalid handle %d\n", handle);
+        Scr_AddInt(0);
+        return;
+    }
+
+    const char *contents = Scr_GetString(1);
+    Scr_AddInt(fprintf(script_file_handles[handle - 1].file, "%s\n", contents) >= 0);
+}
+} // namespace
+
 std::map<std::string, BuiltinMethod> scr_methods;
 
 void Scr_AddMethod(const std::string &name, const BuiltinMethod func)
@@ -130,10 +314,16 @@ unsigned int Scr_GetFunction_Hook(const char **pName, int *type)
 
     if (!pName)
     {
+        CloseAllScriptFiles();
         ResetBotState();
         // Retail registers addtestclient (0xEE), but its implementation is empty.
         Scr_RegisterFunction(reinterpret_cast<int>(GScr_AddTestClient), 0, 0xEE);
+        Scr_RegisterFunction(reinterpret_cast<int>(GScr_OpenFile), 0, GSC_TOKEN_OPENFILE);
+        Scr_RegisterFunction(reinterpret_cast<int>(GScr_CloseFile), 0, GSC_TOKEN_CLOSEFILE);
+        Scr_RegisterFunction(reinterpret_cast<int>(GScr_WriteLine), 0, GSC_TOKEN_FPRINTLN);
+        Scr_RegisterFunction(reinterpret_cast<int>(GScr_ReadLine), 0, GSC_TOKEN_FREADLN);
         DbgPrint("[codxe][IW5][Bots] registered addtestclient token 0xEE at %p\n", GScr_AddTestClient);
+        DbgPrint("[codxe][IW5][GSC] registered streaming file functions\n");
     }
 
     return result;
@@ -178,6 +368,7 @@ Script::Script()
 
 Script::~Script()
 {
+    CloseAllScriptFiles();
     PlayerCmd_GetViewmodel_Detour.Remove();
     Scr_GetFunction_Detour.Remove();
 }
