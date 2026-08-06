@@ -141,7 +141,7 @@ BotMovementInfo *GetBotInfo(scr_entref_t entref)
     return &g_botai[entref.entnum];
 }
 
-gentity_s *AddTestClient()
+gentity_s *AddTestClient(const char *requestedName)
 {
     client_t *clients = *svs_clients;
     const int maxClients = GetMaxClients();
@@ -167,14 +167,37 @@ gentity_s *AddTestClient()
 
     DbgPrint("[codxe][IW5][Bots] AddTestClient selected slot %d\n", clientNum);
 
+    char botName[32];
+    if (requestedName)
+    {
+        int length = 0;
+        for (int i = 0; requestedName[i] && length < static_cast<int>(sizeof(botName)) - 1; ++i)
+        {
+            const unsigned char character = static_cast<unsigned char>(requestedName[i]);
+            if (character >= 0x20 && character != '\\' && character != '"' && character != ';')
+                botName[length++] = requestedName[i];
+        }
+
+        botName[length] = '\0';
+        if (!length)
+        {
+            DbgPrint("[codxe][IW5][Bots] AddTestClient abort: custom name is empty after sanitizing\n");
+            return nullptr;
+        }
+    }
+    else
+    {
+        _snprintf_s(botName, sizeof(botName), _TRUNCATE, "Bot_%d", clientNum);
+    }
+
     const unsigned int botPort = g_botPort++;
     const int xuidHigh = G_IRand(0, INT_MAX);
     const int xuidLow = G_IRand(0, INT_MAX);
     const char *connectString =
         va("connect bot%u "
-           "\"snaps\\20\\rate\\5000\\name\\Bot_%d\\natType\\1\\protocol\\%i\\checksum\\%i\\challenge\\0\\statver\\26 "
+           "\"snaps\\20\\rate\\5000\\name\\%s\\natType\\1\\protocol\\%i\\checksum\\%i\\challenge\\0\\statver\\26 "
            "3648679816\\invited\\1\\xuid\\%08x%08x\\onlineStats\\0\\migrating\\0\\qport\\%u\"",
-           botPort, clientNum, GetProtocolVersion(), BG_NetDataChecksum(), xuidHigh, xuidLow, botPort);
+           botPort, botName, GetProtocolVersion(), BG_NetDataChecksum(), xuidHigh, xuidLow, botPort);
 
     netadr_t botAddress = {};
     botAddress.type = NA_BOT;
@@ -311,7 +334,14 @@ void ResetBotState()
 
 void GScr_AddTestClient()
 {
-    gentity_s *entity = AddTestClient();
+    if (Scr_GetNumParam() > 1)
+    {
+        Scr_ErrorInternal();
+        return;
+    }
+
+    const char *name = Scr_GetNumParam() == 1 ? Scr_GetString(0) : nullptr;
+    gentity_s *entity = AddTestClient(name);
     if (entity)
         Scr_AddEntityNum(entity->s.number, 0);
 }
