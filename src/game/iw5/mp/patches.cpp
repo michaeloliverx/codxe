@@ -63,12 +63,12 @@ void Jump_Start_Hook(pmove_t *pm, pml_t *pml, double height)
 
 patches::patches()
 {
-    EnableBouncing();
-    DisableIdleGunSway();
-    DisableJumpSlowdown();
+    // EnableBouncing();
+    // DisableIdleGunSway();
+    // DisableJumpSlowdown();
 
     Jump_Start_Detour = Detour(Jump_Start, Jump_Start_Hook);
-    Jump_Start_Detour.Install();
+    // Jump_Start_Detour.Install();
 
     CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
     CL_ConsolePrint_Detour.Install();
@@ -77,7 +77,7 @@ patches::patches()
 patches::~patches()
 {
     CL_ConsolePrint_Detour.Remove();
-    Jump_Start_Detour.Remove();
+    // Jump_Start_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw5
