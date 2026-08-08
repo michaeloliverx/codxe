@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "g_client_script_cmd.h"
-#include "g_scr_main.h"
 
 namespace t4
 {
@@ -110,14 +109,6 @@ void PlayerCmd_MoveRightButtonPressed(scr_entref_t entref)
 
 g_client_script_cmd::g_client_script_cmd()
 {
-    // Registering methods
-    Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0);
-    Scr_AddMethod("secondaryoffhandbuttonpressed", PlayerCmd_secondaryOffhandButtonPressed, 0);
-    Scr_AddMethod("sprintbuttonpressed", PlayerCmd_SprintButtonPressed, 0);
-    Scr_AddMethod("moveforwardbuttonpressed", PlayerCmd_MoveForwardButtonPressed, 0);
-    Scr_AddMethod("movebackbuttonpressed", PlayerCmd_MoveBackButtonPressed, 0);
-    Scr_AddMethod("moveleftbuttonpressed", PlayerCmd_MoveLeftButtonPressed, 0);
-    Scr_AddMethod("moverightbuttonpressed", PlayerCmd_MoveRightButtonPressed, 0);
 }
 
 g_client_script_cmd::~g_client_script_cmd()

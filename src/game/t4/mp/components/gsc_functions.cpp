@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gsc_functions.h"
+#include "common/gsc_registry.h"
 #include "sv_bots.h"
 
 namespace t4
@@ -226,11 +227,7 @@ void GSCrGetPlayerclipBrushesContainingPoint()
     }
 }
 
-static struct
-{
-    const char *name;
-    BuiltinFunction handler;
-} gsc_functions[] = {
+static const gsc::Entry<BuiltinFunction> functions[] = {
     {"addtestclient", GScr_AddTestClient},
     {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint},
     {"fs_testfile", GScr_FS_TestFile},
@@ -239,21 +236,17 @@ static struct
     {"fs_readline", GScr_FS_ReadLine},
     {"fs_writeline", GScr_FS_WriteLine},
     {"cmdexec", GScr_CmdExec},
-    {nullptr, nullptr} // Terminator
 };
 
 Detour Scr_GetFunction_Detour;
 
 BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        const auto *func = gsc_functions;
-        for (; func->name != nullptr; ++func)
-        {
-            if (_stricmp(*pName, func->name) == 0)
-                return func->handler;
-        }
+        const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
+        if (function)
+            return function->actionFunc;
     }
     return Scr_GetFunction_Detour.GetOriginal<decltype(&Scr_GetFunction_Hook)>()(pName, type);
 }

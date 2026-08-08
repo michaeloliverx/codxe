@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "g_scr_mover.h"
-#include "g_scr_main.h"
 
 namespace t4
 {
@@ -44,7 +43,6 @@ void ScriptEntCmd_CloneBrushModelToScriptModel(scr_entref_t entref)
 
 g_scr_mover::g_scr_mover()
 {
-    Scr_AddMethod("clonebrushmodeltoscriptmodel", ScriptEntCmd_CloneBrushModelToScriptModel, 0);
 }
 
 g_scr_mover::~g_scr_mover()

@@ -1,5 +1,10 @@
 #include "pch.h"
 #include "g_scr_main.h"
+#include "common/gsc_registry.h"
+#include "gsc_functions.h"
+#include "gsc_hud_elem.h"
+#include "gsc_methods.h"
+#include "sv_bots.h"
 
 namespace iw3
 {
@@ -7,64 +12,55 @@ namespace mp
 {
 namespace
 {
-const size_t MAX_CUSTOM_SCRIPT_FUNCTIONS = 128;
-const size_t MAX_CUSTOM_SCRIPT_METHODS = 128;
+static const BuiltinFunctionDef functions[] = {
+    {"exec", GScr_CbufAddText, 0},
+    {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, 0},
+    {"fs_testfile", GScr_FS_TestFile, 0},
+    {"fs_fopen", GScr_FS_FOpen, 0},
+    {"fs_fclose", GScr_FS_FClose, 0},
+    {"fs_readline", GScr_FS_ReadLine, 0},
+    {"fs_writeline", GScr_FS_WriteLine, 0},
+    {"isarray", Scr_IsArray_f, 0},
+    {"float", GScr_Float, 0},
+    {"precachestring", Scr_PrecacheString_Stub, 0},
+    {"addtestclient", GScr_AddTestClient, 0},
+};
 
-BuiltinFunctionDef scr_functions[MAX_CUSTOM_SCRIPT_FUNCTIONS];
-BuiltinMethodDef scr_methods[MAX_CUSTOM_SCRIPT_METHODS];
-size_t scr_function_count = 0;
-size_t scr_method_count = 0;
+static const BuiltinMethodDef methods[] = {
+    {"settext", HECmd_SetText_Stub, 0},
+    {"buttonpressed", PlayerCmd_ButtonPressed, 0}, // Host-only
+    {"sprintbreathbuttonpressed", PlayerCmd_SprintButtonPressed, 0},
+    {"leanleftbuttonpressed", PlayerCmd_LeanLeftButtonPressed, 0},
+    {"leanrightbuttonpressed", PlayerCmd_LeanRightButtonPressed, 0},
+    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0},
+    {"holdbreathbuttonpressed", PlayerCmd_HoldBreathButtonPressed, 0},
+    {"nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, 0},
+    {"forwardbuttonpressed", PlayerCmd_ForwardButtonPressed, 0},
+    {"backbuttonpressed", PlayerCmd_BackButtonPressed, 0},
+    {"leftbuttonpressed", PlayerCmd_LeftButtonPressed, 0},
+    {"rightbuttonpressed", PlayerCmd_RightButtonPressed, 0},
+    {"setvelocity", PlayerCmd_SetVelocity, 0},
+    {"setstance", PlayerCmd_SetStance, 0},
+    {"clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0},
+    {"setbrushmodel", GScr_SetBrushModel, 0},
+    {"botmoveto", Scr_BotMoveTo, 0},
+    {"botaction", Scr_BotAction, 0},
+    {"botmirror", Scr_BotMirror, 0},
+    {"botstop", Scr_BotStop, 0},
+};
 } // namespace
-
-void Scr_ClearBuiltins()
-{
-    ZeroMemory(scr_functions, sizeof(scr_functions));
-    ZeroMemory(scr_methods, sizeof(scr_methods));
-    scr_function_count = 0;
-    scr_method_count = 0;
-}
-
-void Scr_AddFunction(const char *name, BuiltinFunction func, int type)
-{
-    if (scr_function_count >= MAX_CUSTOM_SCRIPT_FUNCTIONS)
-    {
-        DbgPrint("[codxe][g_scr_main] Too many custom script functions; ignoring '%s'.\n", name);
-        return;
-    }
-
-    BuiltinFunctionDef &newFunc = scr_functions[scr_function_count++];
-    newFunc.actionString = name;
-    newFunc.actionFunc = func;
-    newFunc.type = type;
-}
-
-void Scr_AddMethod(const char *name, BuiltinMethod func, int type)
-{
-    if (scr_method_count >= MAX_CUSTOM_SCRIPT_METHODS)
-    {
-        DbgPrint("[codxe][g_scr_main] Too many custom script methods; ignoring '%s'.\n", name);
-        return;
-    }
-
-    BuiltinMethodDef &newMethod = scr_methods[scr_method_count++];
-    newMethod.actionString = name;
-    newMethod.actionFunc = func;
-    newMethod.type = type;
-}
 
 Detour Scr_GetFunction_Detour;
 
 BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_function_count; ++i)
+        const BuiltinFunctionDef *function = gsc::Find(*pName, functions);
+        if (function)
         {
-            if (std::strcmp(*pName, scr_functions[i].actionString) == 0)
-            {
-                *type = scr_functions[i].type;
-                return scr_functions[i].actionFunc;
-            }
+            *type = function->type;
+            return function->actionFunc;
         }
     }
 
@@ -75,15 +71,13 @@ Detour Scr_GetMethod_Detour;
 
 BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_method_count; ++i)
+        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        if (method)
         {
-            if (std::strcmp(*pName, scr_methods[i].actionString) == 0)
-            {
-                *type = scr_methods[i].type;
-                return scr_methods[i].actionFunc;
-            }
+            *type = method->type;
+            return method->actionFunc;
         }
     }
 
@@ -104,8 +98,6 @@ g_scr_main::~g_scr_main()
     Scr_GetFunction_Detour.Remove();
 
     Scr_GetMethod_Detour.Remove();
-
-    Scr_ClearBuiltins();
 }
 } // namespace mp
 } // namespace iw3

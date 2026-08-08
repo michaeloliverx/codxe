@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "script.h"
 #include "bots.h"
+#include "common/gsc_registry.h"
 
 namespace iw5
 {
@@ -191,17 +192,6 @@ void GScr_WriteLine()
 }
 } // namespace
 
-std::map<std::string, BuiltinMethod> scr_methods;
-
-void Scr_AddMethod(const std::string &name, const BuiltinMethod func)
-{
-    auto result = scr_methods.insert(std::make_pair(name, func));
-    if (!result.second)
-    {
-        throw std::runtime_error("Method '" + name + "' already exists");
-    }
-}
-
 void PlayerCmd_SetClientFlags(scr_entref_t entref)
 {
     gentity_s *ent = GetEntity(entref);
@@ -323,15 +313,34 @@ unsigned int Scr_GetFunction_Hook(const char **pName, int *type)
     return result;
 }
 
+namespace
+{
+static const gsc::Entry<BuiltinMethod> methods[] = {
+    {"setclientflags", PlayerCmd_SetClientFlags},
+    {"getclientflags", PlayerCmd_GetClientFlags},
+    {"setentityflags", PlayerCmd_SetEntityFlags},
+    {"getentityflags", PlayerCmd_GetEntityFlags},
+    {"disablebrushcollisionatorigin", DisableBrushCollisionAtOrigin},
+    {"botaction", PlayerCmd_BotAction},
+    {"botstop", PlayerCmd_BotStop},
+    {"botmovement", PlayerCmd_BotMovement},
+    {"botmeleeparams", PlayerCmd_BotMeleeParams},
+    {"botremoteangles", PlayerCmd_BotRemoteAngles},
+    {"botangles", PlayerCmd_BotAngles},
+};
+} // namespace
+
 void PlayerCmd_GetViewmodel_Hook(scr_entref_t entref)
 {
     if (Scr_GetNumParam() > 0)
     {
         const char *selector = Scr_GetString(0);
-        const std::string name = selector ? selector : "";
-        auto it = scr_methods.find(name);
-        if (it != scr_methods.end())
-            return it->second(entref);
+        const gsc::Entry<BuiltinMethod> *method = gsc::Find(selector, methods);
+        if (method)
+        {
+            method->actionFunc(entref);
+            return;
+        }
     }
 
     PlayerCmd_GetViewmodel_Detour.GetOriginal<PlayerCmd_GetViewmodel_t>()(entref);
@@ -339,20 +348,6 @@ void PlayerCmd_GetViewmodel_Hook(scr_entref_t entref)
 
 Script::Script()
 {
-    Scr_AddMethod("setclientflags", PlayerCmd_SetClientFlags);
-    Scr_AddMethod("getclientflags", PlayerCmd_GetClientFlags);
-
-    Scr_AddMethod("setentityflags", PlayerCmd_SetEntityFlags);
-    Scr_AddMethod("getentityflags", PlayerCmd_GetEntityFlags);
-
-    Scr_AddMethod("disablebrushcollisionatorigin", DisableBrushCollisionAtOrigin);
-
-    Scr_AddMethod("botaction", PlayerCmd_BotAction);
-    Scr_AddMethod("botstop", PlayerCmd_BotStop);
-    Scr_AddMethod("botmovement", PlayerCmd_BotMovement);
-    Scr_AddMethod("botmeleeparams", PlayerCmd_BotMeleeParams);
-    Scr_AddMethod("botremoteangles", PlayerCmd_BotRemoteAngles);
-    Scr_AddMethod("botangles", PlayerCmd_BotAngles);
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
 

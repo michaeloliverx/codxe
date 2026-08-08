@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "gsc_functions.h"
-#include "g_scr_main.h"
 #include "events.h"
 
 namespace iw3
@@ -52,7 +51,7 @@ static void CloseAllScriptFiles()
     }
 }
 
-static void GScr_FS_TestFile()
+void GScr_FS_TestFile()
 {
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: fs_testfile(<filename>)");
@@ -71,7 +70,7 @@ static void GScr_FS_TestFile()
     }
 }
 
-static void GScr_FS_FOpen()
+void GScr_FS_FOpen()
 {
     if (Scr_GetNumParam() != 2)
         Scr_Error("Usage: fs_fopen(<filename>, <mode>)");
@@ -127,7 +126,7 @@ static void GScr_FS_FOpen()
     Scr_Error("fs_fopen: exceeded maximum open file handles");
 }
 
-static void GScr_FS_FClose()
+void GScr_FS_FClose()
 {
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: fs_fclose(<filehandle>)");
@@ -144,7 +143,7 @@ static void GScr_FS_FClose()
     }
 }
 
-static void GScr_FS_ReadLine()
+void GScr_FS_ReadLine()
 {
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: fs_readline(<filehandle>)");
@@ -171,7 +170,7 @@ static void GScr_FS_ReadLine()
     Scr_AddString(buffer);
 }
 
-static void GScr_FS_WriteLine()
+void GScr_FS_WriteLine()
 {
     if (Scr_GetNumParam() != 2)
         Scr_Error("Usage: fs_writeline(<filehandle>, <data>)");
@@ -273,16 +272,6 @@ void GScr_Float()
 
 gsc_functions::gsc_functions()
 {
-    Scr_AddFunction("exec", GScr_CbufAddText, 0);
-    Scr_AddFunction("getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, 0);
-    Scr_AddFunction("fs_testfile", GScr_FS_TestFile, 0);
-    Scr_AddFunction("fs_fopen", GScr_FS_FOpen, 0);
-    Scr_AddFunction("fs_fclose", GScr_FS_FClose, 0);
-    Scr_AddFunction("fs_readline", GScr_FS_ReadLine, 0);
-    Scr_AddFunction("fs_writeline", GScr_FS_WriteLine, 0);
-    Scr_AddFunction("isarray", Scr_IsArray_f, false);
-    Scr_AddFunction("float", GScr_Float, 0);
-
     Events::OnVMShutdown(CloseAllScriptFiles);
 }
 

@@ -6,6 +6,9 @@ namespace iw3
 {
 namespace mp
 {
+void Scr_PrecacheString_Stub();
+void HECmd_SetText_Stub(scr_entref_t entref);
+
 class gsc_hud_elem : public Module
 {
   public:

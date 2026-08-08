@@ -1,13 +1,11 @@
 #include "pch.h"
 #include "g_scr_main.h"
+#include "common/gsc_registry.h"
 
 namespace iw2
 {
 namespace mp
 {
-std::vector<BuiltinFunctionDef *> scr_functions;
-std::vector<BuiltinMethodDef *> scr_methods;
-
 // Inlined in the executable, reimplemented here
 namespace
 {
@@ -178,37 +176,40 @@ void PlayerCmd_SetVelocity(scr_entref_t entref)
     ent->client->ps.velocity[2] = velocity[2];
 }
 
-void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type)
+namespace
 {
-    BuiltinFunctionDef *newFunc = new BuiltinFunctionDef;
-    newFunc->actionString = name;
-    newFunc->actionFunc = func;
-    newFunc->type = type;
-    scr_functions.push_back(newFunc);
-}
+static const BuiltinFunctionDef functions[] = {
+    {"exec", GScr_CbufAddText, BUILTIN_ANY},
+};
 
-void Scr_AddMethod(const char *name, BuiltinMethod func, scr_builtin_type_t type)
-{
-    BuiltinMethodDef *newMethod = new BuiltinMethodDef;
-    newMethod->actionString = name;
-    newMethod->actionFunc = func;
-    newMethod->type = type;
-    scr_methods.push_back(newMethod);
-}
+static const BuiltinMethodDef methods[] = {
+    {"buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY}, // Only works for host buttons
+    {"adsbuttonpressed", PlayerCmd_ADSButtonPressed, BUILTIN_ANY},
+    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY},
+    {"fragbuttonpressed", PlayerCmd_FragButtonPressed, BUILTIN_ANY},
+    {"smokebuttonpressed", PlayerCmd_SmokeButtonPressed, BUILTIN_ANY},
+    {"forwardbuttonpressed", PlayerCmd_ForwardButtonPressed, BUILTIN_ANY},
+    {"backbuttonpressed", PlayerCmd_BackButtonPressed, BUILTIN_ANY},
+    {"leftbuttonpressed", PlayerCmd_LeftButtonPressed, BUILTIN_ANY},
+    {"rightbuttonpressed", PlayerCmd_RightButtonPressed, BUILTIN_ANY},
+    {"getstance", PlayerCmd_GetStance, BUILTIN_ANY},
+    {"setstance", PlayerCmd_SetStance, BUILTIN_ANY},
+    {"getvelocity", PlayerCmd_GetVelocity, BUILTIN_ANY},
+    {"setvelocity", PlayerCmd_SetVelocity, BUILTIN_ANY},
+};
+} // namespace
 
 Detour Scr_GetFunction_Detour;
 
 BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_functions.size(); ++i)
+        const BuiltinFunctionDef *function = gsc::Find(*pName, functions);
+        if (function)
         {
-            if (std::strcmp(*pName, scr_functions[i]->actionString) == 0)
-            {
-                *type = scr_functions[i]->type;
-                return scr_functions[i]->actionFunc;
-            }
+            *type = function->type;
+            return function->actionFunc;
         }
     }
 
@@ -219,15 +220,13 @@ Detour Scr_GetMethod_Detour;
 
 BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_methods.size(); ++i)
+        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        if (method)
         {
-            if (std::strcmp(*pName, scr_methods[i]->actionString) == 0)
-            {
-                *type = scr_methods[i]->type;
-                return scr_methods[i]->actionFunc;
-            }
+            *type = method->type;
+            return method->actionFunc;
         }
     }
 
@@ -241,24 +240,6 @@ g_scr_main::g_scr_main()
 
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
-
-    Scr_AddFunction("exec", GScr_CbufAddText, BUILTIN_ANY);
-
-    Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY); // Only works for host buttons
-    Scr_AddMethod("adsbuttonpressed", PlayerCmd_ADSButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("fragbuttonpressed", PlayerCmd_FragButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("smokebuttonpressed", PlayerCmd_SmokeButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("forwardbuttonpressed", PlayerCmd_ForwardButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("backbuttonpressed", PlayerCmd_BackButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("leftbuttonpressed", PlayerCmd_LeftButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("rightbuttonpressed", PlayerCmd_RightButtonPressed, BUILTIN_ANY);
-
-    Scr_AddMethod("getstance", PlayerCmd_GetStance, BUILTIN_ANY);
-    Scr_AddMethod("setstance", PlayerCmd_SetStance, BUILTIN_ANY);
-
-    Scr_AddMethod("getvelocity", PlayerCmd_GetVelocity, BUILTIN_ANY);
-    Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, BUILTIN_ANY);
 }
 
 g_scr_main::~g_scr_main()

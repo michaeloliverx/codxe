@@ -1,7 +1,6 @@
 // cod4x
 
 #include "pch.h"
-#include "g_scr_main.h"
 #include "gsc_methods.h"
 
 namespace iw3
@@ -189,24 +188,6 @@ void GScr_SetBrushModel(scr_entref_t entref)
 
 gsc_methods::gsc_methods()
 {
-    // Player entity methods
-    Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, 0); // Host-only
-    Scr_AddMethod("sprintbreathbuttonpressed", PlayerCmd_SprintButtonPressed, 0);
-    Scr_AddMethod("leanleftbuttonpressed", PlayerCmd_LeanLeftButtonPressed, 0);
-    Scr_AddMethod("leanrightbuttonpressed", PlayerCmd_LeanRightButtonPressed, 0);
-    Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0);
-    Scr_AddMethod("holdbreathbuttonpressed", PlayerCmd_HoldBreathButtonPressed, 0);
-    Scr_AddMethod("nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, 0);
-    Scr_AddMethod("forwardbuttonpressed", PlayerCmd_ForwardButtonPressed, 0);
-    Scr_AddMethod("backbuttonpressed", PlayerCmd_BackButtonPressed, 0);
-    Scr_AddMethod("leftbuttonpressed", PlayerCmd_LeftButtonPressed, 0);
-    Scr_AddMethod("rightbuttonpressed", PlayerCmd_RightButtonPressed, 0);
-    Scr_AddMethod("setvelocity", PlayerCmd_SetVelocity, 0);
-    Scr_AddMethod("setstance", PlayerCmd_SetStance, 0);
-
-    // Script entity methods
-    Scr_AddMethod("clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0);
-    Scr_AddMethod("setbrushmodel", GScr_SetBrushModel, 0);
 }
 
 gsc_methods::~gsc_methods()

@@ -6,9 +6,6 @@ namespace iw4
 {
 namespace mp_tu6
 {
-void Scr_AddMethod(const char *name, BuiltinMethod func, scr_builtin_type_t type);
-void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type);
-
 class g_scr_main : public Module
 {
   public:

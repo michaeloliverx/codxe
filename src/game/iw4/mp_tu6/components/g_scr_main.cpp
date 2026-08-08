@@ -1,54 +1,69 @@
 #include "pch.h"
 #include "g_scr_main.h"
+#include "common/gsc_registry.h"
+#include "clipmap.h"
 #include "events.h"
+#include "sv_bots.h"
 
 namespace iw4
 {
 namespace mp_tu6
 {
-std::vector<BuiltinFunctionDef *> scr_functions;
-std::vector<BuiltinMethodDef *> scr_methods;
 static FILE *open_script_io_file_handle;
 const int MAX_SCRIPT_STRING_BYTES = 65535;
 
-void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type)
-{
-    BuiltinFunctionDef *newFunc = new BuiltinFunctionDef;
-    newFunc->actionString = name;
-    newFunc->actionFunc = func;
-    newFunc->type = type;
-    scr_functions.push_back(newFunc);
-}
+void GScr_CbufAddText();
+static void GScr_PrintConsole();
+static void GScr_FileWrite();
+static void GScr_FileRead();
+static void GScr_FileExists();
+static void GScr_OpenFile();
+static void GScr_ReadStream();
+static void GScr_CloseFile();
 
-void Scr_AddMethod(const char *name, BuiltinMethod func, scr_builtin_type_t type)
+namespace
 {
-    BuiltinMethodDef *newMethod = new BuiltinMethodDef;
-    newMethod->actionString = name;
-    newMethod->actionFunc = func;
-    newMethod->type = type;
-    scr_methods.push_back(newMethod);
-}
+static const BuiltinFunctionDef functions[] = {
+    {"exec", GScr_CbufAddText, BUILTIN_ANY},
+    {"printconsole", GScr_PrintConsole, BUILTIN_ANY},
+    {"filewrite", GScr_FileWrite, BUILTIN_ANY},
+    {"fileread", GScr_FileRead, BUILTIN_ANY},
+    {"fileexists", GScr_FileExists, BUILTIN_ANY},
+    {"openfile", GScr_OpenFile, BUILTIN_ANY},
+    {"readstream", GScr_ReadStream, BUILTIN_ANY},
+    {"closefile", GScr_CloseFile, BUILTIN_ANY},
+    {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
+};
+
+static const BuiltinMethodDef methods[] = {
+    {"disableplayercliponintersectingbrushes", ::DisablePlayerClipOnIntersectingBrushes, BUILTIN_ANY},
+    {"botaction", PlayerCmd_BotAction, BUILTIN_ANY},
+    {"botstop", PlayerCmd_BotStop, BUILTIN_ANY},
+    {"botmovement", PlayerCmd_BotMovement, BUILTIN_ANY},
+    {"botmeleeparams", PlayerCmd_BotMeleeParams, BUILTIN_ANY},
+    {"botremoteangles", PlayerCmd_BotRemoteAngles, BUILTIN_ANY},
+    {"botangles", PlayerCmd_BotAngles, BUILTIN_ANY},
+};
+} // namespace
 
 Detour Scr_GetFunction_Detour;
 
 BuiltinFunction Scr_GetFunction_Hook(const char **pName, scr_builtin_type_t *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_functions.size(); ++i)
+        const BuiltinFunctionDef *function = gsc::Find(*pName, functions);
+        if (function)
         {
-            if (std::strcmp(*pName, scr_functions[i]->actionString) == 0)
-            {
-                *type = scr_functions[i]->type;
-                return scr_functions[i]->actionFunc;
-            }
+            *type = function->type;
+            return function->actionFunc;
         }
     }
     else
     {
-        for (size_t i = 0; i < scr_functions.size(); ++i)
+        for (size_t i = 0; i < gsc::Size(functions); ++i)
         {
-            Scr_RegisterFunction(reinterpret_cast<int>(scr_functions[i]->actionFunc), scr_functions[i]->actionString);
+            Scr_RegisterFunction(reinterpret_cast<int>(functions[i].actionFunc), functions[i].actionString);
         }
     }
 
@@ -59,22 +74,20 @@ Detour Scr_GetMethod_Detour;
 
 BuiltinMethod Scr_GetMethod_Hook(const char **pName, scr_builtin_type_t *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_methods.size(); ++i)
+        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        if (method)
         {
-            if (std::strcmp(*pName, scr_methods[i]->actionString) == 0)
-            {
-                *type = scr_methods[i]->type;
-                return scr_methods[i]->actionFunc;
-            }
+            *type = method->type;
+            return method->actionFunc;
         }
     }
     else
     {
-        for (size_t i = 0; i < scr_methods.size(); ++i)
+        for (size_t i = 0; i < gsc::Size(methods); ++i)
         {
-            Scr_RegisterFunction(reinterpret_cast<int>(scr_methods[i]->actionFunc), scr_methods[i]->actionString);
+            Scr_RegisterFunction(reinterpret_cast<int>(methods[i].actionFunc), methods[i].actionString);
         }
     }
 
@@ -310,14 +323,6 @@ g_scr_main::g_scr_main()
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
 
-    Scr_AddFunction("exec", GScr_CbufAddText, BUILTIN_ANY);
-    Scr_AddFunction("printconsole", GScr_PrintConsole, BUILTIN_ANY);
-    Scr_AddFunction("filewrite", GScr_FileWrite, BUILTIN_ANY);
-    Scr_AddFunction("fileread", GScr_FileRead, BUILTIN_ANY);
-    Scr_AddFunction("fileexists", GScr_FileExists, BUILTIN_ANY);
-    Scr_AddFunction("openfile", GScr_OpenFile, BUILTIN_ANY);
-    Scr_AddFunction("readstream", GScr_ReadStream, BUILTIN_ANY);
-    Scr_AddFunction("closefile", GScr_CloseFile, BUILTIN_ANY);
     Events::OnVMShutdown(CloseScriptIOFile);
 }
 

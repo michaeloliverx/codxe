@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "events.h"
-#include "g_scr_main.h"
 #include "sv_bots.h"
 
 namespace iw3
@@ -132,7 +131,7 @@ const BotAction_t BotActions[] = {{"gostand", KEY_MASK_JUMP},          {"gocrouc
                                   {"leanright", KEY_MASK_LEANRIGHT},   {"ads", KEY_MASK_ADS_MODE | KEY_MASK_ADS},
                                   {"holdbreath", KEY_MASK_HOLDBREATH}, {"activate", KEY_MASK_USE}};
 
-static void Scr_BotMoveTo(scr_entref_t entref)
+void Scr_BotMoveTo(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -146,7 +145,7 @@ static void Scr_BotMoveTo(scr_entref_t entref)
     g_botai[entref.entnum].doMove = 1;
 }
 
-static void Scr_BotAction(scr_entref_t entref)
+void Scr_BotAction(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -181,7 +180,7 @@ static void Scr_BotAction(scr_entref_t entref)
     Scr_ParamError(0, va("Unknown bot action. Must be one of:%s.", buffer));
 }
 
-static void Scr_BotStop(scr_entref_t entref)
+void Scr_BotStop(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -193,7 +192,7 @@ static void Scr_BotStop(scr_entref_t entref)
     g_botai[entref.entnum].doMove = 0;
 }
 
-static void Scr_BotMirror(scr_entref_t entref)
+void Scr_BotMirror(scr_entref_t entref)
 {
     // Validate self is a player entity
     GetPlayerEntity(entref);
@@ -233,7 +232,7 @@ void SV_UserinfoChanged_Hook(client_t *cl)
     SV_UserinfoChanged_Detour.GetOriginal<SV_UserinfoChanged_t>()(cl);
 }
 
-static void GScr_AddTestClient()
+void GScr_AddTestClient()
 {
     if (Scr_GetNumParam() == 1)
     {
@@ -342,13 +341,6 @@ sv_bots::sv_bots()
 
     SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Stub);
     SV_CalcPings_Detour.Install();
-
-    Scr_AddFunction("addtestclient", GScr_AddTestClient, 0);
-
-    Scr_AddMethod("botmoveto", Scr_BotMoveTo, 0);
-    Scr_AddMethod("botaction", Scr_BotAction, 0);
-    Scr_AddMethod("botmirror", Scr_BotMirror, 0);
-    Scr_AddMethod("botstop", Scr_BotStop, 0);
 
     Events::OnVMShutdown(CleanBotArray);
 }

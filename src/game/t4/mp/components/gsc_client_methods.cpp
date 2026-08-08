@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gsc_client_methods.h"
+#include "common/gsc_registry.h"
 #include "sv_bots.h"
 
 namespace t4
@@ -153,11 +154,7 @@ void GScr_CloneBrushModelToScriptModel(scr_entref_t entref)
     SV_LinkEntity(scriptEnt);
 }
 
-static struct
-{
-    const char *name;
-    BuiltinMethod handler;
-} gsc_player_methods[] = {
+static const gsc::Entry<BuiltinMethod> methods[] = {
     {"buttonpressed", PlayerCmd_ButtonPressed},
     {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed},
     {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed},
@@ -172,21 +169,17 @@ static struct
     {"botangles", PlayerCmd_BotAngles},
     {"isbot", PlayerCmd_IsBot},
     {"ishost", PlayerCmd_IsHost},
-    {nullptr, nullptr} // Terminator
 };
 
 Detour Player_GetMethod_Detour;
 
 BuiltinMethod Player_GetMethod_Hook(const char **pName)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        const auto *func = gsc_player_methods;
-        for (; func->name != nullptr; ++func)
-        {
-            if (_stricmp(*pName, func->name) == 0)
-                return func->handler;
-        }
+        const gsc::Entry<BuiltinMethod> *method = gsc::Find(*pName, methods);
+        if (method)
+            return method->actionFunc;
     }
 
     return Player_GetMethod_Detour.GetOriginal<decltype(Player_GetMethod)>()(pName);

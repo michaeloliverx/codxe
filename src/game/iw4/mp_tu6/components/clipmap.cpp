@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "clipmap.h"
-#include "g_scr_main.h"
 #include "events.h"
 
 iw4::mp_tu6::dvar_t *noclip_brushes = nullptr;
@@ -135,9 +134,6 @@ clipmap::clipmap()
 {
     DB_LinkXAssetEntry1_Detour = Detour(iw4::mp_tu6::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
     DB_LinkXAssetEntry1_Detour.Install();
-
-    iw4::mp_tu6::Scr_AddMethod("disableplayercliponintersectingbrushes", DisablePlayerClipOnIntersectingBrushes,
-                               iw4::mp_tu6::BUILTIN_ANY);
 
     Events::OnCG_DrawActive(
         []()

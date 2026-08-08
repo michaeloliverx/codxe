@@ -17,6 +17,8 @@ class clipmap : public Module
         return "clipmap";
     };
 
+    static void PlayerCmd_DisablePlayerClipOnTouchingBrushes(scr_entref_t entref);
+
   private:
     static dvar_s *noclip_brushes;
     static std::vector<int> brushContents;
@@ -28,7 +30,6 @@ class clipmap : public Module
     static std::vector<int> ParseSpaceSeparatedInts(const std::string &str);
     static void HandleclipmapChange();
     static void RebuildNoclipBrushesDvar();
-    static void PlayerCmd_DisablePlayerClipOnTouchingBrushes(scr_entref_t entref);
 };
 } // namespace mp
 } // namespace qos

@@ -3,7 +3,6 @@
  */
 #include "pch.h"
 
-#include "g_scr_main.h"
 #include "events.h"
 #include "gsc_hud_elem.h"
 
@@ -100,11 +99,6 @@ void Scr_FreeHudElem_Hook(game_hudelem_s *hud)
 
 gsc_hud_elem::gsc_hud_elem()
 {
-
-    // Override buildins
-    Scr_AddFunction("precachestring", Scr_PrecacheString_Stub, 0);
-    Scr_AddMethod("settext", HECmd_SetText_Stub, 0);
-
     Scr_FreeHudElem_Detour = Detour(Scr_FreeHudElem, Scr_FreeHudElem_Hook);
     Scr_FreeHudElem_Detour.Install();
 

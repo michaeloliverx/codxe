@@ -1,47 +1,31 @@
 #include "pch.h"
 #include "g_scr_main.h"
+#include "common/gsc_registry.h"
+#include "g_client_script_cmd.h"
+#include "g_scr_mover.h"
 
 namespace t4
 {
 namespace sp
 {
-std::vector<BuiltinFunctionDef *> scr_functions;
-std::vector<BuiltinMethodDef *> scr_methods;
-
-void Scr_AddFunction(const char *name, BuiltinFunction func, int type)
+namespace
 {
-    BuiltinFunctionDef *newFunc = new BuiltinFunctionDef;
-    newFunc->actionString = name;
-    newFunc->actionFunc = func;
-    newFunc->type = type;
-    scr_functions.push_back(newFunc);
-}
-
-void Scr_AddMethod(const char *name, BuiltinMethod func, int type)
-{
-    BuiltinMethodDef *newMethod = new BuiltinMethodDef;
-    newMethod->actionString = name;
-    newMethod->actionFunc = func;
-    newMethod->type = type;
-    scr_methods.push_back(newMethod);
-}
+static const BuiltinMethodDef methods[] = {
+    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0},
+    {"secondaryoffhandbuttonpressed", PlayerCmd_secondaryOffhandButtonPressed, 0},
+    {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed, 0},
+    {"moveforwardbuttonpressed", PlayerCmd_MoveForwardButtonPressed, 0},
+    {"movebackbuttonpressed", PlayerCmd_MoveBackButtonPressed, 0},
+    {"moveleftbuttonpressed", PlayerCmd_MoveLeftButtonPressed, 0},
+    {"moverightbuttonpressed", PlayerCmd_MoveRightButtonPressed, 0},
+    {"clonebrushmodeltoscriptmodel", ScriptEntCmd_CloneBrushModelToScriptModel, 0},
+};
+} // namespace
 
 Detour Scr_GetFunction_Detour;
 
 BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
-    {
-        for (size_t i = 0; i < scr_functions.size(); ++i)
-        {
-            if (std::strcmp(*pName, scr_functions[i]->actionString) == 0)
-            {
-                *type = scr_functions[i]->type;
-                return scr_functions[i]->actionFunc;
-            }
-        }
-    }
-
     return Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
 }
 
@@ -49,15 +33,13 @@ Detour Scr_GetMethod_Detour;
 
 BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_methods.size(); ++i)
+        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        if (method)
         {
-            if (std::strcmp(*pName, scr_methods[i]->actionString) == 0)
-            {
-                *type = scr_methods[i]->type;
-                return scr_methods[i]->actionFunc;
-            }
+            *type = method->type;
+            return method->actionFunc;
         }
     }
 

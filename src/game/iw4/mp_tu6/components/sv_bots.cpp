@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "events.h"
-#include "g_scr_main.h"
 #include "sv_bots.h"
 
 namespace iw4
@@ -158,7 +157,7 @@ static void SV_CalcPings_Hook()
     }
 }
 
-static void GScr_AddTestClient()
+void GScr_AddTestClient()
 {
     if (Scr_GetNumParam() > 1)
         Scr_Error("Usage: addtestclient(<name>);");
@@ -231,7 +230,7 @@ static const BotAction_t BotActions[] = {
     {"prone", CMD_BUTTON_PRONE},
 };
 
-static void PlayerCmd_BotAction(scr_entref_t entref)
+void PlayerCmd_BotAction(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -267,7 +266,7 @@ static void PlayerCmd_BotAction(scr_entref_t entref)
     Scr_ParamError(0, va("Unknown bot action. Must be one of:%s.", buffer));
 }
 
-static void PlayerCmd_BotStop(scr_entref_t entref)
+void PlayerCmd_BotStop(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -290,7 +289,7 @@ static void PlayerCmd_BotStop(scr_entref_t entref)
         static_cast<unsigned short>(client->ps.weapCommon.primaryWeaponForAltMode);
 }
 
-static void PlayerCmd_BotMovement(scr_entref_t entref)
+void PlayerCmd_BotMovement(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -306,7 +305,7 @@ static void PlayerCmd_BotMovement(scr_entref_t entref)
     g_botai[entref.entnum].has_move = true;
 }
 
-static void PlayerCmd_BotMeleeParams(scr_entref_t entref)
+void PlayerCmd_BotMeleeParams(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -321,7 +320,7 @@ static void PlayerCmd_BotMeleeParams(scr_entref_t entref)
     g_botai[entref.entnum].active = true;
 }
 
-static void PlayerCmd_BotRemoteAngles(scr_entref_t entref)
+void PlayerCmd_BotRemoteAngles(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -337,7 +336,7 @@ static void PlayerCmd_BotRemoteAngles(scr_entref_t entref)
     g_botai[entref.entnum].has_remote_angles = true;
 }
 
-static void PlayerCmd_BotAngles(scr_entref_t entref)
+void PlayerCmd_BotAngles(scr_entref_t entref)
 {
     GetPlayerEntity(entref);
 
@@ -370,15 +369,6 @@ SVBots::SVBots()
 
     // remove bot check inside of Player_ActivateHoldCmd
     *(volatile uint32_t *)0x82263658 = 0x60000000;
-
-    Scr_AddFunction("addtestclient", GScr_AddTestClient, BUILTIN_ANY);
-
-    Scr_AddMethod("botaction", PlayerCmd_BotAction, BUILTIN_ANY);
-    Scr_AddMethod("botstop", PlayerCmd_BotStop, BUILTIN_ANY);
-    Scr_AddMethod("botmovement", PlayerCmd_BotMovement, BUILTIN_ANY);
-    Scr_AddMethod("botmeleeparams", PlayerCmd_BotMeleeParams, BUILTIN_ANY);
-    Scr_AddMethod("botremoteangles", PlayerCmd_BotRemoteAngles, BUILTIN_ANY);
-    Scr_AddMethod("botangles", PlayerCmd_BotAngles, BUILTIN_ANY);
 }
 
 SVBots::~SVBots()

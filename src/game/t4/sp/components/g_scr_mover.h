@@ -6,6 +6,8 @@ namespace t4
 {
 namespace sp
 {
+void ScriptEntCmd_CloneBrushModelToScriptModel(scr_entref_t entref);
+
 class g_scr_mover : public Module
 {
   public:
