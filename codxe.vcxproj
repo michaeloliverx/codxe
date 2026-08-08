@@ -83,7 +83,7 @@
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
 
-      <ClCompile Include="src\game\iw2\mp\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\iw2\mp\components\gsc.cpp" />
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
 
@@ -94,8 +94,8 @@
       <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\console.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\events.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\g_scr_main.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\gsc_client_fields.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\gsc.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_functions.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_hud_elem.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_methods.cpp" />
@@ -115,8 +115,8 @@
 
       <ClCompile Include="src\game\iw4\sp\components\cg.cpp" />
       <ClCompile Include="src\game\iw4\sp\components\clipmap.cpp" />
-      <ClCompile Include="src\game\iw4\sp\components\g_client_fields.cpp" />
-      <ClCompile Include="src\game\iw4\sp\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\iw4\sp\components\gsc_fields.cpp" />
+      <ClCompile Include="src\game\iw4\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\iw4\sp\components\pm.cpp" />
       <ClCompile Include="src\game\iw4\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw4\sp\main.cpp" />
@@ -134,8 +134,8 @@
       <ClCompile Include="src\game\iw4\mp_tu6\components\console.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\events.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\fastfiles.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\g_client_fields.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\gsc_fields.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\gsc.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\mr.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\patches.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\pm.cpp" />
@@ -150,7 +150,7 @@
       <ClCompile Include="src\game\iw5\mp\events.cpp" />
       <ClCompile Include="src\game\iw5\mp\patches.cpp" />
       <ClCompile Include="src\game\iw5\mp\pm.cpp" />
-      <ClCompile Include="src\game\iw5\mp\script.cpp" />
+      <ClCompile Include="src\game\iw5\mp\gsc.cpp" />
 
       <ClCompile Include="src\game\t4\mp\main.cpp" />
       <ClCompile Include="src\game\t4\mp\symbols.cpp" />
@@ -158,7 +158,7 @@
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
       <ClCompile Include="src\game\t4\mp\components\console.cpp" />
       <ClCompile Include="src\game\t4\mp\components\events.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\gsc_client_fields.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_client_methods.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_functions.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_loader.cpp" />
@@ -170,8 +170,8 @@
       <ClCompile Include="src\game\t4\mp\components\ui.cpp" />
 
       <ClCompile Include="src\game\t4\sp\components\clipmap.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\g_client_fields.cpp" /> 
-      <ClCompile Include="src\game\t4\sp\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\gsc_fields.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\t4\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\t4\sp\components\ui.cpp" />
       <ClCompile Include="src\game\t4\sp\main.cpp" />
@@ -188,7 +188,7 @@
       <ClCompile Include="src\game\qos\mp\main.cpp" />
       <ClCompile Include="src\game\qos\mp\components\clipmap.cpp" />
       <ClCompile Include="src\game\qos\mp\components\events.cpp" />
-      <ClCompile Include="src\game\qos\mp\components\g_scr_main.cpp" />
+      <ClCompile Include="src\game\qos\mp\components\gsc.cpp" />
       <ClCompile Include="src\game\qos\mp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />
 
@@ -221,8 +221,8 @@
       <ClInclude Include="src\game\iw3\mp\components\cmds.h" />
       <ClInclude Include="src\game\iw3\mp\components\console.h" />
       <ClInclude Include="src\game\iw3\mp\components\clipmap.h" />
-      <ClInclude Include="src\game\iw3\mp\components\g_scr_main.h" />
-      <ClInclude Include="src\game\iw3\mp\components\gsc_client_fields.h" />
+      <ClInclude Include="src\game\iw3\mp\components\gsc.h" />
+      <ClInclude Include="src\game\iw3\mp\components\gsc_fields.h" />
       <ClInclude Include="src\game\iw3\mp\components\gsc_methods.h" />
       <ClInclude Include="src\game\iw3\mp\components\pm.h" />
       <ClInclude Include="src\game\iw3\mp\components\scr_parser.h" />
@@ -240,8 +240,8 @@
 
       <ClInclude Include="src\game\iw4\sp\components\cg.h" />
       <ClInclude Include="src\game\iw4\sp\components\clipmap.h" />
-      <ClInclude Include="src\game\iw4\sp\components\g_client_fields.h" />
-      <ClInclude Include="src\game\iw4\sp\components\g_scr_main.h" />
+      <ClInclude Include="src\game\iw4\sp\components\gsc_fields.h" />
+      <ClInclude Include="src\game\iw4\sp\components\gsc.h" />
       <ClInclude Include="src\game\iw4\sp\components\pm.h" />
       <ClInclude Include="src\game\iw4\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw4\sp\main.h" />
@@ -263,8 +263,8 @@
       <ClInclude Include="src\game\iw4\mp_tu6\components\console.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\events.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\fastfiles.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\g_client_fields.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\g_scr_main.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\gsc_fields.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\gsc.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\mr.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\patches.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\pm.h" />
@@ -282,7 +282,7 @@
       <ClInclude Include="src\game\t4\mp\components\brush_collision.h" />
       <ClInclude Include="src\game\t4\mp\components\console.h" />
       <ClInclude Include="src\game\t4\mp\components\events.h" />
-      <ClInclude Include="src\game\t4\mp\components\gsc_client_fields.h" />
+      <ClInclude Include="src\game\t4\mp\components\gsc_fields.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_client_methods.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_functions.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_loader.h" />
@@ -294,8 +294,8 @@
       <ClInclude Include="src\game\t4\mp\components\ui.h" />
 
       <ClInclude Include="src\game\t4\sp\components\clipmap.h" />
-      <ClInclude Include="src\game\t4\sp\components\g_client_fields.h" />
-      <ClInclude Include="src\game\t4\sp\components\g_scr_main.h" />
+      <ClInclude Include="src\game\t4\sp\components\gsc_fields.h" />
+      <ClInclude Include="src\game\t4\sp\components\gsc.h" />
       <ClInclude Include="src\game\t4\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\t4\sp\components\ui.h" />
       <ClInclude Include="src\game\t4\sp\main.h" />
@@ -318,7 +318,7 @@
       <ClInclude Include="src\game\qos\sp\symbols.h" />
 
       <ClInclude Include="src\game\qos\mp\main.h" />
-      <ClInclude Include="src\game\qos\mp\components\g_scr_main.h" />
+      <ClInclude Include="src\game\qos\mp\components\gsc.h" />
       <ClInclude Include="src\game\qos\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\qos\mp\structs.h" />
       <ClInclude Include="src\game\qos\mp\symbols.h" />

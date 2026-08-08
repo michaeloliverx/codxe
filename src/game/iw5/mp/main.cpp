@@ -3,7 +3,7 @@
 #include "main.h"
 #include "patches.h"
 #include "pm.h"
-#include "script.h"
+#include "gsc.h"
 #include "bots.h"
 #include "events.h"
 
@@ -258,7 +258,7 @@ IW5_MP_Plugin::IW5_MP_Plugin()
     RegisterModule(new Branding());
     RegisterModule(new patches());
     RegisterModule(new PlayerMovement());
-    RegisterModule(new Script());
+    RegisterModule(new GSC());
     RegisterModule(new Bots());
 
     DB_FindXAssetHeader_Detour = Detour(DB_FindXAssetHeader, DB_FindXAssetHeader_Hook);

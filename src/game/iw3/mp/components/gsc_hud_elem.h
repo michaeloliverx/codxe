@@ -9,15 +9,15 @@ namespace mp
 void Scr_PrecacheString_Stub();
 void HECmd_SetText_Stub(scr_entref_t entref);
 
-class gsc_hud_elem : public Module
+class GSCHudElem : public Module
 {
   public:
-    gsc_hud_elem();
-    ~gsc_hud_elem();
+    GSCHudElem();
+    ~GSCHudElem();
 
     const char *get_name() override
     {
-        return "gsc_hud_elem";
+        return "GSCHudElem";
     };
 };
 } // namespace mp

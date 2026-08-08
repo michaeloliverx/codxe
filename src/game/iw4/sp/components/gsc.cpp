@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "g_scr_main.h"
+#include "gsc.h"
 #include "common/gsc_registry.h"
 
 namespace iw4
@@ -58,7 +58,7 @@ void GScr_CbufAddText()
     Cbuf_AddText(0, text);
 }
 
-g_scr_main::g_scr_main()
+GSC::GSC()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
@@ -67,7 +67,7 @@ g_scr_main::g_scr_main()
     Scr_GetMethod_Detour.Install();
 }
 
-g_scr_main::~g_scr_main()
+GSC::~GSC()
 {
     Scr_GetFunction_Detour.Remove();
 

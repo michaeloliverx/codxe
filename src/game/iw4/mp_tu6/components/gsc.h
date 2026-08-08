@@ -6,14 +6,14 @@ namespace iw4
 {
 namespace mp_tu6
 {
-class g_scr_main : public Module
+class GSC : public Module
 {
   public:
-    g_scr_main();
-    ~g_scr_main();
+    GSC();
+    ~GSC();
     const char *get_name() override
     {
-        return "g_scr_main";
+        return "GSC";
     };
 };
 } // namespace mp_tu6

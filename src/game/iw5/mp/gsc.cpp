@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "script.h"
+#include "gsc.h"
 #include "bots.h"
 #include "common/gsc_registry.h"
 
@@ -346,7 +346,7 @@ void PlayerCmd_GetViewmodel_Hook(scr_entref_t entref)
     PlayerCmd_GetViewmodel_Detour.GetOriginal<PlayerCmd_GetViewmodel_t>()(entref);
 }
 
-Script::Script()
+GSC::GSC()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
@@ -355,7 +355,7 @@ Script::Script()
     PlayerCmd_GetViewmodel_Detour.Install();
 }
 
-Script::~Script()
+GSC::~GSC()
 {
     CloseAllScriptFiles();
     PlayerCmd_GetViewmodel_Detour.Remove();

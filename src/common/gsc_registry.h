@@ -11,8 +11,7 @@ template <typename Handler> struct Entry
     Handler actionFunc;
 };
 
-template <typename EntryType, std::size_t EntryCount>
-std::size_t Size(const EntryType (&)[EntryCount])
+template <typename EntryType, std::size_t EntryCount> std::size_t Size(const EntryType (&)[EntryCount])
 {
     return EntryCount;
 }

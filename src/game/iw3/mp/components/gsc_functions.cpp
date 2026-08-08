@@ -270,12 +270,12 @@ void GScr_Float()
         Scr_ParamError(0, va("cannot cast %s to float", var_typename[varType]));
 }
 
-gsc_functions::gsc_functions()
+GSCFunctions::GSCFunctions()
 {
     Events::OnVMShutdown(CloseAllScriptFiles);
 }
 
-gsc_functions::~gsc_functions()
+GSCFunctions::~GSCFunctions()
 {
     CloseAllScriptFiles();
 }

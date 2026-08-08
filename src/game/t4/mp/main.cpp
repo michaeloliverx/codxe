@@ -4,7 +4,7 @@
 #include "components/brush_collision.h"
 #include "components/console.h"
 #include "components/events.h"
-#include "components/gsc_client_fields.h"
+#include "components/gsc_fields.h"
 #include "components/gsc_client_methods.h"
 #include "components/gsc_functions.h"
 #include "components/gsc_loader.h"
@@ -27,7 +27,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());
     RegisterModule(new console());
-    RegisterModule(new GSCClientFields());
+    RegisterModule(new GSCFields());
     RegisterModule(new GSCClientMethods());
     RegisterModule(new GSCFunctions());
     RegisterModule(new SVBots());

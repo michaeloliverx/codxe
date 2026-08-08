@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "g_scr_main.h"
+#include "gsc.h"
 #include "common/gsc_registry.h"
 #include "clipmap.h"
 
@@ -132,7 +132,7 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
     return pMethod;
 }
 
-g_scr_main::g_scr_main()
+GSC::GSC()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
@@ -141,7 +141,7 @@ g_scr_main::g_scr_main()
     Scr_GetMethod_Detour.Install();
 }
 
-g_scr_main::~g_scr_main()
+GSC::~GSC()
 {
     Scr_GetFunction_Detour.Remove();
 

@@ -97,7 +97,7 @@ void Scr_FreeHudElem_Hook(game_hudelem_s *hud)
     Scr_FreeHudElem_Detour.GetOriginal<Scr_FreeHudElem_t>()(hud);
 }
 
-gsc_hud_elem::gsc_hud_elem()
+GSCHudElem::GSCHudElem()
 {
     Scr_FreeHudElem_Detour = Detour(Scr_FreeHudElem, Scr_FreeHudElem_Hook);
     Scr_FreeHudElem_Detour.Install();
@@ -110,7 +110,7 @@ gsc_hud_elem::gsc_hud_elem()
         });
 }
 
-gsc_hud_elem::~gsc_hud_elem()
+GSCHudElem::~GSCHudElem()
 {
     Scr_FreeHudElem_Detour.Remove();
 }

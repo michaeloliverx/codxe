@@ -6,15 +6,15 @@ namespace iw4
 {
 namespace sp
 {
-class g_client_fields : public Module
+class GSCFields : public Module
 {
   public:
-    g_client_fields();
-    ~g_client_fields();
+    GSCFields();
+    ~GSCFields();
 
     const char *get_name() override
     {
-        return "g_client_fields";
+        return "GSCFields";
     };
 };
 } // namespace sp

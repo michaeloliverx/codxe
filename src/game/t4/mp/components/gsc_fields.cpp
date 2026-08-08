@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "gsc_client_fields.h"
+#include "gsc_fields.h"
 
 const unsigned int CLIENT_FIELD_MASK = 0xC000;
 
@@ -127,7 +127,7 @@ void Scr_GetObjectField_Hook(unsigned int classnum, int entnum, int offset, scri
         Scr_GetObjectField_Detour.GetOriginal<decltype(Scr_GetObjectField)>()(classnum, entnum, offset, inst);
 }
 
-GSCClientFields::GSCClientFields()
+GSCFields::GSCFields()
 {
     GScr_AddFieldsForClient_Detour = Detour(GScr_AddFieldsForClient, GScr_AddFieldsForClient_Hook);
     GScr_AddFieldsForClient_Detour.Install();
@@ -139,7 +139,7 @@ GSCClientFields::GSCClientFields()
     Scr_GetObjectField_Detour.Install();
 }
 
-GSCClientFields::~GSCClientFields()
+GSCFields::~GSCFields()
 {
 
     GScr_AddFieldsForClient_Detour.Remove();

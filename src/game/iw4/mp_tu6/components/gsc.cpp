@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "g_scr_main.h"
+#include "gsc.h"
 #include "common/gsc_registry.h"
 #include "clipmap.h"
 #include "events.h"
@@ -315,7 +315,7 @@ static void GScr_CloseFile()
     Scr_AddInt(result);
 }
 
-g_scr_main::g_scr_main()
+GSC::GSC()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
@@ -326,7 +326,7 @@ g_scr_main::g_scr_main()
     Events::OnVMShutdown(CloseScriptIOFile);
 }
 
-g_scr_main::~g_scr_main()
+GSC::~GSC()
 {
     CloseScriptIOFile();
 

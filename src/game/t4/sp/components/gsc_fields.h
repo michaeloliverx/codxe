@@ -6,14 +6,15 @@ namespace t4
 {
 namespace sp
 {
-class g_scr_main : public Module
+class GSCFields : public Module
 {
   public:
-    g_scr_main();
-    ~g_scr_main();
+    GSCFields();
+    ~GSCFields();
+
     const char *get_name() override
     {
-        return "g_scr_main";
+        return "GSCFields";
     };
 };
 } // namespace sp

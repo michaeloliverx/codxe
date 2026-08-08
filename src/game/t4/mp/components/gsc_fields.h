@@ -2,20 +2,20 @@
 
 #include "pch.h"
 
-namespace iw5
+namespace t4
 {
 namespace mp
 {
-class Script : public Module
+class GSCFields : public Module
 {
   public:
-    Script();
-    ~Script();
+    GSCFields();
+    ~GSCFields();
 
     const char *get_name() override
     {
-        return "Script";
+        return "GSCFields";
     };
 };
 } // namespace mp
-} // namespace iw5
+} // namespace t4

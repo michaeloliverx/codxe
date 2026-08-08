@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "components/g_scr_main.h"
+#include "components/gsc.h"
 #include "components/scr_parser.h"
 #include "main.h"
 
@@ -11,7 +11,7 @@ namespace mp
 IW2_MP_Plugin::IW2_MP_Plugin()
 {
     RegisterModule(new Config());
-    RegisterModule(new g_scr_main());
+    RegisterModule(new GSC());
     RegisterModule(new scr_parser());
 }
 

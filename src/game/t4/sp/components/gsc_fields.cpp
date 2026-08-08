@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "g_client_fields.h"
+#include "gsc_fields.h"
 
 namespace t4
 {
@@ -111,7 +111,7 @@ void Scr_GetObjectField_Hook(unsigned int classnum, int entnum, int offset, scri
     }
 }
 
-g_client_fields::g_client_fields()
+GSCFields::GSCFields()
 {
     GScr_AddFieldsForClient_Detour = Detour(GScr_AddFieldsForClient, GScr_AddFieldsForClient_Hook);
     GScr_AddFieldsForClient_Detour.Install();
@@ -123,7 +123,7 @@ g_client_fields::g_client_fields()
     Scr_GetObjectField_Detour.Install();
 }
 
-g_client_fields::~g_client_fields()
+GSCFields::~GSCFields()
 {
     GScr_AddFieldsForClient_Detour.Remove();
 
