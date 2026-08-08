@@ -63,27 +63,6 @@ void ResetLoadedScripts(bool freeScripts)
     g_gsc_bytecode_arena_used = 0;
 }
 
-bool ShouldLoadWaypointScript(const char *name)
-{
-    std::string scriptName = name ? name : "";
-    std::replace(scriptName.begin(), scriptName.end(), '\\', '/');
-
-    const std::string waypointPrefix = "scripts/mp/mp_";
-    if (scriptName.compare(0, waypointPrefix.size(), waypointPrefix) != 0)
-        return true;
-
-    const size_t fileNameOffset = scriptName.find('/', waypointPrefix.size());
-    if (fileNameOffset == std::string::npos || scriptName.compare(fileNameOffset + 1, 4, "wps_") != 0)
-        return true;
-
-    const dvar_t *mapname = Dvar_FindMalleableVar("mapname");
-    if (!mapname || !mapname->current.string || !mapname->current.string[0])
-        return false;
-
-    const std::string currentMapPrefix = std::string("scripts/mp/") + mapname->current.string + "/";
-    return scriptName.compare(0, currentMapPrefix.size(), currentMapPrefix) == 0;
-}
-
 // Swap byte order for 32-bit integers
 uint32_t SwapEndian(uint32_t value)
 {
@@ -209,9 +188,6 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
         auto loadedScript = g_loaded_scripts.find(name);
         if (loadedScript != g_loaded_scripts.end())
             return reinterpret_cast<XAssetHeader *>(loadedScript->second);
-
-        if (!ShouldLoadWaypointScript(name))
-            return DB_FindXAssetHeader_Detour.GetOriginal<DB_FindXAssetHeader_t>()(type, name, allowCreateDefault);
 
         std::string modBasePath = Config::GetModBasePath();
         std::string overridePath = modBasePath + "\\" + name + ".gscbin";
