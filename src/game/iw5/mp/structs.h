@@ -767,6 +767,8 @@ struct __declspec(align(32)) playerState_s
     int diveDirection;
     int stunTime;
 };
+static_assert(offsetof(playerState_s, weapCommon.offHand) == 868, "");
+static_assert(offsetof(playerState_s, weapCommon.weapon) == 880, "");
 
 enum sessionState_t : __int32
 {
@@ -801,6 +803,15 @@ struct __declspec(align(2)) usercmd_s
     char remoteControlMove[3];
 };
 static_assert(sizeof(usercmd_s) == 44, "");
+static_assert(offsetof(usercmd_s, serverTime) == 0, "");
+static_assert(offsetof(usercmd_s, buttons) == 4, "");
+static_assert(offsetof(usercmd_s, angles) == 8, "");
+static_assert(offsetof(usercmd_s, weapon) == 20, "");
+static_assert(offsetof(usercmd_s, offHand) == 24, "");
+static_assert(offsetof(usercmd_s, forwardmove) == 28, "");
+static_assert(offsetof(usercmd_s, meleeChargeEnt) == 32, "");
+static_assert(offsetof(usercmd_s, meleeChargeDist) == 34, "");
+static_assert(offsetof(usercmd_s, remoteControlAngles) == 38, "");
 
 struct playerTeamState_t
 {
@@ -1016,6 +1027,7 @@ struct netadr_t
     unsigned __int16 port;
     netsrc_t localNetID;
 };
+static_assert(sizeof(netadr_t) == 16, "");
 
 struct netProfilePacket_t
 {
@@ -1083,16 +1095,36 @@ struct client_t
     clientHeader_t header;
     const char *dropReason;
     char *userinfo;
-    char pad01[134580];
+    char pad01a[133116];
+    int reliableSequence;
+    int reliableAcknowledge;
+    int reliableSent;
+    char pad01b[1452];
     gentity_s *gentity;
-    char pad1[67772];
+    char pad1a[116];
+    int lastPacketTime;
+    char pad1b[16];
+    int ping;
+    char pad1c[67632];
     int bIsSplitscreenClient;
-    char pad2[224928];
+    char pad2[13830];
+    uint16_t scriptId;
+    char pad3[4];
+    int bIsTestClient;
+    char pad4[211088];
 };
 static_assert(sizeof(client_t) == 428928, "");
+static_assert(offsetof(client_t, header) == 0, "");
 static_assert(offsetof(client_t, userinfo) == 1636, "");
+static_assert(offsetof(client_t, reliableSequence) == 134756, "");
+static_assert(offsetof(client_t, reliableAcknowledge) == 134760, "");
+static_assert(offsetof(client_t, reliableSent) == 134764, "");
 static_assert(offsetof(client_t, gentity) == 136220, "");
+static_assert(offsetof(client_t, lastPacketTime) == 136340, "");
+static_assert(offsetof(client_t, ping) == 136360, "");
 static_assert(offsetof(client_t, bIsSplitscreenClient) == 203996, "");
+static_assert(offsetof(client_t, scriptId) == 217830, "");
+static_assert(offsetof(client_t, bIsTestClient) == 217836, "");
 
 enum trType_t : __int32
 {
@@ -1902,6 +1934,8 @@ struct ScreenPlacement
 
 typedef void (*CG_GameMessage_t)(LocalClientNum_t localClientNum, const char *msg);
 
+typedef void (*CL_ConsolePrint_t)(LocalClientNum_t localClientNum, int channel, const char *txt, unsigned int duration,
+                                  unsigned int pixelWidth, int flags);
 typedef Font_s *(*CL_RegisterFont_t)(const char *fontName, int imageTrack);
 
 typedef XAssetEntry *(*DB_FindXAssetEntry_t)(XAssetType type, const char *name);
@@ -1917,12 +1951,17 @@ typedef void (*Jump_Start_t)(pmove_t *pm, pml_t *pml, double height);
 typedef unsigned __int8 *(*PMem_AllocFromSource_NoDebug_t)(unsigned int size, unsigned int alignment, unsigned int type,
                                                            PMem_Source source);
 
+typedef void (*G_ShutdownGame_t)(int freeScripts);
+
 typedef void (*Scr_AddInt_t)(int value);
+typedef void (*Scr_AddUndefined_t)();
 typedef void (*Scr_ErrorInternal_t)();
 typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
 typedef int (*Scr_GetInt_t)(unsigned int index);
 typedef unsigned int (*Scr_GetMethod_t)(const char **pName, int *type);
 typedef const char *(*Scr_GetString_t)(unsigned int index);
+typedef int (*Sl_GetString_t)(const char *string, int user);
+typedef unsigned int (*Scr_GetNumParam_t)();
 
 typedef const ScreenPlacement *(*ScrPlace_GetActivePlacement_t)(const LocalClientNum_t localClientNum);
 
@@ -1937,6 +1976,10 @@ typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text,
 typedef gentity_s *(*Weapon_RocketLauncher_Fire_t)(gentity_s *ent, const Weapon *weapon, double spread, weaponParms *wp,
                                                    weaponParms *gunVel, missileFireParms *fireParms,
                                                    missileFireParms *magicBullet, bool a8);
+
+typedef void (*SV_DropClient_t)(client_t *cl, const char *reason, bool tellThem);
+
+typedef int *(*G_SelectWeapon_t)(int clientNum, Weapon weapon);
 
 } // namespace mp
 } // namespace iw5
