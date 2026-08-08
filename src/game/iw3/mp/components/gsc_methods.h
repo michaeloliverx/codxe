@@ -21,17 +21,5 @@ void PlayerCmd_SetVelocity(scr_entref_t entref);
 void PlayerCmd_SetStance(scr_entref_t entref);
 void GScr_CloneBrushModelToScriptModel(scr_entref_t entref);
 void GScr_SetBrushModel(scr_entref_t entref);
-
-class gsc_methods : public Module
-{
-  public:
-    gsc_methods();
-    ~gsc_methods();
-
-    const char *get_name() override
-    {
-        return "gsc_methods";
-    };
-};
 } // namespace mp
 } // namespace iw3

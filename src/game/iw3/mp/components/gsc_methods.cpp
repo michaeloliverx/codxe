@@ -185,13 +185,5 @@ void GScr_SetBrushModel(scr_entref_t entref)
     SV_SetBrushModel(ent);
     SV_LinkEntity(ent);
 }
-
-gsc_methods::gsc_methods()
-{
-}
-
-gsc_methods::~gsc_methods()
-{
-}
 } // namespace mp
 } // namespace iw3
