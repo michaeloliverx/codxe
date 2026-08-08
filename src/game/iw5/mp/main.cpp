@@ -26,8 +26,6 @@ unsigned __int8 *AllocateGSCBytecode(unsigned int size)
         g_gsc_bytecode_arena = PMem_AllocFromSource_NoDebug(GSC_BYTECODE_ARENA_SIZE, 4,
                                                             // 0 crashes on hardware, 2 crashes on Xenia.
                                                             is_xenia ? 0 : 2, PMEM_SOURCE_SCRIPT);
-        DbgPrint("[codxe][IW5][GSCLoader] bytecode arena=[%p, %p)\n", g_gsc_bytecode_arena,
-                 g_gsc_bytecode_arena + GSC_BYTECODE_ARENA_SIZE);
     }
 
     const unsigned int offset = (g_gsc_bytecode_arena_used + 3) & ~3u;
@@ -53,9 +51,6 @@ void ResetLoadedScripts(bool freeScripts)
     if (!freeScripts)
         return;
 
-    const unsigned int scriptCount = static_cast<unsigned int>(g_loaded_scripts.size());
-    const unsigned int bytecodeUsed = g_gsc_bytecode_arena_used;
-
     for (auto it = g_loaded_scripts.begin(); it != g_loaded_scripts.end(); ++it)
     {
         ScriptFile *scriptfile = it->second;
@@ -66,9 +61,6 @@ void ResetLoadedScripts(bool freeScripts)
     g_loaded_scripts.clear();
     g_gsc_bytecode_arena = nullptr;
     g_gsc_bytecode_arena_used = 0;
-
-    DbgPrint("[codxe][IW5][GSCLoader] VM reset: released %u scripts and invalidated %u bytecode bytes\n", scriptCount,
-             bytecodeUsed);
 }
 
 bool ShouldLoadWaypointScript(const char *name)
@@ -86,17 +78,10 @@ bool ShouldLoadWaypointScript(const char *name)
 
     const dvar_t *mapname = Dvar_FindMalleableVar("mapname");
     if (!mapname || !mapname->current.string || !mapname->current.string[0])
-    {
-        DbgPrint("[codxe][IW5][GSCLoader] skipping waypoint '%s': mapname is unavailable\n", name);
         return false;
-    }
 
     const std::string currentMapPrefix = std::string("scripts/mp/") + mapname->current.string + "/";
-    const bool shouldLoad = scriptName.compare(0, currentMapPrefix.size(), currentMapPrefix) == 0;
-    if (!shouldLoad)
-        DbgPrint("[codxe][IW5][GSCLoader] skipping waypoint '%s' for map '%s'\n", name, mapname->current.string);
-
-    return shouldLoad;
+    return scriptName.compare(0, currentMapPrefix.size(), currentMapPrefix) == 0;
 }
 
 // Swap byte order for 32-bit integers
@@ -241,9 +226,6 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
             }
             else
             {
-                DbgPrint("[codxe][IW5][GSCLoader] loading '%s': compressed=%u bytecode=%u total=%u\n", name,
-                         gscbin.compressedLen, gscbin.bytecodeLen, gscbin.compressedLen + gscbin.bytecodeLen);
-
                 // ProcessScript treats these as persistent writable data. Keeping them on the heap avoids
                 // consuming a 64 KiB script page for each small allocation.
                 ScriptFile *scriptfile = static_cast<ScriptFile *>(malloc(sizeof(ScriptFile)));
@@ -270,9 +252,6 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
                 scriptfile->bytecode = bytecode;
 
                 g_loaded_scripts[name] = scriptfile;
-
-                DbgPrint("[codxe][IW5][GSCLoader] loaded '%s': buffer=%p bytecode=[%p, %p)\n", name, buffer, bytecode,
-                         bytecode + gscbin.bytecodeLen);
 
                 return (XAssetHeader *)scriptfile;
             }

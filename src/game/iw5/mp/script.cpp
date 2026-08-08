@@ -306,11 +306,7 @@ Detour Scr_GetFunction_Detour;
 
 unsigned int Scr_GetFunction_Hook(const char **pName, int *type)
 {
-    const char *requestedName = pName && *pName ? *pName : nullptr;
     const unsigned int result = Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
-
-    if (requestedName && !result)
-        DbgPrint("[codxe][IW5][GSC] unresolved builtin function '%s'\n", requestedName);
 
     if (!pName)
     {
@@ -322,8 +318,6 @@ unsigned int Scr_GetFunction_Hook(const char **pName, int *type)
         Scr_RegisterFunction(reinterpret_cast<int>(GScr_CloseFile), 0, GSC_TOKEN_CLOSEFILE);
         Scr_RegisterFunction(reinterpret_cast<int>(GScr_WriteLine), 0, GSC_TOKEN_FPRINTLN);
         Scr_RegisterFunction(reinterpret_cast<int>(GScr_ReadLine), 0, GSC_TOKEN_FREADLN);
-        DbgPrint("[codxe][IW5][Bots] registered addtestclient token 0xEE at %p\n", GScr_AddTestClient);
-        DbgPrint("[codxe][IW5][GSC] registered streaming file functions\n");
     }
 
     return result;

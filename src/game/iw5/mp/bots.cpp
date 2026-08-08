@@ -145,12 +145,8 @@ gentity_s *AddTestClient(const char *requestedName)
 {
     client_t *clients = *svs_clients;
     const int maxClients = GetMaxClients();
-    DbgPrint("[codxe][IW5][Bots] AddTestClient begin: clients=%p maxClients=%d\n", clients, maxClients);
     if (!clients || maxClients <= 0)
-    {
-        DbgPrint("[codxe][IW5][Bots] AddTestClient abort: client array unavailable\n");
         return nullptr;
-    }
 
     int clientNum = 0;
     for (; clientNum < maxClients; ++clientNum)
@@ -160,12 +156,7 @@ gentity_s *AddTestClient(const char *requestedName)
     }
 
     if (clientNum == maxClients)
-    {
-        DbgPrint("[codxe][IW5][Bots] AddTestClient abort: no free client slot\n");
         return nullptr;
-    }
-
-    DbgPrint("[codxe][IW5][Bots] AddTestClient selected slot %d\n", clientNum);
 
     char botName[32];
     if (requestedName)
@@ -180,10 +171,7 @@ gentity_s *AddTestClient(const char *requestedName)
 
         botName[length] = '\0';
         if (!length)
-        {
-            DbgPrint("[codxe][IW5][Bots] AddTestClient abort: custom name is empty after sanitizing\n");
             return nullptr;
-        }
     }
     else
     {
@@ -207,40 +195,24 @@ gentity_s *AddTestClient(const char *requestedName)
     // NA_BOT connection as the first bot reconnecting.
     botAddress.localNetID = static_cast<netsrc_t>(NS_INVALID_NETSRC + clientNum + 1);
 
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: tokenizing connect string (port=%u localNetID=%d)\n", clientNum,
-             botPort, botAddress.localNetID);
     SV_Cmd_TokenizeString(connectString);
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: entering SV_DirectConnect\n", clientNum);
     SV_DirectConnect(botAddress);
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: SV_DirectConnect returned\n", clientNum);
     SV_Cmd_EndTokenizedString();
 
     client_t *client = &clients[clientNum];
     if (client->header.state == CON_DISCONNECTED || !client->gentity)
-    {
-        DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d abort: state=%d gentity=%p\n", clientNum,
-                 client->header.state, client->gentity);
         return nullptr;
-    }
-
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d connected: state=%d gentity=%p\n", clientNum,
-             client->header.state, client->gentity);
 
     client->scriptId = 1023;
     client->bIsTestClient = 1;
     client->gentity->s.number = clientNum;
 
     usercmd_s cmd = {};
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: entering SV_SendClientGameState\n", clientNum);
     SV_SendClientGameState(client);
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: entering SV_ClientEnterWorld\n", clientNum);
     SV_ClientEnterWorld(client, &cmd);
-    DbgPrint("[codxe][IW5][Bots] AddTestClient slot %d: SV_ClientEnterWorld returned state=%d\n", clientNum,
-             client->header.state);
 
     ZeroMemory(&g_botai[clientNum], sizeof(g_botai[clientNum]));
     g_botai[clientNum].meleeChargeEnt = ENTITYNUM_NONE;
-    DbgPrint("[codxe][IW5][Bots] AddTestClient complete: slot=%d entity=%d\n", clientNum, client->gentity->s.number);
     return client->gentity;
 }
 

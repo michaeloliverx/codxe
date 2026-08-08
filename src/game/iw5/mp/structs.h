@@ -1934,8 +1934,6 @@ struct ScreenPlacement
 
 typedef void (*CG_GameMessage_t)(LocalClientNum_t localClientNum, const char *msg);
 
-typedef void (*CL_ConsolePrint_t)(LocalClientNum_t localClientNum, int channel, const char *txt, unsigned int duration,
-                                  unsigned int pixelWidth, int flags);
 typedef Font_s *(*CL_RegisterFont_t)(const char *fontName, int imageTrack);
 
 typedef XAssetEntry *(*DB_FindXAssetEntry_t)(XAssetType type, const char *name);
