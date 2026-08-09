@@ -9,6 +9,7 @@ template <typename Handler> struct Entry
 {
     const char *actionString;
     Handler actionFunc;
+    __int32 type;
 };
 
 template <typename EntryType, std::size_t EntryCount> std::size_t Size(const EntryType (&)[EntryCount])

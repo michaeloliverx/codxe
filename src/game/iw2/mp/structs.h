@@ -339,11 +339,12 @@ enum usercmd_button_bits
     CMD_BUTTON_BINOCULARS = 53248, // Fully in binocular view
 };
 
-enum scr_builtin_type_t
+enum scr_builtin_type_t : __int32
 {
     BUILTIN_ANY = 0x0,
     BUILTIN_DEVELOPER_ONLY = 0x1,
 };
+static_assert(sizeof(scr_builtin_type_t) == 4, "");
 
 struct scr_entref_t
 {

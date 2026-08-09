@@ -228,14 +228,14 @@ void GSCrGetPlayerclipBrushesContainingPoint()
 }
 
 static const gsc::Entry<BuiltinFunction> functions[] = {
-    {"addtestclient", GScr_AddTestClient},
-    {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint},
-    {"fs_testfile", GScr_FS_TestFile},
-    {"fs_fopen", GScr_FS_FOpen},
-    {"fs_fclose", GScr_FS_FClose},
-    {"fs_readline", GScr_FS_ReadLine},
-    {"fs_writeline", GScr_FS_WriteLine},
-    {"cmdexec", GScr_CmdExec},
+    {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
+    {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, BUILTIN_ANY},
+    {"fs_testfile", GScr_FS_TestFile, BUILTIN_ANY},
+    {"fs_fopen", GScr_FS_FOpen, BUILTIN_ANY},
+    {"fs_fclose", GScr_FS_FClose, BUILTIN_ANY},
+    {"fs_readline", GScr_FS_ReadLine, BUILTIN_ANY},
+    {"fs_writeline", GScr_FS_WriteLine, BUILTIN_ANY},
+    {"cmdexec", GScr_CmdExec, BUILTIN_ANY},
 };
 
 Detour Scr_GetFunction_Detour;

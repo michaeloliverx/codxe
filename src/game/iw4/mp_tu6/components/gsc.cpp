@@ -23,7 +23,7 @@ static void GScr_CloseFile();
 
 namespace
 {
-static const BuiltinFunctionDef functions[] = {
+static const gsc::Entry<BuiltinFunction> functions[] = {
     {"exec", GScr_CbufAddText, BUILTIN_ANY},
     {"printconsole", GScr_PrintConsole, BUILTIN_ANY},
     {"filewrite", GScr_FileWrite, BUILTIN_ANY},
@@ -35,7 +35,7 @@ static const BuiltinFunctionDef functions[] = {
     {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
 };
 
-static const BuiltinMethodDef methods[] = {
+static const gsc::Entry<BuiltinMethod> methods[] = {
     {"disableplayercliponintersectingbrushes", ::DisablePlayerClipOnIntersectingBrushes, BUILTIN_ANY},
     {"botaction", PlayerCmd_BotAction, BUILTIN_ANY},
     {"botstop", PlayerCmd_BotStop, BUILTIN_ANY},
@@ -52,10 +52,10 @@ BuiltinFunction Scr_GetFunction_Hook(const char **pName, scr_builtin_type_t *typ
 {
     if (pName)
     {
-        const BuiltinFunctionDef *function = gsc::Find(*pName, functions);
+        const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
         if (function)
         {
-            *type = function->type;
+            *type = static_cast<scr_builtin_type_t>(function->type);
             return function->actionFunc;
         }
     }
@@ -76,10 +76,10 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, scr_builtin_type_t *type)
 {
     if (pName)
     {
-        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        const gsc::Entry<BuiltinMethod> *method = gsc::Find(*pName, methods);
         if (method)
         {
-            *type = method->type;
+            *type = static_cast<scr_builtin_type_t>(method->type);
             return method->actionFunc;
         }
     }

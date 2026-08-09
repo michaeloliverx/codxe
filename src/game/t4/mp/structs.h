@@ -732,11 +732,18 @@ enum scriptInstance_t : __int32
 
 typedef void (*BuiltinFunction)();
 
+enum scr_builtin_type_t : __int32
+{
+    BUILTIN_ANY = 0x0,
+    BUILTIN_DEVELOPER_ONLY = 0x1,
+};
+static_assert(sizeof(scr_builtin_type_t) == 4, "");
+
 struct BuiltinFunctionDef
 {
     const char *actionString;   // OFS: 0x0 SIZE: 0x4
     BuiltinFunction actionFunc; // OFS: 0x4 SIZE: 0x4
-    int type;                   // OFS: 0x8 SIZE: 0x4
+    scr_builtin_type_t type;    // OFS: 0x8 SIZE: 0x4
 };
 static_assert(sizeof(BuiltinFunctionDef) == 0xC, "");
 static_assert(offsetof(BuiltinFunctionDef, actionString) == 0x0, "");
@@ -749,7 +756,7 @@ struct BuiltinMethodDef
 {
     const char *actionString;
     BuiltinMethod actionFunc;
-    int type;
+    scr_builtin_type_t type;
 };
 static_assert(sizeof(BuiltinMethodDef) == 0xC, "");
 static_assert(offsetof(BuiltinMethodDef, actionString) == 0x0, "");

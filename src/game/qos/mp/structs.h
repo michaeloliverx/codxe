@@ -78,11 +78,12 @@ struct scr_entref_t
     uint16_t classnum;
 };
 
-enum scr_builtin_type_t
+enum scr_builtin_type_t : __int32
 {
     BUILTIN_ANY = 0x0,
     BUILTIN_DEVELOPER_ONLY = 0x1,
 };
+static_assert(sizeof(scr_builtin_type_t) == 4, "");
 
 typedef void (*BuiltinFunction)();
 

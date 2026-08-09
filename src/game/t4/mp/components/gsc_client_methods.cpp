@@ -155,20 +155,20 @@ void GScr_CloneBrushModelToScriptModel(scr_entref_t entref)
 }
 
 static const gsc::Entry<BuiltinMethod> methods[] = {
-    {"buttonpressed", PlayerCmd_ButtonPressed},
-    {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed},
-    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed},
-    {"setvelocity", PlayerCmd_SetVelocity},
-    {"getforwardmove", PlayerCmd_GetForwardMove},
-    {"getrightmove", PlayerCmd_GetRightMove},
-    {"clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel},
-    {"botaction", PlayerCmd_BotAction},
-    {"botstop", PlayerCmd_BotStop},
-    {"botmovement", PlayerCmd_BotMovement},
-    {"botmeleeparams", PlayerCmd_BotMeleeParams},
-    {"botangles", PlayerCmd_BotAngles},
-    {"isbot", PlayerCmd_IsBot},
-    {"ishost", PlayerCmd_IsHost},
+    {"buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY},
+    {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed, BUILTIN_ANY},
+    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY},
+    {"setvelocity", PlayerCmd_SetVelocity, BUILTIN_ANY},
+    {"getforwardmove", PlayerCmd_GetForwardMove, BUILTIN_ANY},
+    {"getrightmove", PlayerCmd_GetRightMove, BUILTIN_ANY},
+    {"clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, BUILTIN_ANY},
+    {"botaction", PlayerCmd_BotAction, BUILTIN_ANY},
+    {"botstop", PlayerCmd_BotStop, BUILTIN_ANY},
+    {"botmovement", PlayerCmd_BotMovement, BUILTIN_ANY},
+    {"botmeleeparams", PlayerCmd_BotMeleeParams, BUILTIN_ANY},
+    {"botangles", PlayerCmd_BotAngles, BUILTIN_ANY},
+    {"isbot", PlayerCmd_IsBot, BUILTIN_ANY},
+    {"ishost", PlayerCmd_IsHost, BUILTIN_ANY},
 };
 
 Detour Player_GetMethod_Detour;

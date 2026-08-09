@@ -316,17 +316,17 @@ unsigned int Scr_GetFunction_Hook(const char **pName, int *type)
 namespace
 {
 static const gsc::Entry<BuiltinMethod> methods[] = {
-    {"setclientflags", PlayerCmd_SetClientFlags},
-    {"getclientflags", PlayerCmd_GetClientFlags},
-    {"setentityflags", PlayerCmd_SetEntityFlags},
-    {"getentityflags", PlayerCmd_GetEntityFlags},
-    {"disablebrushcollisionatorigin", DisableBrushCollisionAtOrigin},
-    {"botaction", PlayerCmd_BotAction},
-    {"botstop", PlayerCmd_BotStop},
-    {"botmovement", PlayerCmd_BotMovement},
-    {"botmeleeparams", PlayerCmd_BotMeleeParams},
-    {"botremoteangles", PlayerCmd_BotRemoteAngles},
-    {"botangles", PlayerCmd_BotAngles},
+    {"setclientflags", PlayerCmd_SetClientFlags, BUILTIN_ANY},
+    {"getclientflags", PlayerCmd_GetClientFlags, BUILTIN_ANY},
+    {"setentityflags", PlayerCmd_SetEntityFlags, BUILTIN_ANY},
+    {"getentityflags", PlayerCmd_GetEntityFlags, BUILTIN_ANY},
+    {"disablebrushcollisionatorigin", DisableBrushCollisionAtOrigin, BUILTIN_ANY},
+    {"botaction", PlayerCmd_BotAction, BUILTIN_ANY},
+    {"botstop", PlayerCmd_BotStop, BUILTIN_ANY},
+    {"botmovement", PlayerCmd_BotMovement, BUILTIN_ANY},
+    {"botmeleeparams", PlayerCmd_BotMeleeParams, BUILTIN_ANY},
+    {"botremoteangles", PlayerCmd_BotRemoteAngles, BUILTIN_ANY},
+    {"botangles", PlayerCmd_BotAngles, BUILTIN_ANY},
 };
 } // namespace
 

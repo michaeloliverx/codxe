@@ -1736,7 +1736,7 @@ static_assert(sizeof(cg_s) == 1039872, "");
 typedef void (*BuiltinFunction)();
 typedef void (*BuiltinMethod)(scr_entref_t);
 
-enum scr_builtin_type_t
+enum scr_builtin_type_t : __int32
 {
     BUILTIN_ANY = 0x0,
     BUILTIN_DEVELOPER_ONLY = 0x1,

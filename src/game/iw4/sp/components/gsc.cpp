@@ -10,8 +10,8 @@ void GScr_CbufAddText();
 
 namespace
 {
-static const BuiltinFunctionDef functions[] = {
-    {"exec", GScr_CbufAddText, 0},
+static const gsc::Entry<BuiltinFunction> functions[] = {
+    {"exec", GScr_CbufAddText, BUILTIN_ANY},
 };
 } // namespace
 
@@ -21,7 +21,7 @@ BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
     if (pName)
     {
-        const BuiltinFunctionDef *function = gsc::Find(*pName, functions);
+        const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
         if (function)
         {
             *type = function->type;

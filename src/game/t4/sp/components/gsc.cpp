@@ -146,15 +146,15 @@ void ScriptEntCmd_CloneBrushModelToScriptModel(scr_entref_t entref)
     SV_LinkEntity(scriptEnt);
 }
 
-static const BuiltinMethodDef methods[] = {
-    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0},
-    {"secondaryoffhandbuttonpressed", PlayerCmd_secondaryOffhandButtonPressed, 0},
-    {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed, 0},
-    {"moveforwardbuttonpressed", PlayerCmd_MoveForwardButtonPressed, 0},
-    {"movebackbuttonpressed", PlayerCmd_MoveBackButtonPressed, 0},
-    {"moveleftbuttonpressed", PlayerCmd_MoveLeftButtonPressed, 0},
-    {"moverightbuttonpressed", PlayerCmd_MoveRightButtonPressed, 0},
-    {"clonebrushmodeltoscriptmodel", ScriptEntCmd_CloneBrushModelToScriptModel, 0},
+static const gsc::Entry<BuiltinMethod> methods[] = {
+    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY},
+    {"secondaryoffhandbuttonpressed", PlayerCmd_secondaryOffhandButtonPressed, BUILTIN_ANY},
+    {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed, BUILTIN_ANY},
+    {"moveforwardbuttonpressed", PlayerCmd_MoveForwardButtonPressed, BUILTIN_ANY},
+    {"movebackbuttonpressed", PlayerCmd_MoveBackButtonPressed, BUILTIN_ANY},
+    {"moveleftbuttonpressed", PlayerCmd_MoveLeftButtonPressed, BUILTIN_ANY},
+    {"moverightbuttonpressed", PlayerCmd_MoveRightButtonPressed, BUILTIN_ANY},
+    {"clonebrushmodeltoscriptmodel", ScriptEntCmd_CloneBrushModelToScriptModel, BUILTIN_ANY},
 };
 } // namespace
 
@@ -171,7 +171,7 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
     if (pName)
     {
-        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        const gsc::Entry<BuiltinMethod> *method = gsc::Find(*pName, methods);
         if (method)
         {
             *type = method->type;

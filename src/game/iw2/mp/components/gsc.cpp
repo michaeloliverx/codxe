@@ -178,11 +178,11 @@ void PlayerCmd_SetVelocity(scr_entref_t entref)
 
 namespace
 {
-static const BuiltinFunctionDef functions[] = {
+static const gsc::Entry<BuiltinFunction> functions[] = {
     {"exec", GScr_CbufAddText, BUILTIN_ANY},
 };
 
-static const BuiltinMethodDef methods[] = {
+static const gsc::Entry<BuiltinMethod> methods[] = {
     {"buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY}, // Only works for host buttons
     {"adsbuttonpressed", PlayerCmd_ADSButtonPressed, BUILTIN_ANY},
     {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY},
@@ -205,7 +205,7 @@ BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
     if (pName)
     {
-        const BuiltinFunctionDef *function = gsc::Find(*pName, functions);
+        const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
         if (function)
         {
             *type = function->type;
@@ -222,7 +222,7 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
     if (pName)
     {
-        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        const gsc::Entry<BuiltinMethod> *method = gsc::Find(*pName, methods);
         if (method)
         {
             *type = method->type;

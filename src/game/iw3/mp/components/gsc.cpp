@@ -11,41 +11,41 @@ namespace mp
 {
 namespace
 {
-static const BuiltinFunctionDef functions[] = {
-    {"exec", GScr_CbufAddText, 0},
-    {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, 0},
-    {"fs_testfile", GScr_FS_TestFile, 0},
-    {"fs_fopen", GScr_FS_FOpen, 0},
-    {"fs_fclose", GScr_FS_FClose, 0},
-    {"fs_readline", GScr_FS_ReadLine, 0},
-    {"fs_writeline", GScr_FS_WriteLine, 0},
-    {"isarray", Scr_IsArray_f, 0},
-    {"float", GScr_Float, 0},
-    {"precachestring", Scr_PrecacheString_Stub, 0},
-    {"addtestclient", GScr_AddTestClient, 0},
+static const gsc::Entry<BuiltinFunction> functions[] = {
+    {"exec", GScr_CbufAddText, BUILTIN_ANY},
+    {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, BUILTIN_ANY},
+    {"fs_testfile", GScr_FS_TestFile, BUILTIN_ANY},
+    {"fs_fopen", GScr_FS_FOpen, BUILTIN_ANY},
+    {"fs_fclose", GScr_FS_FClose, BUILTIN_ANY},
+    {"fs_readline", GScr_FS_ReadLine, BUILTIN_ANY},
+    {"fs_writeline", GScr_FS_WriteLine, BUILTIN_ANY},
+    {"isarray", Scr_IsArray_f, BUILTIN_ANY},
+    {"float", GScr_Float, BUILTIN_ANY},
+    {"precachestring", Scr_PrecacheString_Stub, BUILTIN_ANY},
+    {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
 };
 
-static const BuiltinMethodDef methods[] = {
-    {"settext", HECmd_SetText_Stub, 0},
-    {"buttonpressed", PlayerCmd_ButtonPressed, 0}, // Host-only
-    {"sprintbreathbuttonpressed", PlayerCmd_SprintButtonPressed, 0},
-    {"leanleftbuttonpressed", PlayerCmd_LeanLeftButtonPressed, 0},
-    {"leanrightbuttonpressed", PlayerCmd_LeanRightButtonPressed, 0},
-    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, 0},
-    {"holdbreathbuttonpressed", PlayerCmd_HoldBreathButtonPressed, 0},
-    {"nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, 0},
-    {"forwardbuttonpressed", PlayerCmd_ForwardButtonPressed, 0},
-    {"backbuttonpressed", PlayerCmd_BackButtonPressed, 0},
-    {"leftbuttonpressed", PlayerCmd_LeftButtonPressed, 0},
-    {"rightbuttonpressed", PlayerCmd_RightButtonPressed, 0},
-    {"setvelocity", PlayerCmd_SetVelocity, 0},
-    {"setstance", PlayerCmd_SetStance, 0},
-    {"clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, 0},
-    {"setbrushmodel", GScr_SetBrushModel, 0},
-    {"botmoveto", Scr_BotMoveTo, 0},
-    {"botaction", Scr_BotAction, 0},
-    {"botmirror", Scr_BotMirror, 0},
-    {"botstop", Scr_BotStop, 0},
+static const gsc::Entry<BuiltinMethod> methods[] = {
+    {"settext", HECmd_SetText_Stub, BUILTIN_ANY},
+    {"buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY}, // Host-only
+    {"sprintbreathbuttonpressed", PlayerCmd_SprintButtonPressed, BUILTIN_ANY},
+    {"leanleftbuttonpressed", PlayerCmd_LeanLeftButtonPressed, BUILTIN_ANY},
+    {"leanrightbuttonpressed", PlayerCmd_LeanRightButtonPressed, BUILTIN_ANY},
+    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY},
+    {"holdbreathbuttonpressed", PlayerCmd_HoldBreathButtonPressed, BUILTIN_ANY},
+    {"nightvisionbuttonpressed", PlayerCmd_NightVisionButtonPressed, BUILTIN_ANY},
+    {"forwardbuttonpressed", PlayerCmd_ForwardButtonPressed, BUILTIN_ANY},
+    {"backbuttonpressed", PlayerCmd_BackButtonPressed, BUILTIN_ANY},
+    {"leftbuttonpressed", PlayerCmd_LeftButtonPressed, BUILTIN_ANY},
+    {"rightbuttonpressed", PlayerCmd_RightButtonPressed, BUILTIN_ANY},
+    {"setvelocity", PlayerCmd_SetVelocity, BUILTIN_ANY},
+    {"setstance", PlayerCmd_SetStance, BUILTIN_ANY},
+    {"clonebrushmodeltoscriptmodel", GScr_CloneBrushModelToScriptModel, BUILTIN_ANY},
+    {"setbrushmodel", GScr_SetBrushModel, BUILTIN_ANY},
+    {"botmoveto", Scr_BotMoveTo, BUILTIN_ANY},
+    {"botaction", Scr_BotAction, BUILTIN_ANY},
+    {"botmirror", Scr_BotMirror, BUILTIN_ANY},
+    {"botstop", Scr_BotStop, BUILTIN_ANY},
 };
 } // namespace
 
@@ -55,7 +55,7 @@ BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
     if (pName)
     {
-        const BuiltinFunctionDef *function = gsc::Find(*pName, functions);
+        const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
         if (function)
         {
             *type = function->type;
@@ -72,7 +72,7 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
     if (pName)
     {
-        const BuiltinMethodDef *method = gsc::Find(*pName, methods);
+        const gsc::Entry<BuiltinMethod> *method = gsc::Find(*pName, methods);
         if (method)
         {
             *type = method->type;
