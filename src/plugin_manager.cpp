@@ -141,7 +141,7 @@ const GameInfo GAME_INFO[] = {
     },
     {
         TITLE_ID_T6,
-        0x53643D71, // Mon May  5 16:10:57 2014
+        0x53643D71, // Sat May  3 01:50:57 2014
         "default_mp.xex",
         "",
         "Call of Duty: Black Ops II MP Title Update #18",
@@ -149,7 +149,7 @@ const GameInfo GAME_INFO[] = {
     },
     {
         TITLE_ID_T6,
-        0x518A4E7C, // Wed May  8 15:22:04 2013
+        0x518A4E7C, // Wed May  8 14:09:16 2013
         "default.xex",
         "",
         "Call of Duty: Black Ops II SP Title Update #18",

@@ -5,15 +5,11 @@ title_id = "415608C3"                     # AV-2243
 # TU18
 
 [[plugin]]
-author = "mo"
-name = "iw3xe"
-file = "iw3xe.xex"
+file = "codxe.xex"
 hash = "B56F16A83B7E7CCC" # default.xex
 is_enabled = true
 
 [[plugin]]
-author = "mo"
-name = "iw3xe"
-file = "iw3xe.xex"
+file = "codxe.xex"
 hash = "5699D5C3866AD7DF" # default_mp.xex
 is_enabled = true
