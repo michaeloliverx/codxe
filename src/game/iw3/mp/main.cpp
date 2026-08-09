@@ -9,7 +9,6 @@
 #include "components/gsc.h"
 #include "components/gsc_fields.h"
 #include "components/gsc_functions.h"
-#include "components/gsc_hud_elem.h"
 #include "components/image_loader.h"
 #include "components/mpsp.h"
 #include "components/pm.h"
@@ -131,7 +130,6 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new GSC());
     RegisterModule(new GSCFields());
     RegisterModule(new GSCFunctions());
-    RegisterModule(new GSCHudElem());
     RegisterModule(new image_loader());
     RegisterModule(new pm());
     RegisterModule(new mpsp());

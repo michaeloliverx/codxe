@@ -2,7 +2,6 @@
 #include "gsc.h"
 #include "common/gsc_registry.h"
 #include "gsc_functions.h"
-#include "gsc_hud_elem.h"
 #include "gsc_methods.h"
 #include "sv_bots.h"
 
@@ -91,10 +90,14 @@ GSC::GSC()
 
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
+
+    InitializeHudElemMethods();
 }
 
 GSC::~GSC()
 {
+    ShutdownHudElemMethods();
+
     Scr_GetFunction_Detour.Remove();
 
     Scr_GetMethod_Detour.Remove();

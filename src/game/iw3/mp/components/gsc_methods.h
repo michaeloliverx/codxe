@@ -6,6 +6,11 @@ namespace iw3
 {
 namespace mp
 {
+void Scr_PrecacheString_Stub();
+void HECmd_SetText_Stub(scr_entref_t entref);
+void InitializeHudElemMethods();
+void ShutdownHudElemMethods();
+
 void PlayerCmd_ButtonPressed(scr_entref_t entref);
 void PlayerCmd_SprintButtonPressed(scr_entref_t entref);
 void PlayerCmd_LeanLeftButtonPressed(scr_entref_t entref);

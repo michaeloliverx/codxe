@@ -97,7 +97,6 @@
       <ClCompile Include="src\game\iw3\mp\components\gsc.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_functions.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\gsc_hud_elem.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_methods.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\image_loader.cpp" />
