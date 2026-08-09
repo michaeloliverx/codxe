@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "components/clipmap.h"
-#include "components/g_scr_main.h"
+#include "components/gsc.h"
 #include "components/gsc_fields.h"
 #include "components/scr_parser.h"
 #include "components/events.h"
@@ -17,8 +17,8 @@ QOS_MP_Plugin::QOS_MP_Plugin()
     RegisterModule(new Config());
     RegisterModule(new Events());
     RegisterModule(new clipmap());
-    RegisterModule(new g_scr_main());
-    RegisterModule(new gsc_fields());
+    RegisterModule(new GSC());
+    RegisterModule(new GSCFields());
     RegisterModule(new scr_parser());
 }
 

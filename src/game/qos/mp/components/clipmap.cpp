@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "events.h"
-#include "g_scr_main.h"
 #include "clipmap.h"
 
 static const int SURFACE_FLAG_PLAYERCLIP = 0x10000;
@@ -177,8 +176,6 @@ clipmap::clipmap()
                 HandleclipmapChange();
             }
         });
-
-    Scr_AddMethod("disableplayerclipontouchingbrushes", PlayerCmd_DisablePlayerClipOnTouchingBrushes, BUILTIN_ANY);
 }
 
 clipmap::~clipmap()

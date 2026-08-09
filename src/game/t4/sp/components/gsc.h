@@ -6,15 +6,14 @@ namespace t4
 {
 namespace sp
 {
-class g_client_fields : public Module
+class GSC : public Module
 {
   public:
-    g_client_fields();
-    ~g_client_fields();
-
+    GSC();
+    ~GSC();
     const char *get_name() override
     {
-        return "g_client_fields";
+        return "GSC";
     };
 };
 } // namespace sp

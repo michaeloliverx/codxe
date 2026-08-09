@@ -6,15 +6,14 @@ namespace iw3
 {
 namespace mp
 {
-class gsc_hud_elem : public Module
+class GSC : public Module
 {
   public:
-    gsc_hud_elem();
-    ~gsc_hud_elem();
-
+    GSC();
+    ~GSC();
     const char *get_name() override
     {
-        return "gsc_hud_elem";
+        return "GSC";
     };
 };
 } // namespace mp

@@ -2,9 +2,9 @@
 
 #include "pch.h"
 
-namespace qos
+namespace iw4
 {
-namespace mp
+namespace sp
 {
 class GSCFields : public Module
 {
@@ -17,5 +17,5 @@ class GSCFields : public Module
         return "GSCFields";
     };
 };
-} // namespace mp
-} // namespace qos
+} // namespace sp
+} // namespace iw4

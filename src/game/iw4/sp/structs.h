@@ -86,18 +86,25 @@ struct scr_entref_t
 typedef void (*BuiltinFunction)();
 typedef void (*BuiltinMethod)(scr_entref_t);
 
+enum scr_builtin_type_t : __int32
+{
+    BUILTIN_ANY = 0x0,
+    BUILTIN_DEVELOPER_ONLY = 0x1,
+};
+static_assert(sizeof(scr_builtin_type_t) == 4, "");
+
 struct BuiltinFunctionDef
 {
     const char *actionString;
     void (*actionFunc)();
-    int type;
+    scr_builtin_type_t type;
 };
 
 struct BuiltinMethodDef
 {
     const char *actionString;
     void (*actionFunc)(scr_entref_t);
-    int type;
+    scr_builtin_type_t type;
 };
 
 enum fieldtype_t : __int32

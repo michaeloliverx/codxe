@@ -6,11 +6,9 @@
 #include "components/cmds.h"
 #include "components/console.h"
 #include "components/events.h"
-#include "components/g_scr_main.h"
-#include "components/gsc_client_fields.h"
+#include "components/gsc.h"
+#include "components/gsc_fields.h"
 #include "components/gsc_functions.h"
-#include "components/gsc_hud_elem.h"
-#include "components/gsc_methods.h"
 #include "components/image_loader.h"
 #include "components/mpsp.h"
 #include "components/pm.h"
@@ -129,11 +127,9 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new clipmap());
     RegisterModule(new cmds());
     RegisterModule(new console());
-    RegisterModule(new g_scr_main());
-    RegisterModule(new gsc_client_fields());
-    RegisterModule(new gsc_functions());
-    RegisterModule(new gsc_hud_elem());
-    RegisterModule(new gsc_methods());
+    RegisterModule(new GSC());
+    RegisterModule(new GSCFields());
+    RegisterModule(new GSCFunctions());
     RegisterModule(new image_loader());
     RegisterModule(new pm());
     RegisterModule(new mpsp());

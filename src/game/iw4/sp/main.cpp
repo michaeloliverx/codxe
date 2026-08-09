@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "components/cg.h"
 #include "components/clipmap.h"
-#include "components/g_client_fields.h"
-#include "components/g_scr_main.h"
+#include "components/gsc_fields.h"
+#include "components/gsc.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
 #include "main.h"
@@ -36,8 +36,8 @@ IW4_SP_Plugin::IW4_SP_Plugin()
     RegisterModule(new Config());
     RegisterModule(new cg());
     RegisterModule(new clipmap());
-    RegisterModule(new g_client_fields());
-    RegisterModule(new g_scr_main());
+    RegisterModule(new GSCFields());
+    RegisterModule(new GSC());
     RegisterModule(new pm());
     RegisterModule(new scr_parser());
 }

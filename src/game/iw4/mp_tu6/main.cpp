@@ -5,8 +5,8 @@
 #include "components/console.h"
 #include "components/events.h"
 #include "components/fastfiles.h"
-#include "components/g_client_fields.h"
-#include "components/g_scr_main.h"
+#include "components/gsc_fields.h"
+#include "components/gsc.h"
 #include "components/mr.h"
 #include "components/patches.h"
 #include "components/pm.h"
@@ -29,8 +29,8 @@ IW4_MP_TU6_Plugin::IW4_MP_TU6_Plugin()
     RegisterModule(new clipmap());
     RegisterModule(new cmds());
     RegisterModule(new console());
-    RegisterModule(new g_client_fields());
-    RegisterModule(new g_scr_main());
+    RegisterModule(new GSCFields());
+    RegisterModule(new GSC());
     RegisterModule(new MovementRecorder());
     RegisterModule(new patches());
     RegisterModule(new pm());

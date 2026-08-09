@@ -1,13 +1,12 @@
 #include "pch.h"
-#include "g_scr_main.h"
+#include "gsc.h"
+#include "common/gsc_registry.h"
+#include "clipmap.h"
 
 namespace qos
 {
 namespace mp
 {
-std::vector<BuiltinFunctionDef *> scr_functions;
-std::vector<BuiltinMethodDef *> scr_methods;
-
 int CL_IsKeyPressed(const int localClientNum, const char *keyName)
 {
     const int keynum = Key_StringToKeynum(keyName);
@@ -78,37 +77,34 @@ void GScr_CbufAddText()
     Cbuf_AddText(0, text);
 }
 
-void Scr_AddFunction(const char *name, BuiltinFunction func, scr_builtin_type_t type)
+namespace
 {
-    BuiltinFunctionDef *newFunc = new BuiltinFunctionDef;
-    newFunc->actionString = name;
-    newFunc->actionFunc = func;
-    newFunc->type = type;
-    scr_functions.push_back(newFunc);
-}
+static const gsc::Entry<BuiltinFunction> functions[] = {
+    {"exec", GScr_CbufAddText, BUILTIN_ANY},
+};
 
-void Scr_AddMethod(const char *name, BuiltinMethod func, scr_builtin_type_t type)
-{
-    BuiltinMethodDef *newMethod = new BuiltinMethodDef;
-    newMethod->actionString = name;
-    newMethod->actionFunc = func;
-    newMethod->type = type;
-    scr_methods.push_back(newMethod);
-}
+static const gsc::Entry<BuiltinMethod> methods[] = {
+    {"disableplayerclipontouchingbrushes", clipmap::PlayerCmd_DisablePlayerClipOnTouchingBrushes, BUILTIN_ANY},
+    {"buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY}, // Only works for host buttons
+    {"adsbuttonpressed", PlayerCmd_ADSButtonPressed, BUILTIN_ANY},
+    {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY},
+    {"nextfiretypebuttonpressed", PlayerCmd_NextFireTypeButtonPressed, BUILTIN_ANY},
+    {"sprintbuttonpressed", PlayerCmd_SprintButtonPressed, BUILTIN_ANY},
+    {"setplayervelocity", PlayerCmd_SetPlayerVelocity, BUILTIN_ANY},
+};
+} // namespace
 
 Detour Scr_GetFunction_Detour;
 
 BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_functions.size(); ++i)
+        const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
+        if (function)
         {
-            if (std::strcmp(*pName, scr_functions[i]->actionString) == 0)
-            {
-                *type = scr_functions[i]->type;
-                return scr_functions[i]->actionFunc;
-            }
+            *type = function->type;
+            return function->actionFunc;
         }
     }
 
@@ -121,15 +117,13 @@ Detour Scr_GetMethod_Detour;
 
 BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 {
-    if (pName != nullptr)
+    if (pName)
     {
-        for (size_t i = 0; i < scr_methods.size(); ++i)
+        const gsc::Entry<BuiltinMethod> *method = gsc::Find(*pName, methods);
+        if (method)
         {
-            if (std::strcmp(*pName, scr_methods[i]->actionString) == 0)
-            {
-                *type = scr_methods[i]->type;
-                return scr_methods[i]->actionFunc;
-            }
+            *type = method->type;
+            return method->actionFunc;
         }
     }
 
@@ -138,27 +132,16 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
     return pMethod;
 }
 
-g_scr_main::g_scr_main()
+GSC::GSC()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
 
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
-
-    Scr_AddFunction("exec", GScr_CbufAddText, BUILTIN_ANY);
-
-    Scr_AddMethod("buttonpressed", PlayerCmd_ButtonPressed, BUILTIN_ANY); // Only works for host buttons
-
-    Scr_AddMethod("adsbuttonpressed", PlayerCmd_ADSButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("nextfiretypebuttonpressed", PlayerCmd_NextFireTypeButtonPressed, BUILTIN_ANY);
-    Scr_AddMethod("sprintbuttonpressed", PlayerCmd_SprintButtonPressed, BUILTIN_ANY);
-
-    Scr_AddMethod("setplayervelocity", PlayerCmd_SetPlayerVelocity, BUILTIN_ANY);
 }
 
-g_scr_main::~g_scr_main()
+GSC::~GSC()
 {
     Scr_GetFunction_Detour.Remove();
 

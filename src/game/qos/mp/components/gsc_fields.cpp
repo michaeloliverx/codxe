@@ -104,7 +104,7 @@ void Scr_GetObjectField_Hook(unsigned int classnum, unsigned int entnum, unsigne
     }
 }
 
-gsc_fields::gsc_fields()
+GSCFields::GSCFields()
 {
     GScr_AddFieldsForClient_Detour = Detour(GScr_AddFieldsForClient, GScr_AddFieldsForClient_Hook);
     GScr_AddFieldsForClient_Detour.Install();
@@ -116,7 +116,7 @@ gsc_fields::gsc_fields()
     Scr_GetObjectField_Detour.Install();
 }
 
-gsc_fields::~gsc_fields()
+GSCFields::~GSCFields()
 {
     GScr_AddFieldsForClient_Detour.Remove();
     Scr_SetClientField_Detour.Remove();

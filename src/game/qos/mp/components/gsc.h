@@ -6,15 +6,15 @@ namespace qos
 {
 namespace mp
 {
-class GSCFields : public Module
+
+class GSC : public Module
 {
   public:
-    GSCFields();
-    ~GSCFields();
-
+    GSC();
+    ~GSC();
     const char *get_name() override
     {
-        return "GSCFields";
+        return "GSC";
     };
 };
 } // namespace mp

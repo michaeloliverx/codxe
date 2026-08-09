@@ -6,15 +6,15 @@ namespace iw3
 {
 namespace mp
 {
-class gsc_client_fields : public Module
+class GSCFields : public Module
 {
   public:
-    gsc_client_fields();
-    ~gsc_client_fields();
+    GSCFields();
+    ~GSCFields();
 
     const char *get_name() override
     {
-        return "gsc_client_fields";
+        return "GSCFields";
     };
 };
 } // namespace mp

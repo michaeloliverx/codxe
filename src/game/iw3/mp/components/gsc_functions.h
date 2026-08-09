@@ -6,15 +6,25 @@ namespace iw3
 {
 namespace mp
 {
-class gsc_functions : public Module
+void GScr_CbufAddText();
+void GSCrGetPlayerclipBrushesContainingPoint();
+void GScr_FS_TestFile();
+void GScr_FS_FOpen();
+void GScr_FS_FClose();
+void GScr_FS_ReadLine();
+void GScr_FS_WriteLine();
+void Scr_IsArray_f();
+void GScr_Float();
+
+class GSCFunctions : public Module
 {
   public:
-    gsc_functions();
-    ~gsc_functions();
+    GSCFunctions();
+    ~GSCFunctions();
 
     const char *get_name() override
     {
-        return "gsc_functions";
+        return "GSCFunctions";
     };
 };
 } // namespace mp
