@@ -89,7 +89,7 @@
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
 
       <ClCompile Include="src\game\iw2\mp\components\gsc.cpp" />
-      <ClCompile Include="src\game\iw2\mp\components\project_velocity.cpp" />
+      <ClCompile Include="src\game\iw2\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
 
@@ -218,7 +218,7 @@
       <ClInclude Include="src\game\iw2\sp\structs.h" />
       <ClInclude Include="src\game\iw2\sp\symbols.h" />
 
-      <ClInclude Include="src\game\iw2\mp\components\project_velocity.h" />
+      <ClInclude Include="src\game\iw2\mp\components\pm.h" />
       <ClInclude Include="src\game\iw2\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw2\mp\main.h" />
       <ClInclude Include="src\game\iw2\mp\structs.h" />

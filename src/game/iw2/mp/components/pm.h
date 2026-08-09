@@ -19,16 +19,16 @@ static const uint32_t CallToDummyAddr = 0x82455F74; // Location of calls to unus
 // Forward declaration using float* to avoid array-size decay errors
 void PM_ProjectVelocity_Hook(vec3_t in, vec3_t normal, vec3_t out);
 
-class project_velocity : public Module
+class PlayerMovement : public Module
 {
   public:
-    project_velocity();
-    virtual ~project_velocity();
+    PlayerMovement();
+    virtual ~PlayerMovement();
 
   private:
     void install_patch();
-    project_velocity(const project_velocity &);
-    project_velocity &operator=(const project_velocity &);
+    PlayerMovement(const PlayerMovement &);
+    PlayerMovement &operator=(const PlayerMovement &);
 };
 
 } // namespace mp

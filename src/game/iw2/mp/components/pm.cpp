@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "project_velocity.h"
+#include "pm.h"
 #include <cmath>
 
 namespace iw2
@@ -92,7 +92,7 @@ static uint32_t make_b(uint32_t current, uint32_t target)
     return (18u << 26) | li;
 }
 
-void project_velocity::install_patch()
+void PlayerMovement::install_patch()
 {
     // 1. NOP out the original call to the dummy function
     *(volatile uint32_t *)PV_Config::CallToDummyAddr = NOP_INST;
@@ -127,7 +127,7 @@ void project_velocity::install_patch()
     }
 }
 
-project_velocity::project_velocity()
+PlayerMovement::PlayerMovement()
 {
     Jump_RegisterDvars_Detour = Detour(Jump_RegisterDvars, Jump_RegisterDvars_Hook);
     Jump_RegisterDvars_Detour.Install();
@@ -135,7 +135,7 @@ project_velocity::project_velocity()
     install_patch();
 }
 
-project_velocity::~project_velocity()
+PlayerMovement::~PlayerMovement()
 {
     PM_ProjectVelocity_Detour.Remove();
     Jump_RegisterDvars_Detour.Remove();
