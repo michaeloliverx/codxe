@@ -246,18 +246,13 @@ void SV_ClientThink_Hook(client_t *client, usercmd_s *cmd)
         return;
     }
 
-    BotMovementInfo &bot = g_botai[clientNum];
+    const BotMovementInfo &bot = g_botai[clientNum];
     const playerState_s &ps = level->clients[clientNum].ps;
-
-    // The player's current weapon is temporarily cleared while mantling. A
-    // real client keeps sending its selected weapon in usercmd, so preserve
-    // the last non-empty selection for test clients as well.
-    if (ps.weapCommon.weapon.data != 0)
-        bot.weapon = ps.weapCommon.weapon;
 
     usercmd_s botCmd = {};
     botCmd.serverTime = cmd->serverTime;
     botCmd.buttons = bot.buttons;
+    // Preserve pending scripted selections; playerState lags behind G_SelectWeapon during weapon switches.
     botCmd.weapon = bot.weapon.data != 0 ? bot.weapon : ps.weapCommon.weapon;
     botCmd.offHand = ps.weapCommon.offHand;
     botCmd.forwardmove = bot.hasMove ? bot.forwardMove : 0;
@@ -371,6 +366,8 @@ void PlayerCmd_BotStop(scr_entref_t entref)
     const playerState_s &ps = level->clients[entref.entnum].ps;
     for (int i = 0; i < 3; ++i)
         bot->angles[i] = ps.viewangles[i];
+
+    bot->weapon = ps.weapCommon.weapon;
 }
 
 void PlayerCmd_BotMovement(scr_entref_t entref)
