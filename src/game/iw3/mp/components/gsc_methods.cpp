@@ -104,11 +104,7 @@ void InitializeHudElemMethods()
     Scr_FreeHudElem_Detour = Detour(Scr_FreeHudElem, Scr_FreeHudElem_Hook);
     Scr_FreeHudElem_Detour.Install();
 
-    Events::OnVMShutdown(
-        []()
-        {
-            ZeroMemory(g_isLocStringPrecached, sizeof(g_isLocStringPrecached));
-        });
+    Events::OnVMShutdown([]() { ZeroMemory(g_isLocStringPrecached, sizeof(g_isLocStringPrecached)); });
 }
 
 void ShutdownHudElemMethods()
