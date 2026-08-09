@@ -149,7 +149,7 @@ const GameInfo GAME_INFO[] = {
     },
     {
         0x415607E1,
-        0x45B56A5C,// Mon Jan 22 20 : 52 : 28 2007
+        0x45B56A5C, // Mon Jan 22 20 : 52 : 28 2007
         "codmp_xenonf.xex",
         "NGL MP TU3",
         "Call of Duty: 3 Title Update #3",

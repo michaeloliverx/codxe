@@ -10,8 +10,8 @@ namespace mp
 NGL_MP_Plugin::NGL_MP_Plugin()
 {
     DbgPrint("NGL MP Plugin initialized\n");
-    
-    //install_patch();
+
+    // install_patch();
     RegisterModule(new project_velocity());
 }
 
