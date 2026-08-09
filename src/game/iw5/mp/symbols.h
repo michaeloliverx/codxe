@@ -29,6 +29,8 @@ static auto CG_GameMessage = reinterpret_cast<CG_GameMessage_t>(0x82127BF8);
 static auto CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x82168BB8);
 static auto CL_RegisterFont = reinterpret_cast<CL_RegisterFont_t>(0x82174F88);
 
+static auto Com_InitDvars = reinterpret_cast<Com_InitDvars_t>(0x8229FD90);
+
 static auto DB_FindXAssetEntry = reinterpret_cast<DB_FindXAssetEntry_t>(0x821EE920);
 static auto DB_FindXAssetHeader = reinterpret_cast<DB_FindXAssetHeader_t>(0x821EEBF0);
 static auto DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x821AB560);
@@ -36,6 +38,8 @@ static auto DB_LinkXAssetEntry = reinterpret_cast<DB_LinkXAssetEntry_t>(0x821EF3
 static auto DB_IsXAssetDefault = reinterpret_cast<DB_IsXAssetDefault_t>(0x821EEEB0);
 
 static auto Dvar_FindMalleableVar = reinterpret_cast<Dvar_FindMalleableVar_t>(0x8232E100);
+static auto Dvar_RegisterBool = reinterpret_cast<Dvar_RegisterBool_t>(0x8232F4B8);
+static auto Dvar_RegisterFloat = reinterpret_cast<Dvar_RegisterFloat_t>(0x8232F540);
 
 static auto G_ShutdownGame = reinterpret_cast<G_ShutdownGame_t>(0x82244378);
 
