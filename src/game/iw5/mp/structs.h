@@ -1873,6 +1873,11 @@ union DvarValue
     unsigned __int8 color[4];
 };
 
+enum DvarFlags : unsigned __int16
+{
+    DVAR_FLAG_SERVERINFO = 0x10,
+};
+
 struct dvar_t
 {
     const char *name;
@@ -1946,6 +1951,8 @@ typedef void (*CL_ConsolePrint_t)(LocalClientNum_t localClientNum, int channel, 
                                   unsigned int pixelWidth, int flags);
 typedef Font_s *(*CL_RegisterFont_t)(const char *fontName, int imageTrack);
 
+typedef void (*Com_InitDvars_t)();
+
 typedef XAssetEntry *(*DB_FindXAssetEntry_t)(XAssetType type, const char *name);
 typedef XAssetHeader *(*DB_FindXAssetHeader_t)(XAssetType type, const char *name, int allowCreateDefault);
 typedef XAssetEntry *(*DB_LinkXAssetEntry_t)(XAssetType type, XAssetHeader *header);
@@ -1953,6 +1960,10 @@ typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
 typedef bool (*DB_IsXAssetDefault_t)(XAssetType type, const char *name);
 
 typedef dvar_t *(*Dvar_FindMalleableVar_t)(const char *dvarName);
+typedef dvar_t *(*Dvar_RegisterBool_t)(const char *dvarName, bool value, unsigned __int16 flags,
+                                       const char *description);
+typedef dvar_t *(*Dvar_RegisterFloat_t)(const char *dvarName, double value, double min, double max,
+                                        unsigned __int16 flags, const char *description);
 
 typedef void (*Jump_Start_t)(pmove_t *pm, pml_t *pml, double height);
 
