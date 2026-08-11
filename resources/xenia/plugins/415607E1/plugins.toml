@@ -1,0 +1,8 @@
+title_name = "Call Of Duty 3" # MP TU3
+title_id = "415607E1"         # AV-2017
+#media_id = "2E07093A" # Disc (USA, Europe): https://redump.info/disc/12479/
+
+[[plugin]]
+file = "codxe.xex"
+hash = "C4EA5EACCA7CA7CD" # codmp_xenonf.xex
+is_enabled = true
