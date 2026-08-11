@@ -368,7 +368,7 @@ SVBots::SVBots()
     SV_CalcPings_Detour.Install();
 
     // remove bot check inside of Player_ActivateHoldCmd
-    *(volatile uint32_t *)0x82263658 = 0x60000000;
+    ppc::Nop(0x82263658);
 }
 
 SVBots::~SVBots()

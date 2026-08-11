@@ -105,9 +105,7 @@ void PlayerMovement::install_patch()
     const uint32_t patchAddr = 0x8246E1E0;
     const uint32_t hookTargetAddr = 0x8244C1C8;
     const uint32_t callToHookTargetAddr = 0x82466704;
-    const uint32_t nop = 0x60000000;
-
-    *(volatile uint32_t *)callToHookTargetAddr = nop;
+    ppc::Nop(callToHookTargetAddr);
 
     PM_ProjectVelocity_Detour =
         Detour(reinterpret_cast<void *>(hookTargetAddr), reinterpret_cast<void *>(PM_ProjectVelocity_Hook));

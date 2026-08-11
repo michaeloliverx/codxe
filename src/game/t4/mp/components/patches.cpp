@@ -9,26 +9,26 @@ namespace mp
 void DisableFastfileRsaChecks()
 {
     // DBX_AuthLoad_ValidateHash
-    *(volatile uint32_t *)0x821D7E9C = 0x60000000;
-    *(volatile uint32_t *)0x821D7F94 = 0x60000000;
-    *(volatile uint32_t *)0x821D7FE4 = 0x60000000;
+    ppc::Nop(0x821D7E9C);
+    ppc::Nop(0x821D7F94);
+    ppc::Nop(0x821D7FE4);
 
     // DBX_AuthLoad_ValidateSignature
-    *(volatile uint32_t *)0x821D7EB4 = 0x60000000;
+    ppc::Nop(0x821D7EB4);
 }
 
 void EnableExplosiveKnockback()
 {
     // sub_8220D2D0
     // Patches NO_KNOCKBACK flag check, allowing knockback regardless of flags.
-    *(volatile uint32_t *)0x8220D2E8 = 0x60000000; // NOP replaces bnelr
+    ppc::Nop(0x8220D2E8); // NOP replaces bnelr
 }
 
 void EnableRocketJumping()
 {
     // Weapon_RocketLauncher_Fire
-    *(volatile uint32_t *)0x8225F98C = 0x60000000;
-    *(volatile uint32_t *)0x8225F990 = 0x60000000;
+    ppc::Nop(0x8225F98C);
+    ppc::Nop(0x8225F990);
 }
 
 Patches::Patches()

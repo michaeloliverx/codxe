@@ -44,6 +44,7 @@
 // Common includes
 #include "common/branding.h"
 #include "common/config.h"
+#include "common/ppc.h"
 
 // NGL-specific includes
 #include "game/ngl/mp/main.h"

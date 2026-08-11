@@ -14,8 +14,6 @@ dvar_s *bg_bounces = nullptr;
 Detour Jump_RegisterDvars_Detour;
 Detour PM_ProjectVelocity_Detour;
 
-const uint32_t NOP_INST = 0x60000000;
-
 void Jump_RegisterDvars_Hook()
 {
     Jump_RegisterDvars_Detour.GetOriginal<Jump_RegisterDvars_t>()();
@@ -98,7 +96,7 @@ static uint32_t make_b(uint32_t current, uint32_t target)
 void PlayerMovement::install_patch()
 {
     // 1. NOP out the original call to the dummy function
-    *(volatile uint32_t *)PV_Config::CallToDummyAddr = NOP_INST;
+    ppc::Nop(PV_Config::CallToDummyAddr);
 
     // 2. Initialize the Detour on the DummyAddr
     // This redirects any call to DummyAddr to our PM_ProjectVelocity_Hook
@@ -126,7 +124,7 @@ void PlayerMovement::install_patch()
     // Clear the remaining original instructions
     for (int i = 5; i < 18; i++)
     {
-        patch[i] = NOP_INST;
+        ppc::Nop(PV_Config::PatchAddr + (i * sizeof(uint32_t)));
     }
 }
 

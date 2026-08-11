@@ -10,8 +10,8 @@ void ApplyBounceDepatch()
 {
     // PM_StepSlideMove
     // https://xoxor4d.github.io/research/mw2-bounce/
-    *(volatile uint32_t *)0x8232B250 = 0x60000000;
-    *(volatile uint32_t *)0x8232B254 = 0x60000000;
+    ppc::Nop(0x8232B250);
+    ppc::Nop(0x8232B254);
 }
 
 Detour Weapon_RocketLauncher_Fire_Detour;
