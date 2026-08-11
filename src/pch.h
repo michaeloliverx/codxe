@@ -45,7 +45,10 @@
 #include "common/branding.h"
 #include "common/config.h"
 
+// NGL-specific includes
 #include "game/ngl/mp/main.h"
+#include "game/ngl/mp/structs.h"
+#include "game/ngl/mp/symbols.h"
 
 // IW2-specific includes
 #include "game/iw2/sp/main.h"

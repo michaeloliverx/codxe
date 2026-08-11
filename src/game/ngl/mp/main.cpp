@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "main.h"
-#include "components/project_velocity.h"
+#include "components/pm.h"
 
 namespace ngl
 {
@@ -11,8 +11,7 @@ NGL_MP_Plugin::NGL_MP_Plugin()
 {
     DbgPrint("NGL MP Plugin initialized\n");
 
-    // install_patch();
-    RegisterModule(new project_velocity());
+    RegisterModule(new PlayerMovement());
 }
 
 NGL_MP_Plugin::~NGL_MP_Plugin()

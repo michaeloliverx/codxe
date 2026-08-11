@@ -83,7 +83,7 @@
       <ClCompile Include="src\common\config.cpp" />
 
       <ClCompile Include="src\game\ngl\mp\main.cpp" />
-      <ClCompile Include="src\game\ngl\mp\components\project_velocity.cpp" />
+      <ClCompile Include="src\game\ngl\mp\components\pm.cpp" />
 
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
@@ -211,7 +211,9 @@
       <ClInclude Include="src\common\config.h" />
 
       <ClInclude Include="src\game\ngl\mp\main.h" />
-      <ClInclude Include="src\game\ngl\mp\components\project-velocity.h" />
+      <ClInclude Include="src\game\ngl\mp\structs.h" />
+      <ClInclude Include="src\game\ngl\mp\symbols.h" />
+      <ClInclude Include="src\game\ngl\mp\components\pm.h" />
 
       <ClInclude Include="src\game\iw2\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw2\sp\main.h" />
