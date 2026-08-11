@@ -7,20 +7,30 @@ namespace t4
 namespace mp
 {
 dvar_s *noclip_brushes = nullptr;
-std::vector<int> brushContents;
 
-void SaveBrushContents()
+enum
 {
-    if (!cm->isInUse)
-    {
-        DbgPrint("SaveBrushContents: cm is not in use\n");
-        return;
-    }
+    MAX_BRUSH_COUNT = USHRT_MAX + 1,
+    BRUSHES_PER_WORD = sizeof(uint32_t) * 8,
+};
+static uint32_t modifiedBrushes[MAX_BRUSH_COUNT / BRUSHES_PER_WORD];
 
-    brushContents.resize(cm->numBrushes, 0);
-    for (int i = 0; i < cm->numBrushes; ++i)
+void ClearModifiedBrushes()
+{
+    memset(modifiedBrushes, 0, sizeof(modifiedBrushes));
+}
+
+bool WasBrushModified(unsigned int index)
+{
+    return (modifiedBrushes[index / BRUSHES_PER_WORD] & (1u << (index % BRUSHES_PER_WORD))) != 0;
+}
+
+void RemoveBrushCollision(unsigned int index)
+{
+    if (cm->brushes[index].contents & 0x10000)
     {
-        brushContents[i] = cm->brushes[i].contents;
+        modifiedBrushes[index / BRUSHES_PER_WORD] |= 1u << (index % BRUSHES_PER_WORD);
+        cm->brushes[index].contents &= ~0x10000;
     }
 }
 
@@ -32,17 +42,15 @@ void RestoreBrushContents()
         return;
     }
 
-    if (brushContents.size() != static_cast<size_t>(cm->numBrushes))
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        DbgPrint("RestoreBrushContents: size mismatch - saved: %zu, current: %d\n", brushContents.size(),
-                 cm->numBrushes);
-        return;
+        if (WasBrushModified(i))
+        {
+            cm->brushes[i].contents |= 0x10000;
+        }
     }
 
-    for (int i = 0; i < cm->numBrushes; ++i)
-    {
-        cm->brushes[i].contents = brushContents[i];
-    }
+    ClearModifiedBrushes();
 }
 
 void RemoveAllBrushCollision()
@@ -53,9 +61,9 @@ void RemoveAllBrushCollision()
         return;
     }
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        cm->brushes[i].contents &= ~0x10000; // Disable collision for all brushes
+        RemoveBrushCollision(i);
     }
 }
 
@@ -65,8 +73,7 @@ void CM_LoadMap_Hook(const char *name)
     // Let the clip map load first
     CM_LoadMap_Detour.GetOriginal<decltype(CM_LoadMap)>()(name);
 
-    // Save the contents of the brushes
-    SaveBrushContents();
+    ClearModifiedBrushes();
 }
 
 std::vector<int> ParseSpaceSeparatedInts(const std::string &str)
@@ -114,7 +121,7 @@ void HandleBrushCollisionChange()
                     DbgPrint("Error: Invalid brush index: %d\n", idx);
                     continue;
                 }
-                cm->brushes[idx].contents &= ~0x10000; // Disable collision
+                RemoveBrushCollision(idx);
             }
         }
     }

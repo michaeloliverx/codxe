@@ -10,17 +10,30 @@ namespace mp
 {
 
 dvar_s *clipmap::noclip_brushes;
-std::vector<int> clipmap::brushContents;
 
-void clipmap::SaveBrushContents()
+enum
 {
-    if (!cm->isInUse)
-        return;
+    MAX_BRUSH_COUNT = USHRT_MAX + 1,
+    BRUSHES_PER_WORD = sizeof(uint32_t) * 8,
+};
+static uint32_t modifiedBrushes[MAX_BRUSH_COUNT / BRUSHES_PER_WORD];
 
-    brushContents.resize(cm->numBrushes, 0);
-    for (int i = 0; i < cm->numBrushes; ++i)
+void ClearModifiedBrushes()
+{
+    memset(modifiedBrushes, 0, sizeof(modifiedBrushes));
+}
+
+bool WasBrushModified(unsigned int index)
+{
+    return (modifiedBrushes[index / BRUSHES_PER_WORD] & (1u << (index % BRUSHES_PER_WORD))) != 0;
+}
+
+void RemoveBrushCollision(unsigned int index)
+{
+    if (cm->brushes[index].contents & SURFACE_FLAG_PLAYERCLIP)
     {
-        brushContents[i] = cm->brushes[i].contents;
+        modifiedBrushes[index / BRUSHES_PER_WORD] |= 1u << (index % BRUSHES_PER_WORD);
+        cm->brushes[index].contents &= ~SURFACE_FLAG_PLAYERCLIP;
     }
 }
 
@@ -29,17 +42,15 @@ void clipmap::RestoreBrushContents()
     if (!cm->isInUse)
         return;
 
-    if (brushContents.size() != static_cast<size_t>(cm->numBrushes))
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        DbgPrint("RestoreBrushContents: size mismatch - saved: %u, current: %d\n",
-                 static_cast<unsigned int>(brushContents.size()), cm->numBrushes);
-        return;
+        if (WasBrushModified(i))
+        {
+            cm->brushes[i].contents |= SURFACE_FLAG_PLAYERCLIP;
+        }
     }
 
-    for (int i = 0; i < cm->numBrushes; ++i)
-    {
-        cm->brushes[i].contents = brushContents[i];
-    }
+    ClearModifiedBrushes();
 }
 
 void clipmap::RemoveAllBrushesContents()
@@ -47,9 +58,9 @@ void clipmap::RemoveAllBrushesContents()
     if (!cm->isInUse)
         return;
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        cm->brushes[i].contents &= ~SURFACE_FLAG_PLAYERCLIP;
+        RemoveBrushCollision(i);
     }
 }
 
@@ -75,9 +86,9 @@ void clipmap::RebuildNoclipBrushesDvar()
     std::ostringstream oss;
     bool first = true;
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        if ((brushContents[i] & SURFACE_FLAG_PLAYERCLIP) && !(cm->brushes[i].contents & SURFACE_FLAG_PLAYERCLIP))
+        if (WasBrushModified(i))
         {
             if (!first)
                 oss << " ";
@@ -115,7 +126,7 @@ void clipmap::HandleclipmapChange()
                 DbgPrint("[clipmap] Error: Invalid brush index: %d\n", idx);
                 continue;
             }
-            cm->brushes[idx].contents &= ~SURFACE_FLAG_PLAYERCLIP;
+            RemoveBrushCollision(idx);
         }
     }
 }
@@ -152,7 +163,7 @@ void clipmap::PlayerCmd_DisablePlayerClipOnTouchingBrushes(scr_entref_t entref)
         }
 
         if (intersects)
-            brush->contents &= ~SURFACE_FLAG_PLAYERCLIP;
+            RemoveBrushCollision(i);
     }
 
     RebuildNoclipBrushesDvar();
@@ -165,7 +176,7 @@ clipmap::clipmap()
         []()
         {
             clipmap::RegisterDvars();
-            SaveBrushContents();
+            ClearModifiedBrushes();
         });
 
     Events::OnCG_DrawActive(

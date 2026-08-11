@@ -8,37 +8,55 @@ namespace mp
 {
 dvar_s *noclip_brushes = nullptr;
 
-static std::array<uint32_t, USHRT_MAX + 1> brushContents;
-
-void SaveBrushContents()
+enum
 {
-    assert(cm->isInUse);
-    assert(static_cast<size_t>(cm->numBrushes) <= brushContents.size());
+    MAX_BRUSH_COUNT = USHRT_MAX + 1,
+    BRUSHES_PER_WORD = sizeof(uint32_t) * 8,
+};
+static uint32_t modifiedBrushes[MAX_BRUSH_COUNT / BRUSHES_PER_WORD];
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+void ClearModifiedBrushes()
+{
+    memset(modifiedBrushes, 0, sizeof(modifiedBrushes));
+}
+
+bool WasBrushModified(unsigned int index)
+{
+    return (modifiedBrushes[index / BRUSHES_PER_WORD] & (1u << (index % BRUSHES_PER_WORD))) != 0;
+}
+
+void RemoveBrushCollision(unsigned int index)
+{
+    if (cm->brushes[index].contents & CONTENTS_PLAYERCLIP)
     {
-        brushContents[i] = cm->brushes[i].contents;
+        modifiedBrushes[index / BRUSHES_PER_WORD] |= 1u << (index % BRUSHES_PER_WORD);
+        cm->brushes[index].contents &= ~CONTENTS_PLAYERCLIP;
     }
 }
 
 void RestoreBrushContents()
 {
     assert(cm->isInUse);
-    assert(static_cast<size_t>(cm->numBrushes) <= brushContents.size());
+    assert(static_cast<size_t>(cm->numBrushes) <= MAX_BRUSH_COUNT);
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        cm->brushes[i].contents = brushContents[i];
+        if (WasBrushModified(i))
+        {
+            cm->brushes[i].contents |= CONTENTS_PLAYERCLIP;
+        }
     }
+
+    ClearModifiedBrushes();
 }
 
 void RemoveAllBrushCollision()
 {
     assert(cm->isInUse);
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        cm->brushes[i].contents &= ~CONTENTS_PLAYERCLIP; // Disable collision for all brushes
+        RemoveBrushCollision(i);
     }
 }
 
@@ -80,7 +98,7 @@ void clipmap::HandleBrushCollisionChange()
                     DbgPrint("Error: Invalid brush index: %d\n", idx);
                     continue;
                 }
-                cm->brushes[idx].contents &= ~CONTENTS_PLAYERCLIP; // Disable collision
+                RemoveBrushCollision(idx);
             }
         }
     }
@@ -94,7 +112,7 @@ clipmap::clipmap()
             noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
                                                  "Space separated list of brushes to disable collision on.");
         });
-    Events::OnCG_Init(SaveBrushContents);
+    Events::OnCG_Init(ClearModifiedBrushes);
     Events::OnCG_DrawActive(clipmap::HandleBrushCollisionChange);
 }
 

@@ -3,7 +3,32 @@
 #include "events.h"
 
 iw4::mp_tu6::dvar_t *noclip_brushes = nullptr;
-std::vector<int> original_brush_contents;
+
+enum
+{
+    MAX_BRUSH_COUNT = USHRT_MAX + 1,
+    BRUSHES_PER_WORD = sizeof(uint32_t) * 8,
+};
+static uint32_t modifiedBrushes[MAX_BRUSH_COUNT / BRUSHES_PER_WORD];
+
+void ClearModifiedBrushes()
+{
+    memset(modifiedBrushes, 0, sizeof(modifiedBrushes));
+}
+
+bool WasBrushModified(unsigned int index)
+{
+    return (modifiedBrushes[index / BRUSHES_PER_WORD] & (1u << (index % BRUSHES_PER_WORD))) != 0;
+}
+
+void RemoveBrushCollision(unsigned int index)
+{
+    if (iw4::mp_tu6::cm->brushContents[index] & CONTENTS_PLAYERCLIP)
+    {
+        modifiedBrushes[index / BRUSHES_PER_WORD] |= 1u << (index % BRUSHES_PER_WORD);
+        iw4::mp_tu6::cm->brushContents[index] &= ~CONTENTS_PLAYERCLIP;
+    }
+}
 
 Detour DB_LinkXAssetEntry1_Detour;
 
@@ -23,15 +48,7 @@ iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetT
 
     if (type == iw4::mp_tu6::ASSET_TYPE_CLIPMAP_MP)
     {
-        // Resize the vector to match the number of brushes
-        original_brush_contents.resize(header->clipMap->numBrushes);
-
-        // Save original contents
-        for (int i = 0; i < header->clipMap->numBrushes; ++i)
-        {
-            original_brush_contents[i] =
-                header->clipMap->brushContents[i]; // Assuming this is the field you want to save
-        }
+        ClearModifiedBrushes();
     }
 
     return entry;
@@ -40,23 +57,25 @@ iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetT
 void RestoreBrushContents()
 {
     assert(iw4::mp_tu6::cm->isInUse);
-    assert(original_brush_contents.size() == static_cast<size_t>(iw4::mp_tu6::cm->numBrushes));
 
-    // Restore original contents
-    for (int i = 0; i < iw4::mp_tu6::cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < iw4::mp_tu6::cm->numBrushes; ++i)
     {
-        iw4::mp_tu6::cm->brushContents[i] = original_brush_contents[i];
+        if (WasBrushModified(i))
+        {
+            iw4::mp_tu6::cm->brushContents[i] |= CONTENTS_PLAYERCLIP;
+        }
     }
+
+    ClearModifiedBrushes();
 }
 
 void RemoveAllBrushCollision()
 {
     assert(iw4::mp_tu6::cm->isInUse);
-    assert(original_brush_contents.size() == static_cast<size_t>(iw4::mp_tu6::cm->numBrushes));
 
-    for (int i = 0; i < iw4::mp_tu6::cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < iw4::mp_tu6::cm->numBrushes; ++i)
     {
-        iw4::mp_tu6::cm->brushContents[i] &= ~CONTENTS_PLAYERCLIP; // Disable player collision
+        RemoveBrushCollision(i);
     }
 }
 
@@ -141,7 +160,6 @@ clipmap::clipmap()
             if (iw4::mp_tu6::R_CheckDvarModified(noclip_brushes))
             {
                 assert(iw4::mp_tu6::cm->isInUse);
-                assert(original_brush_contents.size() == static_cast<size_t>(iw4::mp_tu6::cm->numBrushes));
 
                 std::string value = noclip_brushes->current.string;
 
@@ -166,7 +184,7 @@ clipmap::clipmap()
                                 0, iw4::mp_tu6::va("^1Error: Invalid brush index %d for map", idx));
                             continue;
                         }
-                        iw4::mp_tu6::cm->brushContents[idx] &= ~CONTENTS_PLAYERCLIP;
+                        RemoveBrushCollision(idx);
                     }
                 }
             }
