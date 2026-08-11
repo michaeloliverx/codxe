@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/brush_collision_tracker.h"
 #include "brush_collision.h"
 #include "events.h"
 
@@ -7,20 +8,13 @@ namespace t4
 namespace mp
 {
 dvar_s *noclip_brushes = nullptr;
-std::vector<int> brushContents;
 
-void SaveBrushContents()
+void RemoveBrushCollision(unsigned int index)
 {
-    if (!cm->isInUse)
+    if (cm->brushes[index].contents & 0x10000)
     {
-        DbgPrint("SaveBrushContents: cm is not in use\n");
-        return;
-    }
-
-    brushContents.resize(cm->numBrushes, 0);
-    for (int i = 0; i < cm->numBrushes; ++i)
-    {
-        brushContents[i] = cm->brushes[i].contents;
+        brush_collision_tracker::MarkModified(index);
+        cm->brushes[index].contents &= ~0x10000;
     }
 }
 
@@ -32,17 +26,15 @@ void RestoreBrushContents()
         return;
     }
 
-    if (brushContents.size() != static_cast<size_t>(cm->numBrushes))
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        DbgPrint("RestoreBrushContents: size mismatch - saved: %zu, current: %d\n", brushContents.size(),
-                 cm->numBrushes);
-        return;
+        if (brush_collision_tracker::WasModified(i))
+        {
+            cm->brushes[i].contents |= 0x10000;
+        }
     }
 
-    for (int i = 0; i < cm->numBrushes; ++i)
-    {
-        cm->brushes[i].contents = brushContents[i];
-    }
+    brush_collision_tracker::Clear();
 }
 
 void RemoveAllBrushCollision()
@@ -53,9 +45,9 @@ void RemoveAllBrushCollision()
         return;
     }
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        cm->brushes[i].contents &= ~0x10000; // Disable collision for all brushes
+        RemoveBrushCollision(i);
     }
 }
 
@@ -65,8 +57,7 @@ void CM_LoadMap_Hook(const char *name)
     // Let the clip map load first
     CM_LoadMap_Detour.GetOriginal<decltype(CM_LoadMap)>()(name);
 
-    // Save the contents of the brushes
-    SaveBrushContents();
+    brush_collision_tracker::Clear();
 }
 
 std::vector<int> ParseSpaceSeparatedInts(const std::string &str)
@@ -114,7 +105,7 @@ void HandleBrushCollisionChange()
                     DbgPrint("Error: Invalid brush index: %d\n", idx);
                     continue;
                 }
-                cm->brushes[idx].contents &= ~0x10000; // Disable collision
+                RemoveBrushCollision(idx);
             }
         }
     }

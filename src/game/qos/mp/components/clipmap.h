@@ -21,10 +21,8 @@ class clipmap : public Module
 
   private:
     static dvar_s *noclip_brushes;
-    static std::vector<int> brushContents;
 
     static void RegisterDvars();
-    static void SaveBrushContents();
     static void RestoreBrushContents();
     static void RemoveAllBrushesContents();
     static std::vector<int> ParseSpaceSeparatedInts(const std::string &str);

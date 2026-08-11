@@ -80,6 +80,7 @@
         <PrecompiledHeader>Create</PrecompiledHeader>
       </ClCompile>
 
+      <ClCompile Include="src\common\brush_collision_tracker.cpp" />
       <ClCompile Include="src\common\config.cpp" />
 
       <ClCompile Include="src\game\ngl\mp\main.cpp" />
@@ -208,6 +209,7 @@
       <ClInclude Include="src\pch.h" />
 
       <ClInclude Include="src\common\branding.h" />
+      <ClInclude Include="src\common\brush_collision_tracker.h" />
       <ClInclude Include="src\common\config.h" />
 
       <ClInclude Include="src\game\ngl\mp\main.h" />

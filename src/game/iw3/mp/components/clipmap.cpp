@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/brush_collision_tracker.h"
 #include "events.h"
 #include "clipmap.h"
 
@@ -8,37 +9,37 @@ namespace mp
 {
 dvar_s *noclip_brushes = nullptr;
 
-static std::array<uint32_t, USHRT_MAX + 1> brushContents;
-
-void SaveBrushContents()
+void RemoveBrushCollision(unsigned int index)
 {
-    assert(cm->isInUse);
-    assert(static_cast<size_t>(cm->numBrushes) <= brushContents.size());
-
-    for (int i = 0; i < cm->numBrushes; ++i)
+    if (cm->brushes[index].contents & CONTENTS_PLAYERCLIP)
     {
-        brushContents[i] = cm->brushes[i].contents;
+        brush_collision_tracker::MarkModified(index);
+        cm->brushes[index].contents &= ~CONTENTS_PLAYERCLIP;
     }
 }
 
 void RestoreBrushContents()
 {
     assert(cm->isInUse);
-    assert(static_cast<size_t>(cm->numBrushes) <= brushContents.size());
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        cm->brushes[i].contents = brushContents[i];
+        if (brush_collision_tracker::WasModified(i))
+        {
+            cm->brushes[i].contents |= CONTENTS_PLAYERCLIP;
+        }
     }
+
+    brush_collision_tracker::Clear();
 }
 
 void RemoveAllBrushCollision()
 {
     assert(cm->isInUse);
 
-    for (int i = 0; i < cm->numBrushes; ++i)
+    for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        cm->brushes[i].contents &= ~CONTENTS_PLAYERCLIP; // Disable collision for all brushes
+        RemoveBrushCollision(i);
     }
 }
 
@@ -80,7 +81,7 @@ void clipmap::HandleBrushCollisionChange()
                     DbgPrint("Error: Invalid brush index: %d\n", idx);
                     continue;
                 }
-                cm->brushes[idx].contents &= ~CONTENTS_PLAYERCLIP; // Disable collision
+                RemoveBrushCollision(idx);
             }
         }
     }
@@ -94,7 +95,7 @@ clipmap::clipmap()
             noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
                                                  "Space separated list of brushes to disable collision on.");
         });
-    Events::OnCG_Init(SaveBrushContents);
+    Events::OnCG_Init(brush_collision_tracker::Clear);
     Events::OnCG_DrawActive(clipmap::HandleBrushCollisionChange);
 }
 
