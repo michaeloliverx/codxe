@@ -24,7 +24,10 @@ void Cvar_RegisterCommands_Hook()
 
 void PM_ProjectVelocity(const vec3_t in, const vec3_t normal, vec3_t out)
 {
-    if (bg_bounces == nullptr || bg_bounces->integer == 0)
+    // IW3 rejects non-walkable step-down traces below this angle before
+    // projecting velocity. A surface this steep is also non-walkable in NGL.
+    const float MIN_BOUNCE_NORMAL = 0.3f;
+    if (bg_bounces == nullptr || bg_bounces->integer == 0 || normal[2] < MIN_BOUNCE_NORMAL)
     {
         PM_ClipVelocity(in, normal, out);
         return;
