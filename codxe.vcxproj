@@ -93,6 +93,7 @@
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
 
+      <ClCompile Include="src\game\iw3\mp\components\assets.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
@@ -107,7 +108,6 @@
       <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\image_loader.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\stats.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\sv_bots.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
@@ -207,6 +207,8 @@
       <!-- Precompiled header -->
       <ClInclude Include="src\pch.h" />
 
+      <ClInclude Include="src\third_party\aria_csv\csv_parser.hpp" />
+
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
 
@@ -226,6 +228,7 @@
       <ClInclude Include="src\game\iw2\mp\structs.h" />
       <ClInclude Include="src\game\iw2\mp\symbols.h" />
 
+      <ClInclude Include="src\game\iw3\mp\components\assets.h" />
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
       <ClInclude Include="src\game\iw3\mp\components\command.h" />
@@ -236,7 +239,6 @@
       <ClInclude Include="src\game\iw3\mp\components\gsc_fields.h" />
       <ClInclude Include="src\game\iw3\mp\components\gsc_methods.h" />
       <ClInclude Include="src\game\iw3\mp\components\pm.h" />
-      <ClInclude Include="src\game\iw3\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw3\mp\components\stats.h" />
       <ClInclude Include="src\game\iw3\mp\main.h" />
       <ClInclude Include="src\game\iw3\mp\structs.h" />
