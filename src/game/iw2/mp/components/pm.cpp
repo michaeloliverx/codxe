@@ -79,20 +79,6 @@ void PM_ProjectVelocity_Hook(vec3_t in, vec3_t normal, vec3_t out)
     out[2] = in[2];
 }
 
-// Simple helper to build the branch-link (bl) instruction
-static uint32_t make_bl(uint32_t current, uint32_t target)
-{
-    uint32_t li = (target - current) & 0x03FFFFFC;
-    return (18u << 26) | li | 1u;
-}
-
-// Simple helper to build the unconditional branch (b) instruction
-static uint32_t make_b(uint32_t current, uint32_t target)
-{
-    uint32_t li = (target - current) & 0x03FFFFFC;
-    return (18u << 26) | li;
-}
-
 void PlayerMovement::install_patch()
 {
     // 1. NOP out the original call to the dummy function
@@ -114,12 +100,12 @@ void PlayerMovement::install_patch()
 
     // Call the hooked DummyAddr (where our Detour is waiting)
     uint32_t blAddr = PV_Config::PatchAddr + (3 * 4);
-    patch[3] = make_bl(blAddr, PV_Config::DummyAddr);
+    ppc::BranchLink(blAddr, PV_Config::DummyAddr);
 
     // Jump past the rest of the original logic (18 instructions total)
     uint32_t bAddr = PV_Config::PatchAddr + (4 * 4);
     uint32_t targetAddr = PV_Config::PatchAddr + (18 * 4);
-    patch[4] = make_b(bAddr, targetAddr);
+    ppc::Branch(bAddr, targetAddr);
 
     // Clear the remaining original instructions
     for (int i = 5; i < 18; i++)
