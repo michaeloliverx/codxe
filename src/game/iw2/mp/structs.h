@@ -5,6 +5,36 @@ namespace iw2
 namespace mp
 {
 
+enum DvarFlags : unsigned __int16
+{
+    DVAR_FLAG_NONE = 0x0,
+    DVAR_FLAG_SERVERINFO = 0x100,
+};
+
+enum DvarType : unsigned __int8
+{
+    DVAR_TYPE_BOOL = 0,
+};
+
+union DvarValue
+{
+    bool enabled;
+    int integer;
+    unsigned int unsignedInt;
+    float value;
+    const char *string;
+};
+
+struct dvar_s
+{
+    const char *name;
+    unsigned __int16 flags;
+    DvarType type;
+    bool modified;
+    DvarValue current;
+};
+static_assert(offsetof(dvar_s, current) == 0x8, "");
+
 // TODO: TBC...
 enum pmflags_t : __int32
 {

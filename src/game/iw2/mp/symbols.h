@@ -18,6 +18,13 @@ static const int PLAYER_METHODS_COUNT = 59;
 
 static const scr_const_t *scr_const = reinterpret_cast<scr_const_t *>(0x8358EF08);
 
+typedef dvar_s *(*Dvar_RegisterVariant_t)(const char *dvarName, DvarType type, DvarFlags flags, unsigned int value,
+                                          unsigned int domain);
+static Dvar_RegisterVariant_t Dvar_RegisterVariant = reinterpret_cast<Dvar_RegisterVariant_t>(0x8230BFB0);
+
+typedef void (*Jump_RegisterDvars_t)();
+static Jump_RegisterDvars_t Jump_RegisterDvars = reinterpret_cast<Jump_RegisterDvars_t>(0x8246AFB8);
+
 typedef void (*Cbuf_AddText_t)(const char *text);
 static Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x82370100);
 

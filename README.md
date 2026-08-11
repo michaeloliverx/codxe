@@ -23,6 +23,7 @@ To run CoD Xe, you will need one of the following:
 | Game                                 | Title Update | Singleplayer | Multiplayer | Supported Region                                |
 | ------------------------------------ | ------------ | ------------ | ----------- | ----------------------------------------------- |
 | Call of Duty 2 (IW2)                 | TU3          | Yes          | Yes         | `Call of Duty 2 (USA, Europe)`                  |
+| Call of Duty 3 (NGL)                 | TU3          | No           | Yes         | `Call of Duty 3 (USA, Europe)`                  |
 | Call of Duty 4: Modern Warfare (IW3) | TU4          | Yes          | Yes         | `Call of Duty 4 - Modern Warfare (USA, Europe)` |
 | 007: Quantum of Solace               | TU2          | Yes          | Yes         | `007 - Quantum of Solace (USA, Europe) (En,Fr)` |
 | Call of Duty: World at War (T4)      | TU7          | Yes          | Yes         | `Call of Duty - World at War (USA, Europe)`     |

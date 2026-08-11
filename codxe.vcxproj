@@ -82,10 +82,14 @@
 
       <ClCompile Include="src\common\config.cpp" />
 
+      <ClCompile Include="src\game\ngl\mp\main.cpp" />
+      <ClCompile Include="src\game\ngl\mp\components\pm.cpp" />
+
       <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
 
       <ClCompile Include="src\game\iw2\mp\components\gsc.cpp" />
+      <ClCompile Include="src\game\iw2\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
 
@@ -206,11 +210,17 @@
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\config.h" />
 
+      <ClInclude Include="src\game\ngl\mp\main.h" />
+      <ClInclude Include="src\game\ngl\mp\structs.h" />
+      <ClInclude Include="src\game\ngl\mp\symbols.h" />
+      <ClInclude Include="src\game\ngl\mp\components\pm.h" />
+
       <ClInclude Include="src\game\iw2\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw2\sp\main.h" />
       <ClInclude Include="src\game\iw2\sp\structs.h" />
       <ClInclude Include="src\game\iw2\sp\symbols.h" />
 
+      <ClInclude Include="src\game\iw2\mp\components\pm.h" />
       <ClInclude Include="src\game\iw2\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw2\mp\main.h" />
       <ClInclude Include="src\game\iw2\mp\structs.h" />
