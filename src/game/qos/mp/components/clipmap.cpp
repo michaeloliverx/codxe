@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/brush_collision_tracker.h"
 #include "events.h"
 #include "clipmap.h"
 
@@ -11,28 +12,11 @@ namespace mp
 
 dvar_s *clipmap::noclip_brushes;
 
-enum
-{
-    MAX_BRUSH_COUNT = USHRT_MAX + 1,
-    BRUSHES_PER_WORD = sizeof(uint32_t) * 8,
-};
-static uint32_t modifiedBrushes[MAX_BRUSH_COUNT / BRUSHES_PER_WORD];
-
-void ClearModifiedBrushes()
-{
-    memset(modifiedBrushes, 0, sizeof(modifiedBrushes));
-}
-
-bool WasBrushModified(unsigned int index)
-{
-    return (modifiedBrushes[index / BRUSHES_PER_WORD] & (1u << (index % BRUSHES_PER_WORD))) != 0;
-}
-
 void RemoveBrushCollision(unsigned int index)
 {
     if (cm->brushes[index].contents & SURFACE_FLAG_PLAYERCLIP)
     {
-        modifiedBrushes[index / BRUSHES_PER_WORD] |= 1u << (index % BRUSHES_PER_WORD);
+        brush_collision_tracker::MarkModified(index);
         cm->brushes[index].contents &= ~SURFACE_FLAG_PLAYERCLIP;
     }
 }
@@ -44,13 +28,13 @@ void clipmap::RestoreBrushContents()
 
     for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        if (WasBrushModified(i))
+        if (brush_collision_tracker::WasModified(i))
         {
             cm->brushes[i].contents |= SURFACE_FLAG_PLAYERCLIP;
         }
     }
 
-    ClearModifiedBrushes();
+    brush_collision_tracker::Clear();
 }
 
 void clipmap::RemoveAllBrushesContents()
@@ -88,7 +72,7 @@ void clipmap::RebuildNoclipBrushesDvar()
 
     for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        if (WasBrushModified(i))
+        if (brush_collision_tracker::WasModified(i))
         {
             if (!first)
                 oss << " ";
@@ -176,7 +160,7 @@ clipmap::clipmap()
         []()
         {
             clipmap::RegisterDvars();
-            ClearModifiedBrushes();
+            brush_collision_tracker::Clear();
         });
 
     Events::OnCG_DrawActive(

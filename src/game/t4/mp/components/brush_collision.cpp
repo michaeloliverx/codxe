@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/brush_collision_tracker.h"
 #include "brush_collision.h"
 #include "events.h"
 
@@ -8,28 +9,11 @@ namespace mp
 {
 dvar_s *noclip_brushes = nullptr;
 
-enum
-{
-    MAX_BRUSH_COUNT = USHRT_MAX + 1,
-    BRUSHES_PER_WORD = sizeof(uint32_t) * 8,
-};
-static uint32_t modifiedBrushes[MAX_BRUSH_COUNT / BRUSHES_PER_WORD];
-
-void ClearModifiedBrushes()
-{
-    memset(modifiedBrushes, 0, sizeof(modifiedBrushes));
-}
-
-bool WasBrushModified(unsigned int index)
-{
-    return (modifiedBrushes[index / BRUSHES_PER_WORD] & (1u << (index % BRUSHES_PER_WORD))) != 0;
-}
-
 void RemoveBrushCollision(unsigned int index)
 {
     if (cm->brushes[index].contents & 0x10000)
     {
-        modifiedBrushes[index / BRUSHES_PER_WORD] |= 1u << (index % BRUSHES_PER_WORD);
+        brush_collision_tracker::MarkModified(index);
         cm->brushes[index].contents &= ~0x10000;
     }
 }
@@ -44,13 +28,13 @@ void RestoreBrushContents()
 
     for (unsigned int i = 0; i < cm->numBrushes; ++i)
     {
-        if (WasBrushModified(i))
+        if (brush_collision_tracker::WasModified(i))
         {
             cm->brushes[i].contents |= 0x10000;
         }
     }
 
-    ClearModifiedBrushes();
+    brush_collision_tracker::Clear();
 }
 
 void RemoveAllBrushCollision()
@@ -73,7 +57,7 @@ void CM_LoadMap_Hook(const char *name)
     // Let the clip map load first
     CM_LoadMap_Detour.GetOriginal<decltype(CM_LoadMap)>()(name);
 
-    ClearModifiedBrushes();
+    brush_collision_tracker::Clear();
 }
 
 std::vector<int> ParseSpaceSeparatedInts(const std::string &str)

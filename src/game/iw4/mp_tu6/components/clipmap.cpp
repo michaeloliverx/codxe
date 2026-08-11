@@ -1,31 +1,15 @@
 #include "pch.h"
+#include "common/brush_collision_tracker.h"
 #include "clipmap.h"
 #include "events.h"
 
 iw4::mp_tu6::dvar_t *noclip_brushes = nullptr;
 
-enum
-{
-    MAX_BRUSH_COUNT = USHRT_MAX + 1,
-    BRUSHES_PER_WORD = sizeof(uint32_t) * 8,
-};
-static uint32_t modifiedBrushes[MAX_BRUSH_COUNT / BRUSHES_PER_WORD];
-
-void ClearModifiedBrushes()
-{
-    memset(modifiedBrushes, 0, sizeof(modifiedBrushes));
-}
-
-bool WasBrushModified(unsigned int index)
-{
-    return (modifiedBrushes[index / BRUSHES_PER_WORD] & (1u << (index % BRUSHES_PER_WORD))) != 0;
-}
-
 void RemoveBrushCollision(unsigned int index)
 {
     if (iw4::mp_tu6::cm->brushContents[index] & CONTENTS_PLAYERCLIP)
     {
-        modifiedBrushes[index / BRUSHES_PER_WORD] |= 1u << (index % BRUSHES_PER_WORD);
+        brush_collision_tracker::MarkModified(index);
         iw4::mp_tu6::cm->brushContents[index] &= ~CONTENTS_PLAYERCLIP;
     }
 }
@@ -48,7 +32,7 @@ iw4::mp_tu6::XAssetEntryPoolEntry *DB_LinkXAssetEntry1_Hook(iw4::mp_tu6::XAssetT
 
     if (type == iw4::mp_tu6::ASSET_TYPE_CLIPMAP_MP)
     {
-        ClearModifiedBrushes();
+        brush_collision_tracker::Clear();
     }
 
     return entry;
@@ -60,13 +44,13 @@ void RestoreBrushContents()
 
     for (unsigned int i = 0; i < iw4::mp_tu6::cm->numBrushes; ++i)
     {
-        if (WasBrushModified(i))
+        if (brush_collision_tracker::WasModified(i))
         {
             iw4::mp_tu6::cm->brushContents[i] |= CONTENTS_PLAYERCLIP;
         }
     }
 
-    ClearModifiedBrushes();
+    brush_collision_tracker::Clear();
 }
 
 void RemoveAllBrushCollision()
