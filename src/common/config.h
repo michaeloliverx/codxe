@@ -21,15 +21,16 @@ class Config : public Module
         return "Config";
     }
 
-    static std::string active_mod;
-    static std::string mod_base_path;
     static bool dump_rawfile;
     static bool dump_map_ents;
 
-    static std::string GetModBasePath();
-    static const char *GetModBasePathCStr();
+    static const char *GetActiveMod();
+    static const char *GetModBasePath();
 
   private:
+    static char active_mod[MAX_PATH];
+    static char mod_base_path[MAX_PATH];
+
     bool LoadFromJson(const char *jsonBuffer, DWORD bufferSize);
     bool LoadFromFile(const char *path);
 };
