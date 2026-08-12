@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/endian.h"
 #include "common/config.h"
 #include "command.h"
 #include "image_loader.h"
@@ -45,7 +46,7 @@ const uint32_t DDSCAPS2_CUBEMAP_ALL_FACES = DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS
                                             DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
                                             DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ;
 
-// DDS Header Structure (with inline endian swapping)
+// DDS Header Structure
 struct DDSHeader
 {
     uint32_t magic;
@@ -83,35 +84,34 @@ struct DDSImage
     std::vector<uint8_t> data;
 };
 
-// Function to swap all necessary fields from little-endian to big-endian
 void SwapDDSHeaderEndian(DDSHeader &header)
 {
-    header.magic = _byteswap_ulong(header.magic);
-    header.size = _byteswap_ulong(header.size);
-    header.flags = _byteswap_ulong(header.flags);
-    header.height = _byteswap_ulong(header.height);
-    header.width = _byteswap_ulong(header.width);
-    header.pitchOrLinearSize = _byteswap_ulong(header.pitchOrLinearSize);
-    header.depth = _byteswap_ulong(header.depth);
-    header.mipMapCount = _byteswap_ulong(header.mipMapCount);
+    header.magic = endian::ByteSwap(header.magic);
+    header.size = endian::ByteSwap(header.size);
+    header.flags = endian::ByteSwap(header.flags);
+    header.height = endian::ByteSwap(header.height);
+    header.width = endian::ByteSwap(header.width);
+    header.pitchOrLinearSize = endian::ByteSwap(header.pitchOrLinearSize);
+    header.depth = endian::ByteSwap(header.depth);
+    header.mipMapCount = endian::ByteSwap(header.mipMapCount);
 
     for (int i = 0; i < 11; i++)
-        header.reserved1[i] = _byteswap_ulong(header.reserved1[i]);
+        header.reserved1[i] = endian::ByteSwap(header.reserved1[i]);
 
-    header.pixelFormat.size = _byteswap_ulong(header.pixelFormat.size);
-    header.pixelFormat.flags = _byteswap_ulong(header.pixelFormat.flags);
-    header.pixelFormat.fourCC = _byteswap_ulong(header.pixelFormat.fourCC);
-    header.pixelFormat.rgbBitCount = _byteswap_ulong(header.pixelFormat.rgbBitCount);
-    header.pixelFormat.rBitMask = _byteswap_ulong(header.pixelFormat.rBitMask);
-    header.pixelFormat.gBitMask = _byteswap_ulong(header.pixelFormat.gBitMask);
-    header.pixelFormat.bBitMask = _byteswap_ulong(header.pixelFormat.bBitMask);
-    header.pixelFormat.aBitMask = _byteswap_ulong(header.pixelFormat.aBitMask);
+    header.pixelFormat.size = endian::ByteSwap(header.pixelFormat.size);
+    header.pixelFormat.flags = endian::ByteSwap(header.pixelFormat.flags);
+    header.pixelFormat.fourCC = endian::ByteSwap(header.pixelFormat.fourCC);
+    header.pixelFormat.rgbBitCount = endian::ByteSwap(header.pixelFormat.rgbBitCount);
+    header.pixelFormat.rBitMask = endian::ByteSwap(header.pixelFormat.rBitMask);
+    header.pixelFormat.gBitMask = endian::ByteSwap(header.pixelFormat.gBitMask);
+    header.pixelFormat.bBitMask = endian::ByteSwap(header.pixelFormat.bBitMask);
+    header.pixelFormat.aBitMask = endian::ByteSwap(header.pixelFormat.aBitMask);
 
-    header.caps = _byteswap_ulong(header.caps);
-    header.caps2 = _byteswap_ulong(header.caps2);
-    header.caps3 = _byteswap_ulong(header.caps3);
-    header.caps4 = _byteswap_ulong(header.caps4);
-    header.reserved2 = _byteswap_ulong(header.reserved2);
+    header.caps = endian::ByteSwap(header.caps);
+    header.caps2 = endian::ByteSwap(header.caps2);
+    header.caps3 = endian::ByteSwap(header.caps3);
+    header.caps4 = endian::ByteSwap(header.caps4);
+    header.reserved2 = endian::ByteSwap(header.reserved2);
 }
 
 DDSImage ReadDDSFile(const std::string &filepath)
@@ -133,7 +133,7 @@ DDSImage ReadDDSFile(const std::string &filepath)
     }
 
     // Swap only the magic number to big-endian for proper validation
-    uint32_t magicSwapped = _byteswap_ulong(ddsImage.header.magic);
+    uint32_t magicSwapped = endian::ByteSwap(ddsImage.header.magic);
 
     if (magicSwapped != 0x20534444) // 'DDS ' in big-endian
     {
@@ -338,53 +338,53 @@ bool BuildDDSHeader(DDSHeader *header, uint32_t width, uint32_t height, uint32_t
         caps |= DDSCAPS_COMPLEX | DDSCAPS_MIPMAP;
     }
 
-    header->magic = _byteswap_ulong(DDS_MAGIC);
-    header->size = _byteswap_ulong(DDS_HEADER_SIZE);
-    header->flags = _byteswap_ulong(flags);
-    header->height = _byteswap_ulong(height);
-    header->width = _byteswap_ulong(width);
-    header->pitchOrLinearSize = _byteswap_ulong(linearSize);
-    header->depth = _byteswap_ulong(depth);
-    header->mipMapCount = _byteswap_ulong(mipCount);
-    header->pixelFormat.size = _byteswap_ulong(DDS_PIXEL_FORMAT_SIZE);
-    header->caps = _byteswap_ulong(caps);
+    header->magic = endian::ByteSwap(DDS_MAGIC);
+    header->size = endian::ByteSwap(DDS_HEADER_SIZE);
+    header->flags = endian::ByteSwap(flags);
+    header->height = endian::ByteSwap(height);
+    header->width = endian::ByteSwap(width);
+    header->pitchOrLinearSize = endian::ByteSwap(linearSize);
+    header->depth = endian::ByteSwap(depth);
+    header->mipMapCount = endian::ByteSwap(mipCount);
+    header->pixelFormat.size = endian::ByteSwap(DDS_PIXEL_FORMAT_SIZE);
+    header->caps = endian::ByteSwap(caps);
 
     switch (format)
     {
     case GPUTEXTUREFORMAT_DXT1:
-        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
-        header->pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
+        header->pixelFormat.flags = endian::ByteSwap(DDPF_FOURCC);
+        header->pixelFormat.fourCC = endian::ByteSwap(DXT1_FOURCC);
         break;
     case GPUTEXTUREFORMAT_DXT2_3:
-        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
-        header->pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
+        header->pixelFormat.flags = endian::ByteSwap(DDPF_FOURCC);
+        header->pixelFormat.fourCC = endian::ByteSwap(DXT3_FOURCC);
         break;
     case GPUTEXTUREFORMAT_DXT4_5:
-        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
-        header->pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
+        header->pixelFormat.flags = endian::ByteSwap(DDPF_FOURCC);
+        header->pixelFormat.fourCC = endian::ByteSwap(DXT5_FOURCC);
         break;
     case GPUTEXTUREFORMAT_DXN:
-        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
-        header->pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
+        header->pixelFormat.flags = endian::ByteSwap(DDPF_FOURCC);
+        header->pixelFormat.fourCC = endian::ByteSwap(DXN_FOURCC);
         break;
     case GPUTEXTUREFORMAT_8:
-        header->pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE);
-        header->pixelFormat.rgbBitCount = _byteswap_ulong(8);
-        header->pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
+        header->pixelFormat.flags = endian::ByteSwap(DDPF_LUMINANCE);
+        header->pixelFormat.rgbBitCount = endian::ByteSwap(8u);
+        header->pixelFormat.rBitMask = endian::ByteSwap(0x000000FFu);
         break;
     case GPUTEXTUREFORMAT_8_8:
-        header->pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
-        header->pixelFormat.rgbBitCount = _byteswap_ulong(16);
-        header->pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
-        header->pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
+        header->pixelFormat.flags = endian::ByteSwap(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
+        header->pixelFormat.rgbBitCount = endian::ByteSwap(16u);
+        header->pixelFormat.rBitMask = endian::ByteSwap(0x000000FFu);
+        header->pixelFormat.gBitMask = endian::ByteSwap(0x0000FF00u);
         break;
     case GPUTEXTUREFORMAT_8_8_8_8:
-        header->pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
-        header->pixelFormat.rgbBitCount = _byteswap_ulong(32);
-        header->pixelFormat.rBitMask = _byteswap_ulong(0x00FF0000);
-        header->pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
-        header->pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
-        header->pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
+        header->pixelFormat.flags = endian::ByteSwap(DDPF_RGB | DDPF_ALPHAPIXELS);
+        header->pixelFormat.rgbBitCount = endian::ByteSwap(32u);
+        header->pixelFormat.rBitMask = endian::ByteSwap(0x00FF0000u);
+        header->pixelFormat.gBitMask = endian::ByteSwap(0x0000FF00u);
+        header->pixelFormat.bBitMask = endian::ByteSwap(0x000000FFu);
+        header->pixelFormat.aBitMask = endian::ByteSwap(0xFF000000u);
         break;
     default:
         return false;
@@ -392,8 +392,8 @@ bool BuildDDSHeader(DDSHeader *header, uint32_t width, uint32_t height, uint32_t
 
     if (cubemap)
     {
-        header->caps = _byteswap_ulong(caps | DDSCAPS_COMPLEX);
-        header->caps2 = _byteswap_ulong(DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_ALL_FACES);
+        header->caps = endian::ByteSwap(caps | DDSCAPS_COMPLEX);
+        header->caps2 = endian::ByteSwap(DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_ALL_FACES);
     }
 
     return true;

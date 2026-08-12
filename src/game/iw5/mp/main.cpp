@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/endian.h"
 #include "branding.h"
 #include "main.h"
 #include "patches.h"
@@ -154,9 +155,9 @@ bool LoadGSCBin(const char *filename, GSCBin &gsc)
     file.read(reinterpret_cast<char *>(&gsc.bytecodeLen), sizeof(gsc.bytecodeLen));
 
     // Convert from little-endian to big-endian
-    gsc.compressedLen = _byteswap_ulong(gsc.compressedLen);
-    gsc.len = _byteswap_ulong(gsc.len);
-    gsc.bytecodeLen = _byteswap_ulong(gsc.bytecodeLen);
+    gsc.compressedLen = endian::ByteSwap(gsc.compressedLen);
+    gsc.len = endian::ByteSwap(gsc.len);
+    gsc.bytecodeLen = endian::ByteSwap(gsc.bytecodeLen);
 
     // Check if the magic identifier is correct
     if (strncmp(gsc.magic, "GSC\0", 4) != 0)
