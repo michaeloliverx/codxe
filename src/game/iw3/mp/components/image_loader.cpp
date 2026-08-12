@@ -910,7 +910,7 @@ bool Image_Replace_Cube(GfxImage *image, const DDSImage &ddsImage)
 
 void Image_Replace(GfxImage *image)
 {
-    const std::string replacement_base_dir = Config::GetModBasePath() + "\\images";
+    const std::string replacement_base_dir = std::string(Config::GetModBasePath()) + "\\images";
     const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
 
     if (!filesystem::file_exists(replacement_path))
@@ -1073,7 +1073,7 @@ bool R_StreamLoadImageReplacement(const char *filename, unsigned int bytesToRead
         outData == NULL)
         return false;
 
-    const std::string replacementPath = Config::GetModBasePath() + "\\images\\" + image->name + ".dds";
+    const std::string replacementPath = std::string(Config::GetModBasePath()) + "\\images\\" + image->name + ".dds";
     if (!filesystem::file_exists(replacementPath))
         return false;
 

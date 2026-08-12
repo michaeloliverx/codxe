@@ -8,14 +8,14 @@ inline const char *GetBrandingString()
 {
     static char brandingBuffer[256];
 
-    if (Config::active_mod.empty())
+    if (Config::GetActiveMod()[0] == '\0')
     {
         _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 r%d", BUILD_NUMBER);
     }
     else
     {
         _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 r%d\nMod: %s", BUILD_NUMBER,
-                    Config::active_mod.c_str());
+                    Config::GetActiveMod());
     }
 
     return brandingBuffer;

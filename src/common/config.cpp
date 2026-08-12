@@ -14,10 +14,10 @@ const char *MOD_DIR = "game:\\_codxe\\mods";
 const char *DUMP_DIR = "game:\\_codxe\\dump";
 
 // Default values
-std::string Config::active_mod = "";
+char Config::active_mod[MAX_PATH] = {};
 bool Config::dump_rawfile = false;
 bool Config::dump_map_ents = false;
-std::string Config::mod_base_path = "";
+char Config::mod_base_path[MAX_PATH] = {};
 
 namespace
 {
@@ -201,8 +201,8 @@ Config::Config()
 Config::~Config()
 {
     // Reset to defaults on cleanup
-    active_mod = "";
-    mod_base_path = "";
+    active_mod[0] = '\0';
+    mod_base_path[0] = '\0';
     dump_rawfile = false;
     dump_map_ents = false;
     DbgPrint("[codxe][Config] Configuration unloaded\n");
@@ -239,9 +239,7 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
             if (wcscmp(propertyName, L"active_mod") == 0 && jsonTokenType == Json_String)
             {
                 XJSONGetTokenValue(hJsonReader, valueBuffer, ARRAYSIZE(valueBuffer));
-                char narrowValue[256];
-                wcstombs(narrowValue, valueBuffer, sizeof(narrowValue));
-                active_mod = narrowValue;
+                wcstombs_s(nullptr, active_mod, ARRAYSIZE(active_mod), valueBuffer, _TRUNCATE);
             }
             else if (wcscmp(propertyName, L"dump_rawfile") == 0)
             {
@@ -261,15 +259,15 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
     XJSONCloseReader(hJsonReader);
 
     DbgPrint("[codxe][Config] Configuration loaded:\n");
-    DbgPrint("  Active Mod: %s\n", active_mod.c_str());
+    DbgPrint("  Active Mod: %s\n", active_mod);
     DbgPrint("  Dump Raw Scripts: %s\n", dump_rawfile ? "true" : "false");
     DbgPrint("  Dump Map Entities: %s\n", dump_map_ents ? "true" : "false");
 
-    if (!active_mod.empty())
+    if (active_mod[0] != '\0')
     {
         // Config loads before game: is guaranteed to point at the new executable root on hardware.
         // Keep the intended path and let later game-lifecycle file accesses validate it naturally.
-        mod_base_path = std::string(MOD_DIR) + "\\" + active_mod;
+        _snprintf_s(mod_base_path, ARRAYSIZE(mod_base_path), _TRUNCATE, "%s\\%s", MOD_DIR, active_mod);
     }
 
     return true;
@@ -290,12 +288,12 @@ bool Config::LoadFromFile(const char *path)
     return true;
 }
 
-std::string Config::GetModBasePath()
+const char *Config::GetActiveMod()
 {
-    return mod_base_path;
+    return active_mod;
 }
 
-const char *Config::GetModBasePathCStr()
+const char *Config::GetModBasePath()
 {
-    return mod_base_path.c_str();
+    return mod_base_path;
 }

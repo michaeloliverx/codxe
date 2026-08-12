@@ -123,7 +123,7 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename, co
     }
 
     char override_path[MAX_SCRIPT_PATH];
-    if (!BuildScriptPath(override_path, sizeof(override_path), Config::GetModBasePathCStr(), extFilename))
+    if (!BuildScriptPath(override_path, sizeof(override_path), Config::GetModBasePath(), extFilename))
         return callOriginal();
 
     char *buffer = ReadFileToGameTempBuffer(override_path);
