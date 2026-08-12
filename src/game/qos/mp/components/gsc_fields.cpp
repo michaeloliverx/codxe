@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "gsc_fields.h"
-#include "unordered_map"
 
 const unsigned int CLIENT_FIELD_MASK = 0xC000;
 

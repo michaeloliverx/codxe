@@ -64,60 +64,6 @@ void ResetLoadedScripts(bool freeScripts)
     g_gsc_bytecode_arena_used = 0;
 }
 
-void DumpScriptFileAsset(const ScriptFile *scriptfile)
-{
-    std::string filename = "game:\\_dump\\" + std::string(scriptfile->name) + ".gscbin";
-    std::ofstream file(filename.c_str(), std::ios::binary);
-    if (!file.is_open())
-    {
-        DbgPrint("ERROR: Failed to open output file for writing\n");
-        return;
-    }
-    // Write the custom header
-    const char header[] = "GSC\0";
-    file.write(header, sizeof(header) - 1); // Exclude the null terminator
-
-    // Write compressedLen in little-endian
-    uint32_t compressedLenLE = endian::ByteSwap(static_cast<uint32_t>(scriptfile->compressedLen));
-    file.write(reinterpret_cast<const char *>(&compressedLenLE), sizeof(compressedLenLE));
-
-    // Write len in little-endian
-    uint32_t lenLE = endian::ByteSwap(static_cast<uint32_t>(scriptfile->len));
-    file.write(reinterpret_cast<const char *>(&lenLE), sizeof(lenLE));
-
-    // Write bytecodeLen in little-endian
-    uint32_t bytecodeLenLE = endian::ByteSwap(static_cast<uint32_t>(scriptfile->bytecodeLen));
-    file.write(reinterpret_cast<const char *>(&bytecodeLenLE), sizeof(bytecodeLenLE));
-
-    // Write buffer content as byte array[compressedLen]
-    if (scriptfile->buffer && scriptfile->compressedLen > 0)
-    {
-        file.write(scriptfile->buffer, scriptfile->compressedLen);
-    }
-    else
-    {
-        // Write zero bytes if no buffer or invalid length
-        std::vector<char> emptyBuffer(scriptfile->compressedLen, 0);
-        file.write(emptyBuffer.data(), emptyBuffer.size());
-    }
-
-    // Write bytecode as byte array[bytecodeLen]
-    if (scriptfile->bytecode && scriptfile->bytecodeLen > 0)
-    {
-        file.write(reinterpret_cast<const char *>(scriptfile->bytecode), scriptfile->bytecodeLen);
-    }
-    else
-    {
-        // Write zero bytes if no bytecode or invalid length
-        std::vector<char> emptyBytecode(scriptfile->bytecodeLen, 0);
-        file.write(emptyBytecode.data(), emptyBytecode.size());
-    }
-
-    file.close();
-
-    DbgPrint("INFO: Script file binary dumped successfully.\n");
-}
-
 /**
  * GSC Tool binary file format.
  * https://github.com/xensik/gsc-tool?tab=readme-ov-file#file-format

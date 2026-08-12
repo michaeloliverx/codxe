@@ -746,13 +746,6 @@ int DB_AuthLoad_Inflate_Hook(z_stream_s *stream, int flush)
     }
 }
 
-void DB_ReallocXAssetPool(XAssetType type, unsigned int newSize)
-{
-    void *pool_entry = malloc(newSize * DB_GetXAssetTypeSize(type));
-    DB_XAssetPool[type] = pool_entry;
-    g_poolSize[type] = newSize;
-}
-
 mpsp::mpsp()
 {
 
