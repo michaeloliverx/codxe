@@ -322,6 +322,9 @@ static R_ShowDirtyDiscError_t R_ShowDirtyDiscError = reinterpret_cast<R_ShowDirt
 typedef int (*DB_AuthLoad_InflateInit_t)(z_stream_s *stream, bool isSecure, const char *filename);
 static DB_AuthLoad_InflateInit_t DB_AuthLoad_InflateInit = reinterpret_cast<DB_AuthLoad_InflateInit_t>(0x822B2B90);
 
+typedef void (*DB_AuthLoad_InflateEnd_t)(z_stream_s *stream);
+static DB_AuthLoad_InflateEnd_t DB_AuthLoad_InflateEnd = reinterpret_cast<DB_AuthLoad_InflateEnd_t>(0x822B2820);
+
 typedef void (*Load_XAssetListCustom_t)();
 static Load_XAssetListCustom_t Load_XAssetListCustom = reinterpret_cast<Load_XAssetListCustom_t>(0x822B20E0);
 
@@ -339,6 +342,9 @@ static DB_CancelLoadXFile_t DB_CancelLoadXFile = reinterpret_cast<DB_CancelLoadX
 
 typedef int (*inflateInit2__t)(z_stream_s *z, int w, const char *version, int stream_size);
 static inflateInit2__t inflateInit2_ = reinterpret_cast<inflateInit2__t>(0x823527B8);
+
+typedef int (*inflateEnd_t)(z_stream_s *stream);
+static inflateEnd_t inflateEnd = reinterpret_cast<inflateEnd_t>(0x82352720);
 
 typedef int (*DB_AuthLoad_Inflate_t)(z_stream_s *stream, int flush);
 static DB_AuthLoad_Inflate_t DB_AuthLoad_Inflate = reinterpret_cast<DB_AuthLoad_Inflate_t>(0x822B2F70);
