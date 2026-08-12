@@ -64,13 +64,6 @@ void ResetLoadedScripts(bool freeScripts)
     g_gsc_bytecode_arena_used = 0;
 }
 
-// Swap byte order for 32-bit integers
-uint32_t SwapEndian(uint32_t value)
-{
-    return ((value & 0x000000FF) << 24) | ((value & 0x0000FF00) << 8) | ((value & 0x00FF0000) >> 8) |
-           ((value & 0xFF000000) >> 24);
-}
-
 void DumpScriptFileAsset(const ScriptFile *scriptfile)
 {
     std::string filename = "game:\\_dump\\" + std::string(scriptfile->name) + ".gscbin";
@@ -85,15 +78,15 @@ void DumpScriptFileAsset(const ScriptFile *scriptfile)
     file.write(header, sizeof(header) - 1); // Exclude the null terminator
 
     // Write compressedLen in little-endian
-    uint32_t compressedLenLE = SwapEndian(static_cast<uint32_t>(scriptfile->compressedLen));
+    uint32_t compressedLenLE = endian::ByteSwap(static_cast<uint32_t>(scriptfile->compressedLen));
     file.write(reinterpret_cast<const char *>(&compressedLenLE), sizeof(compressedLenLE));
 
     // Write len in little-endian
-    uint32_t lenLE = SwapEndian(static_cast<uint32_t>(scriptfile->len));
+    uint32_t lenLE = endian::ByteSwap(static_cast<uint32_t>(scriptfile->len));
     file.write(reinterpret_cast<const char *>(&lenLE), sizeof(lenLE));
 
     // Write bytecodeLen in little-endian
-    uint32_t bytecodeLenLE = SwapEndian(static_cast<uint32_t>(scriptfile->bytecodeLen));
+    uint32_t bytecodeLenLE = endian::ByteSwap(static_cast<uint32_t>(scriptfile->bytecodeLen));
     file.write(reinterpret_cast<const char *>(&bytecodeLenLE), sizeof(bytecodeLenLE));
 
     // Write buffer content as byte array[compressedLen]
