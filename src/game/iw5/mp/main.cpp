@@ -64,6 +64,11 @@ void ResetLoadedScripts(bool freeScripts)
     g_gsc_bytecode_arena_used = 0;
 }
 
+void IW5_MP_Plugin::OnVMShutdown(bool freeScripts)
+{
+    ResetLoadedScripts(freeScripts);
+}
+
 /**
  * GSC Tool binary file format.
  * https://github.com/xensik/gsc-tool?tab=readme-ov-file#file-format
@@ -206,8 +211,6 @@ IW5_MP_Plugin::IW5_MP_Plugin()
 
     DB_IsXAssetDefault_Detour = Detour(DB_IsXAssetDefault, DB_IsXAssetDefault_Hook);
     DB_IsXAssetDefault_Detour.Install();
-
-    Events::OnVMShutdown(ResetLoadedScripts);
 }
 
 IW5_MP_Plugin::~IW5_MP_Plugin()
