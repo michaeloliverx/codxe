@@ -12,6 +12,9 @@ class pm : public Module
     pm();
     ~pm();
 
+    static void OnDvarInit();
+    static void OnCGDrawActive();
+
     const char *get_name() override
     {
         return "pm";

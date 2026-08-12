@@ -18,6 +18,8 @@ class sv_bots : public Module
     sv_bots();
     ~sv_bots();
 
+    static void OnVMShutdown();
+
     const char *get_name() override
     {
         return "sv_bots";

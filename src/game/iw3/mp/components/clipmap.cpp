@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "common/brush_collision_tracker.h"
-#include "events.h"
 #include "clipmap.h"
 
 namespace iw3
@@ -57,6 +56,17 @@ std::vector<int> ParseSpaceSeparatedInts(const std::string &str)
     return result;
 }
 
+void clipmap::OnDvarInit()
+{
+    noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
+                                         "Space separated list of brushes to disable collision on.");
+}
+
+void clipmap::OnCGInit()
+{
+    brush_collision_tracker::Clear();
+}
+
 void clipmap::HandleBrushCollisionChange()
 {
     if (R_CheckDvarModified(noclip_brushes))
@@ -87,16 +97,13 @@ void clipmap::HandleBrushCollisionChange()
     }
 }
 
+void clipmap::OnCGDrawActive()
+{
+    HandleBrushCollisionChange();
+}
+
 clipmap::clipmap()
 {
-    Events::OnDvarInit(
-        []
-        {
-            noclip_brushes = Dvar_RegisterString("noclip_brushes", "", DVAR_CODINFO,
-                                                 "Space separated list of brushes to disable collision on.");
-        });
-    Events::OnCG_Init(brush_collision_tracker::Clear);
-    Events::OnCG_DrawActive(clipmap::HandleBrushCollisionChange);
 }
 
 clipmap::~clipmap()

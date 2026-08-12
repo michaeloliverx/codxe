@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "events.h"
 #include "sv_bots.h"
 
 namespace iw3
@@ -22,6 +21,11 @@ BotMovementInfo_t g_botai[MAX_CLIENTS];
 static void CleanBotArray()
 {
     ZeroMemory(&g_botai, sizeof(g_botai));
+}
+
+void sv_bots::OnVMShutdown()
+{
+    CleanBotArray();
 }
 
 Detour G_SelectWeaponIndex_Detour;
@@ -341,8 +345,6 @@ sv_bots::sv_bots()
 
     SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Stub);
     SV_CalcPings_Detour.Install();
-
-    Events::OnVMShutdown(CleanBotArray);
 }
 
 sv_bots::~sv_bots()

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "console.h"
 #include "command.h"
-#include "events.h"
 
 namespace iw3
 {
@@ -281,7 +280,6 @@ void CL_Input_Hook(int localClientNum)
 console::console()
 {
     command::add("toggleconsole", Cmd_ToggleConsole_f);
-    Events::OnUIRefresh(console::frame);
 
     CL_Input_Detour = Detour(CL_Input, CL_Input_Hook);
     CL_Input_Detour.Install();
@@ -290,6 +288,11 @@ console::console()
 console::~console()
 {
     CL_Input_Detour.Remove();
+}
+
+void console::OnUIRefresh()
+{
+    frame();
 }
 
 void console::frame()

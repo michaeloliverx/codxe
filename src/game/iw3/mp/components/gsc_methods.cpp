@@ -1,7 +1,6 @@
 // cod4x
 
 #include "pch.h"
-#include "events.h"
 #include "gsc_methods.h"
 
 namespace iw3
@@ -103,13 +102,16 @@ void InitializeHudElemMethods()
 {
     Scr_FreeHudElem_Detour = Detour(Scr_FreeHudElem, Scr_FreeHudElem_Hook);
     Scr_FreeHudElem_Detour.Install();
-
-    Events::OnVMShutdown([]() { ZeroMemory(g_isLocStringPrecached, sizeof(g_isLocStringPrecached)); });
 }
 
 void ShutdownHudElemMethods()
 {
     Scr_FreeHudElem_Detour.Remove();
+}
+
+void ClearHudElemLocalizedStringState()
+{
+    ZeroMemory(g_isLocStringPrecached, sizeof(g_isLocStringPrecached));
 }
 
 int CL_IsKeyPressed(const int localClientNum, const char *keyName)

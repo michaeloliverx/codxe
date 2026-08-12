@@ -12,6 +12,9 @@ class cg : public Module
     cg();
     ~cg();
 
+    static void OnDvarInit();
+    static void OnCGDrawActive();
+
     const char *get_name() override
     {
         return "cg";

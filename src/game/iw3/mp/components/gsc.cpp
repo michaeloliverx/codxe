@@ -94,6 +94,11 @@ GSC::GSC()
     InitializeHudElemMethods();
 }
 
+void GSC::OnVMShutdown()
+{
+    ClearHudElemLocalizedStringState();
+}
+
 GSC::~GSC()
 {
     ShutdownHudElemMethods();
