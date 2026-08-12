@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "console.h"
-#include "events.h"
 
 namespace t4
 {
@@ -296,8 +295,6 @@ void CL_WritePacket_Hook(int localClientNum)
 
 console::console()
 {
-    Events::OnUIRefresh(console::frame);
-
     CL_WritePacket_Detour = Detour(CL_WritePacket, CL_WritePacket_Hook);
     CL_WritePacket_Detour.Install();
 }
@@ -305,6 +302,11 @@ console::console()
 console::~console()
 {
     CL_WritePacket_Detour.Remove();
+}
+
+void console::OnUIRefresh()
+{
+    frame();
 }
 
 void console::frame()

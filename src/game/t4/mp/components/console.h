@@ -13,6 +13,7 @@ class console : public Module
     console();
     ~console();
 
+    static void OnUIRefresh();
     static void frame();
     static void toggle();
     static void close();

@@ -11,6 +11,8 @@ class BrushCollision : public Module
   public:
     BrushCollision();
     ~BrushCollision();
+
+    static void OnDvarInit();
 };
 } // namespace mp
 } // namespace t4

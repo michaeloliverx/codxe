@@ -1,31 +1,44 @@
 #include "pch.h"
 #include "events.h"
 
+#include "brush_collision.h"
+#include "console.h"
+#include "stats.h"
+#include "sv_bots.h"
+
 namespace t4
 {
 namespace mp
 {
+namespace
+{
+typedef void (*EventHandler)();
 
-std::vector<std::function<void()>> Events::dvarinit_callbacks;
-std::vector<std::function<void()>> Events::cmdinit_callbacks;
-std::vector<std::function<void()>> Events::vmshutdown_callbacks;
-std::vector<std::function<void()>> Events::ui_refresh_callbacks;
+const EventHandler dvarInitHandlers[] = {
+    BrushCollision::OnDvarInit,
+};
+
+const EventHandler cmdInitHandlers[] = {
+    stats::OnCmdInit,
+};
+
+const EventHandler vmShutdownHandlers[] = {
+    SVBots::OnVMShutdown,
+};
+
+const EventHandler uiRefreshHandlers[] = {
+    console::OnUIRefresh,
+};
+} // namespace
 
 void Events::Com_InitDvars_Hook()
 {
-    for (auto it = dvarinit_callbacks.begin(); it != dvarinit_callbacks.end(); ++it)
+    for (size_t i = 0; i < ARRAYSIZE(dvarInitHandlers); ++i)
     {
-        (*it)();
+        dvarInitHandlers[i]();
     }
 
-    dvarinit_callbacks.clear();
-
     Com_InitDvars_Detour.GetOriginal<decltype(Com_InitDvars)>()();
-}
-
-void Events::OnDvarInit(const std::function<void()> &callback)
-{
-    dvarinit_callbacks.emplace_back(callback);
 }
 
 Detour Events::Com_InitDvars_Detour;
@@ -34,34 +47,22 @@ void Events::Cmd_Init_Hook()
 {
     Cmd_Init_Detour.GetOriginal<Cmd_Init_t>()();
 
-    for (auto it = cmdinit_callbacks.begin(); it != cmdinit_callbacks.end(); ++it)
+    for (size_t i = 0; i < ARRAYSIZE(cmdInitHandlers); ++i)
     {
-        (*it)();
+        cmdInitHandlers[i]();
     }
-
-    cmdinit_callbacks.clear();
-}
-
-void Events::OnCmdInit(const std::function<void()> &callback)
-{
-    cmdinit_callbacks.emplace_back(callback);
 }
 
 Detour Events::Cmd_Init_Detour;
 
 void *Events::Scr_ShutdownSystem_Hook(scriptInstance_t inst, int sys, int bComplete)
 {
-    for (auto it = vmshutdown_callbacks.begin(); it != vmshutdown_callbacks.end(); ++it)
+    for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
     {
-        (*it)();
+        vmShutdownHandlers[i]();
     }
 
     return Scr_ShutdownSystem_Detour.GetOriginal<Scr_ShutdownSystem_t>()(inst, sys, bComplete);
-}
-
-void Events::OnVMShutdown(const std::function<void()> &callback)
-{
-    vmshutdown_callbacks.emplace_back(callback);
 }
 
 Detour Events::Scr_ShutdownSystem_Detour;
@@ -70,17 +71,12 @@ int Events::UI_Refresh_Hook(int localClientNum)
 {
     const int result = UI_Refresh_Detour.GetOriginal<UI_Refresh_t>()(localClientNum);
 
-    for (auto it = ui_refresh_callbacks.begin(); it != ui_refresh_callbacks.end(); ++it)
+    for (size_t i = 0; i < ARRAYSIZE(uiRefreshHandlers); ++i)
     {
-        (*it)();
+        uiRefreshHandlers[i]();
     }
 
     return result;
-}
-
-void Events::OnUIRefresh(const std::function<void()> &callback)
-{
-    ui_refresh_callbacks.emplace_back(callback);
 }
 
 Detour Events::UI_Refresh_Detour;
@@ -106,11 +102,6 @@ Events::~Events()
     Cmd_Init_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
     UI_Refresh_Detour.Remove();
-
-    dvarinit_callbacks.clear();
-    cmdinit_callbacks.clear();
-    vmshutdown_callbacks.clear();
-    ui_refresh_callbacks.clear();
 }
 
 } // namespace mp

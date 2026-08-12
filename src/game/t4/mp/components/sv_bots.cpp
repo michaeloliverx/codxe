@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "events.h"
 #include "sv_bots.h"
 
 namespace t4
@@ -26,6 +25,11 @@ static char s_pendingBotName[32];
 static void CleanBotArray()
 {
     ZeroMemory(&g_botai, sizeof(g_botai));
+}
+
+void SVBots::OnVMShutdown()
+{
+    CleanBotArray();
 }
 
 static gentity_s *GetPlayerEntity(scr_entref_t entref)
@@ -277,8 +281,6 @@ void PlayerCmd_IsHost(scr_entref_t entref)
 
 SVBots::SVBots()
 {
-    Events::OnVMShutdown(CleanBotArray);
-
     G_SelectWeaponIndex_Detour = Detour(G_SelectWeaponIndex, G_SelectWeaponIndex_Hook);
     G_SelectWeaponIndex_Detour.Install();
 
