@@ -11,12 +11,16 @@ class cj_tas : public Module
   public:
     cj_tas();
     ~cj_tas();
+
+    static void OnDvarInit();
+    static void OnCGDrawActive();
+    static void OnCGInit();
+
     const char *get_name() override
     {
         return "cj_tas";
     };
     static bool TAS_Enabled();
-    static void cj_tas::On_CG_Init();
 };
 } // namespace mp
 } // namespace iw3

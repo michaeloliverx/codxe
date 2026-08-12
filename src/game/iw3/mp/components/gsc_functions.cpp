@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "gsc_functions.h"
-#include "events.h"
 
 namespace iw3
 {
@@ -49,6 +48,11 @@ static void CloseAllScriptFiles()
             memset(&s_scriptFiles[i], 0, sizeof(ScriptFileHandle_t));
         }
     }
+}
+
+void GSCFunctions::OnVMShutdown()
+{
+    CloseAllScriptFiles();
 }
 
 void GScr_FS_TestFile()
@@ -272,7 +276,6 @@ void GScr_Float()
 
 GSCFunctions::GSCFunctions()
 {
-    Events::OnVMShutdown(CloseAllScriptFiles);
 }
 
 GSCFunctions::~GSCFunctions()

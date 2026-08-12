@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "command.h"
-#include "events.h"
 #include "cj_tas.h"
 
 namespace iw3
@@ -367,6 +366,40 @@ void CG_DrawTAS()
     R_AddCmdDrawText("TAS", 5, cgMedia->bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
 }
 
+void cj_tas::OnDvarInit()
+{
+    cj_tas_playback_ignore_weapon =
+        Dvar_RegisterBool("cj_tas_playback_ignore_weapon", false, 0, "Ignore weapon in playback");
+
+    cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
+
+    cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", false, 0, "Enable jump at edge");
+
+    cj_tas_jump_on_rpg_fire =
+        Dvar_RegisterBool("cj_tas_jump_on_rpg_fire", false, 0, "Jump exactly when firing the RPG");
+
+    cj_tas_crouch_on_jump = Dvar_RegisterBool("cj_tas_crouch_on_jump", false, 0, "Enable crouch on jump");
+
+    cj_tas_rpg_lookdown = Dvar_RegisterBool("cj_tas_rpg_lookdown", false, 0, "Enable RPG lookdown");
+    cj_tas_rpg_lookdown_yaw = Dvar_RegisterInt("cj_tas_rpg_lookdown_yaw", 0, -180, 180, 0, "RPG lookdown yaw angle");
+    cj_tas_rpg_lookdown_pitch =
+        Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle");
+}
+
+void cj_tas::OnCGDrawActive()
+{
+    if (TAS_Enabled())
+    {
+        CG_DrawTAS();
+    }
+}
+
+void cj_tas::OnCGInit()
+{
+    // Weapon indexes change every game
+    rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
+}
+
 cj_tas::cj_tas()
 {
     CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
@@ -377,44 +410,6 @@ cj_tas::cj_tas()
     command::add("togglerecord", Cmd_Togglerecord_f);
     command::add("startplayback", Cmd_Startplayback_f);
     command::add("stopplayback", Cmd_Stopplayback_f);
-
-    Events::OnDvarInit(
-        []
-        {
-            cj_tas_playback_ignore_weapon =
-                Dvar_RegisterBool("cj_tas_playback_ignore_weapon", false, 0, "Ignore weapon in playback");
-
-            cj_tas_bhop_auto = Dvar_RegisterBool("cj_tas_bhop_auto", false, 0, "Enable automatic bunny hopping");
-
-            cj_tas_jump_at_edge = Dvar_RegisterBool("cj_tas_jump_at_edge", false, 0, "Enable jump at edge");
-
-            cj_tas_jump_on_rpg_fire =
-                Dvar_RegisterBool("cj_tas_jump_on_rpg_fire", false, 0, "Jump exactly when firing the RPG");
-
-            cj_tas_crouch_on_jump = Dvar_RegisterBool("cj_tas_crouch_on_jump", false, 0, "Enable crouch on jump");
-
-            cj_tas_rpg_lookdown = Dvar_RegisterBool("cj_tas_rpg_lookdown", false, 0, "Enable RPG lookdown");
-            cj_tas_rpg_lookdown_yaw =
-                Dvar_RegisterInt("cj_tas_rpg_lookdown_yaw", 0, -180, 180, 0, "RPG lookdown yaw angle");
-            cj_tas_rpg_lookdown_pitch =
-                Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle");
-        });
-
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (cj_tas::TAS_Enabled())
-            {
-                CG_DrawTAS();
-            }
-        });
-
-    Events::OnCG_Init(
-        []()
-        {
-            // Weapon indexes change every game
-            rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
-        });
 }
 
 cj_tas::~cj_tas()

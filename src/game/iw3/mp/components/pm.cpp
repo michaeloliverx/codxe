@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "events.h"
 #include "pm.h"
 
 namespace iw3
@@ -93,30 +92,28 @@ void DrawFixedFPS()
     R_AddCmdDrawText(buff, 16, cgMedia->bigDevFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
 }
 
+void pm::OnDvarInit()
+{
+    pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", false, DVAR_CODINFO, "Enable multi-bounces");
+
+    // This allows FPS-dependent physics
+    pm_pc_mp_velocity_snap = Dvar_RegisterBool("pm_pc_mp_velocity_snap", false, DVAR_CODINFO,
+                                               "Enable PC Multiplayer style velocity snapping (round to nearest). ");
+
+    pm_fixed_fps_enable = Dvar_RegisterBool("pm_fixed_fps_enable", false, 0, "Enable fixed FPS mode");
+    pm_fixed_fps = Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
+}
+
+void pm::OnCGDrawActive()
+{
+    if (pm_fixed_fps_enable->current.enabled)
+    {
+        DrawFixedFPS();
+    }
+}
+
 pm::pm()
 {
-    Events::OnDvarInit(
-        []
-        {
-            pm_multi_bounce = Dvar_RegisterBool("pm_multi_bounce", false, DVAR_CODINFO, "Enable multi-bounces");
-
-            // This allows FPS-dependent physics
-            pm_pc_mp_velocity_snap =
-                Dvar_RegisterBool("pm_pc_mp_velocity_snap", false, DVAR_CODINFO,
-                                  "Enable PC Multiplayer style velocity snapping (round to nearest). ");
-
-            pm_fixed_fps_enable = Dvar_RegisterBool("pm_fixed_fps_enable", false, 0, "Enable fixed FPS mode");
-            pm_fixed_fps = Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
-        });
-
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (pm_fixed_fps_enable->current.enabled)
-            {
-                DrawFixedFPS();
-            }
-        });
 
     // Requires jump_slowdownEnable to be set to 0
     PM_FoliageSounds_Detour = Detour(PM_FoliageSounds, PM_FoliageSounds_Hook);

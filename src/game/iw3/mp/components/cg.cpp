@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "events.h"
 #include "cj_tas.h"
 #include "cg.h"
 
@@ -143,41 +142,40 @@ void CG_DrawPlayerInfo()
     R_AddCmdDrawText(buff, 256, sharedUiInfo->assets.consoleFont, x, y, 1.0, 1.0, 0.0, colorWhiteRGBA, 0);
 }
 
+void cg::OnDvarInit()
+{
+    // Default to true for idle gun sway
+    // This is the default behavior in the original game.
+    bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, 0, "Idle gun sway");
+
+    Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
+
+    cg_scoreboardLabel_Score = Dvar_RegisterString("cg_scoreboardLabel_Score", "", DVAR_FLAG_NONE,
+                                                   "Override label for 'Score' column on scoreboard");
+
+    cg_scoreboardLabel_Kills = Dvar_RegisterString("cg_scoreboardLabel_Kills", "", DVAR_FLAG_NONE,
+                                                   "Override label for 'Kills' column on scoreboard");
+
+    cg_scoreboardLabel_Assists = Dvar_RegisterString("cg_scoreboardLabel_Assists", "", DVAR_FLAG_NONE,
+                                                     "Override label for 'Assists' column on scoreboard");
+
+    cg_scoreboardLabel_Deaths = Dvar_RegisterString("cg_scoreboardLabel_Deaths", "", DVAR_FLAG_NONE,
+                                                    "Override label for 'Deaths' column on scoreboard");
+
+    cg_draw_player_info =
+        Dvar_RegisterBool("cg_draw_player_info", false, 0, "Draw player info (origin, viewangles, speed) on screen");
+}
+
+void cg::OnCGDrawActive()
+{
+    if (cg_draw_player_info->current.enabled)
+    {
+        CG_DrawPlayerInfo();
+    }
+}
+
 cg::cg()
 {
-    Events::OnDvarInit(
-        []
-        {
-            // Default to true for idle gun sway
-            // This is the default behavior in the original game.
-            bg_bobIdle = Dvar_RegisterBool("bg_bobIdle", true, 0, "Idle gun sway");
-
-            Dvar_RegisterBool("r_drawDynEnts", true, 0, "Draw dynamic entities");
-
-            cg_scoreboardLabel_Score = Dvar_RegisterString("cg_scoreboardLabel_Score", "", DVAR_FLAG_NONE,
-                                                           "Override label for 'Score' column on scoreboard");
-
-            cg_scoreboardLabel_Kills = Dvar_RegisterString("cg_scoreboardLabel_Kills", "", DVAR_FLAG_NONE,
-                                                           "Override label for 'Kills' column on scoreboard");
-
-            cg_scoreboardLabel_Assists = Dvar_RegisterString("cg_scoreboardLabel_Assists", "", DVAR_FLAG_NONE,
-                                                             "Override label for 'Assists' column on scoreboard");
-
-            cg_scoreboardLabel_Deaths = Dvar_RegisterString("cg_scoreboardLabel_Deaths", "", DVAR_FLAG_NONE,
-                                                            "Override label for 'Deaths' column on scoreboard");
-
-            cg_draw_player_info = Dvar_RegisterBool("cg_draw_player_info", false, 0,
-                                                    "Draw player info (origin, viewangles, speed) on screen");
-        });
-
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (cg_draw_player_info->current.enabled)
-            {
-                CG_DrawPlayerInfo();
-            }
-        });
 
     Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
     Menus_OpenByName_Detour.Install();

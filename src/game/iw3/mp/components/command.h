@@ -18,6 +18,7 @@ class command : public Module
     };
 
     static void add(const char *name, void (*callback)());
+    static void OnCmdInit();
 
   private:
     static cmd_function_s *allocate();

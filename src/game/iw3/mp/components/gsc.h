@@ -11,6 +11,9 @@ class GSC : public Module
   public:
     GSC();
     ~GSC();
+
+    static void OnVMShutdown();
+
     const char *get_name() override
     {
         return "GSC";

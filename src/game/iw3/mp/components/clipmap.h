@@ -12,10 +12,16 @@ class clipmap : public Module
     clipmap();
     ~clipmap();
 
+    static void OnDvarInit();
+    static void OnCGInit();
+    static void OnCGDrawActive();
+
     const char *get_name() override
     {
         return "clipmap";
     };
+
+  private:
     static void HandleBrushCollisionChange();
 };
 } // namespace mp

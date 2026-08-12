@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "command.h"
-#include "events.h"
 
 namespace iw3
 {
@@ -10,7 +9,6 @@ std::vector<cmd_function_s *> command::commands;
 
 command::command()
 {
-    Events::OnCmdInit([] { register_all(); });
 }
 
 command::~command()
@@ -30,6 +28,11 @@ void command::add(const char *name, void (*callback)())
     new_command->function = callback;
 
     commands.push_back(new_command);
+}
+
+void command::OnCmdInit()
+{
+    register_all();
 }
 
 cmd_function_s *command::allocate()

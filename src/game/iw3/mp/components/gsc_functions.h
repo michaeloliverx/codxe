@@ -22,6 +22,8 @@ class GSCFunctions : public Module
     GSCFunctions();
     ~GSCFunctions();
 
+    static void OnVMShutdown();
+
     const char *get_name() override
     {
         return "GSCFunctions";
