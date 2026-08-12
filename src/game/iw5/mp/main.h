@@ -12,6 +12,8 @@ class IW5_MP_Plugin : public Plugin
   public:
     IW5_MP_Plugin();
     ~IW5_MP_Plugin();
+
+    static void OnVMShutdown(bool freeScripts);
 };
 } // namespace mp
 } // namespace iw5

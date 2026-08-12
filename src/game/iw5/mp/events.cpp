@@ -1,13 +1,27 @@
 #include "pch.h"
 #include "events.h"
 
+#include "main.h"
+#include "pm.h"
+
 namespace iw5
 {
 namespace mp
 {
+namespace
+{
+typedef void (*EventHandler)();
+typedef void (*VMShutdownHandler)(bool freeScripts);
 
-std::vector<std::function<void()>> Events::com_initdvars_callbacks;
-std::vector<std::function<void(bool)>> Events::vm_shutdown_callbacks;
+const EventHandler dvarInitHandlers[] = {
+    PlayerMovement::OnDvarInit,
+};
+
+const VMShutdownHandler vmShutdownHandlers[] = {
+    IW5_MP_Plugin::OnVMShutdown,
+};
+} // namespace
+
 Detour Events::Com_InitDvars_Detour;
 Detour Events::G_ShutdownGame_Detour;
 
@@ -15,32 +29,21 @@ void Events::Com_InitDvars_Hook()
 {
     Com_InitDvars_Detour.GetOriginal<Com_InitDvars_t>()();
 
-    for (auto it = com_initdvars_callbacks.begin(); it != com_initdvars_callbacks.end(); ++it)
+    for (size_t i = 0; i < ARRAYSIZE(dvarInitHandlers); ++i)
     {
-        (*it)();
+        dvarInitHandlers[i]();
     }
-
-    com_initdvars_callbacks.clear();
 }
 
 void Events::G_ShutdownGame_Hook(int freeScripts)
 {
     G_ShutdownGame_Detour.GetOriginal<G_ShutdownGame_t>()(freeScripts);
 
-    for (auto it = vm_shutdown_callbacks.begin(); it != vm_shutdown_callbacks.end(); ++it)
+    const bool shouldFreeScripts = freeScripts != 0;
+    for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
     {
-        (*it)(freeScripts != 0);
+        vmShutdownHandlers[i](shouldFreeScripts);
     }
-}
-
-void Events::OnDvarInit(const std::function<void()> &callback)
-{
-    com_initdvars_callbacks.emplace_back(callback);
-}
-
-void Events::OnVMShutdown(const std::function<void(bool)> &callback)
-{
-    vm_shutdown_callbacks.emplace_back(callback);
 }
 
 Events::Events()
@@ -56,8 +59,6 @@ Events::~Events()
 {
     Com_InitDvars_Detour.Remove();
     G_ShutdownGame_Detour.Remove();
-    com_initdvars_callbacks.clear();
-    vm_shutdown_callbacks.clear();
 }
 
 } // namespace mp
