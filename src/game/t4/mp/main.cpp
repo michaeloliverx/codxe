@@ -8,7 +8,6 @@
 #include "components/gsc_client_methods.h"
 #include "components/gsc_functions.h"
 #include "components/gsc_loader.h"
-#include "components/image_loader.h"
 #include "components/map.h"
 #include "components/patches.h"
 #include "components/stats.h"
@@ -32,7 +31,6 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new GSCFunctions());
     RegisterModule(new SVBots());
     RegisterModule(new GSCLoader());
-    // RegisterModule(new ImageLoader());
     RegisterModule(new Map());
     RegisterModule(new Patches());
     RegisterModule(new stats());
