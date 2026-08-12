@@ -25,6 +25,9 @@ class Events : public Module
     static Detour CG_Init_Detour;
     static void CG_Init_Hook(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum);
 
+    static Detour Load_DelayStream_Detour;
+    static void Load_DelayStream_Hook();
+
     static Detour Scr_ShutdownSystem_Detour;
     static void Scr_ShutdownSystem_Hook(unsigned __int8 sys);
 

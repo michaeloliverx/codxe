@@ -14,6 +14,7 @@ class image_loader : public Module
     ~image_loader();
 
     static void OnAssetLink(XAsset *asset);
+    static void OnDelayStreamLoad();
 
     const char *get_name() override
     {
