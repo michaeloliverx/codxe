@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "events.h"
 
+#include "assets.h"
 #include "cg.h"
 #include "cj_tas.h"
 #include "clipmap.h"
@@ -8,6 +9,8 @@
 #include "console.h"
 #include "gsc.h"
 #include "gsc_functions.h"
+#include "image_loader.h"
+#include "mpsp.h"
 #include "pm.h"
 #include "sv_bots.h"
 
@@ -18,6 +21,13 @@ namespace mp
 namespace
 {
 typedef void (*EventHandler)();
+typedef void (*AssetLinkHandler)(XAsset *asset);
+
+const AssetLinkHandler assetLinkHandlers[] = {
+    assets::OnAssetLink,
+    mpsp::OnAssetLink,
+    image_loader::OnAssetLink,
+};
 
 const EventHandler cgDrawActiveHandlers[] = {
     cg::OnCGDrawActive,
@@ -130,6 +140,18 @@ void Events::UI_Refresh_Hook(int localClientNum)
 
 Detour Events::UI_Refresh_Detour;
 
+XAssetEntry *Events::DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride)
+{
+    for (size_t i = 0; i < ARRAYSIZE(assetLinkHandlers); ++i)
+    {
+        assetLinkHandlers[i](&newEntry->asset);
+    }
+
+    return DB_LinkXAssetEntry_Detour.GetOriginal<DB_LinkXAssetEntry_t>()(newEntry, allowOverride);
+}
+
+Detour Events::DB_LinkXAssetEntry_Detour;
+
 Events::Events()
 {
     CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
@@ -149,6 +171,9 @@ Events::Events()
 
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
+
+    DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
+    DB_LinkXAssetEntry_Detour.Install();
 }
 
 Events::~Events()
@@ -159,6 +184,7 @@ Events::~Events()
     Com_InitDvars_Detour.Remove();
     Cmd_Init_Detour.Remove();
     UI_Refresh_Detour.Remove();
+    DB_LinkXAssetEntry_Detour.Remove();
 }
 
 } // namespace mp

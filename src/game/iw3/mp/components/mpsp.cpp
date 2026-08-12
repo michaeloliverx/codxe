@@ -61,7 +61,7 @@ bool WriteFile(const std::string &path, const char *data, int size)
     std::ofstream file(normalized.c_str(), std::ios::binary);
     if (!file.is_open())
     {
-        DbgPrint("[IO] Failed to open file for writing: %s\n", normalized.c_str());
+        Com_PrintError(CON_CHANNEL_ERROR, "Failed to open '%s' for writing\n", normalized.c_str());
         return false;
     }
 
@@ -75,7 +75,6 @@ std::string ReadTextFile(const std::string &path)
     std::ifstream file(normalized, std::ios::binary);
     if (!file)
     {
-        DbgPrint("ReadTextFile: Failed to open file: %s\n", normalized.c_str());
         return "";
     }
 
@@ -96,7 +95,6 @@ std::vector<unsigned char> ReadBinaryFile(const std::string &path)
     std::ifstream file(normalized, std::ios::binary);
     if (!file)
     {
-        DbgPrint("[IO] ReadBinaryFile: Failed to open file: %s\n", normalized.c_str());
         return std::vector<unsigned char>();
     }
 
@@ -110,7 +108,7 @@ std::vector<unsigned char> ReadBinaryFile(const std::string &path)
 
     if (!file.good() && !file.eof())
     {
-        DbgPrint("[IO] ReadBinaryFile: Error reading file: %s\n", normalized.c_str());
+        Com_PrintError(CON_CHANNEL_ERROR, "Failed to read '%s'\n", normalized.c_str());
         return std::vector<unsigned char>();
     }
 
@@ -147,8 +145,6 @@ void override_(MapEnts *asset)
         mapents_buffer.clear();
     }
 
-    DbgPrint("Overriding map_ents '%s'\n", asset->name);
-
     mapents_buffer.assign(buffer);
 
     asset->entityString = const_cast<char *>(mapents_buffer.c_str());
@@ -175,8 +171,6 @@ void override_(RawFile *asset)
     {
         return;
     }
-
-    DbgPrint("Overriding rawfile '%s'\n", asset->name);
 
     auto itr = rawfile_buffers.find(asset->name);
     if (itr != rawfile_buffers.end())
@@ -438,30 +432,27 @@ const ZoneOverride ZONE_OVERRIDES[] = {
 
 int g_zoneOverrideIndex = -1;
 
-Detour DB_LinkXAssetEntry_Detour;
-XAssetEntry *DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride)
+void mpsp::OnAssetLink(XAsset *asset)
 {
-    XAsset xasset;
-    xasset.type = newEntry->asset.type;
-    xasset.header = newEntry->asset.header;
+    XAsset xasset = *asset;
 
     if (mpsp::is_sp_map)
     {
-        switch (newEntry->asset.type)
+        switch (asset->type)
         {
         case ASSET_TYPE_MAP_ENTS:
         {
-            Asset::MapEnts_::override_(newEntry->asset.header.mapEnts);
+            Asset::MapEnts_::override_(asset->header.mapEnts);
             break;
         }
         case ASSET_TYPE_RAWFILE:
         {
-            Asset::RawFile_::override_(newEntry->asset.header.rawfile);
+            Asset::RawFile_::override_(asset->header.rawfile);
             break;
         }
         case ASSET_TYPE_GAMEWORLD_SP:
         {
-            newEntry->asset.type = ASSET_TYPE_GAMEWORLD_MP;
+            asset->type = ASSET_TYPE_GAMEWORLD_MP;
             break;
         }
         // Hijack the reference asset ',' mechanism to avoid reaching asset limits.
@@ -480,8 +471,6 @@ XAssetEntry *DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride)
         }
         }
     }
-
-    return DB_LinkXAssetEntry_Detour.GetOriginal<DB_LinkXAssetEntry_t>()(newEntry, allowOverride);
 }
 
 Detour Com_sprintf_Detour;
@@ -778,10 +767,6 @@ mpsp::mpsp()
     DB_AuthLoad_Inflate_Detour = Detour(DB_AuthLoad_Inflate, DB_AuthLoad_Inflate_Hook);
     DB_AuthLoad_Inflate_Detour.Install();
 
-    // Rewrite some assets before linking
-    DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
-    DB_LinkXAssetEntry_Detour.Install();
-
     Load_XAssetArrayCustom_Detour = Detour(Load_XAssetArrayCustom, Load_XAssetArrayCustom_Stub);
     Load_XAssetArrayCustom_Detour.Install();
 
@@ -798,8 +783,6 @@ mpsp::~mpsp()
     DB_LoadXFileInternal_Detour.Remove();
 
     DB_AuthLoad_Inflate_Detour.Remove();
-
-    DB_LinkXAssetEntry_Detour.Remove();
 
     Load_XAssetArrayCustom_Detour.Remove();
 

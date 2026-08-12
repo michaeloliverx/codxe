@@ -17,6 +17,7 @@ class mpsp : public Module
     };
     static bool is_sp_map;
     static bool is_sp_mapname(const std::string &name);
+    static void OnAssetLink(XAsset *asset);
 };
 } // namespace mp
 } // namespace iw3

@@ -45,7 +45,6 @@ static CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x8231E
 
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8230AAF0);
 static auto CG_GetPredictedPlayerState = reinterpret_cast<const playerState_s *(*)(int localClientNum)>(0x82309120);
-static auto CG_RegisterGraphics = reinterpret_cast<void (*)(int localClientNum, const char *mapname)>(0x8230D858);
 
 static auto CL_CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x822E6E60);
 static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name, unsigned int *checksum)>(0x82243940);
@@ -145,8 +144,6 @@ static auto G_SetLastServerTime = reinterpret_cast<void (*)(int clientNum, int l
 static auto G_SetOrigin = reinterpret_cast<void (*)(gentity_s *ent, float *origin)>(0x8224AAF0);
 
 static auto I_strnicmp = reinterpret_cast<int (*)(const char *s0, const char *s1, int n)>(0x821CDA98);
-
-static auto Load_MapEntsPtr = reinterpret_cast<void (*)()>(0x822A9648);
 
 static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x821E5B38);
 

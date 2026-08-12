@@ -13,6 +13,8 @@ class image_loader : public Module
     image_loader();
     ~image_loader();
 
+    static void OnAssetLink(XAsset *asset);
+
     const char *get_name() override
     {
         return "image_loader";
