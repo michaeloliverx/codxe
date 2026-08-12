@@ -185,19 +185,6 @@ BuiltinMethod Player_GetMethod_Hook(const char **pName)
     return Player_GetMethod_Detour.GetOriginal<decltype(Player_GetMethod)>()(pName);
 }
 
-void DebugPrintBuiltinMethods()
-{
-    for (int i = 0; i < BUILTIN_PLAYER_METHOD_COUNT; ++i)
-    {
-        const auto &method = builtin_player_methods[i];
-        if (method.actionFunc != nullptr)
-        {
-            DbgPrint("method[%d]: actionString: %s actionFunc: %p type: %d\n", i, method.actionString,
-                     (void *)method.actionFunc, method.type);
-        }
-    }
-}
-
 GSCClientMethods::GSCClientMethods()
 {
     Player_GetMethod_Detour = Detour(Player_GetMethod, Player_GetMethod_Hook);

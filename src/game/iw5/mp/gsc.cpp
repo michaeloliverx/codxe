@@ -251,22 +251,6 @@ void DisableBrushCollisionAtOrigin(scr_entref_t entref)
     CG_GameMessage(LOCAL_CLIENT_0, brush_indices_str.c_str());
 }
 
-void RemoveBrushCollisions()
-{
-    // if (!cm->isInUse)
-    // {
-    //     DbgPrint("[PLUGIN] cm not in use\n");
-    //     return;
-    // }
-    auto numBrushes = cm->info.numBrushes;
-    DbgPrint("[PLUGIN] numBrushes=%d \n", numBrushes);
-
-    for (unsigned short i = 0; i < cm->info.numBrushes; i++)
-    {
-        cm->info.brushContents[i] &= ~CONTENTS_PLAYERCLIP;
-    }
-}
-
 Detour PlayerCmd_GetViewmodel_Detour;
 Detour Scr_GetFunction_Detour;
 

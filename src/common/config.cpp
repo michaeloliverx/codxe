@@ -82,12 +82,6 @@ bool BuildMountedConfigPath(const std::string &device_config_path, std::string &
 }
 } // namespace
 
-bool DirectoryExists(const char *path)
-{
-    DWORD attrs = GetFileAttributesA(path);
-    return (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_DIRECTORY));
-}
-
 bool FileExists(const char *path)
 {
     DWORD attrs = GetFileAttributesA(path);
