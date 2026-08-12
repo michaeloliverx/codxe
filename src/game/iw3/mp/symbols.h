@@ -146,8 +146,6 @@ static auto G_SetOrigin = reinterpret_cast<void (*)(gentity_s *ent, float *origi
 
 static auto I_strnicmp = reinterpret_cast<int (*)(const char *s0, const char *s1, int n)>(0x821CDA98);
 
-static auto Load_MapEntsPtr = reinterpret_cast<void (*)()>(0x822A9648);
-
 static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x821E5B38);
 
 static auto PM_FoliageSounds = reinterpret_cast<void (*)(pmove_t *pm)>(0x82335E90);

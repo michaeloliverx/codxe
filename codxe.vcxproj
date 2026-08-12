@@ -96,6 +96,7 @@
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
 
+      <ClCompile Include="src\game\iw3\mp\components\assets.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
@@ -232,6 +233,7 @@
       <ClInclude Include="src\game\iw2\mp\structs.h" />
       <ClInclude Include="src\game\iw2\mp\symbols.h" />
 
+      <ClInclude Include="src\game\iw3\mp\components\assets.h" />
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
       <ClInclude Include="src\game\iw3\mp\components\command.h" />

@@ -36,6 +36,9 @@ class Events : public Module
 
     static Detour UI_Refresh_Detour;
     static void UI_Refresh_Hook(int localClientNum);
+
+    static Detour DB_LinkXAssetEntry_Detour;
+    static XAssetEntry *DB_LinkXAssetEntry_Hook(XAssetEntry *newEntry, int allowOverride);
 };
 } // namespace mp
 } // namespace iw3
