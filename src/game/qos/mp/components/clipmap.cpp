@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "common/brush_collision_tracker.h"
-#include "events.h"
 #include "clipmap.h"
 
 static const int SURFACE_FLAG_PLAYERCLIP = 0x10000;
@@ -153,24 +152,22 @@ void clipmap::PlayerCmd_DisablePlayerClipOnTouchingBrushes(scr_entref_t entref)
     RebuildNoclipBrushesDvar();
 }
 
+void clipmap::OnCGInit()
+{
+    RegisterDvars();
+    brush_collision_tracker::Clear();
+}
+
+void clipmap::OnCGDrawActive()
+{
+    if (R_CheckDvarModified(noclip_brushes))
+    {
+        HandleclipmapChange();
+    }
+}
+
 clipmap::clipmap()
 {
-
-    Events::OnCG_Init(
-        []()
-        {
-            clipmap::RegisterDvars();
-            brush_collision_tracker::Clear();
-        });
-
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (R_CheckDvarModified(clipmap::noclip_brushes))
-            {
-                HandleclipmapChange();
-            }
-        });
 }
 
 clipmap::~clipmap()

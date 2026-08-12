@@ -12,6 +12,8 @@ class clipmap : public Module
     clipmap();
     ~clipmap();
 
+    static void OnCGDrawActive();
+    static void OnCGInit();
     static void PlayerCmd_DisablePlayerClipOnTouchingBrushes(scr_entref_t entref);
 
   private:
