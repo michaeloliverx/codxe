@@ -85,6 +85,8 @@
       <ClCompile Include="src\common\ppc.cpp" />
       <ClCompile Include="src\common\script_files.cpp" />
 
+      <ClCompile Include="src\image\xenos_texture.cpp" />
+
       <ClCompile Include="src\game\ngl\mp\main.cpp" />
       <ClCompile Include="src\game\ngl\mp\components\pm.cpp" />
 
@@ -171,7 +173,6 @@
       <ClCompile Include="src\game\t4\mp\components\gsc_client_methods.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_functions.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_loader.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\image_loader.cpp" />
       <ClCompile Include="src\game\t4\mp\components\map.cpp" />
       <ClCompile Include="src\game\t4\mp\components\patches.cpp" />
       <ClCompile Include="src\game\t4\mp\components\stats.cpp" />
@@ -216,6 +217,8 @@
       <ClInclude Include="src\common\config.h" />
       <ClInclude Include="src\common\ppc.h" />
       <ClInclude Include="src\common\script_files.h" />
+
+      <ClInclude Include="src\image\xenos_texture.h" />
 
       <ClInclude Include="src\game\ngl\mp\main.h" />
       <ClInclude Include="src\game\ngl\mp\structs.h" />
@@ -305,7 +308,6 @@
       <ClInclude Include="src\game\t4\mp\components\gsc_client_methods.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_functions.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_loader.h" />
-      <ClInclude Include="src\game\t4\mp\components\image_loader.h" />
       <ClInclude Include="src\game\t4\mp\components\map.h" />
       <ClInclude Include="src\game\t4\mp\components\patches.h" />
       <ClInclude Include="src\game\t4\mp\components\stats.h" />
