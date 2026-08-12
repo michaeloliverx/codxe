@@ -83,6 +83,7 @@
       <ClCompile Include="src\common\brush_collision_tracker.cpp" />
       <ClCompile Include="src\common\config.cpp" />
       <ClCompile Include="src\common\ppc.cpp" />
+      <ClCompile Include="src\common\script_files.cpp" />
 
       <ClCompile Include="src\game\ngl\mp\main.cpp" />
       <ClCompile Include="src\game\ngl\mp\components\pm.cpp" />
@@ -213,6 +214,7 @@
       <ClInclude Include="src\common\brush_collision_tracker.h" />
       <ClInclude Include="src\common\config.h" />
       <ClInclude Include="src\common\ppc.h" />
+      <ClInclude Include="src\common\script_files.h" />
 
       <ClInclude Include="src\game\ngl\mp\main.h" />
       <ClInclude Include="src\game\ngl\mp\structs.h" />

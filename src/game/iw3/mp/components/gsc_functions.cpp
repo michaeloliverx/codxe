@@ -1,20 +1,11 @@
 #include "pch.h"
 #include "gsc_functions.h"
+#include "common/script_files.h"
 
 namespace iw3
 {
 namespace mp
 {
-
-#define MAX_SCRIPT_FILEHANDLES 8
-
-struct ScriptFileHandle_t
-{
-    FILE *fh;
-    char filename[MAX_PATH];
-};
-
-static ScriptFileHandle_t s_scriptFiles[MAX_SCRIPT_FILEHANDLES];
 
 static std::string BuildScriptFilePath(const char *filename)
 {
@@ -40,14 +31,7 @@ static std::string BuildScriptFilePath(const char *filename)
 
 static void CloseAllScriptFiles()
 {
-    for (int i = 0; i < MAX_SCRIPT_FILEHANDLES; ++i)
-    {
-        if (s_scriptFiles[i].fh)
-        {
-            fclose(s_scriptFiles[i].fh);
-            memset(&s_scriptFiles[i], 0, sizeof(ScriptFileHandle_t));
-        }
-    }
+    script_files::CloseAll();
 }
 
 void GSCFunctions::OnVMShutdown()
@@ -111,23 +95,14 @@ void GScr_FS_FOpen()
         }
     }
 
-    for (int i = 0; i < MAX_SCRIPT_FILEHANDLES; ++i)
+    const int handle = script_files::Open(fullpath.c_str(), fmode);
+    if (handle == script_files::NO_FREE_HANDLES)
     {
-        if (!s_scriptFiles[i].fh)
-        {
-            s_scriptFiles[i].fh = fopen(fullpath.c_str(), fmode);
-            if (!s_scriptFiles[i].fh)
-            {
-                Scr_AddInt(0);
-                return;
-            }
-            strncpy(s_scriptFiles[i].filename, filename, sizeof(s_scriptFiles[i].filename) - 1);
-            Scr_AddInt(i + 1);
-            return;
-        }
+        Scr_Error("fs_fopen: exceeded maximum open file handles");
+        return;
     }
 
-    Scr_Error("fs_fopen: exceeded maximum open file handles");
+    Scr_AddInt(handle);
 }
 
 void GScr_FS_FClose()
@@ -136,15 +111,11 @@ void GScr_FS_FClose()
         Scr_Error("Usage: fs_fclose(<filehandle>)");
 
     int fh = Scr_GetInt(0);
-    if (fh < 1 || fh > MAX_SCRIPT_FILEHANDLES)
+    if (!script_files::IsValidHandle(fh))
         Scr_Error("fs_fclose: invalid filehandle");
 
-    ScriptFileHandle_t &slot = s_scriptFiles[fh - 1];
-    if (slot.fh)
-    {
-        fclose(slot.fh);
-        memset(&slot, 0, sizeof(ScriptFileHandle_t));
-    }
+    if (script_files::Get(fh))
+        script_files::Close(fh);
 }
 
 void GScr_FS_ReadLine()
@@ -153,15 +124,15 @@ void GScr_FS_ReadLine()
         Scr_Error("Usage: fs_readline(<filehandle>)");
 
     int fh = Scr_GetInt(0);
-    if (fh < 1 || fh > MAX_SCRIPT_FILEHANDLES)
+    if (!script_files::IsValidHandle(fh))
         Scr_Error("fs_readline: invalid filehandle");
 
-    ScriptFileHandle_t &slot = s_scriptFiles[fh - 1];
-    if (!slot.fh)
+    FILE *file = script_files::Get(fh);
+    if (!file)
         Scr_Error("fs_readline: filehandle is not open");
 
     char buffer[8192];
-    if (!fgets(buffer, sizeof(buffer), slot.fh))
+    if (!fgets(buffer, sizeof(buffer), file))
     {
         Scr_AddUndefined();
         return;
@@ -180,15 +151,15 @@ void GScr_FS_WriteLine()
         Scr_Error("Usage: fs_writeline(<filehandle>, <data>)");
 
     int fh = Scr_GetInt(0);
-    if (fh < 1 || fh > MAX_SCRIPT_FILEHANDLES)
+    if (!script_files::IsValidHandle(fh))
         Scr_Error("fs_writeline: invalid filehandle");
 
-    ScriptFileHandle_t &slot = s_scriptFiles[fh - 1];
-    if (!slot.fh)
+    FILE *file = script_files::Get(fh);
+    if (!file)
         Scr_Error("fs_writeline: filehandle is not open");
 
     const char *data = Scr_GetString(1);
-    if (fprintf(slot.fh, "%s\n", data) < 0)
+    if (fprintf(file, "%s\n", data) < 0)
     {
         Scr_AddInt(0);
         return;

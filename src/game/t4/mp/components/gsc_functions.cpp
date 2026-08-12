@@ -1,22 +1,13 @@
 #include "pch.h"
 #include "gsc_functions.h"
 #include "common/gsc_registry.h"
+#include "common/script_files.h"
 #include "sv_bots.h"
 
 namespace t4
 {
 namespace mp
 {
-
-#define MAX_SCRIPT_FILEHANDLES 8
-
-struct ScriptFileHandle_t
-{
-    FILE *fh;
-    char filename[MAX_PATH];
-};
-
-static ScriptFileHandle_t s_scriptFiles[MAX_SCRIPT_FILEHANDLES];
 
 static std::string BuildScriptFilePath(const char *filename)
 {
@@ -39,14 +30,7 @@ static std::string BuildScriptFilePath(const char *filename)
 
 static void CloseAllScriptFiles()
 {
-    for (int i = 0; i < MAX_SCRIPT_FILEHANDLES; ++i)
-    {
-        if (s_scriptFiles[i].fh)
-        {
-            fclose(s_scriptFiles[i].fh);
-            memset(&s_scriptFiles[i], 0, sizeof(ScriptFileHandle_t));
-        }
-    }
+    script_files::CloseAll();
 }
 
 static void GScr_FS_TestFile()
@@ -104,24 +88,14 @@ static void GScr_FS_FOpen()
         }
     }
 
-    for (int i = 0; i < MAX_SCRIPT_FILEHANDLES; ++i)
+    const int handle = script_files::Open(fullpath.c_str(), fmode);
+    if (handle == script_files::NO_FREE_HANDLES)
     {
-        if (!s_scriptFiles[i].fh)
-        {
-            s_scriptFiles[i].fh = fopen(fullpath.c_str(), fmode);
-            if (!s_scriptFiles[i].fh)
-            {
-                Scr_AddInt(0, SCRIPTINSTANCE_SERVER);
-                return;
-            }
-
-            strncpy(s_scriptFiles[i].filename, filename, sizeof(s_scriptFiles[i].filename) - 1);
-            Scr_AddInt(i + 1, SCRIPTINSTANCE_SERVER);
-            return;
-        }
+        Scr_Error("fs_fopen: exceeded maximum open file handles", SCRIPTINSTANCE_SERVER);
+        return;
     }
 
-    Scr_Error("fs_fopen: exceeded maximum open file handles", SCRIPTINSTANCE_SERVER);
+    Scr_AddInt(handle, SCRIPTINSTANCE_SERVER);
 }
 
 static void GScr_FS_FClose()
@@ -130,15 +104,11 @@ static void GScr_FS_FClose()
         Scr_Error("Usage: fs_fclose(<filehandle>)", SCRIPTINSTANCE_SERVER);
 
     int fh = Scr_GetInt(0, SCRIPTINSTANCE_SERVER, 0, -1);
-    if (fh < 1 || fh > MAX_SCRIPT_FILEHANDLES)
+    if (!script_files::IsValidHandle(fh))
         Scr_Error("fs_fclose: invalid filehandle", SCRIPTINSTANCE_SERVER);
 
-    ScriptFileHandle_t &slot = s_scriptFiles[fh - 1];
-    if (slot.fh)
-    {
-        fclose(slot.fh);
-        memset(&slot, 0, sizeof(ScriptFileHandle_t));
-    }
+    if (script_files::Get(fh))
+        script_files::Close(fh);
 }
 
 static void GScr_FS_ReadLine()
@@ -150,15 +120,15 @@ static void GScr_FS_ReadLine()
         Scr_Error("fs_readline: Scr_AddString/Scr_AddUndefined addresses are not set", SCRIPTINSTANCE_SERVER);
 
     int fh = Scr_GetInt(0, SCRIPTINSTANCE_SERVER, 0, -1);
-    if (fh < 1 || fh > MAX_SCRIPT_FILEHANDLES)
+    if (!script_files::IsValidHandle(fh))
         Scr_Error("fs_readline: invalid filehandle", SCRIPTINSTANCE_SERVER);
 
-    ScriptFileHandle_t &slot = s_scriptFiles[fh - 1];
-    if (!slot.fh)
+    FILE *file = script_files::Get(fh);
+    if (!file)
         Scr_Error("fs_readline: filehandle is not open", SCRIPTINSTANCE_SERVER);
 
     char buffer[8192];
-    if (!fgets(buffer, sizeof(buffer), slot.fh))
+    if (!fgets(buffer, sizeof(buffer), file))
     {
         Scr_AddUndefined(SCRIPTINSTANCE_SERVER);
         return;
@@ -177,15 +147,15 @@ static void GScr_FS_WriteLine()
         Scr_Error("Usage: fs_writeline(<filehandle>, <data>)", SCRIPTINSTANCE_SERVER);
 
     int fh = Scr_GetInt(0, SCRIPTINSTANCE_SERVER, 0, -1);
-    if (fh < 1 || fh > MAX_SCRIPT_FILEHANDLES)
+    if (!script_files::IsValidHandle(fh))
         Scr_Error("fs_writeline: invalid filehandle", SCRIPTINSTANCE_SERVER);
 
-    ScriptFileHandle_t &slot = s_scriptFiles[fh - 1];
-    if (!slot.fh)
+    FILE *file = script_files::Get(fh);
+    if (!file)
         Scr_Error("fs_writeline: filehandle is not open", SCRIPTINSTANCE_SERVER);
 
     const char *data = Scr_GetString(1, SCRIPTINSTANCE_SERVER);
-    Scr_AddInt(fprintf(slot.fh, "%s\n", data) >= 0, SCRIPTINSTANCE_SERVER);
+    Scr_AddInt(fprintf(file, "%s\n", data) >= 0, SCRIPTINSTANCE_SERVER);
 }
 
 static void GScr_CmdExec()

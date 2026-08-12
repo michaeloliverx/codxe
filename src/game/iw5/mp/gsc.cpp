@@ -2,6 +2,7 @@
 #include "gsc.h"
 #include "bots.h"
 #include "common/gsc_registry.h"
+#include "common/script_files.h"
 
 namespace iw5
 {
@@ -10,18 +11,10 @@ namespace mp
 
 namespace
 {
-static const int MAX_SCRIPT_FILE_HANDLES = 8;
 static const unsigned int GSC_TOKEN_OPENFILE = 0x99;
 static const unsigned int GSC_TOKEN_CLOSEFILE = 0x9A;
 static const unsigned int GSC_TOKEN_FPRINTLN = 0x9B;
 static const unsigned int GSC_TOKEN_FREADLN = 0x9D;
-
-struct ScriptFileHandle
-{
-    FILE *file;
-};
-
-ScriptFileHandle script_file_handles[MAX_SCRIPT_FILE_HANDLES];
 
 std::string BuildScriptFilePath(const char *filename)
 {
@@ -51,14 +44,7 @@ void EnsureParentDirectory(const std::string &path)
 
 void CloseAllScriptFiles()
 {
-    for (int i = 0; i < MAX_SCRIPT_FILE_HANDLES; ++i)
-    {
-        if (script_file_handles[i].file)
-        {
-            fclose(script_file_handles[i].file);
-            script_file_handles[i].file = nullptr;
-        }
-    }
+    script_files::CloseAll();
 }
 
 void GScr_OpenFile()
@@ -90,24 +76,14 @@ void GScr_OpenFile()
     if (file_mode[0] == 'w' || file_mode[0] == 'a')
         EnsureParentDirectory(path);
 
-    for (int i = 0; i < MAX_SCRIPT_FILE_HANDLES; ++i)
+    int handle = script_files::Open(path.c_str(), file_mode);
+    if (handle == script_files::NO_FREE_HANDLES)
     {
-        if (!script_file_handles[i].file)
-        {
-            script_file_handles[i].file = fopen(path.c_str(), file_mode);
-            if (!script_file_handles[i].file)
-            {
-                Scr_AddInt(0);
-                return;
-            }
-
-            Scr_AddInt(i + 1);
-            return;
-        }
+        DbgPrint("[codxe][IW5][GSC] openfile exhausted its file handles\n");
+        handle = script_files::OPEN_FAILED;
     }
 
-    DbgPrint("[codxe][IW5][GSC] openfile exhausted its file handles\n");
-    Scr_AddInt(0);
+    Scr_AddInt(handle);
 }
 
 void GScr_CloseFile()
@@ -120,22 +96,20 @@ void GScr_CloseFile()
     }
 
     const int handle = Scr_GetInt(0);
-    if (handle < 1 || handle > MAX_SCRIPT_FILE_HANDLES)
+    if (!script_files::IsValidHandle(handle))
     {
         DbgPrint("[codxe][IW5][GSC] closefile received invalid handle %d\n", handle);
         Scr_AddInt(0);
         return;
     }
 
-    ScriptFileHandle &slot = script_file_handles[handle - 1];
-    if (!slot.file)
+    if (!script_files::Get(handle))
     {
         Scr_AddInt(0);
         return;
     }
 
-    const int result = fclose(slot.file);
-    slot.file = nullptr;
+    const int result = script_files::Close(handle);
     Scr_AddInt(result == 0);
 }
 
@@ -149,7 +123,8 @@ void GScr_ReadLine()
     }
 
     const int handle = Scr_GetInt(0);
-    if (handle < 1 || handle > MAX_SCRIPT_FILE_HANDLES || !script_file_handles[handle - 1].file)
+    FILE *file = script_files::Get(handle);
+    if (!file)
     {
         DbgPrint("[codxe][IW5][GSC] freadln received invalid handle %d\n", handle);
         Scr_AddUndefined();
@@ -157,7 +132,7 @@ void GScr_ReadLine()
     }
 
     char line[4096];
-    if (!fgets(line, sizeof(line), script_file_handles[handle - 1].file))
+    if (!fgets(line, sizeof(line), file))
     {
         Scr_AddUndefined();
         return;
@@ -180,7 +155,8 @@ void GScr_WriteLine()
     }
 
     const int handle = Scr_GetInt(0);
-    if (handle < 1 || handle > MAX_SCRIPT_FILE_HANDLES || !script_file_handles[handle - 1].file)
+    FILE *file = script_files::Get(handle);
+    if (!file)
     {
         DbgPrint("[codxe][IW5][GSC] fprintln received invalid handle %d\n", handle);
         Scr_AddInt(0);
@@ -188,7 +164,7 @@ void GScr_WriteLine()
     }
 
     const char *contents = Scr_GetString(1);
-    Scr_AddInt(fprintf(script_file_handles[handle - 1].file, "%s\n", contents) >= 0);
+    Scr_AddInt(fprintf(file, "%s\n", contents) >= 0);
 }
 } // namespace
 
