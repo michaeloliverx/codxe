@@ -6,7 +6,6 @@ extern const char *CONFIG_PATH;
 extern const char *MOD_DIR;
 extern const char *DUMP_DIR;
 
-bool DirectoryExists(const char *path);
 bool FileExists(const char *path);
 bool ReadFileToString(const char *path, std::string &outString);
 
