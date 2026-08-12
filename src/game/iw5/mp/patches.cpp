@@ -11,8 +11,8 @@ void EnableBouncing()
     // https://xoxor4d.github.io/research/mw2-bounce/
     // .text:820EB470                 cmpwi     cr6, r23, 0
     // .text:820EB474                 bne       cr6, loc_820EB424
-    *(volatile uint32_t *)0x820EB470 = 0x60000000;
-    *(volatile uint32_t *)0x820EB474 = 0x60000000;
+    ppc::Nop(0x820EB470);
+    ppc::Nop(0x820EB474);
 }
 
 void DisableIdleGunSway()
@@ -20,29 +20,29 @@ void DisableIdleGunSway()
     // No weapon sway when aiming down sights
     // .text:8210468C                 bl        sub_82104228
     // BG_CalculateViewMovement_Angles_Idle
-    *(volatile uint32_t *)0x8210468C = 0x60000000;
+    ppc::Nop(0x8210468C);
 
     // .text:82103CD8                 bl        sub_82102738
     // BG_ComputeAndApplyWeaponMovement_IdleAngles
-    *(volatile uint32_t *)0x82103CD8 = 0x60000000;
+    ppc::Nop(0x82103CD8);
 }
 
 void DisableJumpSlowdown()
 {
     // .text:820E86CC                 bl        Jump_ApplySlowdown
-    *(volatile uint32_t *)0x820E86CC = 0x60000000;
+    ppc::Nop(0x820E86CC);
 
     // // .text:820E8EB8                 bl        PM_CrashLand
-    // *(volatile uint32_t *)0x820E8EB8 = 0x60000000;
+    // ppc::Nop(0x820E8EB8);
 }
 
 void DisableDvarWriteChecks()
 {
     // .text:8232DE20                 bne       cr6, loc_8232E0F8
-    *(volatile uint32_t *)0x8232DE20 = 0x60000000;
+    ppc::Nop(0x8232DE20);
 
     // .text:8232DE2C                 bne       cr6, loc_8232E0F8
-    *(volatile uint32_t *)0x8232DE2C = 0x60000000;
+    ppc::Nop(0x8232DE2C);
 }
 
 Detour Jump_Start_Detour;

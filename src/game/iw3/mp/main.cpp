@@ -102,12 +102,12 @@ void Load_MapEntsPtr_Hook()
 void DisableFastfileAuth()
 {
     // DBX_AuthLoad_ValidateHash
-    *(volatile uint32_t *)0x822B2994 = 0x60000000;
-    *(volatile uint32_t *)0x822B2A34 = 0x60000000;
-    *(volatile uint32_t *)0x822B2D2C = 0x60000000;
+    ppc::Nop(0x822B2994);
+    ppc::Nop(0x822B2A34);
+    ppc::Nop(0x822B2D2C);
 
     // DBX_AuthLoad_ValidateSignature
-    *(volatile uint32_t *)0x822B2D44 = 0x60000000;
+    ppc::Nop(0x822B2D44);
 }
 
 IW3_MP_Plugin::IW3_MP_Plugin()

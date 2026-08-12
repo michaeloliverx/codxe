@@ -94,27 +94,18 @@ __declspec(naked) void PM_ProjectVelocity_Hook()
 }
 } // namespace
 
-static uint32_t make_bl(uint32_t current, uint32_t target)
-{
-    uint32_t li = (target - current) & 0x03FFFFFC;
-    return (18u << 26) | li | 1u;
-}
-
 void PlayerMovement::install_patch()
 {
     const uint32_t patchAddr = 0x8246E1E0;
     const uint32_t hookTargetAddr = 0x8244C1C8;
     const uint32_t callToHookTargetAddr = 0x82466704;
-    const uint32_t nop = 0x60000000;
-
-    *(volatile uint32_t *)callToHookTargetAddr = nop;
+    ppc::Nop(callToHookTargetAddr);
 
     PM_ProjectVelocity_Detour =
         Detour(reinterpret_cast<void *>(hookTargetAddr), reinterpret_cast<void *>(PM_ProjectVelocity_Hook));
     PM_ProjectVelocity_Detour.Install();
 
-    volatile uint32_t *patch = reinterpret_cast<volatile uint32_t *>(patchAddr);
-    patch[0] = make_bl(patchAddr, hookTargetAddr);
+    ppc::BranchLink(patchAddr, hookTargetAddr);
 }
 
 PlayerMovement::PlayerMovement()

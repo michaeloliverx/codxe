@@ -14,10 +14,10 @@ namespace sp
 void RemoveIdleGunSway()
 {
     // BG_CalculateViewMovement_Angles_Idle
-    *(volatile uint32_t *)0x82336C9C = 0x60000000;
+    ppc::Nop(0x82336C9C);
 
     // BG_ComputeAndApplyWeaponMovement_IdleAngles
-    *(volatile uint32_t *)0x823362A8 = 0x60000000;
+    ppc::Nop(0x823362A8);
 }
 
 IW4_SP_Plugin::IW4_SP_Plugin()
@@ -25,11 +25,11 @@ IW4_SP_Plugin::IW4_SP_Plugin()
 
     // GScr_SetSavedDvar
     // Patches SetSavedDvar SAVED flag check
-    *(volatile uint32_t *)0x8221F688 = 0x60000000; // NOP replaces bl Scr_Error
+    ppc::Nop(0x8221F688); // NOP replaces bl Scr_Error
 
     // GScr_SetDvar_Internal
-    *(volatile uint32_t *)0x8220F664 = 0x60000000; // NOP replaces bl Scr_Error
-    *(volatile uint32_t *)0x8220F690 = 0x60000000; // NOP replaces bl Scr_Error
+    ppc::Nop(0x8220F664); // NOP replaces bl Scr_Error
+    ppc::Nop(0x8220F690); // NOP replaces bl Scr_Error
 
     RemoveIdleGunSway();
 
