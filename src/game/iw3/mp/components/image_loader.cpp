@@ -17,11 +17,13 @@ const uint32_t DDSD_CAPS = 0x1;
 const uint32_t DDSD_HEIGHT = 0x2;
 const uint32_t DDSD_WIDTH = 0x4;
 const uint32_t DDSD_PIXELFORMAT = 0x1000;
+const uint32_t DDSD_MIPMAPCOUNT = 0x20000;
 const uint32_t DDSD_LINEARSIZE = 0x80000;
 const uint32_t DDPF_FOURCC = 0x4;
 const uint32_t DDPF_RGB = 0x40;
 const uint32_t DDPF_ALPHAPIXELS = 0x1;
 const uint32_t DDSCAPS_TEXTURE = 0x1000;
+const uint32_t DDSCAPS_COMPLEX = 0x8;
 const uint32_t DDSCAPS_MIPMAP = 0x400000;
 const uint32_t DDPF_LUMINANCE = 0x20000;
 
@@ -323,6 +325,120 @@ bool ValidateCubeReplacementData(const iw3::mp::GfxImage *image, const DDSImage 
     return true;
 }
 
+bool BuildDDSHeader(DDSHeader *header, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
+                    uint32_t linearSize, GPUTEXTUREFORMAT format, bool cubemap)
+{
+    memset(header, 0, sizeof(*header));
+
+    uint32_t flags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE;
+    uint32_t caps = DDSCAPS_TEXTURE;
+    if (mipCount > 1u)
+    {
+        flags |= DDSD_MIPMAPCOUNT;
+        caps |= DDSCAPS_COMPLEX | DDSCAPS_MIPMAP;
+    }
+
+    header->magic = _byteswap_ulong(DDS_MAGIC);
+    header->size = _byteswap_ulong(DDS_HEADER_SIZE);
+    header->flags = _byteswap_ulong(flags);
+    header->height = _byteswap_ulong(height);
+    header->width = _byteswap_ulong(width);
+    header->pitchOrLinearSize = _byteswap_ulong(linearSize);
+    header->depth = _byteswap_ulong(depth);
+    header->mipMapCount = _byteswap_ulong(mipCount);
+    header->pixelFormat.size = _byteswap_ulong(DDS_PIXEL_FORMAT_SIZE);
+    header->caps = _byteswap_ulong(caps);
+
+    switch (format)
+    {
+    case GPUTEXTUREFORMAT_DXT1:
+        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
+        header->pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
+        break;
+    case GPUTEXTUREFORMAT_DXT2_3:
+        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
+        header->pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
+        break;
+    case GPUTEXTUREFORMAT_DXT4_5:
+        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
+        header->pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
+        break;
+    case GPUTEXTUREFORMAT_DXN:
+        header->pixelFormat.flags = _byteswap_ulong(DDPF_FOURCC);
+        header->pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
+        break;
+    case GPUTEXTUREFORMAT_8:
+        header->pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE);
+        header->pixelFormat.rgbBitCount = _byteswap_ulong(8);
+        header->pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
+        break;
+    case GPUTEXTUREFORMAT_8_8:
+        header->pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
+        header->pixelFormat.rgbBitCount = _byteswap_ulong(16);
+        header->pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
+        header->pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
+        break;
+    case GPUTEXTUREFORMAT_8_8_8_8:
+        header->pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
+        header->pixelFormat.rgbBitCount = _byteswap_ulong(32);
+        header->pixelFormat.rBitMask = _byteswap_ulong(0x00FF0000);
+        header->pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
+        header->pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
+        header->pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
+        break;
+    default:
+        return false;
+    }
+
+    if (cubemap)
+    {
+        header->caps = _byteswap_ulong(caps | DDSCAPS_COMPLEX);
+        header->caps2 = _byteswap_ulong(DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_ALL_FACES);
+    }
+
+    return true;
+}
+
+std::string GetImageDumpPath(const char *imageName)
+{
+    std::string sanitizedName = imageName;
+    sanitizedName.erase(std::remove_if(sanitizedName.begin(), sanitizedName.end(), [](char c) { return c == '*'; }),
+                        sanitizedName.end());
+    return std::string(DUMP_DIR) + "\\images\\" + sanitizedName + ".dds";
+}
+
+bool ReadBinaryFile(const std::string &path, std::vector<uint8_t> *data)
+{
+    std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
+    if (!file)
+        return false;
+
+    const std::streamsize size = file.tellg();
+    if (size < 0)
+        return false;
+
+    file.seekg(0, std::ios::beg);
+    data->resize(static_cast<size_t>(size));
+    return size == 0 || file.read(reinterpret_cast<char *>(data->data()), size) != 0;
+}
+
+bool UntileImageLevel(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t basePitch, GPUENDIAN endian,
+                      const uint8_t *source, size_t sourceSize, std::vector<uint8_t> *linearData)
+{
+    const uint32_t tiledSize = image::xenos_texture::CalculateTiledLevelSize(width, height, 0u, format, basePitch);
+    const uint32_t linearSize = image::xenos_texture::CalculateLinearLevelSize(width, height, 0u, format);
+    const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(width, 0u, format);
+    if (tiledSize == 0 || linearSize == 0 || rowPitch == 0 || source == NULL || sourceSize < tiledSize)
+        return false;
+
+    std::vector<uint8_t> tiledData(source, source + tiledSize);
+    image::xenos_texture::ApplyGpuEndian(tiledData.data(), tiledData.size(), endian);
+
+    linearData->resize(linearSize);
+    return image::xenos_texture::UntileTextureLevel(width, height, 0u, format, basePitch, linearData->data(),
+                                                    linearData->size(), rowPitch, tiledData.data(), tiledData.size());
+}
+
 } // namespace
 
 namespace iw3
@@ -382,13 +498,13 @@ void Image_Dump(const GfxImage *image)
 {
     // TODO: cleanup empty files if failed
 
-    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image '%s'\n", image->name);
-
     if (!image)
     {
         Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Null GfxImage!\n");
         return;
     }
+
+    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumping image '%s'\n", image->name);
 
     if (!image->pixels || image->baseSize == 0)
     {
@@ -402,91 +518,17 @@ void Image_Dump(const GfxImage *image)
         return;
     }
 
-    const uint32_t faceCount = image->mapType == MAPTYPE_CUBE ? 6u : 1u;
-    uint32_t BaseSize =
-        image::xenos_texture::CalculateBaseSize(image->texture.basemap, image->width, image->height, faceCount);
-
+    const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
+    const uint32_t linearSize = image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, 0u, format);
     DDSHeader header;
-    memset(&header, 0, sizeof(DDSHeader));
-
-    header.magic = _byteswap_ulong(DDS_MAGIC);
-    header.size = _byteswap_ulong(DDS_HEADER_SIZE);
-    header.flags = _byteswap_ulong(DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE);
-    header.height = _byteswap_ulong(image->height);
-    header.width = _byteswap_ulong(image->width);
-    header.depth = _byteswap_ulong(image->depth);
-    header.mipMapCount = _byteswap_ulong(image::xenos_texture::GetTextureLevelCount(image->texture.basemap));
-
-    auto format = image->texture.basemap->Format.DataFormat;
-    switch (format)
+    if (linearSize == 0 || !BuildDDSHeader(&header, image->width, image->height, image->depth, 1u, linearSize, format,
+                                           image->mapType == MAPTYPE_CUBE))
     {
-    case GPUTEXTUREFORMAT_DXT1:
-        header.pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
-        header.pitchOrLinearSize = BaseSize;
-        break;
-    case GPUTEXTUREFORMAT_DXT2_3:
-        header.pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
-        header.pitchOrLinearSize = BaseSize;
-        break;
-    case GPUTEXTUREFORMAT_DXT4_5:
-        header.pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
-        header.pitchOrLinearSize = BaseSize;
-        break;
-    case GPUTEXTUREFORMAT_DXN:
-        header.pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
-        header.pitchOrLinearSize = BaseSize;
-        break;
-    case GPUTEXTUREFORMAT_8:
-        header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE);
-        header.pixelFormat.rgbBitCount = _byteswap_ulong(8);
-        header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
-        header.pixelFormat.gBitMask = 0;
-        header.pixelFormat.bBitMask = 0;
-        header.pixelFormat.aBitMask = 0;
-        header.pitchOrLinearSize = BaseSize;
-        break;
-    case GPUTEXTUREFORMAT_8_8:
-        header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
-        header.pixelFormat.rgbBitCount = _byteswap_ulong(16);
-        header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
-        header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
-        header.pixelFormat.bBitMask = 0;
-        header.pixelFormat.aBitMask = 0;
-        header.pitchOrLinearSize = BaseSize;
-        break;
-    case GPUTEXTUREFORMAT_8_8_8_8:
-        header.pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
-        header.pixelFormat.rgbBitCount = _byteswap_ulong(32);
-        header.pixelFormat.rBitMask = _byteswap_ulong(0x00FF0000);
-        header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
-        header.pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
-        header.pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
-        header.pitchOrLinearSize = BaseSize;
-        break;
-    default:
         Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
         return;
     }
 
-    // Set texture capabilities
-    header.caps = _byteswap_ulong(DDSCAPS_TEXTURE | DDSCAPS_MIPMAP);
-
-    // Handle Cubemaps
-    if (image->mapType == mp::MAPTYPE_CUBE)
-    {
-        header.caps2 = _byteswap_ulong(DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
-                                       DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
-                                       DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ);
-    }
-
-    std::string filename = std::string(DUMP_DIR) + "\\" + "images";
-    std::string sanitized_name = image->name;
-
-    // Remove invalid characters
-    sanitized_name.erase(std::remove_if(sanitized_name.begin(), sanitized_name.end(), [](char c) { return c == '*'; }),
-                         sanitized_name.end());
-
-    filename += "\\" + sanitized_name + ".dds";
+    const std::string filename = GetImageDumpPath(image->name);
 
     std::ofstream file(filename, std::ios::binary);
     if (!file)
@@ -499,40 +541,29 @@ void Image_Dump(const GfxImage *image)
     {
         file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
 
-        unsigned int face_size = 0;
-        unsigned int rowPitch = 0;
-        const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
-
-        switch (format)
+        const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(image->width, 0u, format);
+        const uint32_t tiledFaceSize = image::xenos_texture::CalculateTiledLevelSize(
+            image->width, image->height, 0u, format, image->texture.basemap->Format.Pitch);
+        if (rowPitch == 0 || tiledFaceSize == 0 || image->baseSize < tiledFaceSize * 6u)
         {
-        case GPUTEXTUREFORMAT_DXT1:
-            face_size = (image->width / 4) * (image->height / 4) * 8;
-            rowPitch = (image->width / 4) * 8; // 8 bytes per 4x4 block
-            break;
-        case GPUTEXTUREFORMAT_8_8_8_8:
-            face_size = image->width * image->height * 4;
-            rowPitch = image->width * 4; // 4 bytes per pixel
-            break;
-        default:
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported cube map format %d!\n", format);
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Invalid cube map layout for image '%s'\n", image->name);
             return;
         }
 
         // TODO: handle mip levels per face for cubemaps
         for (int i = 0; i < 6; i++)
         {
-            unsigned char *face_pixels = image->pixels + (i * face_size); // Offset for each face
+            unsigned char *facePixels = image->pixels + (i * tiledFaceSize);
 
-            std::vector<uint8_t> swappedFace(face_pixels, face_pixels + face_size);
+            std::vector<uint8_t> swappedFace(facePixels, facePixels + tiledFaceSize);
             image::xenos_texture::ApplyGpuEndian(swappedFace.data(), swappedFace.size(),
                                                  static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
-            // Create buffer for linear texture data
-            std::vector<uint8_t> linearFace(face_size);
+            std::vector<uint8_t> linearFace(linearSize);
 
-            if (!image::xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
-                                                          image->texture.basemap->Format.Pitch, linearFace.data(),
-                                                          rowPitch, swappedFace.data()))
+            if (!image::xenos_texture::UntileTextureLevel(
+                    image->width, image->height, 0, static_cast<uint32_t>(format), image->texture.basemap->Format.Pitch,
+                    linearFace.data(), linearFace.size(), rowPitch, swappedFace.data(), swappedFace.size()))
             {
                 Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile cube image '%s' face %d\n", image->name,
                                i);
@@ -546,47 +577,12 @@ void Image_Dump(const GfxImage *image)
     }
     else if (image->mapType == MAPTYPE_2D)
     {
-        // TODO: write mip levels
         file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
 
-        std::vector<uint8_t> pixelData(image->pixels, image->pixels + image->baseSize);
-
-        image::xenos_texture::ApplyGpuEndian(pixelData.data(), pixelData.size(),
-                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
-
-        // Create a linear data buffer to hold the untiled texture
-        std::vector<uint8_t> linearData(image->baseSize);
-
-        // Calculate row pitch based on format
-        uint32_t rowPitch;
-        auto format = image->texture.basemap->Format.DataFormat;
-
-        switch (format)
-        {
-        case GPUTEXTUREFORMAT_DXT1:
-        case GPUTEXTUREFORMAT_DXT2_3:
-        case GPUTEXTUREFORMAT_DXT4_5:
-        case GPUTEXTUREFORMAT_DXN:
-            // Block compressed formats use 4x4 blocks
-            rowPitch = ((image->width + 3) / 4) * (format == GPUTEXTUREFORMAT_DXT1 ? 8 : 16);
-            break;
-        case GPUTEXTUREFORMAT_8:
-            rowPitch = image->width;
-            break;
-        case GPUTEXTUREFORMAT_8_8:
-            rowPitch = image->width * 2;
-            break;
-        case GPUTEXTUREFORMAT_8_8_8_8:
-            rowPitch = image->width * 4;
-            break;
-        default:
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
-            return;
-        }
-
-        if (!image::xenos_texture::UntileTextureLevel(image->width, image->height, 0, static_cast<uint32_t>(format),
-                                                      image->texture.basemap->Format.Pitch, linearData.data(), rowPitch,
-                                                      pixelData.data()))
+        std::vector<uint8_t> linearData;
+        if (!UntileImageLevel(image->width, image->height, format, image->texture.basemap->Format.Pitch,
+                              static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian), image->pixels,
+                              image->baseSize, &linearData))
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile image '%s'\n", image->name);
             return;
@@ -603,200 +599,110 @@ void Image_Dump(const GfxImage *image)
     }
 }
 
+bool Image_DumpStreamed(const GfxImage *image, const std::string &highMipPath)
+{
+    if (image == NULL || image->name == NULL || image->texture.basemap == NULL || image->pixels == NULL ||
+        image->mapType != MAPTYPE_2D || !image->streaming)
+    {
+        return false;
+    }
+
+    const GPUTEXTUREFORMAT format = static_cast<GPUTEXTUREFORMAT>(image->texture.basemap->Format.DataFormat);
+    if (format != GPUTEXTUREFORMAT_DXT1 && format != GPUTEXTUREFORMAT_DXT2_3 && format != GPUTEXTUREFORMAT_DXT4_5 &&
+        format != GPUTEXTUREFORMAT_DXN)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Streamed image '%s' has unsupported format %d\n", image->name,
+                       format);
+        return false;
+    }
+
+    std::vector<uint8_t> highMipData;
+    if (!ReadBinaryFile(highMipPath, &highMipData))
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to read streamed image '%s': %s\n", image->name,
+                       highMipPath.c_str());
+        return false;
+    }
+
+    const uint32_t streamedWidth = static_cast<uint32_t>(image->width) * 2u;
+    const uint32_t streamedHeight = static_cast<uint32_t>(image->height) * 2u;
+    const GPUENDIAN endian = static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian);
+
+    std::vector<uint8_t> streamedLinearData;
+    if (!UntileImageLevel(streamedWidth, streamedHeight, format, 0u, endian, highMipData.data(), highMipData.size(),
+                          &streamedLinearData))
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile streamed image '%s'\n", image->name);
+        return false;
+    }
+
+    std::vector<uint8_t> residentLinearData;
+    if (!UntileImageLevel(image->width, image->height, format, image->texture.basemap->Format.Pitch, endian,
+                          image->pixels, image->baseSize, &residentLinearData))
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile resident image '%s'\n", image->name);
+        return false;
+    }
+
+    DDSHeader header;
+    if (!BuildDDSHeader(&header, streamedWidth, streamedHeight, image->depth, 2u,
+                        static_cast<uint32_t>(streamedLinearData.size()), format, false))
+    {
+        return false;
+    }
+
+    const std::string outputPath = GetImageDumpPath(image->name);
+    std::ofstream outputFile(outputPath.c_str(), std::ios::binary);
+    if (!outputFile)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", outputPath.c_str());
+        return false;
+    }
+
+    outputFile.write(reinterpret_cast<const char *>(&header), sizeof(header));
+    outputFile.write(reinterpret_cast<const char *>(streamedLinearData.data()), streamedLinearData.size());
+    outputFile.write(reinterpret_cast<const char *>(residentLinearData.data()), residentLinearData.size());
+    if (!outputFile)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to write streamed image '%s'\n", image->name);
+        return false;
+    }
+
+    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Image_Dump: Dumped unified streamed image '%s'\n", image->name);
+    return true;
+}
+
 void Cmd_imagedump()
 {
     ImageList imageList;
     R_GetImageList(&imageList);
 
-    // images bundled in xex
-    // auto g_imageProgs = reinterpret_cast<GfxImage *>(0x84FEA6D0);
-    // for (unsigned int i = 0; i < 10; i++)
-    // {
-    //     imageList.image[imageList.count++] = &g_imageProgs[i];
-    // }
-
     CreateDirectoryA(DUMP_DIR, 0);
     CreateDirectoryA((std::string(DUMP_DIR) + "\\images").c_str(), 0);
-    CreateDirectoryA((std::string(DUMP_DIR) + "\\highmip").c_str(), 0);
 
-    for (unsigned int i = 0; i < imageList.count; i++)
+    for (unsigned int i = 0; i < imageList.count; ++i)
     {
-        auto image = imageList.image[i];
-        Image_DbgPrint(image);
+        GfxImage *image = imageList.image[i];
+        if (image == NULL)
+            continue;
 
+        Image_DbgPrint(image);
         Image_Dump(image);
     }
 
-    auto highmips = filesystem::list_files_in_directory("D:\\highmip");
-    for (size_t i = 0; i < highmips.size(); ++i)
+    const std::vector<std::string> highMipFiles = filesystem::list_files_in_directory("D:\\highmip");
+    for (size_t i = 0; i < highMipFiles.size(); ++i)
     {
-        const std::string &filepath = "D:\\highmip\\" + highmips[i];
-        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumping highmip file: %s\n", filepath.c_str());
-        std::string assetName = extract_filename(filepath.c_str());
-        auto asset = DB_FindXAssetEntry(ASSET_TYPE_IMAGE, assetName.c_str());
-        if (!asset)
+        const std::string highMipPath = "D:\\highmip\\" + highMipFiles[i];
+        const std::string assetName = extract_filename(highMipFiles[i].c_str());
+        XAssetEntryPoolEntry *asset = DB_FindXAssetEntry(ASSET_TYPE_IMAGE, assetName.c_str());
+        if (asset == NULL)
         {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' not found in asset list!\n", assetName.c_str());
+            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Streamed image '%s' was not found\n", assetName.c_str());
             continue;
         }
 
-        auto image = asset->entry.asset.header.image;
-
-        std::ifstream input_file(filepath,
-                                 std::ios::binary | std::ios::ate); // Open file in binary mode and seek to end
-        if (!input_file)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", filepath.c_str());
-            continue;
-        }
-
-        std::streamsize size = input_file.tellg();
-        if (size < 0)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to determine file size: %s\n", filepath.c_str());
-            continue;
-        }
-
-        input_file.seekg(0, std::ios::beg);
-        std::vector<uint8_t> buffer(static_cast<size_t>(size));
-
-        if (input_file.read(reinterpret_cast<char *>(buffer.data()), size))
-        {
-            Com_Printf(CON_CHANNEL_CONSOLEONLY, "Read %d bytes from file.\n", size);
-        }
-        else
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Error reading file: %s\n", filepath.c_str());
-            continue;
-        }
-
-        auto width = image->width * 2;
-        auto height = image->height * 2;
-        auto baseSize = width * height * 4;
-
-        DDSHeader header;
-        memset(&header, 0, sizeof(DDSHeader));
-
-        header.magic = _byteswap_ulong(DDS_MAGIC);
-        header.size = _byteswap_ulong(DDS_HEADER_SIZE);
-        header.flags = _byteswap_ulong(DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE);
-        header.width = _byteswap_ulong(width);
-        header.height = _byteswap_ulong(height);
-        header.depth = _byteswap_ulong(image->depth);
-        header.mipMapCount = _byteswap_ulong(1);
-        header.caps = _byteswap_ulong(DDSCAPS_TEXTURE);
-        header.pitchOrLinearSize = baseSize;
-
-        auto format = image->texture.basemap->Format.DataFormat;
-        switch (format)
-        {
-        case GPUTEXTUREFORMAT_DXT1:
-            header.pixelFormat.fourCC = _byteswap_ulong(DXT1_FOURCC);
-
-            break;
-        case GPUTEXTUREFORMAT_DXT2_3:
-            header.pixelFormat.fourCC = _byteswap_ulong(DXT3_FOURCC);
-
-            break;
-        case GPUTEXTUREFORMAT_DXT4_5:
-            header.pixelFormat.fourCC = _byteswap_ulong(DXT5_FOURCC);
-
-            break;
-        case GPUTEXTUREFORMAT_DXN:
-            header.pixelFormat.fourCC = _byteswap_ulong(DXN_FOURCC);
-
-            break;
-        case GPUTEXTUREFORMAT_8:
-            header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE);
-            header.pixelFormat.rgbBitCount = _byteswap_ulong(8);
-            header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
-            header.pixelFormat.gBitMask = 0;
-            header.pixelFormat.bBitMask = 0;
-            header.pixelFormat.aBitMask = 0;
-
-            break;
-        case GPUTEXTUREFORMAT_8_8:
-            header.pixelFormat.flags = _byteswap_ulong(DDPF_LUMINANCE | DDPF_ALPHAPIXELS);
-            header.pixelFormat.rgbBitCount = _byteswap_ulong(16);
-            header.pixelFormat.rBitMask = _byteswap_ulong(0x000000FF);
-            header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
-            header.pixelFormat.bBitMask = 0;
-            header.pixelFormat.aBitMask = 0;
-
-            break;
-        case GPUTEXTUREFORMAT_8_8_8_8:
-            header.pixelFormat.flags = _byteswap_ulong(DDPF_RGB | DDPF_ALPHAPIXELS);
-            header.pixelFormat.rgbBitCount = _byteswap_ulong(32);
-            header.pixelFormat.rBitMask = _byteswap_ulong(0x00FF0000);
-            header.pixelFormat.gBitMask = _byteswap_ulong(0x0000FF00);
-            header.pixelFormat.bBitMask = _byteswap_ulong(0x000000FF);
-            header.pixelFormat.aBitMask = _byteswap_ulong(0xFF000000);
-
-            break;
-        default:
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Unsupported texture format %d!\n", format);
-            return;
-        }
-
-        // TODO: add sanity checks for format, size, etc.
-        // TODO: handle filenames with unsupported characters for Windows
-
-        auto output_filepath = std::string(DUMP_DIR) + "\\highmip\\" + assetName + ".dds";
-
-        std::ofstream output_file(output_filepath, std::ios::binary);
-        if (!output_file)
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to open file: %s\n", output_filepath.c_str());
-            return;
-        }
-
-        output_file.write(reinterpret_cast<const char *>(&header), sizeof(DDSHeader));
-
-        image::xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
-                                             static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
-
-        // Calculate row pitch based on format
-        uint32_t rowPitch;
-
-        switch (format)
-        {
-        case GPUTEXTUREFORMAT_DXT1:
-            rowPitch = (width / 4) * 8; // 8 bytes per 4x4 block
-            break;
-        case GPUTEXTUREFORMAT_DXT2_3:
-        case GPUTEXTUREFORMAT_DXT4_5:
-        case GPUTEXTUREFORMAT_DXN:
-            rowPitch = (width / 4) * 16; // 16 bytes per 4x4 block
-            break;
-        case GPUTEXTUREFORMAT_8:
-            rowPitch = width; // 1 byte per pixel
-            break;
-        case GPUTEXTUREFORMAT_8_8:
-            rowPitch = width * 2; // 2 bytes per pixel
-            break;
-        case GPUTEXTUREFORMAT_8_8_8_8:
-            rowPitch = width * 4; // 4 bytes per pixel
-            break;
-        default:
-            rowPitch = width * 4; // Default to 4 bytes per pixel
-            break;
-        }
-
-        // Create a buffer for linear texture data
-        std::vector<uint8_t> linearData(buffer.size());
-        std::vector<uint8_t> bufferAsUint8(buffer.begin(), buffer.end());
-
-        if (!image::xenos_texture::UntileTextureLevel(width, height, 0, static_cast<uint32_t>(format), 0,
-                                                      linearData.data(), rowPitch, bufferAsUint8.data()))
-        {
-            Com_PrintError(CON_CHANNEL_ERROR, "Image_Dump: Failed to untile highmip image '%s'\n", assetName.c_str());
-            continue;
-        }
-
-        output_file.write(reinterpret_cast<const char *>(linearData.data()), linearData.size());
-        output_file.close();
-
-        Com_Printf(CON_CHANNEL_CONSOLEONLY, "Dumped highmip file: %s\n", output_filepath.c_str());
+        Image_DumpStreamed(asset->entry.asset.header.image, highMipPath);
     }
 }
 
@@ -1131,7 +1037,27 @@ void image_loader::OnAssetLink(XAsset *asset)
         return;
     }
 
-    Image_Replace(asset->header.image);
+    GfxImage *image = asset->header.image;
+    if (!image->delayLoadPixels)
+    {
+        Image_Replace(image);
+    }
+}
+
+void image_loader::OnDelayStreamLoad()
+{
+    const int MAX_IMAGES = 2048;
+    XAssetHeader images[MAX_IMAGES];
+    const int imageCount = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, images, MAX_IMAGES);
+
+    for (int i = 0; i < imageCount; ++i)
+    {
+        GfxImage *image = images[i].image;
+        if (image != NULL && image->delayLoadPixels)
+        {
+            Image_Replace(image);
+        }
+    }
 }
 
 bool R_StreamLoadImageReplacement(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)

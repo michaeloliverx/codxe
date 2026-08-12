@@ -41,6 +41,10 @@ const EventHandler cgInitHandlers[] = {
     clipmap::OnCGInit,
 };
 
+const EventHandler delayStreamLoadHandlers[] = {
+    image_loader::OnDelayStreamLoad,
+};
+
 const EventHandler vmShutdownHandlers[] = {
     GSC::OnVMShutdown,
     GSCFunctions::OnVMShutdown,
@@ -88,6 +92,18 @@ void Events::CG_Init_Hook(int localClientNum, int serverMessageNum, int serverCo
 }
 
 Detour Events::CG_Init_Detour;
+
+void Events::Load_DelayStream_Hook()
+{
+    Load_DelayStream_Detour.GetOriginal<Load_DelayStream_t>()();
+
+    for (size_t i = 0; i < ARRAYSIZE(delayStreamLoadHandlers); ++i)
+    {
+        delayStreamLoadHandlers[i]();
+    }
+}
+
+Detour Events::Load_DelayStream_Detour;
 
 void Events::Scr_ShutdownSystem_Hook(unsigned __int8 sys)
 {
@@ -160,6 +176,9 @@ Events::Events()
     CG_Init_Detour = Detour(CG_Init, CG_Init_Hook);
     CG_Init_Detour.Install();
 
+    Load_DelayStream_Detour = Detour(Load_DelayStream, Load_DelayStream_Hook);
+    Load_DelayStream_Detour.Install();
+
     Scr_ShutdownSystem_Detour = Detour(Scr_ShutdownSystem, Scr_ShutdownSystem_Hook);
     Scr_ShutdownSystem_Detour.Install();
 
@@ -180,6 +199,7 @@ Events::~Events()
 {
     CG_DrawActive_Detour.Remove();
     CG_Init_Detour.Remove();
+    Load_DelayStream_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
     Com_InitDvars_Detour.Remove();
     Cmd_Init_Detour.Remove();
