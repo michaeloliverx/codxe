@@ -1,6 +1,5 @@
 #include "pch.h"
 #include <stdlib.h>
-#include "events.h"
 #include "stats.h"
 
 namespace iw4
@@ -98,9 +97,13 @@ void RegisterCommands()
 }
 } // namespace
 
+void stats::OnCmdInit()
+{
+    RegisterCommands();
+}
+
 stats::stats()
 {
-    Events::OnCmdInit(RegisterCommands);
 }
 
 stats::~stats()

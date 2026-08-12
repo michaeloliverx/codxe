@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "common/brush_collision_tracker.h"
 #include "clipmap.h"
-#include "events.h"
 
 iw4::mp_tu6::dvar_t *noclip_brushes = nullptr;
 
@@ -133,46 +132,45 @@ void DisablePlayerClipOnIntersectingBrushes(iw4::mp_tu6::scr_entref_t entref)
     iw4::mp_tu6::CG_GameMessage(0, iw4::mp_tu6::va("^2Disabled collision for brushes: %s", new_value.c_str()));
 }
 
+void clipmap::OnCGDrawActive()
+{
+    if (iw4::mp_tu6::R_CheckDvarModified(noclip_brushes))
+    {
+        assert(iw4::mp_tu6::cm->isInUse);
+
+        std::string value = noclip_brushes->current.string;
+
+        if (value == "")
+        {
+            RestoreBrushContents();
+        }
+        else if (value == "*")
+        {
+            RemoveAllBrushCollision();
+        }
+        else
+        {
+            RestoreBrushContents();
+            const auto brush_indices = ParseSpaceSeparatedInts(value);
+            for (size_t i = 0; i < brush_indices.size(); ++i)
+            {
+                const int idx = brush_indices[i];
+                if (idx < 0 || idx >= iw4::mp_tu6::cm->numBrushes)
+                {
+                    iw4::mp_tu6::CG_GameMessage(0,
+                                                iw4::mp_tu6::va("^1Error: Invalid brush index %d for map", idx));
+                    continue;
+                }
+                RemoveBrushCollision(idx);
+            }
+        }
+    }
+}
+
 clipmap::clipmap()
 {
     DB_LinkXAssetEntry1_Detour = Detour(iw4::mp_tu6::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
     DB_LinkXAssetEntry1_Detour.Install();
-
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (iw4::mp_tu6::R_CheckDvarModified(noclip_brushes))
-            {
-                assert(iw4::mp_tu6::cm->isInUse);
-
-                std::string value = noclip_brushes->current.string;
-
-                if (value == "")
-                {
-                    RestoreBrushContents();
-                }
-                else if (value == "*")
-                {
-                    RemoveAllBrushCollision();
-                }
-                else
-                {
-                    RestoreBrushContents();
-                    const auto brush_indices = ParseSpaceSeparatedInts(value);
-                    for (size_t i = 0; i < brush_indices.size(); ++i)
-                    {
-                        const int idx = brush_indices[i];
-                        if (idx < 0 || idx >= iw4::mp_tu6::cm->numBrushes)
-                        {
-                            iw4::mp_tu6::CG_GameMessage(
-                                0, iw4::mp_tu6::va("^1Error: Invalid brush index %d for map", idx));
-                            continue;
-                        }
-                        RemoveBrushCollision(idx);
-                    }
-                }
-            }
-        });
 }
 
 clipmap::~clipmap()

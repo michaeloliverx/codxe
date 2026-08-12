@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "mr.h"
-#include "events.h"
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
 #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
@@ -231,30 +230,28 @@ void CL_CreateNewCommands_Hook(int localClientNum)
 
 const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
+void MovementRecorder::OnCmdInit()
+{
+    Cmd_AddCommandInternal("startrecord", Cmd_Startrecord_f, &Cmd_Startrecord_VAR);
+    Cmd_AddCommandInternal("stoprecord", Cmd_Stoprecord_f, &Cmd_Stoprecord_VAR);
+    Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
+    Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
+    Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
+}
+
+void MovementRecorder::OnCGDrawActive()
+{
+    if (is_playing)
+    {
+        static auto bigDevFont = iw4::mp_tu6::R_RegisterFont("fonts/bigDevFont");
+        iw4::mp_tu6::R_AddCmdDrawText("TAS", 4, bigDevFont, 10.f, 20.f, 1.0f, 1.0f, 0.0f, color_white_rgba, 0);
+    }
+}
+
 MovementRecorder::MovementRecorder()
 {
     CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
     CL_CreateNewCommands_Detour.Install();
-
-    Events::OnCmdInit(
-        []
-        {
-            Cmd_AddCommandInternal("startrecord", Cmd_Startrecord_f, &Cmd_Startrecord_VAR);
-            Cmd_AddCommandInternal("stoprecord", Cmd_Stoprecord_f, &Cmd_Stoprecord_VAR);
-            Cmd_AddCommandInternal("togglerecord", Cmd_Togglerecord_f, &Cmd_Togglerecord_VAR);
-            Cmd_AddCommandInternal("startplayback", Cmd_Startplayback_f, &Cmd_Startplayback_VAR);
-            Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
-        });
-
-    Events::OnCG_DrawActive(
-        []()
-        {
-            if (is_playing)
-            {
-                static auto bigDevFont = iw4::mp_tu6::R_RegisterFont("fonts/bigDevFont");
-                iw4::mp_tu6::R_AddCmdDrawText("TAS", 4, bigDevFont, 10.f, 20.f, 1.0f, 1.0f, 0.0f, color_white_rgba, 0);
-            }
-        });
 }
 
 MovementRecorder::~MovementRecorder()

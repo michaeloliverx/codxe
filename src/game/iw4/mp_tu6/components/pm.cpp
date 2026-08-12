@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "pm.h"
-#include "events.h"
 
 namespace iw4
 {
@@ -33,16 +32,15 @@ gentity_s *Weapon_RocketLauncher_Fire_Hook(gentity_s *ent, unsigned int weaponIn
 
 } // namespace
 
+void pm::OnDvarInit()
+{
+    bg_rocketJump = Dvar_RegisterBool("bg_rocketJump", false, DVAR_FLAG_SERVERINFO, "Enable CoD4 rocket jumps");
+    bg_rocketJumpScale = Dvar_RegisterFloat("bg_rocketJumpScale", 64.0f, 1.0f, FLT_MAX, DVAR_FLAG_SERVERINFO,
+                                            "The scale applied to the pushback force of a rocket");
+}
+
 pm::pm()
 {
-    Events::OnDvarInit(
-        []
-        {
-            bg_rocketJump = Dvar_RegisterBool("bg_rocketJump", false, DVAR_FLAG_SERVERINFO, "Enable CoD4 rocket jumps");
-            bg_rocketJumpScale = Dvar_RegisterFloat("bg_rocketJumpScale", 64.0f, 1.0f, FLT_MAX, DVAR_FLAG_SERVERINFO,
-                                                    "The scale applied to the pushback force of a rocket");
-        });
-
     Weapon_RocketLauncher_Fire_Detour = Detour(Weapon_RocketLauncher_Fire, Weapon_RocketLauncher_Fire_Hook);
     Weapon_RocketLauncher_Fire_Detour.Install();
 }

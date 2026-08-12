@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "events.h"
 #include "sv_bots.h"
 
 namespace iw4
@@ -31,6 +30,11 @@ static void CleanBotArray()
 {
     ZeroMemory(&g_botai, sizeof(g_botai));
     s_pendingBotName[0] = '\0';
+}
+
+void SVBots::OnVMShutdown()
+{
+    CleanBotArray();
 }
 
 static char ClampMove(int value)
@@ -356,8 +360,6 @@ void PlayerCmd_BotAngles(scr_entref_t entref)
 
 SVBots::SVBots()
 {
-    Events::OnVMShutdown(CleanBotArray);
-
     G_SelectWeaponIndex_Detour = Detour(G_SelectWeaponIndex, G_SelectWeaponIndex_Hook);
     G_SelectWeaponIndex_Detour.Install();
 

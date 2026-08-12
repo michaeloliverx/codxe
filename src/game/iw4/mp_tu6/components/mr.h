@@ -11,6 +11,9 @@ class MovementRecorder : public Module
   public:
     MovementRecorder();
     ~MovementRecorder();
+
+    static void OnCGDrawActive();
+    static void OnCmdInit();
     static bool TAS_Enabled();
     static void MovementRecorder::On_CG_Init();
 };

@@ -11,6 +11,8 @@ class pm : public Module
   public:
     pm();
     ~pm();
+
+    static void OnDvarInit();
 };
 } // namespace mp_tu6
 } // namespace iw4
