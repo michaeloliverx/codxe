@@ -157,8 +157,7 @@ void clipmap::OnCGDrawActive()
                 const int idx = brush_indices[i];
                 if (idx < 0 || idx >= iw4::mp_tu6::cm->numBrushes)
                 {
-                    iw4::mp_tu6::CG_GameMessage(0,
-                                                iw4::mp_tu6::va("^1Error: Invalid brush index %d for map", idx));
+                    iw4::mp_tu6::CG_GameMessage(0, iw4::mp_tu6::va("^1Error: Invalid brush index %d for map", idx));
                     continue;
                 }
                 RemoveBrushCollision(idx);
