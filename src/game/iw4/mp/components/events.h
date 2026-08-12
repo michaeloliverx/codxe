@@ -13,10 +13,7 @@ class Events : public Module
     Events();
     ~Events();
 
-    static void OnDvarInit(const std::function<void()> &callback);
-
   private:
-    static std::vector<std::function<void()>> com_initdvars_callbacks;
     static Detour Com_InitDvars_Detour;
     static void Com_InitDvars_Hook();
 };
