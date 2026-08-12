@@ -15,11 +15,6 @@ class image_loader : public Module
 
     static void OnAssetLink(XAsset *asset);
     static void OnDelayStreamLoad();
-
-    const char *get_name() override
-    {
-        return "image_loader";
-    };
 };
 } // namespace mp
 } // namespace iw3

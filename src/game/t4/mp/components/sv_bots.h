@@ -11,11 +11,6 @@ class SVBots : public Module
   public:
     SVBots();
     ~SVBots();
-
-    const char *get_name() override
-    {
-        return "SVBots";
-    };
 };
 
 void PlayerCmd_BotAction(scr_entref_t entref);

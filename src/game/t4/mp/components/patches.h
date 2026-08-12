@@ -10,11 +10,6 @@ class Patches : public Module
 {
   public:
     Patches();
-
-    const char *get_name() override
-    {
-        return "patches";
-    }
 };
 } // namespace mp
 } // namespace t4

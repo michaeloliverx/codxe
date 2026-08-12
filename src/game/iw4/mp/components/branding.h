@@ -11,11 +11,6 @@ class Branding : public Module
     Branding();
     ~Branding();
 
-    const char *get_name() override
-    {
-        return "branding";
-    }
-
   private:
     static void DrawBranding(int localClientNum);
     static void UI_DrawBuildNumber_Hook(int localClientNum);

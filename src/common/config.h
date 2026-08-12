@@ -15,11 +15,6 @@ class Config : public Module
     Config();
     ~Config();
 
-    const char *get_name() override
-    {
-        return "Config";
-    }
-
     static bool dump_rawfile;
     static bool dump_map_ents;
 

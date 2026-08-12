@@ -13,11 +13,6 @@ class console : public Module
     console();
     ~console();
 
-    const char *get_name() override
-    {
-        return "console";
-    }
-
     static void frame();
     static void toggle();
     static void close();

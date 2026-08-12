@@ -9,11 +9,6 @@ class patches : public Module
 {
   public:
     patches();
-
-    const char *get_name() override
-    {
-        return "iw4_mp_patches";
-    }
 };
 } // namespace mp
 } // namespace iw4

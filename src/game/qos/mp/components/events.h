@@ -13,11 +13,6 @@ class Events : public Module
     Events();
     ~Events();
 
-    const char *get_name() override
-    {
-        return "Events";
-    };
-
     static void OnCG_DrawActive(const std::function<void()> &callback);
     static void OnCG_Init(const std::function<void()> &callback);
     static void OnVMShutdown(const std::function<void()> &callback);

@@ -11,11 +11,6 @@ class stats : public Module
   public:
     stats();
     ~stats();
-
-    const char *get_name() override
-    {
-        return "stats";
-    }
 };
 } // namespace mp
 } // namespace t4

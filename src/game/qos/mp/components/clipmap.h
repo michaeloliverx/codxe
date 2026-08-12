@@ -12,11 +12,6 @@ class clipmap : public Module
     clipmap();
     ~clipmap();
 
-    const char *get_name() override
-    {
-        return "clipmap";
-    };
-
     static void PlayerCmd_DisablePlayerClipOnTouchingBrushes(scr_entref_t entref);
 
   private:

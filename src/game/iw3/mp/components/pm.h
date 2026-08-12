@@ -14,11 +14,6 @@ class pm : public Module
 
     static void OnDvarInit();
     static void OnCGDrawActive();
-
-    const char *get_name() override
-    {
-        return "pm";
-    };
 };
 } // namespace mp
 } // namespace iw3
