@@ -198,13 +198,43 @@ bool DDSIsCubemap(const DDSImage &ddsImage)
            (ddsImage.header.caps2 & DDSCAPS2_CUBEMAP_ALL_FACES) == DDSCAPS2_CUBEMAP_ALL_FACES;
 }
 
-size_t CalculateRequiredLinearDataSize(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t levelCount,
-                                       uint32_t faceCount)
+uint32_t GetDDSMipCount(const DDSImage &ddsImage)
+{
+    return max(1u, static_cast<uint32_t>(ddsImage.header.mipMapCount));
+}
+
+bool GetDDSFormat(const DDSImage &ddsImage, GPUTEXTUREFORMAT *format)
+{
+    if ((ddsImage.header.pixelFormat.flags & DDPF_FOURCC) == 0)
+        return false;
+
+    switch (ddsImage.header.pixelFormat.fourCC)
+    {
+    case DXT1_FOURCC:
+        *format = GPUTEXTUREFORMAT_DXT1;
+        return true;
+    case DXT3_FOURCC:
+        *format = GPUTEXTUREFORMAT_DXT2_3;
+        return true;
+    case DXT5_FOURCC:
+        *format = GPUTEXTUREFORMAT_DXT4_5;
+        return true;
+    case DXN_FOURCC:
+        *format = GPUTEXTUREFORMAT_DXN;
+        return true;
+    default:
+        return false;
+    }
+}
+
+size_t CalculateRequiredLinearDataSize(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t firstMipLevel,
+                                       uint32_t levelCount, uint32_t faceCount)
 {
     size_t requiredSize = 0;
 
-    for (uint32_t mipLevel = 0; mipLevel < levelCount; ++mipLevel)
+    for (uint32_t localMipLevel = 0; localMipLevel < levelCount; ++localMipLevel)
     {
+        const uint32_t mipLevel = firstMipLevel + localMipLevel;
         const uint32_t levelSize = image::xenos_texture::CalculateLinearLevelSize(width, height, mipLevel, format);
         if (levelSize == 0)
             return 0;
@@ -213,6 +243,23 @@ size_t CalculateRequiredLinearDataSize(uint32_t width, uint32_t height, GPUTEXTU
     }
 
     return requiredSize;
+}
+
+uint32_t CalculateDDSMipOffset(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format, uint32_t mipLevel)
+{
+    uint32_t offset = 0;
+
+    for (uint32_t currentMipLevel = 0; currentMipLevel < mipLevel; ++currentMipLevel)
+    {
+        const uint32_t levelSize =
+            image::xenos_texture::CalculateLinearLevelSize(width, height, currentMipLevel, format);
+        if (levelSize == 0)
+            return 0;
+
+        offset += levelSize;
+    }
+
+    return offset;
 }
 
 size_t CalculateRequiredMipTextureBytes(uint32_t width, uint32_t height, GPUTEXTUREFORMAT format,
@@ -233,10 +280,15 @@ size_t CalculateRequiredMipTextureBytes(uint32_t width, uint32_t height, GPUTEXT
 }
 
 bool Validate2DReplacementData(const iw3::mp::GfxImage *image, const DDSImage &ddsImage, GPUTEXTUREFORMAT format,
-                               uint32_t replacementLevelCount, size_t *requiredDDSSize, size_t *requiredTextureBytes)
+                               uint32_t ddsFirstMipLevel, uint32_t replacementLevelCount, size_t *requiredDDSSize,
+                               size_t *requiredTextureBytes)
 {
-    *requiredDDSSize = CalculateRequiredLinearDataSize(image->width, image->height, format, replacementLevelCount, 1u);
-    if (*requiredDDSSize == 0)
+    const size_t ddsMipOffset =
+        CalculateDDSMipOffset(ddsImage.header.width, ddsImage.header.height, format, ddsFirstMipLevel);
+    const size_t requiredLinearSize = CalculateRequiredLinearDataSize(
+        ddsImage.header.width, ddsImage.header.height, format, ddsFirstMipLevel, replacementLevelCount, 1u);
+    *requiredDDSSize = ddsMipOffset + requiredLinearSize;
+    if (requiredLinearSize == 0 || (ddsFirstMipLevel > 0 && ddsMipOffset == 0))
         return false;
 
     if (ddsImage.data.size() < *requiredDDSSize)
@@ -748,7 +800,7 @@ void Cmd_imagedump()
     }
 }
 
-bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
+bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage, uint32_t ddsFirstMipLevel)
 {
     if (image->mapType != MAPTYPE_2D)
     {
@@ -761,7 +813,15 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
     const uint32_t mipTailBaseLevel = image->texture.basemap->Format.PackedMips != 0
                                           ? image::xenos_texture::GetMipTailBaseLevel(image->width, image->height)
                                           : levelCount;
-    const uint32_t replaceLevelCount = min(levelCount, max(1u, static_cast<uint32_t>(ddsImage.header.mipMapCount)));
+    const uint32_t ddsMipCount = GetDDSMipCount(ddsImage);
+    if (ddsFirstMipLevel >= ddsMipCount)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' replacement DDS has no mip %u: mipCount=%u\n", image->name,
+                       ddsFirstMipLevel, ddsMipCount);
+        return false;
+    }
+
+    const uint32_t replaceLevelCount = min(levelCount, ddsMipCount - ddsFirstMipLevel);
     const uint32_t nonPackedLevelCount = max(1u, min(replaceLevelCount, mipTailBaseLevel));
     unsigned char *baseData = image::xenos_texture::GetTextureBase(image->texture.basemap, image->pixels);
     unsigned char *mipData = image::xenos_texture::GetTextureMipBase(image->texture.basemap, baseData, image->width,
@@ -769,7 +829,7 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
 
     size_t requiredDDSSize = 0;
     size_t requiredTextureBytes = 0;
-    if (!Validate2DReplacementData(image, ddsImage, format, nonPackedLevelCount, &requiredDDSSize,
+    if (!Validate2DReplacementData(image, ddsImage, format, ddsFirstMipLevel, nonPackedLevelCount, &requiredDDSSize,
                                    &requiredTextureBytes))
     {
         if (requiredDDSSize == 0)
@@ -799,20 +859,21 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
         return false;
     }
 
-    uint32_t ddsOffset = 0;
+    uint32_t ddsOffset = CalculateDDSMipOffset(ddsImage.header.width, ddsImage.header.height, format, ddsFirstMipLevel);
 
-    for (uint32_t mipLevel = 0; mipLevel < nonPackedLevelCount; mipLevel++)
+    for (uint32_t localMipLevel = 0; localMipLevel < nonPackedLevelCount; localMipLevel++)
     {
-        uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(image->width, mipLevel, format);
-        uint32_t ddsMipLevelSize =
-            image::xenos_texture::CalculateLinearLevelSize(image->width, image->height, mipLevel, format);
+        const uint32_t ddsMipLevel = ddsFirstMipLevel + localMipLevel;
+        uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(ddsImage.header.width, ddsMipLevel, format);
+        uint32_t ddsMipLevelSize = image::xenos_texture::CalculateLinearLevelSize(
+            ddsImage.header.width, ddsImage.header.height, ddsMipLevel, format);
         uint32_t tiledMipLevelSize = image::xenos_texture::CalculateTiledLevelSize(
-            image->width, image->height, mipLevel, format, image->texture.basemap->Format.Pitch);
+            image->width, image->height, localMipLevel, format, image->texture.basemap->Format.Pitch);
 
         if (ddsMipLevelSize == 0 || tiledMipLevelSize == 0 || rowPitch == 0)
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Replace_2D: Unsupported format %d for image '%s' mip level %u\n",
-                           image->texture.basemap->Format.DataFormat, image->name, mipLevel);
+                           image->texture.basemap->Format.DataFormat, image->name, localMipLevel);
             return false;
         }
 
@@ -820,7 +881,7 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
         if (ddsOffset + ddsMipLevelSize > ddsImage.data.size())
         {
             Com_PrintError(CON_CHANNEL_ERROR, "Image_Replace_2D: Image '%s' mip level %u exceeds DDS data size\n",
-                           image->name, mipLevel);
+                           image->name, ddsMipLevel);
             return false;
         }
 
@@ -831,22 +892,22 @@ bool Image_Replace_2D(GfxImage *image, const DDSImage &ddsImage)
                                              static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
         unsigned char *destination = baseData;
-        if (mipLevel > 0)
+        if (localMipLevel > 0)
         {
-            destination = mipData + image::xenos_texture::CalculateMipLevelOffset(image->width, image->height, mipLevel,
-                                                                                  format, 1u);
+            destination = mipData + image::xenos_texture::CalculateMipLevelOffset(image->width, image->height,
+                                                                                  localMipLevel, format, 1u);
         }
 
         std::vector<uint8_t> tiledData(tiledMipLevelSize);
 
-        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, mipLevel, format,
+        if (!image::xenos_texture::TileTextureLevel(image->width, image->height, localMipLevel, format,
                                                     image->texture.basemap->Format.Pitch, tiledData.data(),
                                                     tiledData.size(), levelData.data(), levelData.size(), rowPitch))
         {
             Com_PrintError(
                 CON_CHANNEL_ERROR,
                 "Image_Replace_2D: Failed to tile mip level %d for image '%s' rowPitch=%u sourceSize=%u destSize=%u\n",
-                mipLevel, image->name, rowPitch, static_cast<unsigned int>(levelData.size()), tiledMipLevelSize);
+                localMipLevel, image->name, rowPitch, static_cast<unsigned int>(levelData.size()), tiledMipLevelSize);
             return false;
         }
 
@@ -965,38 +1026,11 @@ void Image_Replace(GfxImage *image)
         return;
     }
 
-    if ((ddsImage.header.pixelFormat.flags & DDPF_FOURCC) == 0)
-    {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' replacement DDS is not a FourCC/compressed texture!\n",
-                       image->name);
-        return;
-    }
-
-    if (image->width != ddsImage.header.width || image->height != ddsImage.header.height)
-    {
-        Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' dimensions do not match DDS file: %s\n", image->name,
-                       replacement_path.c_str());
-        return;
-    }
-
     GPUTEXTUREFORMAT ddsFormat;
-    switch (ddsImage.header.pixelFormat.fourCC)
+    if (!GetDDSFormat(ddsImage, &ddsFormat))
     {
-    case DXT1_FOURCC:
-        ddsFormat = GPUTEXTUREFORMAT_DXT1;
-        break;
-    case DXT3_FOURCC:
-        ddsFormat = GPUTEXTUREFORMAT_DXT2_3;
-        break;
-    case DXT5_FOURCC:
-        ddsFormat = GPUTEXTUREFORMAT_DXT4_5;
-        break;
-    case DXN_FOURCC:
-        ddsFormat = GPUTEXTUREFORMAT_DXN;
-        break;
-    default:
-        Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' has an unsupported DDS format: 0x%X\n", image->name,
-                       ddsImage.header.pixelFormat.fourCC);
+        Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' has an unsupported DDS format: flags=0x%X fourCC=0x%X\n",
+                       image->name, ddsImage.header.pixelFormat.flags, ddsImage.header.pixelFormat.fourCC);
         return;
     }
 
@@ -1009,10 +1043,46 @@ void Image_Replace(GfxImage *image)
     }
 
     const bool ddsIsCubemap = DDSIsCubemap(ddsImage);
+    const bool ddsMatchesImageDimensions =
+        image->width == ddsImage.header.width && image->height == ddsImage.header.height;
+    const bool ddsIncludesStreamedMip = image->streaming && image->mapType == MAPTYPE_2D && !ddsIsCubemap &&
+                                        ddsImage.header.width == static_cast<uint32_t>(image->width) * 2u &&
+                                        ddsImage.header.height == static_cast<uint32_t>(image->height) * 2u;
+    uint32_t ddsFirstMipLevel = 0;
 
     if (image->mapType == MAPTYPE_2D && ddsIsCubemap)
     {
         Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' is 2D but replacement DDS is a cubemap!\n", image->name);
+        return;
+    }
+
+    if (ddsIncludesStreamedMip)
+    {
+        const uint32_t ddsMipCount = GetDDSMipCount(ddsImage);
+        if (ddsMipCount < 2u)
+        {
+            Com_PrintError(CON_CHANNEL_ERROR,
+                           "Image '%s' replacement DDS contains a streamed level but no resident level: "
+                           "%ux%u mipCount=%u\n",
+                           image->name, ddsImage.header.width, ddsImage.header.height, ddsMipCount);
+            return;
+        }
+
+        ddsFirstMipLevel = 1u;
+    }
+    else if (image->streaming && image->mapType == MAPTYPE_2D && ddsMatchesImageDimensions)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR,
+                       "Streamed image '%s' replacement has no streamed mip; stock high-mip data will overwrite it "
+                       "when streamed. Use a %ux%u DDS with at least 2 mip levels.\n",
+                       image->name, static_cast<uint32_t>(image->width) * 2u,
+                       static_cast<uint32_t>(image->height) * 2u);
+    }
+    else if (!ddsMatchesImageDimensions)
+    {
+        Com_PrintError(CON_CHANNEL_ERROR, "Image '%s' dimensions do not match DDS file: image=%ux%u dds=%ux%u %s\n",
+                       image->name, image->width, image->height, ddsImage.header.width, ddsImage.header.height,
+                       replacement_path.c_str());
         return;
     }
 
@@ -1036,7 +1106,7 @@ void Image_Replace(GfxImage *image)
     bool replaced = false;
     if (image->mapType == MAPTYPE_2D)
     {
-        replaced = Image_Replace_2D(image, ddsImage);
+        replaced = Image_Replace_2D(image, ddsImage, ddsFirstMipLevel);
     }
     else if (image->mapType == MAPTYPE_CUBE)
     {
@@ -1064,65 +1134,75 @@ void image_loader::OnAssetLink(XAsset *asset)
     Image_Replace(asset->header.image);
 }
 
-bool R_StreamLoadHighMipReplacement(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
+bool R_StreamLoadImageReplacement(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
 {
-    std::string asset_name = extract_filename(filename);
-    auto asset = DB_FindXAssetEntry(ASSET_TYPE_IMAGE, asset_name.c_str());
+    const std::string assetName = extract_filename(filename);
+    XAssetEntryPoolEntry *asset = DB_FindXAssetEntry(ASSET_TYPE_IMAGE, assetName.c_str());
 
     if (!asset)
+        return false;
+
+    GfxImage *image = asset->entry.asset.header.image;
+    if (image == NULL || image->name == NULL || image->texture.basemap == NULL || image->mapType != MAPTYPE_2D ||
+        outData == NULL)
+        return false;
+
+    const std::string replacementPath = Config::GetModBasePath() + "\\images\\" + image->name + ".dds";
+    if (!filesystem::file_exists(replacementPath))
+        return false;
+
+    DDSImage ddsImage = ReadDDSFile(replacementPath);
+    if (ddsImage.data.empty())
+        return false;
+
+    const uint32_t streamedWidth = static_cast<uint32_t>(image->width) * 2u;
+    const uint32_t streamedHeight = static_cast<uint32_t>(image->height) * 2u;
+    if (ddsImage.header.width != streamedWidth || ddsImage.header.height != streamedHeight)
+        return false;
+
+    if (ddsImage.header.size != DDS_HEADER_SIZE || ddsImage.header.pixelFormat.size != DDS_PIXEL_FORMAT_SIZE ||
+        DDSIsCubemap(ddsImage) || GetDDSMipCount(ddsImage) < 2u)
     {
+        Com_PrintError(CON_CHANNEL_ERROR, "Streamed image '%s' has an invalid replacement DDS: %s\n", image->name,
+                       replacementPath.c_str());
         return false;
     }
 
-    auto image = asset->entry.asset.header.image;
-
-    // Use new ConfigModule API
-    std::string replacement_path = Config::GetModBasePath() + "\\highmip" + "\\" + asset_name + ".dds";
-
-    std::ifstream file(replacement_path, std::ios::binary | std::ios::ate);
-    if (!file)
+    GPUTEXTUREFORMAT ddsFormat;
+    if (!GetDDSFormat(ddsImage, &ddsFormat) ||
+        static_cast<uint32_t>(ddsFormat) != image->texture.basemap->Format.DataFormat)
     {
+        Com_PrintError(CON_CHANNEL_ERROR, "Streamed image '%s' replacement format does not match the game texture\n",
+                       image->name);
         return false;
     }
 
-    std::streamsize file_size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    if (file_size - 0x80 != bytesToRead) // 0x80 is the size of the DDS header
+    const uint32_t sourceSize =
+        image::xenos_texture::CalculateLinearLevelSize(streamedWidth, streamedHeight, 0u, ddsFormat);
+    const uint32_t rowPitch = image::xenos_texture::CalculateLinearRowPitch(streamedWidth, 0u, ddsFormat);
+    const uint32_t tiledSize =
+        image::xenos_texture::CalculateTiledLevelSize(streamedWidth, streamedHeight, 0u, ddsFormat, 0u);
+    if (sourceSize == 0 || rowPitch == 0 || tiledSize == 0 || ddsImage.data.size() < sourceSize ||
+        tiledSize != bytesToRead)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "R_StreamLoadHighMipReplacement: File size mismatch: %s\n",
-                       replacement_path.c_str());
+        Com_PrintError(CON_CHANNEL_ERROR,
+                       "Streamed image '%s' replacement size mismatch: source=%u tiled=%u requested=%u\n", image->name,
+                       sourceSize, tiledSize, bytesToRead);
         return false;
     }
 
-    std::vector<unsigned char> ddsHeader(0x80);
-    file.read(reinterpret_cast<char *>(ddsHeader.data()), 0x80);
-
-    // TODO: check if file is DDS and has correct format and dimensions
-
-    std::vector<unsigned char> buffer;
-    buffer.resize(static_cast<size_t>(bytesToRead));
-    file.read(reinterpret_cast<char *>(buffer.data()), bytesToRead);
-
-    image::xenos_texture::ApplyGpuEndian(buffer.data(), buffer.size(),
+    std::vector<uint8_t> levelData(ddsImage.data.begin(), ddsImage.data.begin() + sourceSize);
+    image::xenos_texture::ApplyGpuEndian(levelData.data(), levelData.size(),
                                          static_cast<GPUENDIAN>(image->texture.basemap->Format.Endian));
 
-    // High mip are 2x the size of the original image
-    auto width = image->width * 2;
-    auto height = image->height * 2;
-    auto rowPitch = image::xenos_texture::CalculateLinearRowPitch(width, 0, image->texture.basemap->Format.DataFormat);
-    if (rowPitch == 0)
-        return false;
-
-    if (!image::xenos_texture::TileTextureLevel(width, height, 0, image->texture.basemap->Format.DataFormat, 0, outData,
-                                                bytesToRead, buffer.data(), buffer.size(), rowPitch))
+    if (!image::xenos_texture::TileTextureLevel(streamedWidth, streamedHeight, 0u, ddsFormat, 0u, outData, bytesToRead,
+                                                levelData.data(), levelData.size(), rowPitch))
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "R_StreamLoadHighMipReplacement: Failed to tile image '%s'\n",
-                       asset_name.c_str());
+        Com_PrintError(CON_CHANNEL_ERROR, "Failed to tile streamed image '%s'\n", image->name);
         return false;
     }
 
-    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Replaced highmip image '%s'\n", asset_name.c_str());
+    Com_Printf(CON_CHANNEL_CONSOLEONLY, "Replaced streamed image '%s'\n", image->name);
     return true;
 }
 
@@ -1130,7 +1210,7 @@ Detour R_StreamLoadFileSynchronously_Detour;
 
 int R_StreamLoadFileSynchronously_Hook(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
 {
-    if (R_StreamLoadHighMipReplacement(filename, bytesToRead, outData))
+    if (R_StreamLoadImageReplacement(filename, bytesToRead, outData))
     {
         return 1;
     }
@@ -1142,7 +1222,7 @@ int R_StreamLoadFileSynchronously_Hook(const char *filename, unsigned int bytesT
 
 image_loader::image_loader()
 {
-    // Load highmip texture replacements from active mod folder
+    // Load streamed texture replacements from the active mod folder.
     R_StreamLoadFileSynchronously_Detour = Detour(R_StreamLoadFileSynchronously, R_StreamLoadFileSynchronously_Hook);
     R_StreamLoadFileSynchronously_Detour.Install();
 
