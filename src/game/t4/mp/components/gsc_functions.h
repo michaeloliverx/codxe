@@ -11,10 +11,6 @@ class GSCFunctions : public Module
   public:
     GSCFunctions();
     ~GSCFunctions();
-    const char *get_name() override
-    {
-        return "GSCFunctions";
-    };
 };
 } // namespace mp
 } // namespace t4

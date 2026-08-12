@@ -23,11 +23,6 @@ class GSCFunctions : public Module
     ~GSCFunctions();
 
     static void OnVMShutdown();
-
-    const char *get_name() override
-    {
-        return "GSCFunctions";
-    };
 };
 } // namespace mp
 } // namespace iw3

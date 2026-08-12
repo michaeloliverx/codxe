@@ -13,11 +13,6 @@ class GSC : public Module
     ~GSC();
 
     static void OnVMShutdown();
-
-    const char *get_name() override
-    {
-        return "GSC";
-    };
 };
 } // namespace mp
 } // namespace iw3

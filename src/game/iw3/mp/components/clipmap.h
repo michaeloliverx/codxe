@@ -16,11 +16,6 @@ class clipmap : public Module
     static void OnCGInit();
     static void OnCGDrawActive();
 
-    const char *get_name() override
-    {
-        return "clipmap";
-    };
-
   private:
     static void HandleBrushCollisionChange();
 };

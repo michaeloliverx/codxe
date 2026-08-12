@@ -14,11 +14,6 @@ class cg : public Module
 
     static void OnDvarInit();
     static void OnCGDrawActive();
-
-    const char *get_name() override
-    {
-        return "cg";
-    };
 };
 } // namespace mp
 } // namespace iw3

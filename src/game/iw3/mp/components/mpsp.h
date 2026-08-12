@@ -11,10 +11,6 @@ class mpsp : public Module
   public:
     mpsp();
     ~mpsp();
-    const char *get_name() override
-    {
-        return "mpsp";
-    };
     static bool is_sp_map;
     static bool is_sp_mapname(const std::string &name);
     static void OnAssetLink(XAsset *asset);

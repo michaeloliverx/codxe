@@ -12,11 +12,6 @@ class command : public Module
     command();
     ~command();
 
-    const char *get_name() override
-    {
-        return "command";
-    };
-
     static void add(const char *name, void (*callback)());
     static void OnCmdInit();
 
