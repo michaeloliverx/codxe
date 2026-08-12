@@ -19,6 +19,8 @@ class SVBots : public Module
   public:
     SVBots();
     ~SVBots();
+
+    static void OnVMShutdown();
 };
 } // namespace mp_tu6
 } // namespace iw4

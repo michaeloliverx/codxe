@@ -2,7 +2,6 @@
 #include "gsc.h"
 #include "common/gsc_registry.h"
 #include "clipmap.h"
-#include "events.h"
 #include "sv_bots.h"
 
 namespace iw4
@@ -299,6 +298,11 @@ static void CloseScriptIOFile()
     }
 }
 
+void GSC::OnVMShutdown()
+{
+    CloseScriptIOFile();
+}
+
 static void GScr_CloseFile()
 {
     if (Scr_GetNumParam() != 0)
@@ -322,8 +326,6 @@ GSC::GSC()
 
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
-
-    Events::OnVMShutdown(CloseScriptIOFile);
 }
 
 GSC::~GSC()

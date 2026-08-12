@@ -8,6 +8,8 @@ class console : public Module
     console();
     ~console();
 
+    static void OnCmdInit();
+
   private:
     static Detour SCR_DrawScreenField_Detour;
     static void SCR_DrawScreenField_Hook(int localClientNum, int refreshedUI);

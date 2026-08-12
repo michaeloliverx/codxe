@@ -11,6 +11,8 @@ class GSC : public Module
   public:
     GSC();
     ~GSC();
+
+    static void OnVMShutdown();
 };
 } // namespace mp_tu6
 } // namespace iw4

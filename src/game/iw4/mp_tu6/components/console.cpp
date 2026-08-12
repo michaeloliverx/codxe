@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "console.h"
-#include "events.h"
 
 namespace
 {
@@ -266,10 +265,13 @@ void dispatch_keystroke(const XINPUT_KEYSTROKE &keystroke)
 
 Detour console::SCR_DrawScreenField_Detour;
 
+void console::OnCmdInit()
+{
+    register_commands();
+}
+
 console::console()
 {
-    Events::OnCmdInit(register_commands);
-
     SCR_DrawScreenField_Detour = Detour(iw4::mp_tu6::SCR_DrawScreenField, SCR_DrawScreenField_Hook);
     SCR_DrawScreenField_Detour.Install();
 }
