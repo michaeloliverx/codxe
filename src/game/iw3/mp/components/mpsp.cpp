@@ -746,6 +746,18 @@ int DB_AuthLoad_Inflate_Hook(z_stream_s *stream, int flush)
     }
 }
 
+Detour DB_AuthLoad_InflateEnd_Detour;
+void DB_AuthLoad_InflateEnd_Hook(z_stream_s *stream)
+{
+    if (g_isSecure)
+    {
+        DB_AuthLoad_InflateEnd_Detour.GetOriginal<DB_AuthLoad_InflateEnd_t>()(stream);
+        return;
+    }
+
+    inflateEnd(stream);
+}
+
 mpsp::mpsp()
 {
 
@@ -759,6 +771,9 @@ mpsp::mpsp()
 
     DB_AuthLoad_Inflate_Detour = Detour(DB_AuthLoad_Inflate, DB_AuthLoad_Inflate_Hook);
     DB_AuthLoad_Inflate_Detour.Install();
+
+    DB_AuthLoad_InflateEnd_Detour = Detour(DB_AuthLoad_InflateEnd, DB_AuthLoad_InflateEnd_Hook);
+    DB_AuthLoad_InflateEnd_Detour.Install();
 
     Load_XAssetArrayCustom_Detour = Detour(Load_XAssetArrayCustom, Load_XAssetArrayCustom_Stub);
     Load_XAssetArrayCustom_Detour.Install();
@@ -776,6 +791,8 @@ mpsp::~mpsp()
     DB_LoadXFileInternal_Detour.Remove();
 
     DB_AuthLoad_Inflate_Detour.Remove();
+
+    DB_AuthLoad_InflateEnd_Detour.Remove();
 
     Load_XAssetArrayCustom_Detour.Remove();
 
