@@ -187,14 +187,14 @@ StaticDDSImage ReadDDSFileStatic(const char *filepath)
                               FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE)
     {
-        DbgPrint("ERROR: Unable to open file: %s\n", filepath);
+        iw3::mp::Com_PrintError(iw3::mp::CON_CHANNEL_ERROR, "Failed to open DDS file '%s'\n", filepath);
         return ddsImage;
     }
 
     DWORD bytesRead = 0;
     if (!ReadFile(file, &ddsImage.header, sizeof(DDSHeader), &bytesRead, nullptr) || bytesRead != sizeof(DDSHeader))
     {
-        DbgPrint("ERROR: Failed to read DDS header: %s\n", filepath);
+        iw3::mp::Com_PrintError(iw3::mp::CON_CHANNEL_ERROR, "Failed to read DDS header from '%s'\n", filepath);
         CloseHandle(file);
         return ddsImage;
     }
@@ -202,7 +202,7 @@ StaticDDSImage ReadDDSFileStatic(const char *filepath)
     const uint32_t magicSwapped = _byteswap_ulong(ddsImage.header.magic);
     if (magicSwapped != 0x20534444)
     {
-        DbgPrint("ERROR: Invalid DDS file: %s\n", filepath);
+        iw3::mp::Com_PrintError(iw3::mp::CON_CHANNEL_ERROR, "Invalid DDS file '%s'\n", filepath);
         CloseHandle(file);
         return ddsImage;
     }
@@ -212,7 +212,8 @@ StaticDDSImage ReadDDSFileStatic(const char *filepath)
     const DWORD fileSize = GetFileSize(file, nullptr);
     if (fileSize == INVALID_FILE_SIZE || fileSize <= sizeof(DDSHeader))
     {
-        DbgPrint("ERROR: Failed to determine DDS file size: %s\n", filepath);
+        iw3::mp::Com_PrintError(iw3::mp::CON_CHANNEL_ERROR, "Failed to determine the size of DDS file '%s'\n",
+                                filepath);
         CloseHandle(file);
         return ddsImage;
     }
@@ -220,15 +221,15 @@ StaticDDSImage ReadDDSFileStatic(const char *filepath)
     const DWORD dataSize = fileSize - sizeof(DDSHeader);
     if (dataSize > sizeof(g_staticDDSData))
     {
-        DbgPrint("ERROR: DDS file too large for static buffer: %s size=%u max=%u\n", filepath, dataSize,
-                 static_cast<unsigned int>(sizeof(g_staticDDSData)));
+        iw3::mp::Com_PrintError(iw3::mp::CON_CHANNEL_ERROR, "DDS file '%s' is too large (%u bytes; maximum %u)\n",
+                                filepath, dataSize, static_cast<unsigned int>(sizeof(g_staticDDSData)));
         CloseHandle(file);
         return ddsImage;
     }
 
     if (!ReadFile(file, g_staticDDSData, dataSize, &bytesRead, nullptr) || bytesRead != dataSize)
     {
-        DbgPrint("ERROR: Failed to read DDS data: %s\n", filepath);
+        iw3::mp::Com_PrintError(iw3::mp::CON_CHANNEL_ERROR, "Failed to read DDS data from '%s'\n", filepath);
         CloseHandle(file);
         return ddsImage;
     }
@@ -237,11 +238,6 @@ StaticDDSImage ReadDDSFileStatic(const char *filepath)
 
     ddsImage.data = g_staticDDSData;
     ddsImage.dataSize = dataSize;
-
-    DbgPrint("INFO: DDS file '%s' loaded successfully.\n", filepath);
-    DbgPrint("      Resolution: %ux%u\n", ddsImage.header.width, ddsImage.header.height);
-    DbgPrint("      MipMaps: %u\n", ddsImage.header.mipMapCount);
-    DbgPrint("      Data Size: %u bytes\n", ddsImage.dataSize);
 
     return ddsImage;
 }
@@ -946,19 +942,15 @@ void Image_Replace(GfxImage *image)
 
     if (!filesystem::file_exists(replacement_path))
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "File does not exist: %s\n", replacement_path.c_str());
         return;
     }
 
     StaticDDSImage staticDDSImage = ReadDDSFileStatic(replacement_path.c_str());
     if (staticDDSImage.data == nullptr)
     {
-        Com_PrintError(CON_CHANNEL_ERROR, "Failed to load DDS file: %s\n", replacement_path.c_str());
         return;
     }
 
-    DbgPrint("[codxe][image_loader] DDS loaded for isolation: %s bytes=%u\n", replacement_path.c_str(),
-             static_cast<unsigned int>(staticDDSImage.dataSize));
     return;
 
     DDSImage ddsImage = ReadDDSFile(replacement_path.c_str());
@@ -1019,24 +1011,14 @@ void Image_Replace(GfxImage *image)
     }
 }
 
-void Load_images()
+void image_loader::OnAssetLink(XAsset *asset)
 {
-    const int MAX_IMAGES = 2048;
-    XAssetHeader assets[MAX_IMAGES];
-    const auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, assets, MAX_IMAGES);
-    for (int i = 0; i < count; i++)
+    if (asset->type != ASSET_TYPE_IMAGE || !asset->header.image || !asset->header.image->name)
     {
-        GfxImage *image = assets[i].image;
-        Image_Replace(image);
+        return;
     }
-}
 
-Detour CG_RegisterGraphics_Detour;
-
-void CG_RegisterGraphics_Hook(int localClientNum, const char *mapname)
-{
-    CG_RegisterGraphics_Detour.GetOriginal<decltype(CG_RegisterGraphics)>()(localClientNum, mapname);
-    Load_images();
+    Image_Replace(asset->header.image);
 }
 
 bool R_StreamLoadHighMipReplacement(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
@@ -1115,10 +1097,6 @@ int R_StreamLoadFileSynchronously_Hook(const char *filename, unsigned int bytesT
 
 image_loader::image_loader()
 {
-    // Load raw texture replacements from active mod folder
-    CG_RegisterGraphics_Detour = Detour(CG_RegisterGraphics, CG_RegisterGraphics_Hook);
-    CG_RegisterGraphics_Detour.Install();
-
     // Load highmip texture replacements from active mod folder
     R_StreamLoadFileSynchronously_Detour = Detour(R_StreamLoadFileSynchronously, R_StreamLoadFileSynchronously_Hook);
     R_StreamLoadFileSynchronously_Detour.Install();
@@ -1128,8 +1106,6 @@ image_loader::image_loader()
 
 image_loader::~image_loader()
 {
-    CG_RegisterGraphics_Detour.Remove();
-
     R_StreamLoadFileSynchronously_Detour.Remove();
 }
 } // namespace mp

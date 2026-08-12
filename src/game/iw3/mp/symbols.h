@@ -45,7 +45,6 @@ static CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x8231E
 
 static auto CG_GameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8230AAF0);
 static auto CG_GetPredictedPlayerState = reinterpret_cast<const playerState_s *(*)(int localClientNum)>(0x82309120);
-static auto CG_RegisterGraphics = reinterpret_cast<void (*)(int localClientNum, const char *mapname)>(0x8230D858);
 
 static auto CL_CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x822E6E60);
 static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name, unsigned int *checksum)>(0x82243940);

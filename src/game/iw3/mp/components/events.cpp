@@ -9,6 +9,7 @@
 #include "console.h"
 #include "gsc.h"
 #include "gsc_functions.h"
+#include "image_loader.h"
 #include "mpsp.h"
 #include "pm.h"
 #include "sv_bots.h"
@@ -25,6 +26,7 @@ typedef void (*AssetLinkHandler)(XAsset *asset);
 const AssetLinkHandler assetLinkHandlers[] = {
     assets::OnAssetLink,
     mpsp::OnAssetLink,
+    image_loader::OnAssetLink,
 };
 
 const EventHandler cgDrawActiveHandlers[] = {
