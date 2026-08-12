@@ -11,6 +11,8 @@ class stats : public Module
   public:
     stats();
     ~stats();
+
+    static void OnCmdInit();
 };
 } // namespace mp
 } // namespace t4

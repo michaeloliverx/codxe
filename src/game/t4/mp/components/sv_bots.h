@@ -11,6 +11,8 @@ class SVBots : public Module
   public:
     SVBots();
     ~SVBots();
+
+    static void OnVMShutdown();
 };
 
 void PlayerCmd_BotAction(scr_entref_t entref);
