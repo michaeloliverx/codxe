@@ -20,6 +20,7 @@ class Config : public Module
 
     static const char *GetActiveMod();
     static const char *GetModBasePath();
+    static std::string ResolveModPath(const char *relativePath);
 
   private:
     static char active_mod[MAX_PATH];

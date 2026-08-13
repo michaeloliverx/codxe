@@ -16,18 +16,6 @@ static const unsigned int GSC_TOKEN_CLOSEFILE = 0x9A;
 static const unsigned int GSC_TOKEN_FPRINTLN = 0x9B;
 static const unsigned int GSC_TOKEN_FREADLN = 0x9D;
 
-std::string BuildScriptFilePath(const char *filename)
-{
-    std::string relative_path = filename ? filename : "";
-    std::replace(relative_path.begin(), relative_path.end(), '/', '\\');
-
-    const std::string mod_base_path = Config::GetModBasePath();
-    if (mod_base_path.empty())
-        return relative_path;
-
-    return mod_base_path + "\\" + relative_path;
-}
-
 void CloseAllScriptFiles()
 {
     script_files::CloseAll();
@@ -58,7 +46,7 @@ void GScr_OpenFile()
     }
 
     const char *filename = Scr_GetString(0);
-    const std::string path = BuildScriptFilePath(filename);
+    const std::string path = Config::ResolveModPath(filename);
     if (file_mode[0] == 'w' || file_mode[0] == 'a')
         filesystem::CreateParentDirectories(path.c_str());
 
