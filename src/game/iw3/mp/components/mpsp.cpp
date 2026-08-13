@@ -48,15 +48,7 @@ std::string NormalizePath(const std::string &path)
 bool WriteFile(const std::string &path, const char *data, int size)
 {
     const std::string normalized = NormalizePath(path);
-
-    // Create directories if they do not exist
-    size_t pos = 0;
-    while ((pos = normalized.find('\\', pos)) != std::string::npos)
-    {
-        std::string dir = normalized.substr(0, pos);
-        CreateDirectoryA(dir.c_str(), NULL);
-        pos++;
-    }
+    filesystem::CreateParentDirectories(normalized.c_str());
 
     std::ofstream file(normalized.c_str(), std::ios::binary);
     if (!file.is_open())

@@ -677,8 +677,8 @@ void Cmd_imagedump()
     ImageList imageList;
     R_GetImageList(&imageList);
 
-    CreateDirectoryA(DUMP_DIR, 0);
-    CreateDirectoryA((std::string(DUMP_DIR) + "\\images").c_str(), 0);
+    const std::string imageDumpDirectory = filesystem::JoinPath(DUMP_DIR, "images");
+    filesystem::CreateDirectories(imageDumpDirectory.c_str());
 
     for (unsigned int i = 0; i < imageList.count; ++i)
     {

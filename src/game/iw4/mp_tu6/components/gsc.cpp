@@ -112,20 +112,6 @@ static std::string BuildScriptFilePath(const char *filename)
     return base + "\\" + rel;
 }
 
-static void EnsureParentDirectory(const std::string &path)
-{
-    char dirpath[MAX_PATH];
-    strncpy(dirpath, path.c_str(), sizeof(dirpath) - 1);
-    dirpath[sizeof(dirpath) - 1] = '\0';
-
-    char *last_slash = strrchr(dirpath, '\\');
-    if (last_slash)
-    {
-        *last_slash = '\0';
-        filesystem::create_nested_dirs(dirpath);
-    }
-}
-
 void GScr_CbufAddText()
 {
     if (Scr_GetNumParam() != 1)
@@ -164,7 +150,7 @@ static void GScr_FileWrite()
         Scr_ParamError(2, "filewrite: mode must be \"write\" or \"append\"");
 
     const std::string path = BuildScriptFilePath(filename);
-    EnsureParentDirectory(path);
+    filesystem::CreateParentDirectories(path.c_str());
 
     FILE *file = fopen(path.c_str(), file_mode);
     if (!file)

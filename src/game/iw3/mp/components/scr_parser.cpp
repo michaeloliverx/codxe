@@ -7,8 +7,6 @@ namespace mp
 {
 namespace
 {
-const size_t MAX_SCRIPT_PATH = 512;
-
 char *ReadFileToGameTempBuffer(const char *path)
 {
     HANDLE file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
@@ -51,16 +49,7 @@ void WriteScriptDump(const char *script_path, const char *contents)
     if (dumpPath.empty())
         return;
 
-    char dir_path[MAX_SCRIPT_PATH];
-    strncpy(dir_path, dumpPath.c_str(), sizeof(dir_path) - 1);
-    dir_path[sizeof(dir_path) - 1] = '\0';
-
-    char *last_slash = strrchr(dir_path, '\\');
-    if (last_slash != nullptr)
-    {
-        *last_slash = '\0';
-        filesystem::create_nested_dirs(dir_path);
-    }
+    filesystem::CreateParentDirectories(dumpPath.c_str());
 
     HANDLE file =
         CreateFileA(dumpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);

@@ -49,16 +49,7 @@ void WriteScriptDump(const char *scriptPath, const char *contents)
     if (dumpPath.empty())
         return;
 
-    char dirPath[MAX_PATH];
-    strncpy(dirPath, dumpPath.c_str(), sizeof(dirPath) - 1);
-    dirPath[sizeof(dirPath) - 1] = '\0';
-
-    char *lastSlash = strrchr(dirPath, '\\');
-    if (lastSlash != nullptr)
-    {
-        *lastSlash = '\0';
-        filesystem::create_nested_dirs(dirPath);
-    }
+    filesystem::CreateParentDirectories(dumpPath.c_str());
 
     HANDLE file =
         CreateFileA(dumpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);

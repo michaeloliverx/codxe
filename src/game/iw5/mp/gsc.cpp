@@ -28,20 +28,6 @@ std::string BuildScriptFilePath(const char *filename)
     return mod_base_path + "\\" + relative_path;
 }
 
-void EnsureParentDirectory(const std::string &path)
-{
-    char directory[MAX_PATH];
-    strncpy(directory, path.c_str(), sizeof(directory) - 1);
-    directory[sizeof(directory) - 1] = '\0';
-
-    char *last_slash = strrchr(directory, '\\');
-    if (last_slash)
-    {
-        *last_slash = '\0';
-        filesystem::create_nested_dirs(directory);
-    }
-}
-
 void CloseAllScriptFiles()
 {
     script_files::CloseAll();
@@ -74,7 +60,7 @@ void GScr_OpenFile()
     const char *filename = Scr_GetString(0);
     const std::string path = BuildScriptFilePath(filename);
     if (file_mode[0] == 'w' || file_mode[0] == 'a')
-        EnsureParentDirectory(path);
+        filesystem::CreateParentDirectories(path.c_str());
 
     int handle = script_files::Open(path.c_str(), file_mode);
     if (handle == script_files::NO_FREE_HANDLES)

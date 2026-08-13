@@ -81,17 +81,7 @@ static void GScr_FS_FOpen()
     std::string fullpath = BuildScriptFilePath(filename);
 
     if (fmode[0] == 'w' || fmode[0] == 'a')
-    {
-        char dirpath[256];
-        strncpy(dirpath, fullpath.c_str(), sizeof(dirpath) - 1);
-        dirpath[sizeof(dirpath) - 1] = '\0';
-        char *last_slash = strrchr(dirpath, '\\');
-        if (last_slash)
-        {
-            *last_slash = '\0';
-            filesystem::create_nested_dirs(dirpath);
-        }
-    }
+        filesystem::CreateParentDirectories(fullpath.c_str());
 
     const int handle = script_files::Open(fullpath.c_str(), fmode);
     if (handle == script_files::NO_FREE_HANDLES)

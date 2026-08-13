@@ -34,32 +34,57 @@ std::string JoinPath(const char *basePath, const char *relativePath)
     return path;
 }
 
-void create_nested_dirs(const char *path)
+void CreateDirectories(const char *path)
 {
     if (!path || !*path)
         return;
 
-    char temp_path[256];
-    strncpy(temp_path, path, sizeof(temp_path) - 1);
-    temp_path[sizeof(temp_path) - 1] = '\0';
+    std::string directory = path;
+    NormalizePathSeparators(&directory[0]);
 
-    char *p = temp_path;
+    char *p = &directory[0];
+    const bool hasDrivePrefix = directory.size() >= 3 && p[1] == ':' && p[2] == '\\';
+    const bool hasGamePrefix = directory.size() >= 6 && strncmp(p, "game:\\", 6) == 0;
 
     // Skip leading drive letter (e.g., "C:\") or "game:\" prefix
-    if ((p[0] && p[1] == ':') || strncmp(p, "game:\\", 6) == 0)
-        p += (p[1] == ':' ? 3 : 6); // Move past "C:\" or "game:\"
+    if (hasDrivePrefix || hasGamePrefix)
+        p += (hasDrivePrefix ? 3 : 6); // Move past "C:\" or "game:\"
 
     for (; *p; p++)
     {
         if (*p == '\\' || *p == '/')
         {
             *p = '\0';
-            _mkdir(temp_path); // Attempt to create the directory
+            _mkdir(directory.c_str()); // Attempt to create the directory
             *p = '\\';
         }
     }
 
-    _mkdir(temp_path); // Create final directory
+    _mkdir(directory.c_str()); // Create final directory
+}
+
+void CreateParentDirectories(const char *path)
+{
+    if (!path || !*path)
+        return;
+
+    std::string directory = path;
+    NormalizePathSeparators(&directory[0]);
+
+    const size_t lastSeparator = directory.find_last_of('\\');
+    if (lastSeparator == std::string::npos)
+        return;
+
+    const bool isDriveRoot = lastSeparator == 2 && directory.size() > 1 && directory[1] == ':';
+    const bool isGameRoot =
+        lastSeparator == 5 && directory.size() >= 6 && strncmp(directory.c_str(), "game:\\", 6) == 0;
+    if (isDriveRoot || isGameRoot)
+    {
+        return;
+    }
+
+    directory.erase(lastSeparator);
+    CreateDirectories(directory.c_str());
 }
 
 /**
@@ -78,15 +103,7 @@ int write_file_to_disk(const char *file_path, const char *data, size_t data_size
         return 0;
     }
 
-    // Ensure the directory exists
-    char dir_path[256];
-    strncpy(dir_path, file_path, sizeof(dir_path));
-    char *last_slash = strrchr(dir_path, '\\');
-    if (last_slash)
-    {
-        *last_slash = '\0';
-        create_nested_dirs(dir_path);
-    }
+    CreateParentDirectories(file_path);
 
     // Write data to file
     FILE *file = fopen(file_path, "wb");
