@@ -14,6 +14,26 @@ void NormalizePathSeparators(char *path)
     }
 }
 
+std::string JoinPath(const char *basePath, const char *relativePath)
+{
+    std::string path = basePath ? basePath : "";
+    const char *relative = relativePath ? relativePath : "";
+
+    const bool baseHasSeparator = !path.empty() && (path[path.size() - 1] == '\\' || path[path.size() - 1] == '/');
+    const bool relativeHasSeparator = relative[0] == '\\' || relative[0] == '/';
+
+    if (!path.empty() && relative[0] != '\0' && !baseHasSeparator && !relativeHasSeparator)
+        path += '\\';
+    else if (baseHasSeparator && relativeHasSeparator)
+        ++relative;
+
+    path += relative;
+    if (!path.empty())
+        NormalizePathSeparators(&path[0]);
+
+    return path;
+}
+
 void create_nested_dirs(const char *path)
 {
     if (!path || !*path)

@@ -22,8 +22,7 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename, co
         if (contents)
         {
             // Dump the script to a file
-            std::string dumpPath = std::string(DUMP_DIR) + "\\" + extFilename;
-            std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
+            const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, extFilename);
             filesystem::write_file_to_disk(dumpPath.c_str(), contents, std::strlen(contents));
             DbgPrint("GSCLoader: Dumped script to %s\n", dumpPath.c_str());
         }
@@ -37,8 +36,7 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename, co
         return callOriginal();
 
     // Build full path to override file
-    std::string overridePath = modBasePath + "\\" + extFilename;
-    std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
+    const std::string overridePath = filesystem::JoinPath(modBasePath.c_str(), extFilename);
 
     // Try to load override file
     std::string fileContent = filesystem::read_file_to_string(overridePath);

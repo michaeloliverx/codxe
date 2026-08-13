@@ -137,10 +137,8 @@ void Cmd_Dumpraw_f()
     for (int i = 0; i < count; i++)
     {
         auto rawfile = files[i].rawfile;
-        std::string asset_name = rawfile->name;
-        std::replace(asset_name.begin(), asset_name.end(), '/', '\\'); // Replace forward slashes with backslashes
-        filesystem::write_file_to_disk((std::string(DUMP_DIR) + "\\" + asset_name).c_str(), rawfile->buffer,
-                                       rawfile->len);
+        const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, rawfile->name);
+        filesystem::write_file_to_disk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
     }
 }
 

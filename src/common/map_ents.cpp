@@ -9,12 +9,9 @@ std::string BuildPath(const char *directory, const char *assetName)
         return std::string();
     }
 
-    std::string path = directory;
-    path += '\\';
-    path += assetName;
-    path += ".ents";
+    std::string fileName = assetName;
+    fileName += ".ents";
 
-    filesystem::NormalizePathSeparators(&path[0]);
-    return path;
+    return filesystem::JoinPath(directory, fileName.c_str());
 }
 } // namespace map_ents
