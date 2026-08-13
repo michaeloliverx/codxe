@@ -16,7 +16,7 @@ void Cmd_Dumpraw_f()
     {
         auto rawfile = files[i].rawfile;
         const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, rawfile->name);
-        filesystem::write_file_to_disk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
+        filesystem::WriteFileToDisk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
     }
 }
 
@@ -123,7 +123,7 @@ bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const ch
     if (path.empty())
         return callOriginal();
 
-    std::string contents = filesystem::read_file_to_string(path);
+    std::string contents = filesystem::ReadFileToString(path);
     if (contents.empty())
         return callOriginal();
 

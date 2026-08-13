@@ -90,48 +90,51 @@ void CreateParentDirectories(const char *path)
 /**
  * Writes data to a file on disk.
  *
- * @param file_path The full path to the file to write.
+ * @param filePath The full path to the file to write.
  * @param data The data to write.
- * @param data_size The size of the data in bytes.
+ * @param dataSize The size of
+ * the data in bytes.
  * @return 1 if successful, 0 if failed.
  */
-int write_file_to_disk(const char *file_path, const char *data, size_t data_size)
+int WriteFileToDisk(const char *filePath, const char *data, size_t dataSize)
 {
-    if (!file_path || !data || data_size == 0)
+    if (!filePath || !data || dataSize == 0)
     {
-        DbgPrint("write_file_to_disk: Invalid parameters!\n");
+        DbgPrint("WriteFileToDisk: Invalid parameters!\n");
         return 0;
     }
 
-    CreateParentDirectories(file_path);
+    CreateParentDirectories(filePath);
 
     // Write data to file
-    FILE *file = fopen(file_path, "wb");
+    FILE *file = fopen(filePath, "wb");
     if (file)
     {
-        fwrite(data, 1, data_size, file);
+        fwrite(data, 1, dataSize, file);
         fclose(file);
-        DbgPrint("Successfully wrote file: %s\n", file_path);
+        DbgPrint("Successfully wrote file: %s\n", filePath);
         return 1;
     }
     else
     {
-        DbgPrint("Failed to write file: %s\n", file_path);
+        DbgPrint("Failed to write file: %s\n", filePath);
         return 0;
     }
 }
 
-// Function to check if a file exists
-bool file_exists(const std::string &file_path)
+bool FileExists(const char *filePath)
 {
-    std::ifstream file(file_path.c_str());
-    return file.good();
+    if (!filePath || !*filePath)
+        return false;
+
+    const DWORD attributes = GetFileAttributesA(filePath);
+    return attributes != static_cast<DWORD>(-1) && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 // Function to read a file's contents into a string
-std::string read_file_to_string(const std::string &file_path)
+std::string ReadFileToString(const std::string &filePath)
 {
-    std::ifstream file(file_path, std::ios::binary);
+    std::ifstream file(filePath, std::ios::binary);
     if (!file)
     {
         return "";
@@ -142,7 +145,7 @@ std::string read_file_to_string(const std::string &file_path)
     return content;
 }
 
-std::vector<std::string> list_files_in_directory(const std::string &directory)
+std::vector<std::string> ListFilesInDirectory(const std::string &directory)
 {
     std::vector<std::string> filenames;
     WIN32_FIND_DATAA findFileData;

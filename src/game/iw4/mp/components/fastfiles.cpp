@@ -79,8 +79,8 @@ bool IsSafeFastfileName(const char *filename)
 void DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)
 {
     auto original = DB_LoadXAssets_Detour.GetOriginal<DB_LoadXAssets_t>();
-    const bool patchFileExists = FileExists(CODXE_PATCH_PATH);
-    const bool uiFileExists = FileExists(CODXE_UI_PATH);
+    const bool patchFileExists = filesystem::FileExists(CODXE_PATCH_PATH);
+    const bool uiFileExists = filesystem::FileExists(CODXE_UI_PATH);
     const XZoneInfo *stockPatchZone = FindZone(zoneInfo, zoneCount, "patch_mp");
     const XZoneInfo *stockUiZone = FindZone(zoneInfo, zoneCount, "ui_mp");
     const bool injectPatch = patchFileExists && stockPatchZone;
@@ -137,7 +137,7 @@ int Sys_CreateFile_Hook(const char *dir, const char *filename)
         const std::string relativePath = std::string(CODXE_ZONE_RELATIVE_DIRECTORY) + filename;
         const std::string devicePath = std::string(GAME_DEVICE_PREFIX) + relativePath;
 
-        if (FileExists(devicePath.c_str()))
+        if (filesystem::FileExists(devicePath.c_str()))
             return original(dir, relativePath.c_str());
     }
 
@@ -146,7 +146,7 @@ int Sys_CreateFile_Hook(const char *dir, const char *filename)
         const std::string relativePath = std::string(CODXE_ZONE_RELATIVE_DIRECTORY) + filename;
         const std::string devicePath = std::string(GAME_DEVICE_PREFIX) + relativePath;
 
-        if (FileExists(devicePath.c_str()))
+        if (filesystem::FileExists(devicePath.c_str()))
             return original(dir, relativePath.c_str());
     }
 
