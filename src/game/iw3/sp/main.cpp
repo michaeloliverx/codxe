@@ -85,24 +85,25 @@ void Load_MapEntsPtr_Hook()
         MapEnts *mapEnts = *varMapEntsPtr;
 
         // Write stock map ents to disk
-        std::string file_path = "game:\\dump\\";
-        file_path += mapEnts->name;
-        file_path += ".ents";                                        //  iw4x naming convention
-        std::replace(file_path.begin(), file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
-        filesystem::write_file_to_disk(file_path.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
+        const std::string filePath = map_ents::BuildPath("game:\\dump", mapEnts->name);
+        if (!filePath.empty())
+        {
+            filesystem::write_file_to_disk(filePath.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
+        }
 
         // Load map ents from file
         // Path to check for existing entity file
-        std::string raw_file_path = "game:\\raw\\";
-        raw_file_path += mapEnts->name;
-        raw_file_path += ".ents";                                            // IW4x naming convention
-        std::replace(raw_file_path.begin(), raw_file_path.end(), '/', '\\'); // Replace forward slashes with backslashes
+        const std::string rawFilePath = map_ents::BuildPath("game:\\raw", mapEnts->name);
+        if (rawFilePath.empty())
+        {
+            return;
+        }
 
         // If the file exists, replace entityString
-        if (filesystem::file_exists(raw_file_path))
+        if (filesystem::file_exists(rawFilePath))
         {
-            DbgPrint("Found entity file: %s\n", raw_file_path.c_str());
-            std::string new_entity_string = filesystem::read_file_to_string(raw_file_path);
+            DbgPrint("Found entity file: %s\n", rawFilePath.c_str());
+            std::string new_entity_string = filesystem::read_file_to_string(rawFilePath);
             if (!new_entity_string.empty())
             {
                 // Allocate new memory and copy the data
@@ -113,7 +114,7 @@ void Load_MapEntsPtr_Hook()
                 {
                     memcpy(new_memory, new_entity_string.c_str(), new_size); // Copy with null terminator
                     mapEnts->entityString = new_memory;
-                    DbgPrint("Replaced entityString from file: %s\n", raw_file_path.c_str());
+                    DbgPrint("Replaced entityString from file: %s\n", rawFilePath.c_str());
                 }
                 else
                 {

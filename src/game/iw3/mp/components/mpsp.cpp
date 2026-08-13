@@ -132,7 +132,12 @@ std::string mapents_buffer;
 void override_(MapEnts *asset)
 {
     // _load\maps\airplane.d3dbsp.ents
-    const std::string filename = Asset::get_load_dir() + "\\" + asset->name + ".ents";
+    const std::string filename = map_ents::BuildPath(Asset::get_load_dir().c_str(), asset->name);
+    if (filename.empty())
+    {
+        return;
+    }
+
     const std::string buffer = FS::ReadTextFile(filename);
 
     if (buffer.empty())

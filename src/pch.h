@@ -42,6 +42,7 @@
 // Common includes
 #include "common/branding.h"
 #include "common/config.h"
+#include "common/map_ents.h"
 #include "common/ppc.h"
 
 // NGL-specific includes

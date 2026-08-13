@@ -20,20 +20,19 @@ void Load_clipMap_t_Hook(bool atStreamStart)
     // Dump map entities if enabled
     if (Config::dump_map_ents)
     {
-        std::string dumpPath = va("%s\\%s.ents", DUMP_DIR, mapEnts->name); // IW4x naming convention
-        std::replace(dumpPath.begin(), dumpPath.end(), '/', '\\');
-        filesystem::write_file_to_disk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
-        DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
+        const std::string dumpPath = map_ents::BuildPath(DUMP_DIR, mapEnts->name);
+        if (!dumpPath.empty())
+        {
+            filesystem::write_file_to_disk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
+            DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
+        }
     }
 
-    // Check for mod override
-    std::string modBasePath = Config::GetModBasePath();
-    if (modBasePath.empty())
+    const std::string overridePath = map_ents::BuildPath(Config::GetModBasePath(), mapEnts->name);
+    if (overridePath.empty())
+    {
         return;
-
-    // Build path to override file
-    std::string overridePath = va("%s\\%s.ents", modBasePath.c_str(), mapEnts->name);
-    std::replace(overridePath.begin(), overridePath.end(), '/', '\\');
+    }
 
     // Try to load override file
     std::string fileContent = filesystem::read_file_to_string(overridePath);

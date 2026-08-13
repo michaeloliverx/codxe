@@ -83,6 +83,7 @@
       <ClCompile Include="src\common\brush_collision_tracker.cpp" />
       <ClCompile Include="src\common\config.cpp" />
       <ClCompile Include="src\common\endian.cpp" />
+      <ClCompile Include="src\common\map_ents.cpp" />
       <ClCompile Include="src\common\ppc.cpp" />
       <ClCompile Include="src\common\script_files.cpp" />
 
@@ -217,6 +218,7 @@
       <ClInclude Include="src\common\brush_collision_tracker.h" />
       <ClInclude Include="src\common\config.h" />
       <ClInclude Include="src\common\endian.h" />
+      <ClInclude Include="src\common\map_ents.h" />
       <ClInclude Include="src\common\ppc.h" />
       <ClInclude Include="src\common\script_files.h" />
 
