@@ -2,6 +2,18 @@
 
 namespace filesystem
 {
+void NormalizePathSeparators(char *path)
+{
+    if (!path)
+        return;
+
+    for (; *path; ++path)
+    {
+        if (*path == '/')
+            *path = '\\';
+    }
+}
+
 void create_nested_dirs(const char *path)
 {
     if (!path || !*path)

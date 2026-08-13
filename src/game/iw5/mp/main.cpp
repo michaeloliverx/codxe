@@ -32,18 +32,6 @@ unsigned int g_loaded_script_count = 0;
 unsigned __int8 *g_gsc_arena = nullptr;
 unsigned int g_gsc_arena_used = 0;
 
-void NormalizePath(char *path)
-{
-    if (path == nullptr)
-        return;
-
-    for (char *cursor = path; *cursor != '\0'; ++cursor)
-    {
-        if (*cursor == '/')
-            *cursor = '\\';
-    }
-}
-
 bool BuildScriptPath(char *path, size_t pathSize, const char *name)
 {
     const char *modBasePath = Config::GetModBasePath();
@@ -58,7 +46,7 @@ bool BuildScriptPath(char *path, size_t pathSize, const char *name)
     if (written < 0 || static_cast<size_t>(written) >= pathSize)
         return false;
 
-    NormalizePath(path);
+    filesystem::NormalizePathSeparators(path);
     return true;
 }
 

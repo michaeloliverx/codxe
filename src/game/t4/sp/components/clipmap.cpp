@@ -23,13 +23,7 @@ bool BuildMapEntsPath(char *path, size_t pathSize, const char *mapEntsName)
         return false;
     }
 
-    for (char *cursor = path; *cursor != '\0'; ++cursor)
-    {
-        if (*cursor == '/')
-        {
-            *cursor = '\\';
-        }
-    }
+    filesystem::NormalizePathSeparators(path);
 
     return true;
 }

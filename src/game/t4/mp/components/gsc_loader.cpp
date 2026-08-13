@@ -7,18 +7,6 @@ namespace mp
 {
 namespace
 {
-void NormalizePath(char *path)
-{
-    if (path == nullptr)
-        return;
-
-    for (char *cursor = path; *cursor != '\0'; ++cursor)
-    {
-        if (*cursor == '/')
-            *cursor = '\\';
-    }
-}
-
 bool BuildScriptPath(char *path, size_t pathSize, const char *basePath, const char *scriptPath)
 {
     if (path == nullptr || pathSize == 0 || basePath == nullptr || basePath[0] == '\0' || scriptPath == nullptr ||
@@ -33,7 +21,7 @@ bool BuildScriptPath(char *path, size_t pathSize, const char *basePath, const ch
     if (written < 0 || static_cast<size_t>(written) >= pathSize)
         return false;
 
-    NormalizePath(path);
+    filesystem::NormalizePathSeparators(path);
     return true;
 }
 

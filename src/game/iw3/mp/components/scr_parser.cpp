@@ -9,18 +9,6 @@ namespace
 {
 const size_t MAX_SCRIPT_PATH = 512;
 
-void NormalizePath(char *path)
-{
-    if (path == nullptr)
-        return;
-
-    for (char *cursor = path; *cursor != '\0'; ++cursor)
-    {
-        if (*cursor == '/')
-            *cursor = '\\';
-    }
-}
-
 bool BuildScriptPath(char *path, size_t path_size, const char *base_path, const char *script_path)
 {
     if (path == nullptr || path_size == 0 || base_path == nullptr || base_path[0] == '\0' || script_path == nullptr ||
@@ -35,7 +23,7 @@ bool BuildScriptPath(char *path, size_t path_size, const char *base_path, const 
     if (written < 0 || static_cast<size_t>(written) >= path_size)
         return false;
 
-    NormalizePath(path);
+    filesystem::NormalizePathSeparators(path);
     return true;
 }
 
