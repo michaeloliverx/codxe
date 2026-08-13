@@ -169,6 +169,19 @@ const GameInfo *FindGameInfo(DWORD title_id, DWORD timestamp)
     return nullptr;
 }
 
+bool IsKnownTitle(DWORD title_id)
+{
+    for (size_t i = 0; i < ARRAYSIZE(GAME_INFO); ++i)
+    {
+        if (GAME_INFO[i].titleId == title_id)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 PluginManager::PluginManager() : m_current_plugin(nullptr), m_trampoline_pool_baseline(0)
 {
 }
@@ -234,8 +247,17 @@ void PluginManager::OnExecutableLoaded(DWORD title_id, DWORD timestamp)
     const GameInfo *info = FindGameInfo(title_id, timestamp);
     if (!info)
     {
-        DbgPrint("[codxe][PluginManager] Ignoring unknown executable Title ID:0x%08X TimeDateStamp=0x%08X\n", title_id,
-                 timestamp);
+        if (IsKnownTitle(title_id))
+        {
+            DbgPrint("[codxe][PluginManager] Unsupported game build Title ID:0x%08X TimeDateStamp=0x%08X\n", title_id,
+                     timestamp);
+            xbox::Notify("Unsupported game build. Check the codxe log.");
+        }
+        else
+        {
+            DbgPrint("[codxe][PluginManager] Ignoring unknown executable Title ID:0x%08X TimeDateStamp=0x%08X\n",
+                     title_id, timestamp);
+        }
         return;
     }
 
