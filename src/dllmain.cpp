@@ -130,8 +130,6 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
             return TRUE;
         }
 
-        xbox::ApplySystemPatches();
-
         ExRegisterTitleTerminateNotification(&g_title_terminate_registration, TRUE);
         g_title_terminate_registered = true;
 
