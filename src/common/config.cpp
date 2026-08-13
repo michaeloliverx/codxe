@@ -287,11 +287,6 @@ const char *Config::GetActiveMod()
     return active_mod;
 }
 
-const char *Config::GetModBasePath()
-{
-    return mod_base_path;
-}
-
 std::string Config::ResolveModPath(const char *relativePath)
 {
     if (!relativePath || !*relativePath || !mod_base_path[0])

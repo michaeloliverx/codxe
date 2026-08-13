@@ -19,7 +19,6 @@ class Config : public Module
     static bool dump_map_ents;
 
     static const char *GetActiveMod();
-    static const char *GetModBasePath();
     static std::string ResolveModPath(const char *relativePath);
 
   private:

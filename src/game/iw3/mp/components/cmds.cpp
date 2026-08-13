@@ -119,12 +119,11 @@ bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const ch
                                                                                          controllerIndex, filename);
     };
 
-    // Check if mod is active
-    std::string modBasePath = Config::GetModBasePath();
-    if (modBasePath.empty())
+    const std::string path = Config::ResolveModPath(filename);
+    if (path.empty())
         return callOriginal();
 
-    std::string contents = filesystem::read_file_to_string(modBasePath + "\\" + filename);
+    std::string contents = filesystem::read_file_to_string(path);
     if (contents.empty())
         return callOriginal();
 

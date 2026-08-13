@@ -83,11 +83,10 @@ char *Scr_AddSourceBuffer_Hook(scriptInstance_t inst, const char *filename, cons
         return contents;
     }
 
-    const char *modBasePath = Config::GetModBasePath();
-    if (modBasePath == nullptr || modBasePath[0] == '\0')
+    const std::string overridePath = Config::ResolveModPath(extFilename);
+    if (overridePath.empty())
         return callOriginal();
 
-    const std::string overridePath = filesystem::JoinPath(modBasePath, extFilename);
     char *buffer = ReadFileToGameTempBuffer(overridePath.c_str());
     if (buffer == nullptr)
         return callOriginal();

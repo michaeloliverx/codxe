@@ -28,7 +28,8 @@ void Load_clipMap_t_Hook(bool atStreamStart)
         }
     }
 
-    const std::string overridePath = map_ents::BuildPath(Config::GetModBasePath(), mapEnts->name);
+    const std::string fileName = map_ents::GetFileNameForAssetName(mapEnts->name);
+    const std::string overridePath = Config::ResolveModPath(fileName.c_str());
     if (overridePath.empty())
     {
         return;

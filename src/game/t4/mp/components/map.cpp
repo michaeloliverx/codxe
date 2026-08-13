@@ -9,7 +9,8 @@ namespace
 {
 void OverrideMapEnts(MapEnts *mapEnts)
 {
-    const std::string filePath = map_ents::BuildPath(Config::GetModBasePath(), mapEnts->name);
+    const std::string fileName = map_ents::GetFileNameForAssetName(mapEnts->name);
+    const std::string filePath = Config::ResolveModPath(fileName.c_str());
     if (filePath.empty())
     {
         return;

@@ -34,16 +34,13 @@ unsigned int g_gsc_arena_used = 0;
 
 std::string BuildScriptPath(const char *name)
 {
-    const char *modBasePath = Config::GetModBasePath();
-    if (modBasePath == nullptr || modBasePath[0] == '\0' || name == nullptr || name[0] == '\0')
-    {
+    if (name == nullptr || name[0] == '\0')
         return std::string();
-    }
 
     std::string fileName = name;
     fileName += ".gscbin";
 
-    return filesystem::JoinPath(modBasePath, fileName.c_str());
+    return Config::ResolveModPath(fileName.c_str());
 }
 
 void *AllocateGSCData(unsigned int size, unsigned int alignment)

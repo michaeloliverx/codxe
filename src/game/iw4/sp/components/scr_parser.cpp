@@ -22,13 +22,9 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
         return contents;
     }
 
-    // Check if mod is active
-    std::string modBasePath = Config::GetModBasePath();
-    if (modBasePath.empty())
+    const std::string overridePath = Config::ResolveModPath(extFilename);
+    if (overridePath.empty())
         return callOriginal();
-
-    // Build full path to override file
-    const std::string overridePath = filesystem::JoinPath(modBasePath.c_str(), extFilename);
 
     // Try to load override file
     std::string fileContent = filesystem::read_file_to_string(overridePath);
