@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/gsc_loader.h"
 #include "scr_parser.h"
 
 namespace iw2
@@ -17,39 +18,13 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename, co
 
     if (Config::dump_rawfile)
     {
-        DbgPrint("GSCLoader: Dumping script %s\n", extFilename);
-        auto contents = callOriginal();
-        if (contents)
-        {
-            // Dump the script to a file
-            const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, extFilename);
-            filesystem::write_file_to_disk(dumpPath.c_str(), contents, std::strlen(contents));
-            DbgPrint("GSCLoader: Dumped script to %s\n", dumpPath.c_str());
-        }
-
+        char *contents = callOriginal();
+        gsc_loader::DumpSource(extFilename, contents);
         return contents;
     }
 
-    const std::string overridePath = Config::ResolveModPath(extFilename);
-    if (overridePath.empty())
-        return callOriginal();
-
-    // Try to load override file
-    std::string fileContent = filesystem::read_file_to_string(overridePath);
-    if (fileContent.empty())
-        return callOriginal();
-
-    // Allocate buffer using game's memory allocator
-    char *buffer = (char *)Hunk_AllocateTempMemoryHighInternal(fileContent.size() + 1);
-    if (!buffer)
-        return callOriginal();
-
-    // Copy content and null terminate
-    memcpy(buffer, fileContent.c_str(), fileContent.size());
-    buffer[fileContent.size()] = '\0';
-
-    DbgPrint("GSCLoader: Loaded override script: %s\n", overridePath.c_str());
-    return buffer;
+    char *contents = gsc_loader::TryLoadOverride(extFilename, Hunk_AllocateTempMemoryHighInternal);
+    return contents ? contents : callOriginal();
 }
 
 scr_parser::scr_parser()

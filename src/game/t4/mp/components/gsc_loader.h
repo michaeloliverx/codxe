@@ -13,7 +13,7 @@ class GSCLoader : public Module
     ~GSCLoader();
 
   private:
-    static char *Scr_AddSourceBuffer_Hook(scriptInstance_t a1, const char *filename, const char *extFilename,
+    static char *Scr_AddSourceBuffer_Hook(scriptInstance_t inst, const char *filename, const char *extFilename,
                                           const char *codePos, bool archive);
 };
 } // namespace mp

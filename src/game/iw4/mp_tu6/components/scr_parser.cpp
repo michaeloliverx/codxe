@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "common/gsc_loader.h"
 #include "scr_parser.h"
 
 namespace iw4
@@ -14,49 +15,13 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
 
     if (Config::dump_rawfile)
     {
-        auto contents = callOriginal();
-        // Dump the script to a file
-        const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, extFilename);
-        filesystem::write_file_to_disk(dumpPath.c_str(), contents, std::strlen(contents));
-        DbgPrint("GSCLoader: Dumped script to %s\n", dumpPath.c_str());
+        char *contents = callOriginal();
+        gsc_loader::DumpSource(extFilename, contents);
         return contents;
     }
 
-    const std::string overridePath = Config::ResolveModPath(extFilename);
-    if (overridePath.empty())
-        return callOriginal();
-
-    FILE *file = fopen(overridePath.c_str(), "rb");
-    if (!file)
-        return callOriginal();
-
-    fseek(file, 0, SEEK_END);
-    const long fileSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    if (fileSize <= 0)
-    {
-        fclose(file);
-        return callOriginal();
-    }
-
-    char *buffer = (char *)Hunk_AllocateTempMemoryHighInternal(fileSize + 1);
-    if (!buffer)
-    {
-        fclose(file);
-        return callOriginal();
-    }
-
-    const size_t bytesRead = fread(buffer, 1, fileSize, file);
-    fclose(file);
-
-    if (bytesRead != static_cast<size_t>(fileSize))
-        return callOriginal();
-
-    buffer[bytesRead] = '\0';
-
-    DbgPrint("scr_parser: Loaded override script: %s\n", overridePath.c_str());
-    return buffer;
+    char *contents = gsc_loader::TryLoadOverride(extFilename, Hunk_AllocateTempMemoryHighInternal);
+    return contents ? contents : callOriginal();
 }
 
 scr_parser::scr_parser()
