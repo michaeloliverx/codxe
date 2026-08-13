@@ -71,7 +71,7 @@ void Load_clipMap_t_Hook(bool atStreamStart)
         const std::string dumpPath = map_ents::BuildPath(DUMP_DIR, mapEnts->name);
         if (!dumpPath.empty())
         {
-            filesystem::write_file_to_disk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
+            filesystem::WriteFileToDisk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
             DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
         }
     }

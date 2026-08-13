@@ -698,7 +698,7 @@ void Cmd_imagedump()
         Image_Dump(image);
     }
 
-    const std::vector<std::string> highMipFiles = filesystem::list_files_in_directory("D:\\highmip");
+    const std::vector<std::string> highMipFiles = filesystem::ListFilesInDirectory("D:\\highmip");
     for (size_t i = 0; i < highMipFiles.size(); ++i)
     {
         const std::string highMipPath = "D:\\highmip\\" + highMipFiles[i];
@@ -921,7 +921,7 @@ void Image_Replace(GfxImage *image)
     const std::string relativePath = GetImageRelativePath(image->name);
     const std::string replacement_path = Config::ResolveModPath(relativePath.c_str());
 
-    if (!filesystem::file_exists(replacement_path))
+    if (!filesystem::FileExists(replacement_path.c_str()))
     {
         return;
     }
@@ -1083,7 +1083,7 @@ bool R_StreamLoadImageReplacement(const char *filename, unsigned int bytesToRead
 
     const std::string relativePath = GetImageRelativePath(image->name);
     const std::string replacementPath = Config::ResolveModPath(relativePath.c_str());
-    if (!filesystem::file_exists(replacementPath))
+    if (!filesystem::FileExists(replacementPath.c_str()))
         return false;
 
     DDSImage ddsImage = ReadDDSFile(replacementPath);

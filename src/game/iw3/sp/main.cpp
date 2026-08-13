@@ -88,7 +88,7 @@ void Load_MapEntsPtr_Hook()
         const std::string filePath = map_ents::BuildPath("game:\\dump", mapEnts->name);
         if (!filePath.empty())
         {
-            filesystem::write_file_to_disk(filePath.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
+            filesystem::WriteFileToDisk(filePath.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
         }
 
         // Load map ents from file
@@ -100,10 +100,10 @@ void Load_MapEntsPtr_Hook()
         }
 
         // If the file exists, replace entityString
-        if (filesystem::file_exists(rawFilePath))
+        if (filesystem::FileExists(rawFilePath.c_str()))
         {
             DbgPrint("Found entity file: %s\n", rawFilePath.c_str());
-            std::string new_entity_string = filesystem::read_file_to_string(rawFilePath);
+            std::string new_entity_string = filesystem::ReadFileToString(rawFilePath);
             if (!new_entity_string.empty())
             {
                 // Allocate new memory and copy the data
@@ -138,7 +138,7 @@ void Cmd_Dumpraw_f()
     {
         auto rawfile = files[i].rawfile;
         const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, rawfile->name);
-        filesystem::write_file_to_disk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
+        filesystem::WriteFileToDisk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
     }
 }
 

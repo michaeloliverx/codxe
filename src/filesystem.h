@@ -8,8 +8,8 @@ void NormalizePathSeparators(char *path);
 std::string JoinPath(const char *basePath, const char *relativePath);
 void CreateDirectories(const char *path);
 void CreateParentDirectories(const char *path);
-int write_file_to_disk(const char *file_path, const char *data, size_t data_size);
-bool file_exists(const std::string &file_path);
-std::string read_file_to_string(const std::string &file_path);
-std::vector<std::string> list_files_in_directory(const std::string &directory);
+int WriteFileToDisk(const char *filePath, const char *data, size_t dataSize);
+bool FileExists(const char *filePath);
+std::string ReadFileToString(const std::string &filePath);
+std::vector<std::string> ListFilesInDirectory(const std::string &directory);
 } // namespace filesystem
