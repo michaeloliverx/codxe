@@ -152,6 +152,23 @@ void SV_BotUserMove_Stub(client_t *cl)
     SV_ClientThink(cl, &cmd);
 }
 
+Detour SV_CalcPings_Detour;
+
+void SV_CalcPings_Hook()
+{
+    SV_CalcPings_Detour.GetOriginal<SV_CalcPings_t>()();
+
+    // svsHeader receives a copy of this pointer later in SV_SetServerStaticHeader.
+    // Use the live server state here because SV_CalcPings can run before that copy is refreshed.
+    client_t *clients = *svs_clients;
+    const unsigned int maxClients = (*sv_maxclients)->current.unsignedInt;
+    for (unsigned int i = 0; i < maxClients && i < T4_MAX_CLIENTS; ++i)
+    {
+        if (clients[i].header.netchan.remoteAddress.type == NA_BOT)
+            clients[i].ping = 0;
+    }
+}
+
 struct BotAction_t
 {
     const char *action;
@@ -289,6 +306,9 @@ SVBots::SVBots()
 
     SV_UserinfoChanged_Detour = Detour(SV_UserinfoChanged, SV_UserinfoChanged_Hook);
     SV_UserinfoChanged_Detour.Install();
+
+    SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Hook);
+    SV_CalcPings_Detour.Install();
 }
 
 SVBots::~SVBots()
@@ -299,6 +319,8 @@ SVBots::~SVBots()
     SV_BotUserMove_Detour.Remove();
 
     SV_UserinfoChanged_Detour.Remove();
+
+    SV_CalcPings_Detour.Remove();
 
     CleanBotArray();
     s_pendingBotName[0] = '\0';

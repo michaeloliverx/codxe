@@ -1043,7 +1043,9 @@ struct client_t
     gentity_s *gentity;    // OFS: 0x213F4 SIZE: 0x4
     char pad4[12];         //
     int nextSnapshotTime;  // OFS: 0x21404 SIZE: 0x4
-    char pad5[614948];     // padding to reach end of struct
+    char pad5[0x94E04 - 0x21408];
+    int ping; // OFS: 0x94E04 SIZE: 0x4
+    char pad6[0xB762C - 0x94E08];
 };
 
 static_assert(sizeof(client_t) == 751148, "");
@@ -1053,6 +1055,7 @@ static_assert(offsetof(client_t, lastUsercmd) == 0x20EF4, "");
 static_assert(offsetof(client_t, name) == 0x21328, "");
 static_assert(offsetof(client_t, gentity) == 0x213F4, "");
 static_assert(offsetof(client_t, nextSnapshotTime) == 0x21404, "");
+static_assert(offsetof(client_t, ping) == 0x94E04, "");
 
 struct serverStaticHeader_t
 {
