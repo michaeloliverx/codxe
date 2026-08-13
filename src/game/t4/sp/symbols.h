@@ -70,6 +70,9 @@ static auto Com_PrintMessage = reinterpret_cast<void (*)(int channel, const char
 static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration,
                                                         int pixelWidth, int flags)>(0x8214EA60);
 
+typedef void *(*Hunk_AllocLowAlign_t)(size_t size, int alignment);
+static Hunk_AllocLowAlign_t Hunk_AllocLowAlign = reinterpret_cast<Hunk_AllocLowAlign_t>(0x82286410);
+
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822862F8);
 
 static auto Scr_AddInt = reinterpret_cast<void (*)(int value, scriptInstance_t inst)>(0x82342000);
