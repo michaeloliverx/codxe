@@ -399,12 +399,20 @@ bool BuildDDSHeader(DDSHeader *header, uint32_t width, uint32_t height, uint32_t
     return true;
 }
 
+std::string GetImageRelativePath(const char *imageName)
+{
+    std::string fileName = imageName;
+    fileName += ".dds";
+    return filesystem::JoinPath("images", fileName.c_str());
+}
+
 std::string GetImageDumpPath(const char *imageName)
 {
     std::string sanitizedName = imageName;
     sanitizedName.erase(std::remove_if(sanitizedName.begin(), sanitizedName.end(), [](char c) { return c == '*'; }),
                         sanitizedName.end());
-    return std::string(DUMP_DIR) + "\\images\\" + sanitizedName + ".dds";
+    const std::string relativePath = GetImageRelativePath(sanitizedName.c_str());
+    return filesystem::JoinPath(DUMP_DIR, relativePath.c_str());
 }
 
 bool ReadBinaryFile(const std::string &path, std::vector<uint8_t> *data)
@@ -677,8 +685,8 @@ void Cmd_imagedump()
     ImageList imageList;
     R_GetImageList(&imageList);
 
-    CreateDirectoryA(DUMP_DIR, 0);
-    CreateDirectoryA((std::string(DUMP_DIR) + "\\images").c_str(), 0);
+    const std::string imageDumpDirectory = filesystem::JoinPath(DUMP_DIR, "images");
+    filesystem::CreateDirectories(imageDumpDirectory.c_str());
 
     for (unsigned int i = 0; i < imageList.count; ++i)
     {
@@ -910,8 +918,8 @@ bool Image_Replace_Cube(GfxImage *image, const DDSImage &ddsImage)
 
 void Image_Replace(GfxImage *image)
 {
-    const std::string replacement_base_dir = std::string(Config::GetModBasePath()) + "\\images";
-    const std::string replacement_path = replacement_base_dir + "\\" + image->name + ".dds";
+    const std::string relativePath = GetImageRelativePath(image->name);
+    const std::string replacement_path = Config::ResolveModPath(relativePath.c_str());
 
     if (!filesystem::file_exists(replacement_path))
     {
@@ -1073,7 +1081,8 @@ bool R_StreamLoadImageReplacement(const char *filename, unsigned int bytesToRead
         outData == NULL)
         return false;
 
-    const std::string replacementPath = std::string(Config::GetModBasePath()) + "\\images\\" + image->name + ".dds";
+    const std::string relativePath = GetImageRelativePath(image->name);
+    const std::string replacementPath = Config::ResolveModPath(relativePath.c_str());
     if (!filesystem::file_exists(replacementPath))
         return false;
 

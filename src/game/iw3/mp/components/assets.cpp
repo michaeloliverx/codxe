@@ -7,32 +7,6 @@ namespace mp
 {
 namespace
 {
-bool BuildMapEntsPath(char *path, size_t pathSize, const char *mapEntsName)
-{
-    if (!path || pathSize == 0 || !mapEntsName || mapEntsName[0] == '\0')
-    {
-        return false;
-    }
-
-    const int written = _snprintf_s(path, pathSize, _TRUNCATE, "%s\\%s.ents", Config::GetModBasePath(), mapEntsName);
-    path[pathSize - 1] = '\0';
-
-    if (written < 0 || static_cast<size_t>(written) >= pathSize)
-    {
-        return false;
-    }
-
-    for (char *cursor = path; *cursor != '\0'; ++cursor)
-    {
-        if (*cursor == '/')
-        {
-            *cursor = '\\';
-        }
-    }
-
-    return true;
-}
-
 void OverrideMapEnts(MapEnts *mapEnts)
 {
     if (!mapEnts || !mapEnts->name || mapEnts->name[0] == ',')
@@ -40,14 +14,15 @@ void OverrideMapEnts(MapEnts *mapEnts)
         return;
     }
 
-    char filePath[MAX_PATH];
-    if (!BuildMapEntsPath(filePath, sizeof(filePath), mapEnts->name))
+    const std::string fileName = map_ents::GetFileNameForAssetName(mapEnts->name);
+    const std::string filePath = Config::ResolveModPath(fileName.c_str());
+    if (filePath.empty())
     {
         return;
     }
 
-    HANDLE file = CreateFileA(filePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                              FILE_ATTRIBUTE_NORMAL, nullptr);
+    HANDLE file = CreateFileA(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE)
     {
         return;
@@ -82,7 +57,7 @@ void OverrideMapEnts(MapEnts *mapEnts)
     mapEnts->entityString = buffer;
     mapEnts->numEntityChars = static_cast<int>(fileSize);
 
-    DbgPrint("[codxe][iw3] Loaded MapEnts override: %s (%u bytes at %p).\n", filePath, fileSize, buffer);
+    DbgPrint("[codxe][iw3] Loaded MapEnts override: %s (%u bytes at %p).\n", filePath.c_str(), fileSize, buffer);
 }
 } // namespace
 

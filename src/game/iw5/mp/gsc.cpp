@@ -16,32 +16,6 @@ static const unsigned int GSC_TOKEN_CLOSEFILE = 0x9A;
 static const unsigned int GSC_TOKEN_FPRINTLN = 0x9B;
 static const unsigned int GSC_TOKEN_FREADLN = 0x9D;
 
-std::string BuildScriptFilePath(const char *filename)
-{
-    std::string relative_path = filename ? filename : "";
-    std::replace(relative_path.begin(), relative_path.end(), '/', '\\');
-
-    const std::string mod_base_path = Config::GetModBasePath();
-    if (mod_base_path.empty())
-        return relative_path;
-
-    return mod_base_path + "\\" + relative_path;
-}
-
-void EnsureParentDirectory(const std::string &path)
-{
-    char directory[MAX_PATH];
-    strncpy(directory, path.c_str(), sizeof(directory) - 1);
-    directory[sizeof(directory) - 1] = '\0';
-
-    char *last_slash = strrchr(directory, '\\');
-    if (last_slash)
-    {
-        *last_slash = '\0';
-        filesystem::create_nested_dirs(directory);
-    }
-}
-
 void CloseAllScriptFiles()
 {
     script_files::CloseAll();
@@ -72,9 +46,9 @@ void GScr_OpenFile()
     }
 
     const char *filename = Scr_GetString(0);
-    const std::string path = BuildScriptFilePath(filename);
+    const std::string path = Config::ResolveModPath(filename);
     if (file_mode[0] == 'w' || file_mode[0] == 'a')
-        EnsureParentDirectory(path);
+        filesystem::CreateParentDirectories(path.c_str());
 
     int handle = script_files::Open(path.c_str(), file_mode);
     if (handle == script_files::NO_FREE_HANDLES)

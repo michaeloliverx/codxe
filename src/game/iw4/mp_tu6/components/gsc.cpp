@@ -93,39 +93,6 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, scr_builtin_type_t *type)
     return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
 }
 
-static std::string BuildScriptFilePath(const char *filename)
-{
-    if ((filename[0] && filename[1] == ':') || strncmp(filename, "game:\\", 6) == 0)
-        return filename;
-
-    std::string rel(filename);
-    for (size_t i = 0; i < rel.size(); ++i)
-    {
-        if (rel[i] == '/')
-            rel[i] = '\\';
-    }
-
-    const std::string base = Config::GetModBasePath();
-    if (base.empty())
-        return rel;
-
-    return base + "\\" + rel;
-}
-
-static void EnsureParentDirectory(const std::string &path)
-{
-    char dirpath[MAX_PATH];
-    strncpy(dirpath, path.c_str(), sizeof(dirpath) - 1);
-    dirpath[sizeof(dirpath) - 1] = '\0';
-
-    char *last_slash = strrchr(dirpath, '\\');
-    if (last_slash)
-    {
-        *last_slash = '\0';
-        filesystem::create_nested_dirs(dirpath);
-    }
-}
-
 void GScr_CbufAddText()
 {
     if (Scr_GetNumParam() != 1)
@@ -163,8 +130,8 @@ static void GScr_FileWrite()
     else
         Scr_ParamError(2, "filewrite: mode must be \"write\" or \"append\"");
 
-    const std::string path = BuildScriptFilePath(filename);
-    EnsureParentDirectory(path);
+    const std::string path = Config::ResolveModPath(filename);
+    filesystem::CreateParentDirectories(path.c_str());
 
     FILE *file = fopen(path.c_str(), file_mode);
     if (!file)
@@ -184,7 +151,7 @@ static void GScr_FileRead()
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: fileread(<file>)");
 
-    const std::string path = BuildScriptFilePath(Scr_GetString(0));
+    const std::string path = Config::ResolveModPath(Scr_GetString(0));
     FILE *file = fopen(path.c_str(), "rb");
     if (!file)
     {
@@ -225,7 +192,7 @@ static void GScr_FileExists()
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: fileexists(<file>)");
 
-    const std::string path = BuildScriptFilePath(Scr_GetString(0));
+    const std::string path = Config::ResolveModPath(Scr_GetString(0));
     FILE *file = fopen(path.c_str(), "rb");
     if (!file)
     {
@@ -257,7 +224,7 @@ static void GScr_OpenFile()
         return;
     }
 
-    const std::string path = BuildScriptFilePath(filename);
+    const std::string path = Config::ResolveModPath(filename);
     open_script_io_file_handle = fopen(path.c_str(), "r");
     if (!open_script_io_file_handle)
     {

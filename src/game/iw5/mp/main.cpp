@@ -32,34 +32,15 @@ unsigned int g_loaded_script_count = 0;
 unsigned __int8 *g_gsc_arena = nullptr;
 unsigned int g_gsc_arena_used = 0;
 
-void NormalizePath(char *path)
+std::string BuildScriptPath(const char *name)
 {
-    if (path == nullptr)
-        return;
+    if (name == nullptr || name[0] == '\0')
+        return std::string();
 
-    for (char *cursor = path; *cursor != '\0'; ++cursor)
-    {
-        if (*cursor == '/')
-            *cursor = '\\';
-    }
-}
+    std::string fileName = name;
+    fileName += ".gscbin";
 
-bool BuildScriptPath(char *path, size_t pathSize, const char *name)
-{
-    const char *modBasePath = Config::GetModBasePath();
-    if (path == nullptr || pathSize == 0 || modBasePath == nullptr || modBasePath[0] == '\0' || name == nullptr ||
-        name[0] == '\0')
-    {
-        return false;
-    }
-
-    const int written = _snprintf_s(path, pathSize, _TRUNCATE, "%s\\%s.gscbin", modBasePath, name);
-    path[pathSize - 1] = '\0';
-    if (written < 0 || static_cast<size_t>(written) >= pathSize)
-        return false;
-
-    NormalizePath(path);
-    return true;
+    return Config::ResolveModPath(fileName.c_str());
 }
 
 void *AllocateGSCData(unsigned int size, unsigned int alignment)
@@ -210,10 +191,10 @@ XAssetHeader *DB_FindXAssetHeader_Hook(XAssetType type, const char *name, int al
         if (loadedScript != nullptr)
             return reinterpret_cast<XAssetHeader *>(loadedScript);
 
-        char overridePath[MAX_PATH];
-        if (BuildScriptPath(overridePath, sizeof(overridePath), name))
+        const std::string overridePath = BuildScriptPath(name);
+        if (!overridePath.empty())
         {
-            ScriptFile *scriptFile = LoadGSCBin(overridePath, name);
+            ScriptFile *scriptFile = LoadGSCBin(overridePath.c_str(), name);
             if (scriptFile != nullptr)
                 return reinterpret_cast<XAssetHeader *>(scriptFile);
         }

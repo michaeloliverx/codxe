@@ -7,36 +7,6 @@ namespace sp
 {
 namespace
 {
-void NormalizePath(char *path)
-{
-    if (path == nullptr)
-        return;
-
-    for (char *cursor = path; *cursor != '\0'; ++cursor)
-    {
-        if (*cursor == '/')
-            *cursor = '\\';
-    }
-}
-
-bool BuildScriptPath(char *path, size_t pathSize, const char *basePath, const char *scriptPath)
-{
-    if (path == nullptr || pathSize == 0 || basePath == nullptr || basePath[0] == '\0' || scriptPath == nullptr ||
-        scriptPath[0] == '\0')
-    {
-        return false;
-    }
-
-    const int written = _snprintf_s(path, pathSize, _TRUNCATE, "%s\\%s", basePath, scriptPath);
-    path[pathSize - 1] = '\0';
-
-    if (written < 0 || static_cast<size_t>(written) >= pathSize)
-        return false;
-
-    NormalizePath(path);
-    return true;
-}
-
 char *ReadFileToGameTempBuffer(const char *path)
 {
     HANDLE file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
@@ -75,22 +45,14 @@ void WriteScriptDump(const char *scriptPath, const char *contents)
     if (scriptPath == nullptr || contents == nullptr)
         return;
 
-    char dumpPath[MAX_PATH];
-    if (!BuildScriptPath(dumpPath, sizeof(dumpPath), DUMP_DIR, scriptPath))
+    const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, scriptPath);
+    if (dumpPath.empty())
         return;
 
-    char dirPath[MAX_PATH];
-    strncpy(dirPath, dumpPath, sizeof(dirPath) - 1);
-    dirPath[sizeof(dirPath) - 1] = '\0';
+    filesystem::CreateParentDirectories(dumpPath.c_str());
 
-    char *lastSlash = strrchr(dirPath, '\\');
-    if (lastSlash != nullptr)
-    {
-        *lastSlash = '\0';
-        filesystem::create_nested_dirs(dirPath);
-    }
-
-    HANDLE file = CreateFileA(dumpPath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    HANDLE file =
+        CreateFileA(dumpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE)
         return;
 
@@ -121,15 +83,15 @@ char *Scr_AddSourceBuffer_Hook(scriptInstance_t inst, const char *filename, cons
         return contents;
     }
 
-    char overridePath[MAX_PATH];
-    if (!BuildScriptPath(overridePath, sizeof(overridePath), Config::GetModBasePath(), extFilename))
+    const std::string overridePath = Config::ResolveModPath(extFilename);
+    if (overridePath.empty())
         return callOriginal();
 
-    char *buffer = ReadFileToGameTempBuffer(overridePath);
+    char *buffer = ReadFileToGameTempBuffer(overridePath.c_str());
     if (buffer == nullptr)
         return callOriginal();
 
-    DbgPrint("GSCLoader: Loaded override script: %s\n", overridePath);
+    DbgPrint("GSCLoader: Loaded override script: %s\n", overridePath.c_str());
     return buffer;
 }
 
