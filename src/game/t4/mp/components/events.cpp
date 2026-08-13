@@ -3,6 +3,7 @@
 
 #include "brush_collision.h"
 #include "console.h"
+#include "gsc_functions.h"
 #include "stats.h"
 #include "sv_bots.h"
 
@@ -23,6 +24,7 @@ const EventHandler cmdInitHandlers[] = {
 };
 
 const EventHandler vmShutdownHandlers[] = {
+    GSCFunctions::OnVMShutdown,
     SVBots::OnVMShutdown,
 };
 

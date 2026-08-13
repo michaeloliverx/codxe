@@ -33,6 +33,11 @@ static void CloseAllScriptFiles()
     script_files::CloseAll();
 }
 
+void GSCFunctions::OnVMShutdown()
+{
+    CloseAllScriptFiles();
+}
+
 static void GScr_FS_TestFile()
 {
     if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 1)
