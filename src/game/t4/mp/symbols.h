@@ -98,6 +98,9 @@ static auto GScr_AllocString = reinterpret_cast<int (*)(const char *s)>(0x8222D3
 typedef void (*Info_SetValueForKey_t)(char *s, const char *key, const char *value);
 static Info_SetValueForKey_t Info_SetValueForKey = reinterpret_cast<Info_SetValueForKey_t>(0x822C3FE0);
 
+typedef void *(*Hunk_AllocLowAlign_t)(size_t size, int alignment);
+static Hunk_AllocLowAlign_t Hunk_AllocLowAlign = reinterpret_cast<Hunk_AllocLowAlign_t>(0x822B9DD8);
+
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822B9CC0);
 
 static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x821E4220);
