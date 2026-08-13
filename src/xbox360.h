@@ -12,7 +12,6 @@ enum Environment
 
 Environment GetEnvironment();
 const char *GetEnvironmentName(Environment environment);
-void ApplySystemPatches();
 void Notify(const char *message);
 
 } // namespace xbox
