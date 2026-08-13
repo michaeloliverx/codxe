@@ -254,8 +254,7 @@ typedef void (*CG_Init_t)(int localClientNum, int serverMessageNum, int serverCo
 static CG_Init_t CG_Init = reinterpret_cast<CG_Init_t>(0x8230DEA0);
 
 typedef void *(*Hunk_AllocAlignInternal_t)(size_t size, int alignment);
-static Hunk_AllocAlignInternal_t Hunk_AllocAlignInternal =
-    reinterpret_cast<Hunk_AllocAlignInternal_t>(0x821D7438);
+static Hunk_AllocAlignInternal_t Hunk_AllocAlignInternal = reinterpret_cast<Hunk_AllocAlignInternal_t>(0x821D7438);
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x821D7328);
 static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(
