@@ -28,6 +28,7 @@ static auto ent_fields = reinterpret_cast<ent_field_t *>(0x82035BF0); // null-te
 static auto g_entities = reinterpret_cast<gentity_s *>(0x82BAD1B0);
 static auto level = reinterpret_cast<level_locals_t *>(0x82D6A440);
 static auto svsHeader = reinterpret_cast<serverStaticHeader_t *>(0x84f85100);
+static auto svs_clients = reinterpret_cast<client_t **>(0x830C0C90);
 static auto sv_maxclients = reinterpret_cast<dvar_s **>(0x83008C08);
 static auto scrVarPub = reinterpret_cast<scrVarPub_t *>(0x85AC2F00);
 static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x82756700);
@@ -170,6 +171,8 @@ typedef gentity_s *(*SV_AddTestClient_t)();
 static SV_AddTestClient_t SV_AddTestClient = reinterpret_cast<SV_AddTestClient_t>(0x82285D20);
 typedef void (*SV_BotUserMove_t)(client_t *cl);
 static SV_BotUserMove_t SV_BotUserMove = reinterpret_cast<SV_BotUserMove_t>(0x8228AB98);
+typedef void (*SV_CalcPings_t)();
+static SV_CalcPings_t SV_CalcPings = reinterpret_cast<SV_CalcPings_t>(0x8228A1B0);
 static auto SV_GameSendServerCommand =
     reinterpret_cast<void (*)(int clientNum, svscmd_type type, const char *text)>(0x82285FA8);
 static auto SV_LinkEntity = reinterpret_cast<void (*)(gentity_s *ent)>(0x82290C38);
