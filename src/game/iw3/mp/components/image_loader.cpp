@@ -1052,20 +1052,21 @@ void image_loader::OnAssetLink(XAsset *asset)
     }
 }
 
+namespace
+{
+void ReplaceDelayedImage(void *const asset, void *)
+{
+    auto *const image = static_cast<GfxImage *>(asset);
+    if (image != nullptr && image->delayLoadPixels)
+    {
+        Image_Replace(image);
+    }
+}
+} // namespace
+
 void image_loader::OnDelayStreamLoad()
 {
-    const int MAX_IMAGES = 2048;
-    XAssetHeader images[MAX_IMAGES];
-    const int imageCount = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_IMAGE, images, MAX_IMAGES);
-
-    for (int i = 0; i < imageCount; ++i)
-    {
-        GfxImage *image = images[i].image;
-        if (image != NULL && image->delayLoadPixels)
-        {
-            Image_Replace(image);
-        }
-    }
+    DB_EnumXAssets_FastFile(ASSET_TYPE_IMAGE, ReplaceDelayedImage, nullptr, false);
 }
 
 bool R_StreamLoadImageReplacement(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)
