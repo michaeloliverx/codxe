@@ -1,4 +1,5 @@
-// Auto-generated version header
 #pragma once
 
-#define BUILD_NUMBER 0
+#ifndef GIT_VERSION
+#define GIT_VERSION "unknown"
+#endif
