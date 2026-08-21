@@ -9,22 +9,19 @@ MSBUILD_ARGS = ["/m", "/p:BuildInParallel=true"]
 BINARY_PATH = r"build\Release\bin\codxe.xex"
 STAGING_DIR = r"build\staging"
 RESOURCES_PATH = r"resources"
+VERSION_HEADER_PATH = r"build\Release\obj\git_version.h"
 
 
-def count_commits():
+def read_git_version():
     try:
-        result = subprocess.run(
-            ["git", "rev-list", "--count", "HEAD"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        with open(VERSION_HEADER_PATH, "r") as version_file:
+            for line in version_file:
+                if line.startswith("#define GIT_VERSION "):
+                    git_version = line.split('"')[1]
+                    print(f"Git version: {git_version}")
+                    return git_version
 
-        # Get the commit count from the command output
-        commit_count = result.stdout.strip()
-
-        print(f"Total number of commits in the current branch: {commit_count}")
-        return commit_count
+        raise RuntimeError(f"GIT_VERSION was not found in {VERSION_HEADER_PATH}")
     except Exception as e:
         print(f"An error occurred: {e}")
         exit(1)
@@ -35,15 +32,6 @@ if not os.path.exists(MSBUILD_PATH):
     print(f"ERROR: MSBuild not found at {MSBUILD_PATH}")
     exit(1)
 
-VERSION_HEADER_PATH = r"src\version.h"
-BUILD_NUMBER = count_commits()
-
-print("Generating version.h with build metadata...")
-with open(VERSION_HEADER_PATH, "w") as version_file:
-    version_file.write("// Auto-generated version header\n")
-    version_file.write("#pragma once\n\n")
-    version_file.write(f"#define BUILD_NUMBER {BUILD_NUMBER}\n")
-
 print("Building solution with parallel MSBuild jobs...")
 result = subprocess.run([MSBUILD_PATH, SOLUTION_FILE, *MSBUILD_ARGS])
 if result.returncode != 0:
@@ -51,6 +39,8 @@ if result.returncode != 0:
     exit(result.returncode)
 else:
     print("Build succeeded.")
+
+GIT_VERSION = read_git_version()
 
 print("Creating clean staging directory...")
 if os.path.exists(STAGING_DIR):
@@ -89,7 +79,7 @@ else:
 
 
 PROJECT_NAME = "codxe"
-ZIP_FILE_NAME = f"{PROJECT_NAME}-r{BUILD_NUMBER}.zip"
+ZIP_FILE_NAME = f"{PROJECT_NAME}-{GIT_VERSION}.zip"
 STAGING_ZIP_PATH = os.path.join("build", ZIP_FILE_NAME)
 
 print("Zipping the staging folder...")

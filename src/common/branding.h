@@ -10,11 +10,11 @@ inline const char *GetBrandingString()
 
     if (Config::GetActiveMod()[0] == '\0')
     {
-        _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 r%d", BUILD_NUMBER);
+        _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 %s", GIT_VERSION);
     }
     else
     {
-        _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 r%d\nMod: %s", BUILD_NUMBER,
+        _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 %s\nMod: %s", GIT_VERSION,
                     Config::GetActiveMod());
     }
 

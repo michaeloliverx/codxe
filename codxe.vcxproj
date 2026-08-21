@@ -27,6 +27,7 @@
   <PropertyGroup>
     <OutDir>$(SolutionDir)build\$(Configuration)\bin\</OutDir>
     <IntDir>$(SolutionDir)build\$(Configuration)\obj\</IntDir>
+    <GitVersionHeader>$(IntDir)git_version.h</GitVersionHeader>
     <RemoteRoot>hdd:\Plugins</RemoteRoot>
     <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     <ImageXexOutput>$(OutDir)$(ProjectName).xex</ImageXexOutput>
@@ -43,6 +44,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)\pch.pch</PrecompiledHeaderOutputFile>
+      <ForcedIncludeFiles>$(GitVersionHeader);%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <!-- Disable warning C4481: nonstandard extension used: override specifier 'override'
            This allows use of the C++11 'override' keyword with the Xbox 360 compiler (pre-C++11) -->
       <AdditionalOptions>/wd4481 %(AdditionalOptions)</AdditionalOptions>
@@ -356,4 +358,7 @@
       <ClInclude Include="src\plugin.h" />
       <ClInclude Include="src\xbox360.h" />
   </ItemGroup>
+  <Target Name="GenerateGitVersionHeader" BeforeTargets="ClCompile">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\generate-version.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(GitVersionHeader)&quot;" />
+  </Target>
 </Project>

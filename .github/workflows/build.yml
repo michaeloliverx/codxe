@@ -74,6 +74,8 @@ jobs:
 
       - name: Build Plugin
         id: build
+        env:
+          CODXE_RELEASE_BUILD: "1"
         run: |
           # Get commit count
           $commitCount = git rev-list --count HEAD
