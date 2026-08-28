@@ -292,6 +292,13 @@ static auto UI_DrawText =
 
 static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x823160A8);
 
+// bg_removeBarriers
+typedef void (*PmoveSingle_t)(pmove_t* pm);
+static PmoveSingle_t PmoveSingle = reinterpret_cast<PmoveSingle_t>(0x8210B488);
+
+typedef void (*PM_CheckLadderMove_t)(pmove_t* pm, pml_t* pml);
+static PM_CheckLadderMove_t PM_CheckLadderMove = reinterpret_cast<PM_CheckLadderMove_t>(0x8210ACC8);
+
 // Data
 static auto DB_XAssetPool = reinterpret_cast<void **>(0x82442828);
 static auto g_assetNames = reinterpret_cast<const char **>(0x82442298);
