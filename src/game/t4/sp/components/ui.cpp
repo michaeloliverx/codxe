@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ui.h"
+#include "console.h"
 
 namespace t4
 {
@@ -24,6 +25,7 @@ Detour UI_Refresh_Detour;
 void UI_Refresh_Hook(int localClientNum)
 {
     UI_Refresh_Detour.GetOriginal<decltype(UI_Refresh)>()(localClientNum);
+    console::OnUIRefresh();
     DrawBranding(localClientNum);
 }
 
