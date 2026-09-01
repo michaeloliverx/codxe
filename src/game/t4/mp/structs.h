@@ -165,6 +165,25 @@ union XAssetHeader
     void *data;
 };
 
+struct internal_state;
+
+struct z_stream_s
+{
+    unsigned __int8 *next_in;
+    unsigned int avail_in;
+    unsigned int total_in;
+    unsigned __int8 *next_out;
+    unsigned int avail_out;
+    unsigned int total_out;
+    char *msg;
+    internal_state *state;
+    unsigned __int8 *(__fastcall *zalloc)(unsigned __int8 *, unsigned int, unsigned int);
+    void(__fastcall *zfree)(unsigned __int8 *, unsigned __int8 *);
+    unsigned __int8 *opaque;
+    int data_type;
+};
+static_assert(sizeof(z_stream_s) == 0x30, "");
+
 struct __declspec(align(4)) cLeaf_t
 {
     unsigned __int16 firstCollAabbIndex;

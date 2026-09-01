@@ -82,6 +82,27 @@ static auto DB_FindXAssetHeader =
 static auto DB_GetAllXAssetOfType_FastFile =
     reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x821E7428);
 
+typedef int (*DB_AuthLoad_InflateInit_t)(z_stream_s *stream, bool isSecure, const char *filename);
+static DB_AuthLoad_InflateInit_t DB_AuthLoad_InflateInit = reinterpret_cast<DB_AuthLoad_InflateInit_t>(0x821D8180);
+
+typedef int (*DB_AuthLoad_Inflate_t)(z_stream_s *stream, int flush);
+static DB_AuthLoad_Inflate_t DB_AuthLoad_Inflate = reinterpret_cast<DB_AuthLoad_Inflate_t>(0x821D8298);
+
+typedef void (*DB_AuthLoad_InflateEnd_t)(z_stream_s *stream);
+static DB_AuthLoad_InflateEnd_t DB_AuthLoad_InflateEnd = reinterpret_cast<DB_AuthLoad_InflateEnd_t>(0x821D8228);
+
+typedef int (*inflateInit__t)(z_stream_s *stream, const char *version, int streamSize);
+static inflateInit__t inflateInit_ = reinterpret_cast<inflateInit__t>(0x822F36A0);
+
+typedef int (*inflate_t)(z_stream_s *stream, int flush);
+static inflate_t inflate = reinterpret_cast<inflate_t>(0x822F36B0);
+
+typedef int (*inflateEnd_t)(z_stream_s *stream);
+static inflateEnd_t inflateEnd = reinterpret_cast<inflateEnd_t>(0x822F34C8);
+
+typedef void (*R_ShowDirtyDiscError_t)();
+static R_ShowDirtyDiscError_t R_ShowDirtyDiscError = reinterpret_cast<R_ShowDirtyDiscError_t>(0x824166F0);
+
 static auto Dvar_FindMalleableVar = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x822BDFE8);
 static auto Dvar_GetBool = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x822BE0E8);
 static auto Dvar_GetString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x822BE230);
