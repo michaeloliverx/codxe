@@ -25,6 +25,13 @@ const int ENTITY_TYPE_COUNT = 19;
 static auto entityTypeNames = reinterpret_cast<const char **>(0x824B60C8);
 
 static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x8253F2F0);
+static auto g_consoleField = reinterpret_cast<field_t *>(0x82538590);
+static auto clientConnectionStates = reinterpret_cast<connstate_t *>(0x843C6880);
+static auto conInitialized = reinterpret_cast<int *>(0x8251EBD0);
+static auto conActiveLineCount = reinterpret_cast<int *>(0x8251EC00);
+static auto conDisplayLineOffset = reinterpret_cast<int *>(0x8252EE0C);
+static auto conOutputVisible = reinterpret_cast<unsigned __int8 *>(0x8252EE14);
+static auto conVisibleLineCount = reinterpret_cast<int *>(0x8252EE1C);
 
 // Functions
 static auto BG_AddPredictableEventToPlayerstate =
@@ -33,6 +40,7 @@ static auto BG_AddPredictableEventToPlayerstate =
 
 static auto CM_EntityString = reinterpret_cast<const char *(*)()>(0x82241C88);
 static auto CL_CmdButtons = reinterpret_cast<void (*)(int a1, usercmd_s *a2)>(0x822E38F8);
+static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x822E44B8);
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8224D8E0);
 
@@ -69,6 +77,15 @@ static auto Com_PrintError = reinterpret_cast<void (*)(int channel, const char *
 static auto Com_PrintMessage = reinterpret_cast<void (*)(int channel, const char *msg, int error)>(0x8224F804);
 static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration,
                                                         int pixelWidth, int flags)>(0x8214EA60);
+
+static auto Con_OneTimeInit = reinterpret_cast<int (*)()>(0x8214DD00);
+
+typedef void (*Field_AdjustScroll_t)(const ScreenPlacement *scrPlace, field_t *edit);
+static Field_AdjustScroll_t Field_AdjustScroll = reinterpret_cast<Field_AdjustScroll_t>(0x82154920);
+
+static auto Key_IsCatcherActive = reinterpret_cast<int (*)(int localClientNum, int catcher)>(0x821564E0);
+static auto Key_AddCatcher = reinterpret_cast<int (*)(int localClientNum, int catcher)>(0x82156520);
+static auto Key_RemoveCatcher = reinterpret_cast<int (*)(int localClientNum, int catcher)>(0x82156550);
 
 typedef void *(*Hunk_AllocLowAlign_t)(size_t size, int alignment);
 static Hunk_AllocLowAlign_t Hunk_AllocLowAlign = reinterpret_cast<Hunk_AllocLowAlign_t>(0x82286410);
@@ -122,8 +139,8 @@ static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const ch
 
 struct Font_s;
 
-struct ScreenPlacement;
 static auto scrPlaceFullUnsafe = reinterpret_cast<ScreenPlacement *>(0x8253F1D0);
+static ScreenPlacement &scrPlaceFull = *scrPlaceFullUnsafe;
 
 static auto UI_DrawText =
     reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, float x,
