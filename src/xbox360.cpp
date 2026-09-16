@@ -31,10 +31,11 @@ const DWORD XNOTIFY_DELAY_MS = 1000;
 struct Notification
 {
     volatile LONG inUse;
+    DWORD delayMs;
     WCHAR displayText[160];
 };
 
-Notification g_notifications[2];
+Notification g_notifications[3];
 
 /**
  * Check if we are running in Xenia Canary.
@@ -87,11 +88,32 @@ DWORD WINAPI NotifyThread(void *argument)
 {
     Notification *notification = static_cast<Notification *>(argument);
 
-    Sleep(XNOTIFY_DELAY_MS);
+    if (notification->delayMs != 0)
+    {
+        Sleep(notification->delayMs);
+    }
+
     XNotifyQueueUI(XNOTIFYUI_TYPE_EXCLAIM, XNOTIFY_USER_INDEX_ANY, XNOTIFY_AREA_SYSTEM, notification->displayText,
                    nullptr);
     InterlockedExchange(&notification->inUse, 0);
     return 0;
+}
+
+bool StartNotification(Notification *notification, const char *message, HANDLE *thread)
+{
+    char brandedMessage[160];
+    _snprintf_s(brandedMessage, sizeof(brandedMessage), _TRUNCATE, "CoD Xe: %s", message);
+    CopyAsciiToWide(brandedMessage, notification->displayText, ARRAYSIZE(notification->displayText));
+
+    const NTSTATUS status =
+        ExCreateThread(thread, 0, nullptr, nullptr, NotifyThread, notification, EX_CREATE_FLAG_TITLE_EXEC);
+    if (!NT_SUCCESS(status))
+    {
+        DbgPrint("[codxe] Failed to create notification thread: 0x%08X.\n", status);
+        return false;
+    }
+
+    return true;
 }
 } // namespace
 
@@ -137,20 +159,30 @@ void Notify(const char *message)
         return;
     }
 
-    char branded_message[160];
-    _snprintf_s(branded_message, sizeof(branded_message), _TRUNCATE, "CoD Xe: %s", message);
-    CopyAsciiToWide(branded_message, notification->displayText, ARRAYSIZE(notification->displayText));
+    notification->delayMs = XNOTIFY_DELAY_MS;
 
     HANDLE thread = nullptr;
-    const NTSTATUS status =
-        ExCreateThread(&thread, 0, nullptr, nullptr, NotifyThread, notification, EX_CREATE_FLAG_TITLE_EXEC);
-    if (!NT_SUCCESS(status))
+    if (!StartNotification(notification, message, &thread))
     {
         InterlockedExchange(&notification->inUse, 0);
-        DbgPrint("[codxe] Failed to create notification thread: 0x%08X.\n", status);
         return;
     }
 
+    CloseHandle(thread);
+}
+
+void NotifyAndWait(const char *message)
+{
+    assert(message != nullptr);
+
+    Notification notification = {};
+    HANDLE thread = nullptr;
+    if (!StartNotification(&notification, message, &thread))
+    {
+        return;
+    }
+
+    WaitForSingleObject(thread, INFINITE);
     CloseHandle(thread);
 }
 
