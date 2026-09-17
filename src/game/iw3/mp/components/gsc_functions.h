@@ -15,6 +15,7 @@ void GScr_FS_ReadLine();
 void GScr_FS_WriteLine();
 void Scr_IsArray_f();
 void GScr_Float();
+void GScr_ReplaceFunc();
 
 class GSCFunctions : public Module
 {

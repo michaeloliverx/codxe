@@ -1,0 +1,59 @@
+PR: Add GSC replaceFunc support for IW3 multiplayer
+
+Summary
+-------
+This change adds a new GSC builtin, replaceFunc, that allows one GSC function
+to be replaced by another function at runtime. It is intended for mods that
+need to override or extend existing script behavior without editing the
+original function directly.
+
+What replaceFunc does
+---------------------
+replaceFunc takes two function references:
+
+    replaceFunc(originalFunction, replacementFunction);
+
+The first function is the function to intercept, and the second function is
+the function that should run in its place. The replacement is registered by
+the compiled code positions of both functions. When the script VM is about to
+execute a registered original function, the VM hook resolves that code
+position to the replacement code position and continues execution from the
+replacement function.
+
+This makes it possible for a mod to redirect existing script callbacks or
+functions while leaving the original game script files unchanged.
+
+Implementation details
+----------------------
+- Registers replaceFunc as a GSC builtin available to all builtin contexts.
+- Validates that exactly two parameters are supplied.
+- Validates that both parameters are actual function values.
+- Tracks replacements by compiled GSC code position.
+- Hooks VM execution so replacements are applied whenever the original
+  function is called.
+- Includes registration, replacement-hit, and cleanup logging to make the
+  behavior easy to verify during development.
+- Installs and removes the VM detour with the GSC component lifecycle.
+
+Game and VM lifecycle
+---------------------
+Replacement entries are only valid for the current script VM/game state. All
+registered replacements are cleared during the script shutdown hook, before
+the original shutdown routine continues. This is important because compiled
+GSC code positions can become invalid after a game or map is shut down.
+
+The cleanup runs every time the current game is shut down, so old replacement
+functions do not carry over into a new game. Each new game starts with a clean
+replacement table and can register its own mappings safely. Clearing the map
+removes the old replacement registrations; it does not modify or delete the
+original GSC functions.
+
+Status
+------
+The implementation works perfectly in its intended use: functions register
+correctly, calls are redirected through the VM to their replacements, invalid
+arguments are rejected with a diagnostic, and all old replacement entries are
+cleared when the game shuts down before the next game starts.
+
+This keeps replaceFunc reliable across map/game transitions and prevents stale
+function pointers from being reused by a later script VM instance.
