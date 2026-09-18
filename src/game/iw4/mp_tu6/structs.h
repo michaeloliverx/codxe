@@ -128,6 +128,7 @@ union DvarLimits
 
 enum DvarFlags : std::uint16_t
 {
+    DVAR_CODINFO = 0x08, // needed to properly send to clients as a dvar
     DVAR_FLAG_SERVERINFO = 0x10,
 };
 
@@ -2116,6 +2117,100 @@ union XAssetEntryPoolEntry
 static_assert(sizeof(XAssetEntry) == 0x10, "");
 static_assert(offsetof(XAssetEntry, nextHash) == 0xC, "");
 static_assert(offsetof(XAssetEntry, nextOverride) == 0xE, "");
+
+// bg_removeBarriers - some items like PMF are ripped from iw4x.
+enum
+{
+    PMF_PRONE = 1 << 0,
+    PMF_DUCKED = 1 << 1,
+    PMF_MANTLE = 1 << 2,
+    PMF_LADDER = 1 << 3,
+    PMF_SIGHT_AIMING = 1 << 4,
+    PMF_BACKWARDS_RUN = 1 << 5,
+    PMF_WALKING = 1 << 6,
+    PMF_TIME_HARDLANDING = 1 << 7,
+    PMF_TIME_KNOCKBACK = 1 << 8,
+    PMF_PRONEMOVE_OVERRIDDEN = 1 << 9,
+    PMF_RESPAWNED = 1 << 10,
+    PMF_FROZEN = 1 << 11,
+    PMF_LADDER_FALL = 1 << 12,
+    PMF_JUMPING = 1 << 13,
+    PMF_SPRINTING = 1 << 14,
+    PMF_SHELLSHOCKED = 1 << 15,
+    PMF_MELEE_CHARGE = 1 << 16,
+    PMF_NO_SPRINT = 1 << 17,
+    PMF_NO_JUMP = 1 << 18,
+    PMF_REMOTE_CONTROLLING = 1 << 19,
+    PMF_ANIM_SCRIPTED = 1 << 20,
+    PMF_UNK1 = 1 << 21,
+    PMF_DIVING = 1 << 22,
+};
+
+enum TraceHitType : __int32
+{
+    TRACE_HITTYPE_NONE = 0x0,
+    TRACE_HITTYPE_ENTITY = 0x1,
+    TRACE_HITTYPE_DYNENT_MODEL = 0x2,
+    TRACE_HITTYPE_DYNENT_BRUSH = 0x3,
+    TRACE_HITTYPE_GLASS = 0x4,
+};
+
+struct __declspec(align(4)) trace_t
+{
+    float fraction;
+    float normal[3];
+    int surfaceFlags;
+    int contents;
+    const char* material;
+    TraceHitType hitType;
+    unsigned __int16 hitId;
+    float fractionForHitType;
+    unsigned __int16 modelIndex;
+    unsigned __int16 partName;
+    unsigned __int16 partGroup;
+    bool allsolid;
+    bool startsolid;
+    bool walkable;
+};
+
+struct pml_t
+{
+    float forward[3];
+    float right[3];
+    float up[3];
+    float frametime;
+    int msec;
+    int walking;
+    int groundPlane;
+    int almostGroundPlane;
+    trace_t groundTrace;
+    float impactSpeed;
+    float previous_origin[3];
+    float previous_velocity[3];
+    unsigned int holdrand;
+};
+
+struct pmove_t
+{
+    playerState_s* ps;
+    usercmd_s cmd;
+    usercmd_s oldcmd;
+    int tracemask;
+    int numtouch;
+    int touchents[32];
+    Bounds bounds;
+    float xyspeed;
+    int proneChange;
+    float maxSprintTimeMultiplier;
+    bool mantleStarted;
+    float mantleEndPos[3];
+    int mantleDuration;
+    int viewChangeTime;
+    float viewChange;
+    float fTorsoPitch;
+    float fWaistPitch;
+    unsigned __int8 handler;
+};
 
 } // namespace mp_tu6
 } // namespace iw4
