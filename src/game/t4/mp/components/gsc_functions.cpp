@@ -3,11 +3,13 @@
 #include "common/gsc_registry.h"
 #include "common/script_files.h"
 #include "sv_bots.h"
+#include <unordered_map>
 
 namespace t4
 {
 namespace mp
 {
+static std::unordered_map<const char*, const char*> ReplacedFunctions;
 static void CloseAllScriptFiles()
 {
     script_files::CloseAll();
@@ -172,8 +174,156 @@ void GSCrGetPlayerclipBrushesContainingPoint()
     }
 }
 
+static const char* GetCodePosForParam(int index)
+{
+    const scriptInstance_t inst = SCRIPTINSTANCE_SERVER;
+    const int numParams = static_cast<int>(Scr_GetNumParam(inst));
+
+    if (index < 0 || index >= numParams)
+        return nullptr;
+
+    auto* top = *reinterpret_cast<VariableValue**>(0x85B11094 + (static_cast<int>(inst) * 0x14));
+
+    if (!top)
+        return nullptr;
+
+    auto* value = top - index;
+
+    if (value->type != VAR_FUNCTION)
+        return nullptr;
+
+    return value->u.codePosValue;
+}
+
+static const char* GSC_ResolveReplaceFunc(const char* pos)
+{
+    if (!pos)
+        return nullptr;
+
+    const auto it = ReplacedFunctions.find(pos);
+
+    if (it == ReplacedFunctions.end())
+        return nullptr;
+
+    printf(
+        "[ReplaceFunc HIT] %p -> %p | count=%u\n",
+        pos,
+        it->second,
+        static_cast<unsigned int>(ReplacedFunctions.size())
+    );
+
+    return it->second;
+}
+
+extern "C" const char* T4_GSC_GetReplacedPos(const char* pos)
+{
+    const char* replacement = GSC_ResolveReplaceFunc(pos);
+
+    if (replacement)
+    {
+        printf("[ReplaceFunc VM HIT] %p -> %p\n", pos, replacement);
+        return replacement;
+    }
+
+    return pos;
+}
+
+static void GScr_ReplaceFunc()
+{
+    if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 2)
+    {
+        Scr_Error(
+            "replaceFunc: needs two parameters",
+            SCRIPTINSTANCE_SERVER
+        );
+        return;
+    }
+
+    const char* what = GetCodePosForParam(0);
+    const char* with = GetCodePosForParam(1);
+
+    if (!what)
+    {
+        Scr_Error(
+            "replaceFunc: first parameter is not a function",
+            SCRIPTINSTANCE_SERVER
+        );
+        return;
+    }
+
+    if (!with)
+    {
+        Scr_Error(
+            "replaceFunc: second parameter is not a function",
+            SCRIPTINSTANCE_SERVER
+        );
+        return;
+    }
+
+    printf(
+        "[ReplaceFunc REGISTER] %p -> %p | before=%u\n",
+        what,
+        with,
+        static_cast<unsigned int>(ReplacedFunctions.size())
+    );
+
+    ReplacedFunctions[what] = with;
+
+    printf(
+        "[ReplaceFunc REGISTER] after=%u\n",
+        static_cast<unsigned int>(ReplacedFunctions.size())
+    );
+}
+
+Detour VMExecuteInternal_Detour;
+extern "C" __declspec(naked) void VM_Execute_Hook()
+{
+    __asm
+    {
+        mr      r3, r10
+        bl      T4_GSC_GetReplacedPos
+
+        mr      r10, r3
+
+        addi    r11, r10, 1
+        lbz     r9, 0(r10)
+        addi    r10, r27, -0x4068
+        slwi    r21, r31, 2
+
+        lis     r12, 0x8234
+        ori     r12, r12, 0x6480
+        mtctr   r12
+        bctr
+    }
+}
+
+void GSCFunctions::ClearReplacedFunctions()
+{
+    printf(
+        "[ReplaceFunc CLEAR] before=%u\n",
+        static_cast<unsigned int>(ReplacedFunctions.size())
+    );
+
+    for (auto it = ReplacedFunctions.begin(); it != ReplacedFunctions.end(); ++it)
+    {
+        printf(
+            "[ReplaceFunc CLEAR] removing %p -> %p\n",
+            it->first,
+            it->second
+        );
+    }
+
+    ReplacedFunctions.clear();
+
+    printf(
+        "[ReplaceFunc CLEAR] after=%u\n",
+        static_cast<unsigned int>(ReplacedFunctions.size())
+    );
+}
+
 static const gsc::Entry<BuiltinFunction> functions[] = {
     {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
+    {"replaceFunc", GScr_ReplaceFunc, BUILTIN_ANY},
     {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, BUILTIN_ANY},
     {"fs_testfile", GScr_FS_TestFile, BUILTIN_ANY},
     {"fs_fopen", GScr_FS_FOpen, BUILTIN_ANY},
@@ -200,11 +350,15 @@ GSCFunctions::GSCFunctions()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
+
+    VMExecuteInternal_Detour = Detour(reinterpret_cast<void*>(0x82346470), reinterpret_cast<const void*>(VM_Execute_Hook));
+    VMExecuteInternal_Detour.Install();
 }
 
 GSCFunctions::~GSCFunctions()
 {
     Scr_GetFunction_Detour.Remove();
+    VMExecuteInternal_Detour.Remove();
     CloseAllScriptFiles();
 }
 } // namespace mp
