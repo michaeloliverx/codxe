@@ -131,6 +131,15 @@ bool FileExists(const char *filePath)
     return attributes != static_cast<DWORD>(-1) && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+bool DirectoryExists(const char *directoryPath)
+{
+    if (!directoryPath || !*directoryPath)
+        return false;
+
+    const DWORD attributes = GetFileAttributesA(directoryPath);
+    return attributes != static_cast<DWORD>(-1) && (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
 // Function to read a file's contents into a string
 std::string ReadFileToString(const std::string &filePath)
 {

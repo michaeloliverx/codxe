@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "cj_tas.h"
 #include "cg.h"
+#include "mods.h"
 
 namespace iw3
 {
@@ -46,7 +47,17 @@ void R_DrawAllDynEnt_Hook(const GfxViewInfo *viewInfo)
 
 void DrawBranding()
 {
-    const char *brandingWithBuild = branding::GetBrandingString();
+    char brandingWithBuild[256];
+    const std::string activeMod = ModList::GetActiveName();
+    if (activeMod.empty())
+    {
+        _snprintf_s(brandingWithBuild, ARRAYSIZE(brandingWithBuild), _TRUNCATE, "CoD ^2Xe^7 %s", GIT_VERSION);
+    }
+    else
+    {
+        _snprintf_s(brandingWithBuild, ARRAYSIZE(brandingWithBuild), _TRUNCATE, "CoD ^2Xe^7 %s\nMod: %s", GIT_VERSION,
+                    activeMod.c_str());
+    }
 
     float color[4] = {1.0, 1.0, 1.0, 0.4};
 

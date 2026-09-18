@@ -89,6 +89,7 @@
       <ClCompile Include="src\common\map_ents.cpp" />
       <ClCompile Include="src\common\ppc.cpp" />
       <ClCompile Include="src\common\script_files.cpp" />
+      <ClCompile Include="src\common\string_utils.cpp" />
 
       <ClCompile Include="src\image\xenos_texture.cpp" />
 
@@ -115,8 +116,13 @@
       <ClCompile Include="src\game\iw3\mp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_functions.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_methods.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\fastfiles.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\mods.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\patches.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\image_loader.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\ui_feeder.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\ui_script.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\stats.cpp" />
@@ -227,6 +233,7 @@
       <ClInclude Include="src\common\map_ents.h" />
       <ClInclude Include="src\common\ppc.h" />
       <ClInclude Include="src\common\script_files.h" />
+      <ClInclude Include="src\common\string_utils.h" />
 
       <ClInclude Include="src\image\xenos_texture.h" />
 
@@ -256,7 +263,12 @@
       <ClInclude Include="src\game\iw3\mp\components\gsc.h" />
       <ClInclude Include="src\game\iw3\mp\components\gsc_fields.h" />
       <ClInclude Include="src\game\iw3\mp\components\gsc_methods.h" />
+      <ClInclude Include="src\game\iw3\mp\components\fastfiles.h" />
+      <ClInclude Include="src\game\iw3\mp\components\mods.h" />
+      <ClInclude Include="src\game\iw3\mp\components\patches.h" />
       <ClInclude Include="src\game\iw3\mp\components\pm.h" />
+      <ClInclude Include="src\game\iw3\mp\components\ui_feeder.h" />
+      <ClInclude Include="src\game\iw3\mp\components\ui_script.h" />
       <ClInclude Include="src\game\iw3\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw3\mp\components\stats.h" />
       <ClInclude Include="src\game\iw3\mp\main.h" />

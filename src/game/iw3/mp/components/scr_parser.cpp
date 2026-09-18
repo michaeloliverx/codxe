@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "common/gsc_loader.h"
+#include "mods.h"
 #include "scr_parser.h"
 
 namespace iw3
@@ -16,14 +17,9 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename, co
                                                                                        archive);
     };
 
-    if (Config::dump_rawfile)
-    {
-        char *contents = callOriginal();
-        gsc_loader::DumpSource(extFilename, contents);
-        return contents;
-    }
-
-    char *contents = gsc_loader::TryLoadOverride(extFilename, Hunk_AllocateTempMemoryHighInternal);
+    const std::string overridePath = ModList::ResolvePath(extFilename);
+    char *contents =
+        gsc_loader::TryLoadOverride(extFilename, overridePath.c_str(), Hunk_AllocateTempMemoryHighInternal);
     return contents ? contents : callOriginal();
 }
 

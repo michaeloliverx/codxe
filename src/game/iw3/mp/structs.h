@@ -197,7 +197,45 @@ struct DxGlobals
     volatile int showDirtyDiscError;
 };
 
+struct Material;
 struct menuDef_t;
+
+struct itemDef_s
+{
+    unsigned char _pad0[0x178];
+    float special;
+    int cursorPos[4];
+    void *typeData;
+    unsigned char _pad1[0x44];
+};
+static_assert(sizeof(itemDef_s) == 0x1D4, "");
+static_assert(offsetof(itemDef_s, special) == 0x178, "");
+static_assert(offsetof(itemDef_s, cursorPos) == 0x17C, "");
+
+struct FeederEntry
+{
+    std::string name;
+    std::string displayName;
+};
+
+typedef int (*UIFeederGetItemCount_t)();
+typedef const char *(*UIFeederGetItemText_t)(int index);
+typedef void (*UIFeederSelect_t)(int index);
+
+struct UIFeederCallbacks
+{
+    UIFeederGetItemCount_t getItemCount;
+    UIFeederGetItemText_t getItemText;
+    UIFeederSelect_t select;
+};
+
+typedef void (*UIScriptHandler_t)(int localClientNum, const char **args);
+
+struct UIScriptEntry
+{
+    const char *name;
+    UIScriptHandler_t callback;
+};
 
 struct UiContext_cursor
 {
@@ -1746,6 +1784,7 @@ struct XAsset
     XAssetType type;
     XAssetHeader header;
 };
+static_assert(sizeof(XAsset) == 0x8, "");
 
 struct XAssetEntry
 {
@@ -1756,12 +1795,19 @@ struct XAssetEntry
     unsigned __int16 nextOverride;
     unsigned __int16 usageFrame;
 };
+static_assert(sizeof(XAssetEntry) == 0x10, "");
+static_assert(offsetof(XAssetEntry, asset) == 0x0, "");
+static_assert(offsetof(XAssetEntry, zoneIndex) == 0x8, "");
+static_assert(offsetof(XAssetEntry, nextHash) == 0xA, "");
+static_assert(offsetof(XAssetEntry, nextOverride) == 0xC, "");
+static_assert(offsetof(XAssetEntry, usageFrame) == 0xE, "");
 
 union XAssetEntryPoolEntry
 {
     XAssetEntry entry;
     XAssetEntryPoolEntry *next;
 };
+static_assert(sizeof(XAssetEntryPoolEntry) == 0x10, "");
 
 enum svscmd_type : __int32
 {
@@ -2077,7 +2123,16 @@ static_assert(sizeof(server_t) == 392292, "");
 enum DvarFlags : unsigned __int16
 {
     DVAR_FLAG_NONE = 0x0,
+    DVAR_ARCHIVE = 0x1,
     DVAR_CODINFO = 0x100, // On change, this is sent to all clients (if you are host)
+};
+
+enum DvarSetSource : __int32
+{
+    DVAR_SOURCE_INTERNAL = 0x0,
+    DVAR_SOURCE_EXTERNAL = 0x1,
+    DVAR_SOURCE_SCRIPT = 0x2,
+    DVAR_SOURCE_DEVGUI = 0x3,
 };
 
 union DvarValue
@@ -3411,11 +3466,30 @@ struct XFile
     unsigned int blockSize[MAX_XFILE_COUNT];
 };
 
+enum DBZoneFlags : __int32
+{
+    DB_ZONE_NONE = 0x0,
+    DB_ZONE_COMMON = 0x1,
+    DB_ZONE_GAME = 0x2,
+    DB_ZONE_LOAD = 0x4,
+    DB_ZONE_PATCH = 0x8,
+    DB_ZONE_DEV = 0x10,
+    DB_ZONE_MOD = 0x20,
+};
+
 struct XZoneName
 {
     char name[64];
     int flags;
 };
+
+struct XZoneInfo
+{
+    const char *name;
+    int allocFlags;
+    int freeFlags;
+};
+static_assert(sizeof(XZoneInfo) == 0xC, "");
 
 struct StreamDelayInfo
 {
@@ -3691,6 +3765,19 @@ struct cgMedia_t
     Material *textDecodeCharactersGlow;
 };
 static_assert(sizeof(cgMedia_t) == 0x27A8, "");
+
+struct __declspec(align(2)) playerStatNetworkData
+{
+    unsigned __int8 playerStats[8192];
+    unsigned __int8 tempStatsBuffer[8192];
+    XSTORAGE_DOWNLOAD_TO_MEMORY_RESULTS statsResults;
+    wchar_t statsServerPath[256];
+    unsigned int statsServerPathLen;
+    bool statsFetched;
+    bool statWriteNeeded;
+    bool firstTimeRunning;
+};
+static_assert(sizeof(playerStatNetworkData) == 0x421C, "");
 
 } // namespace mp
 } // namespace iw3

@@ -5,15 +5,17 @@ namespace gsc_loader
 {
 char *TryLoadOverride(const char *scriptPath, AllocateTempMemory_t allocateTempMemory)
 {
-    if (!scriptPath || !allocateTempMemory)
-        return nullptr;
-
     const std::string overridePath = Config::ResolveModPath(scriptPath);
-    if (overridePath.empty())
+    return TryLoadOverride(scriptPath, overridePath.c_str(), allocateTempMemory);
+}
+
+char *TryLoadOverride(const char *scriptPath, const char *overridePath, AllocateTempMemory_t allocateTempMemory)
+{
+    if (!scriptPath || !overridePath || !*overridePath || !allocateTempMemory)
         return nullptr;
 
-    HANDLE file = CreateFileA(overridePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    HANDLE file = CreateFileA(overridePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE)
         return nullptr;
 
@@ -41,7 +43,7 @@ char *TryLoadOverride(const char *scriptPath, AllocateTempMemory_t allocateTempM
     CloseHandle(file);
     buffer[fileSize] = '\0';
 
-    DbgPrint("GSCLoader: Loaded override script: %s\n", overridePath.c_str());
+    DbgPrint("GSCLoader: Loaded override script: %s\n", overridePath);
     return buffer;
 }
 

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "assets.h"
+#include "mods.h"
 
 namespace iw3
 {
@@ -15,7 +16,7 @@ void OverrideMapEnts(MapEnts *mapEnts)
     }
 
     const std::string fileName = map_ents::GetFileNameForAssetName(mapEnts->name);
-    const std::string filePath = Config::ResolveModPath(fileName.c_str());
+    const std::string filePath = ModList::ResolvePath(fileName.c_str());
     if (filePath.empty())
     {
         return;

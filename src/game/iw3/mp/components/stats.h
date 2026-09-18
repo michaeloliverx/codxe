@@ -6,11 +6,16 @@ namespace iw3
 {
 namespace mp
 {
-class stats : public Module
+class Stats : public Module
 {
   public:
-    stats();
-    ~stats();
+    Stats();
+    ~Stats();
+
+  private:
+    friend class UIScript;
+
+    static void LoadStatsScript(int localClientNum, const char **args);
 };
 } // namespace mp
 } // namespace iw3

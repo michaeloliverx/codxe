@@ -60,6 +60,10 @@ static auto CL_GamepadButtonEvent =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, int key, int down, unsigned int time)>(
         0x822DD1E8);
 
+typedef int (*CL_ControllerIndexFromClientNum_t)(int localClientNum);
+static CL_ControllerIndexFromClientNum_t CL_ControllerIndexFromClientNum =
+    reinterpret_cast<CL_ControllerIndexFromClientNum_t>(0x822CEFB0);
+
 typedef void (*CL_Input_t)(int localClientNum);
 static CL_Input_t CL_Input = reinterpret_cast<CL_Input_t>(0x822DCBC8);
 
@@ -132,6 +136,8 @@ static auto Dvar_RegisterInt =
 static auto Dvar_RegisterString =
     reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
         0x821D1040);
+typedef void (*Dvar_SetStringFromSource_t)(dvar_s *dvar, const char *value, DvarSetSource source);
+static Dvar_SetStringFromSource_t Dvar_SetStringFromSource = reinterpret_cast<Dvar_SetStringFromSource_t>(0x821D4148);
 
 typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
 static GetEntity_t GetEntity = reinterpret_cast<GetEntity_t>(0x82257F30);
@@ -145,7 +151,17 @@ static auto G_SetOrigin = reinterpret_cast<void (*)(gentity_s *ent, float *origi
 
 static auto I_strnicmp = reinterpret_cast<int (*)(const char *s0, const char *s1, int n)>(0x821CDA98);
 
+typedef void (*Item_ListBox_Scroll_t)(int localClientNum, itemDef_s *item, int max, int scrollMax, int viewMax,
+                                      int delta);
+static Item_ListBox_Scroll_t Item_ListBox_Scroll = reinterpret_cast<Item_ListBox_Scroll_t>(0x821E0D28);
+typedef void (*Item_ListBox_SetCursorPos_t)(int localClientNum, itemDef_s *item, int viewMax, int newCursorPos);
+static Item_ListBox_SetCursorPos_t Item_ListBox_SetCursorPos =
+    reinterpret_cast<Item_ListBox_SetCursorPos_t>(0x821E0BE8);
+
 static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x821E5B38);
+
+typedef void (*Party_SetDisplayMapName_t)(const char *rawMapName);
+static Party_SetDisplayMapName_t Party_SetDisplayMapName = reinterpret_cast<Party_SetDisplayMapName_t>(0x822BFAB8);
 
 static auto PM_FoliageSounds = reinterpret_cast<void (*)(pmove_t *pm)>(0x82335E90);
 static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233B470);
@@ -220,8 +236,20 @@ static auto UI_DrawTextExt =
     reinterpret_cast<void (*)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x,
                               double y, int horzAlign, int vertAlign, double scale, const float *color, int style)>(
         0x821EB858);
+typedef int (*UI_FeederCount_t)(int localClientNum, itemDef_s *item, float feederID);
+static UI_FeederCount_t UI_FeederCount = reinterpret_cast<UI_FeederCount_t>(0x821EED28);
+typedef void (*UI_FeederItemColor_t)(int localClientNum, itemDef_s *item, float feederID, int index, int column,
+                                     float *color);
+static UI_FeederItemColor_t UI_FeederItemColor = reinterpret_cast<UI_FeederItemColor_t>(0x821EC420);
+typedef const char *(*UI_FeederItemText_t)(int localClientNum, itemDef_s *item, float feederID, int index,
+                                           unsigned int column, Material **handle);
+static UI_FeederItemText_t UI_FeederItemText = reinterpret_cast<UI_FeederItemText_t>(0x821EDFB0);
+typedef void (*UI_FeederSelection_t)(int localClientNum, float feederID, itemDef_s *item, int index);
+static UI_FeederSelection_t UI_FeederSelection = reinterpret_cast<UI_FeederSelection_t>(0x821EBE50);
 static auto UI_OpenMenu = reinterpret_cast<void (*)(int localClientNum, const char *menuName)>(0x821EA1E0);
 static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x821F2F28);
+typedef void (*UI_RunMenuScript_t)(int localClientNum, const char **args, const char *actualScript);
+static UI_RunMenuScript_t UI_RunMenuScript = reinterpret_cast<UI_RunMenuScript_t>(0x821F0418);
 static auto UI_SafeTranslateString = reinterpret_cast<const char *(*)(char *reference)>(0x821ECA78);
 
 static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x821CD858);
@@ -263,6 +291,25 @@ static auto Scr_AddSourceBuffer =
 typedef int (*I_stricmp_t)(const char *s0, const char *s1);
 static I_stricmp_t I_stricmp = reinterpret_cast<I_stricmp_t>(0x821CDCC8);
 
+typedef unsigned int (*LiveStorage_ChecksumGamerStats_t)(const unsigned __int8 *playerStatsData);
+static LiveStorage_ChecksumGamerStats_t LiveStorage_ChecksumGamerStats =
+    reinterpret_cast<LiveStorage_ChecksumGamerStats_t>(0x821775F0);
+
+typedef void (*LiveStorage_ReadStats_t)(unsigned int controllerIndex);
+static LiveStorage_ReadStats_t LiveStorage_ReadStats = reinterpret_cast<LiveStorage_ReadStats_t>(0x821A27F8);
+
+typedef void (*LiveStorage_ResetStats_t)(int controllerIndex);
+static LiveStorage_ResetStats_t LiveStorage_ResetStats = reinterpret_cast<LiveStorage_ResetStats_t>(0x821A2C48);
+
+typedef void (*LiveStorage_SetStat_t)(int controllerIndex, int index, unsigned int value);
+static LiveStorage_SetStat_t LiveStorage_SetStat = reinterpret_cast<LiveStorage_SetStat_t>(0x821A29D8);
+
+typedef void (*LiveStorage_UploadStats_t)(unsigned int controllerIndex);
+static LiveStorage_UploadStats_t LiveStorage_UploadStats = reinterpret_cast<LiveStorage_UploadStats_t>(0x821A2508);
+
+typedef int (*String_Parse_t)(const char **p, char *out, int len);
+static String_Parse_t String_Parse = reinterpret_cast<String_Parse_t>(0x821E11D0);
+
 typedef void (*G_AddEvent_t)(gentity_s *ent, int event, int eventParm);
 static G_AddEvent_t G_AddEvent = reinterpret_cast<G_AddEvent_t>(0x8224AB48);
 
@@ -278,11 +325,17 @@ static DB_SetXAssetName_t DB_SetXAssetName = reinterpret_cast<DB_SetXAssetName_t
 typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
 static DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x822B3490);
 
-typedef XAssetEntry *(*DB_LinkXAssetEntry_t)(XAssetEntry *newEntry, int allowOverride);
+typedef XAssetEntryPoolEntry *(*DB_LinkXAssetEntry_t)(XAssetEntryPoolEntry *newEntry, int allowOverride);
 static DB_LinkXAssetEntry_t DB_LinkXAssetEntry = reinterpret_cast<DB_LinkXAssetEntry_t>(0x8229FC50);
 
 typedef void (*DB_LoadXFileData_t)(unsigned __int8 *pos, unsigned int size);
 static DB_LoadXFileData_t DB_LoadXFileData = reinterpret_cast<DB_LoadXFileData_t>(0x822B1FC8);
+
+typedef int (*DB_BuildOSPath_t)(const char *zoneName, unsigned int size, char *filename);
+static DB_BuildOSPath_t DB_BuildOSPath = reinterpret_cast<DB_BuildOSPath_t>(0x822A1178);
+
+typedef void (*DB_LoadXAssets_t)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
+static DB_LoadXAssets_t DB_LoadXAssets = reinterpret_cast<DB_LoadXAssets_t>(0x822A1318);
 
 typedef void (*DB_AllocXBlocks_t)(const unsigned int *blockSize, const char *filename, XBlock *blocks,
                                   unsigned int allocType);
@@ -443,6 +496,9 @@ typedef void (*Cmd_Init_t)();
 static Cmd_Init_t Cmd_Init = reinterpret_cast<Cmd_Init_t>(0x8223B228);
 
 // Variables
+typedef playerStatNetworkData *controllerStatData_t;
+static controllerStatData_t controllerStatData = reinterpret_cast<controllerStatData_t>(0x84C5E238);
+
 static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
 static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
 static auto clients = reinterpret_cast<clientActive_t **>(0x82435AB8);
@@ -480,7 +536,7 @@ static DB_LoadData *g_load = reinterpret_cast<DB_LoadData *>(0x82475508);
 static const char **g_block_mem_name = reinterpret_cast<const char **>(0x823A42AC);
 static const char **g_assetNames = reinterpret_cast<const char **>(0x823A42C8);
 static const char **g_defaultAssetName = reinterpret_cast<const char **>(0x823A40F8);
-static const XZoneName *g_zoneNames = reinterpret_cast<XZoneName *>(0x8270BC28);
+static XZoneName *g_zoneNames = reinterpret_cast<XZoneName *>(0x8270BC28);
 static const unsigned int *g_zoneIndex = reinterpret_cast<const unsigned int *>(0x82536C4C);
 static XAsset **varXAsset = reinterpret_cast<XAsset **>(0x82475658);
 static XAssetHeader **varXAssetHeader = reinterpret_cast<XAssetHeader **>(0x824756E0);

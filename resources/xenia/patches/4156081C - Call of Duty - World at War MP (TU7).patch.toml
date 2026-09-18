@@ -1,0 +1,19 @@
+title_name = "Call of Duty - World at War"
+title_id = "4156081C"
+hash = "56E69D05A9F15D2B" # default_mp.xex
+#media_id = "17723718" # Disc (USA, Europe): http://redump.org/disc/11816/
+
+[[patch]]
+name = "Memory allocator expansion"
+desc = "Increases the engine's primary memory allocation from 0x18F00000 (~399 MB) to 0x1E000000 (~480 MB)."
+author = "mo"
+is_enabled = true
+
+# PMem_Init - Updates memory allocation size for initialization
+[[patch.be16]]
+address = 0x822C0CA2
+value = 0x1E00       # Change 0x18F0 -> 0x1E00 (main allocation call)
+
+[[patch.be16]]
+address = 0x822C0C92
+value = 0x1E00       # Change 0x18F0 -> 0x1E00 (secondary reference)

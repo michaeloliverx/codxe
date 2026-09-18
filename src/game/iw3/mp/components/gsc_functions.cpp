@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gsc_functions.h"
+#include "mods.h"
 #include "common/script_files.h"
 
 namespace iw3
@@ -22,7 +23,7 @@ void GScr_FS_TestFile()
         Scr_Error("Usage: fs_testfile(<filename>)");
 
     const char *filename = Scr_GetString(0);
-    const std::string fullpath = Config::ResolveModPath(filename);
+    const std::string fullpath = ModList::ResolvePath(filename);
     FILE *f = fopen(fullpath.c_str(), "r");
     if (f)
     {
@@ -56,7 +57,7 @@ void GScr_FS_FOpen()
         return;
     }
 
-    const std::string fullpath = Config::ResolveModPath(filename);
+    const std::string fullpath = ModList::ResolvePath(filename);
 
     // Create parent directories for write/append modes
     if (fmode[0] == 'w' || fmode[0] == 'a')

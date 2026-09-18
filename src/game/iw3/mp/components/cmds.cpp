@@ -2,6 +2,7 @@
 #include "command.h"
 #include "events.h"
 #include "cmds.h"
+#include "mods.h"
 
 namespace iw3
 {
@@ -119,7 +120,7 @@ bool Cmd_ExecFromFastFile_Hook(int localClientNum, int controllerIndex, const ch
                                                                                          controllerIndex, filename);
     };
 
-    const std::string path = Config::ResolveModPath(filename);
+    const std::string path = ModList::ResolvePath(filename);
     if (path.empty())
         return callOriginal();
 

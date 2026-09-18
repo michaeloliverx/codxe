@@ -10,6 +10,7 @@ void CreateDirectories(const char *path);
 void CreateParentDirectories(const char *path);
 int WriteFileToDisk(const char *filePath, const char *data, size_t dataSize);
 bool FileExists(const char *filePath);
+bool DirectoryExists(const char *directoryPath);
 std::string ReadFileToString(const std::string &filePath);
 std::vector<std::string> ListFilesInDirectory(const std::string &directory);
 } // namespace filesystem
