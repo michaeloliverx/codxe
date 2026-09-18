@@ -3779,5 +3779,18 @@ struct __declspec(align(2)) playerStatNetworkData
 };
 static_assert(sizeof(playerStatNetworkData) == 0x421C, "");
 
+struct VariableValue
+{
+    union
+    {
+        int intValue;
+        float floatValue;
+        const char* stringValue;
+        const char* codePosValue;
+    };
+
+    int type;
+};
+
 } // namespace mp
 } // namespace iw3
