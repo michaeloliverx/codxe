@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "components/clipmap.h"
 #include "components/console.h"
+#include "components/fastfiles.h"
 #include "components/gsc_fields.h"
 #include "components/gsc.h"
 #include "components/scr_parser.h"
@@ -15,6 +16,7 @@ namespace sp
 T4_SP_Plugin::T4_SP_Plugin()
 {
     RegisterModule(new Config());
+    RegisterModule(new FastFiles());
     RegisterModule(new clipmap());
     RegisterModule(new console());
     RegisterModule(new GSC());
