@@ -64,6 +64,11 @@ void *Events::Scr_ShutdownSystem_Hook(scriptInstance_t inst, int sys, int bCompl
         vmShutdownHandlers[i]();
     }
 
+    if (bComplete)
+    {
+        GSCFunctions::ClearReplacedFunctions();
+    }
+
     return Scr_ShutdownSystem_Detour.GetOriginal<Scr_ShutdownSystem_t>()(inst, sys, bComplete);
 }
 

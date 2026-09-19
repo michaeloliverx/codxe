@@ -13,6 +13,7 @@ class GSCFunctions : public Module
     ~GSCFunctions();
 
     static void OnVMShutdown();
+    static void ClearReplacedFunctions();
 };
 } // namespace mp
 } // namespace t4
