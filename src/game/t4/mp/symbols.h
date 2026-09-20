@@ -52,6 +52,9 @@ static auto CG_Init =
     reinterpret_cast<void (*)(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)>(
         0x82171A30);
 
+typedef void (*CL_ConsolePrint_t)(int channel, const char *text, int flags);
+static CL_ConsolePrint_t CL_ConsolePrint = reinterpret_cast<CL_ConsolePrint_t>(0x82271AE8);
+
 typedef int (*Con_OneTimeInit_t)();
 static Con_OneTimeInit_t Con_OneTimeInit = reinterpret_cast<Con_OneTimeInit_t>(0x821A7360);
 
@@ -82,6 +85,9 @@ static auto DB_FindXAssetHeader =
 static auto DB_GetAllXAssetOfType_FastFile =
     reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x821E7428);
 
+typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
+static DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x821D7958);
+
 typedef int (*DB_AuthLoad_InflateInit_t)(z_stream_s *stream, bool isSecure, const char *filename);
 static DB_AuthLoad_InflateInit_t DB_AuthLoad_InflateInit = reinterpret_cast<DB_AuthLoad_InflateInit_t>(0x821D8180);
 
@@ -99,6 +105,9 @@ static inflate_t inflate = reinterpret_cast<inflate_t>(0x822F36B0);
 
 typedef int (*inflateEnd_t)(z_stream_s *stream);
 static inflateEnd_t inflateEnd = reinterpret_cast<inflateEnd_t>(0x822F34C8);
+
+static const char **g_assetNames = reinterpret_cast<const char **>(0x82484A98);
+static const XZoneName *g_zoneNames = reinterpret_cast<XZoneName *>(0x82A933D0);
 
 typedef void (*R_ShowDirtyDiscError_t)();
 static R_ShowDirtyDiscError_t R_ShowDirtyDiscError = reinterpret_cast<R_ShowDirtyDiscError_t>(0x824166F0);
