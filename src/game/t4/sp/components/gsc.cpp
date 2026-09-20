@@ -13,6 +13,33 @@ client_t *VM_GetClientForEntRef(scr_entref_t entref)
     return &(*reinterpret_cast<client_t **>(0x839EC08C))[entref.entnum];
 }
 
+void GScr_SpawnCollision()
+{
+    if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 4)
+        Scr_Error("Usage: SpawnCollision(<model>, <targetname>, <origin>, <angles>)", SCRIPTINSTANCE_SERVER);
+
+    const char *modelName = Scr_GetString(0, SCRIPTINSTANCE_SERVER);
+    const char *targetName = Scr_GetString(1, SCRIPTINSTANCE_SERVER);
+    float origin[3];
+    float angles[3];
+    Scr_GetVector(2, origin, SCRIPTINSTANCE_SERVER, -1);
+    Scr_GetVector(3, angles, SCRIPTINSTANCE_SERVER, -1);
+
+    gentity_s *ent = G_Spawn();
+    Scr_SetString(&ent->classname, GScr_AllocString("script_model"), SCRIPTINSTANCE_SERVER);
+    ent->s.index = G_ModelIndex(modelName);
+    if (!ent->s.index)
+        Scr_ParamError(0, va("SpawnCollision: Collision model name %s is not valid.", modelName),
+                       SCRIPTINSTANCE_SERVER);
+
+    Scr_SetString(&ent->targetname, GScr_AllocString(targetName), SCRIPTINSTANCE_SERVER);
+    std::memcpy(ent->r.currentOrigin, origin, sizeof(origin));
+    std::memcpy(ent->r.currentAngles, angles, sizeof(angles));
+    G_CallSpawnEntity(ent);
+    ent->flags |= 0x200;
+    Scr_AddEntity(ent, SCRIPTINSTANCE_SERVER);
+}
+
 void PlayerCmd_JumpButtonPressed(scr_entref_t entref)
 {
     if (entref.classnum != 0)
@@ -156,12 +183,26 @@ static const gsc::Entry<BuiltinMethod> methods[] = {
     {"moverightbuttonpressed", PlayerCmd_MoveRightButtonPressed, BUILTIN_ANY},
     {"clonebrushmodeltoscriptmodel", ScriptEntCmd_CloneBrushModelToScriptModel, BUILTIN_ANY},
 };
+
+static const gsc::Entry<BuiltinFunction> functions[] = {
+    {"spawncollision", GScr_SpawnCollision, BUILTIN_ANY},
+};
 } // namespace
 
 Detour Scr_GetFunction_Detour;
 
 BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
 {
+    if (pName)
+    {
+        const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
+        if (function)
+        {
+            *type = function->type;
+            return function->actionFunc;
+        }
+    }
+
     return Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
 }
 

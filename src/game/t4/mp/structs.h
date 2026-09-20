@@ -165,6 +165,31 @@ union XAssetHeader
     void *data;
 };
 
+struct XAsset
+{
+    XAssetType type;
+    XAssetHeader header;
+};
+static_assert(sizeof(XAsset) == 0x8, "");
+
+struct XAssetEntry
+{
+    XAsset asset;
+    unsigned __int8 zoneIndex;
+    bool inuse;
+    unsigned __int16 nextHash;
+    unsigned __int16 nextOverride;
+    unsigned __int16 usageFrame;
+};
+static_assert(sizeof(XAssetEntry) == 0x10, "");
+
+struct XZoneName
+{
+    char name[64];
+    int flags;
+};
+static_assert(sizeof(XZoneName) == 0x44, "");
+
 struct internal_state;
 
 struct z_stream_s

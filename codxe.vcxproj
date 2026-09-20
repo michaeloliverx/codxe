@@ -193,6 +193,7 @@
 
       <ClCompile Include="src\game\t4\sp\components\clipmap.cpp" />
       <ClCompile Include="src\game\t4\sp\components\console.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\fastfiles.cpp" />
       <ClCompile Include="src\game\t4\sp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\t4\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\t4\sp\components\scr_parser.cpp" />
@@ -339,6 +340,7 @@
 
       <ClInclude Include="src\game\t4\sp\components\clipmap.h" />
       <ClInclude Include="src\game\t4\sp\components\console.h" />
+      <ClInclude Include="src\game\t4\sp\components\fastfiles.h" />
       <ClInclude Include="src\game\t4\sp\components\gsc_fields.h" />
       <ClInclude Include="src\game\t4\sp\components\gsc.h" />
       <ClInclude Include="src\game\t4\sp\components\scr_parser.h" />
