@@ -46,7 +46,9 @@ static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const c
 
 static auto Dvar_RegisterBool =
     reinterpret_cast<void *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
+static auto Dvar_GetVariantString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x8228B5E0);
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x8228CF10);
+static auto Dvar_SetFromStringByName = reinterpret_cast<char *(*)(const char *dvarName, const char *value)>(0x8228D228);
 
 static auto ClientScr_ReadOnly =
     reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC6F8);
@@ -151,6 +153,7 @@ static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int 
 static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82165290);
 
 static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x8226B7D0);
+static auto Item_Slider_HandleKey = reinterpret_cast<int (*)(UiContext *dc, itemDef_s *item, int key)>(0x82271BB8);
 static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *dc, const char *menuName)>(0x822755B8);
 static auto UI_PlayerStart = reinterpret_cast<void (*)()>(0x822675E8);
 
