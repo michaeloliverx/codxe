@@ -43,6 +43,7 @@ Feature support varies by game and mode. See the game-specific docs below for mo
 - [Call of Duty 2 (IW2)](docs/iw2.md)
 - [Call of Duty 4: Modern Warfare (IW3)](docs/iw3.md)
 - [Call of Duty: World at War (T4)](docs/t4.md)
+  - [Singleplayer mod menu](docs/t4-mod-menu.md)
 - [Call of Duty: Modern Warfare 2 (IW4)](docs/iw4.md)
 - [007: Quantum of Solace](docs/qos.md)
 
@@ -56,6 +57,10 @@ Several supported games ship with a ready-to-use `codjumper` mod in this repo:
 - [`resources/t4/_codxe/mods/codjumper`](resources/t4/_codxe/mods/codjumper)
 
 These mods are practical examples of the `_codxe` mod layout and a starting point.
+
+World at War also ships a singleplayer mod menu covering the campaign and Nazi Zombies:
+
+- [`resources/t4/_codxe/mods/mod_menu`](resources/t4/_codxe/mods/mod_menu) ([docs](docs/t4-mod-menu.md))
 
 Several games also include an `example` mod that demonstrates the GSC loader with small, focused scripts:
 
