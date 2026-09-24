@@ -2,6 +2,9 @@
 #include "ui.h"
 #include "console.h"
 
+#include <cstdlib>
+#include <cstdio>
+
 namespace t4
 {
 namespace sp
@@ -35,6 +38,47 @@ void Campaign_UnlockAll()
 }
 
 Detour Menus_OpenByName_Detour;
+Detour Item_Slider_HandleKey_Detour;
+
+// Stock sliders move by 5% of their range; FOV needs one-degree steps.
+int Item_Slider_HandleKey_Hook(UiContext *dc, itemDef_s *item, int key)
+{
+    const auto original = Item_Slider_HandleKey_Detour.GetOriginal<decltype(Item_Slider_HandleKey)>();
+
+    int direction = 0;
+    if (key == K_DPAD_LEFT || key == K_APAD_LEFT || key == K_LEFTARROW || key == K_PGUP)
+        direction = -1;
+    else if (key == K_DPAD_RIGHT || key == K_APAD_RIGHT || key == K_RIGHTARROW || key == K_PGDN)
+        direction = 1;
+
+    if (!item || !direction)
+        return original(dc, item, key);
+
+    const auto *dvarName = item->dvar;
+    if (!dvarName || std::strcmp(dvarName, "cg_fov") != 0)
+        return original(dc, item, key);
+
+    const auto *limits = item->typeData.editField;
+    if (!limits)
+        return original(dc, item, key);
+
+    const float before = static_cast<float>(std::atof(Dvar_GetVariantString(dvarName)));
+    const int handled = original(dc, item, key);
+    if (handled)
+    {
+        float after = before + static_cast<float>(direction);
+        if (after < limits->minVal)
+            after = limits->minVal;
+        else if (after > limits->maxVal)
+            after = limits->maxVal;
+
+        char value[32];
+        sprintf_s(value, "%g", after);
+        Dvar_SetFromStringByName(dvarName, value);
+    }
+
+    return handled;
+}
 
 void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 {
@@ -53,10 +97,15 @@ ui::ui()
 
     Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
     Menus_OpenByName_Detour.Install();
+
+    Item_Slider_HandleKey_Detour = Detour(Item_Slider_HandleKey, Item_Slider_HandleKey_Hook);
+    Item_Slider_HandleKey_Detour.Install();
 }
 
 ui::~ui()
 {
+    Item_Slider_HandleKey_Detour.Remove();
+    Menus_OpenByName_Detour.Remove();
     UI_Refresh_Detour.Remove();
 }
 } // namespace sp

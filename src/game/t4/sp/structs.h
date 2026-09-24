@@ -4,6 +4,12 @@ namespace t4
 {
 namespace sp
 {
+enum DvarFlags : unsigned __int16
+{
+    DVAR_FLAG_NONE = 0x0,
+    DVAR_FLAG_EXTERNAL = 0x4000,
+};
+
 // usercmd_t->button bits
 enum button_mask
 {
@@ -105,12 +111,14 @@ struct gentity_s
         int eventTime;
     } r;
 
-    gclient_s *client;          // OFS: 384 SIZE: 0x4
-    char pad_0[28];             //
-    unsigned __int16 classname; // OFS: 416 SIZE: 0x2
-    char pad_1[18];             //
-    int flags;                  // OFS: 436 SIZE: 0x4
-    char pad_2[448];            //
+    gclient_s *client;           // OFS: 384 SIZE: 0x4
+    char pad_0[28];              //
+    unsigned __int16 classname;  // OFS: 416 SIZE: 0x2
+    char pad_1[6];               //
+    unsigned __int16 targetname; // OFS: 424 SIZE: 0x2
+    char pad_2[10];              //
+    int flags;                   // OFS: 436 SIZE: 0x4
+    char pad_3[448];             //
 };
 static_assert(sizeof(gentity_s) == 888, "");
 static_assert(offsetof(gentity_s, s.index) == 168, "");
@@ -119,6 +127,7 @@ static_assert(offsetof(gentity_s, r.bmodel) == 281, "");
 static_assert(offsetof(gentity_s, r.contents) == 324, "");
 static_assert(offsetof(gentity_s, client) == 384, "");
 static_assert(offsetof(gentity_s, classname) == 416, "");
+static_assert(offsetof(gentity_s, targetname) == 424, "");
 static_assert(offsetof(gentity_s, flags) == 436, "");
 
 struct usercmd_s
@@ -292,7 +301,232 @@ static_assert(offsetof(clipMap_t, numSubModels) == 148, "");
 static_assert(offsetof(clipMap_t, cmodels) == 152, "");
 static_assert(offsetof(clipMap_t, mapEnts) == 180, "");
 
+enum XAssetType : uint32_t
+{
+    ASSET_TYPE_XMODELPIECES = 0x0,
+    ASSET_TYPE_PHYSPRESET = 0x1,
+    ASSET_TYPE_PHYSCONSTRAINTS = 0x2,
+    ASSET_TYPE_DESTRUCTIBLEDEF = 0x3,
+    ASSET_TYPE_XANIMPARTS = 0x4,
+    ASSET_TYPE_XMODEL = 0x5,
+    ASSET_TYPE_MATERIAL = 0x6,
+    ASSET_TYPE_PIXELSHADER = 0x7,
+    ASSET_TYPE_TECHNIQUE_SET = 0x8,
+    ASSET_TYPE_IMAGE = 0x9,
+    ASSET_TYPE_SOUND = 0xA,
+    ASSET_TYPE_LOADED_SOUND = 0xB,
+    ASSET_TYPE_CLIPMAP = 0xC,
+    ASSET_TYPE_CLIPMAP_PVS = 0xD,
+    ASSET_TYPE_COMWORLD = 0xE,
+    ASSET_TYPE_GAMEWORLD_SP = 0xF,
+    ASSET_TYPE_GAMEWORLD_MP = 0x10,
+    ASSET_TYPE_MAP_ENTS = 0x11,
+    ASSET_TYPE_GFXWORLD = 0x12,
+    ASSET_TYPE_LIGHT_DEF = 0x13,
+    ASSET_TYPE_UI_MAP = 0x14,
+    ASSET_TYPE_FONT = 0x15,
+    ASSET_TYPE_MENULIST = 0x16,
+    ASSET_TYPE_MENU = 0x17,
+    ASSET_TYPE_LOCALIZE_ENTRY = 0x18,
+    ASSET_TYPE_WEAPON = 0x19,
+    ASSET_TYPE_SNDDRIVER_GLOBALS = 0x1A,
+    ASSET_TYPE_FX = 0x1B,
+    ASSET_TYPE_IMPACT_FX = 0x1C,
+    ASSET_TYPE_AITYPE = 0x1D,
+    ASSET_TYPE_MPTYPE = 0x1E,
+    ASSET_TYPE_CHARACTER = 0x1F,
+    ASSET_TYPE_XMODELALIAS = 0x20,
+    ASSET_TYPE_RAWFILE = 0x21,
+    ASSET_TYPE_STRINGTABLE = 0x22,
+    ASSET_TYPE_PACKINDEX = 0x23,
+
+    ASSET_TYPE_COUNT
+};
+
+struct RawFile
+{
+    const char *name;
+    int len;
+    const char *buffer;
+};
+static_assert(sizeof(RawFile) == 0xC, "");
+
+union XAssetHeader
+{
+    void *data;
+    RawFile *rawfile;
+};
+
+struct XAsset
+{
+    XAssetType type;
+    XAssetHeader header;
+};
+static_assert(sizeof(XAsset) == 0x8, "");
+
+struct XAssetEntry
+{
+    XAsset asset;
+    unsigned __int8 zoneIndex;
+    bool inuse;
+    unsigned __int16 nextHash;
+    unsigned __int16 nextOverride;
+    unsigned __int16 usageFrame;
+};
+static_assert(sizeof(XAssetEntry) == 0x10, "");
+
+struct XZoneName
+{
+    char name[64];
+    int flags;
+};
+static_assert(sizeof(XZoneName) == 0x44, "");
+
+enum DBZoneFlags : __int32
+{
+    DB_ZONE_NONE = 0x0,
+    DB_ZONE_COMMON = 0x1,
+    DB_ZONE_GAME = 0x2,
+    DB_ZONE_LOAD = 0x4,
+    DB_ZONE_PATCH = 0x8,
+    DB_ZONE_DEV = 0x10,
+    DB_ZONE_MOD = 0x20,
+};
+
+struct XZoneInfo
+{
+    const char *name;
+    int allocFlags;
+    int freeFlags;
+};
+static_assert(sizeof(XZoneInfo) == 0xC, "");
+
 struct UiContext;
+struct Material;
+struct menuDef_t;
+struct snd_alias_list_t;
+struct listBoxDef_s;
+struct multiDef_s;
+struct expressionEntry;
+
+struct rectDef_s
+{
+    float x;
+    float y;
+    float w;
+    float h;
+    int horzAlign;
+    int vertAlign;
+};
+static_assert(sizeof(rectDef_s) == 0x18, "");
+
+struct windowDef_t
+{
+    const char *name;
+    rectDef_s rect;
+    rectDef_s rectClient;
+    const char *group;
+    int style;
+    int border;
+    int ownerDraw;
+    int ownerDrawFlags;
+    float borderSize;
+    int staticFlags;
+    int dynamicFlags[4];
+    int nextTime;
+    float foreColor[4];
+    float backColor[4];
+    float borderColor[4];
+    float outlineColor[4];
+    Material *background;
+};
+static_assert(sizeof(windowDef_t) == 0xA8, "");
+
+struct statement_s
+{
+    int numEntries;
+    expressionEntry **entries;
+};
+static_assert(sizeof(statement_s) == 0x8, "");
+
+struct ItemKeyHandler
+{
+    int key;
+    const char *action;
+    ItemKeyHandler *next;
+};
+
+struct editFieldDef_s
+{
+    float minVal;
+    float maxVal;
+    float defVal;
+    float range;
+    int maxChars;
+    int maxCharsGotoNext;
+    int maxPaintChars;
+    int paintOffset;
+};
+static_assert(sizeof(editFieldDef_s) == 0x20, "");
+
+union itemDefData_t
+{
+    listBoxDef_s *listBox;
+    editFieldDef_s *editField;
+    multiDef_s *multi;
+    const char *enumDvarName;
+    void *data;
+};
+
+struct itemDef_s
+{
+    windowDef_t window;
+    rectDef_s textRect[4];
+    int type;
+    int dataType;
+    int alignment;
+    int fontEnum;
+    int textAlignMode;
+    float textalignx;
+    float textaligny;
+    float textscale;
+    int textStyle;
+    int gameMsgWindowIndex;
+    int gameMsgWindowMode;
+    const char *text;
+    int itemFlags;
+    menuDef_t *parent;
+    const char *mouseEnterText;
+    const char *mouseExitText;
+    const char *mouseEnter;
+    const char *mouseExit;
+    const char *action;
+    const char *onAccept;
+    const char *onFocus;
+    const char *leaveFocus;
+    const char *dvar;
+    const char *dvarTest;
+    const char *onListboxSelectionChange;
+    ItemKeyHandler *onKey;
+    const char *enableDvar;
+    int dvarFlags;
+    snd_alias_list_t *focusSound;
+    float special;
+    int cursorPos[4];
+    itemDefData_t typeData;
+    int imageTrack;
+    statement_s visibleExp;
+    statement_s textExp;
+    statement_s materialExp;
+    statement_s rectXExp;
+    statement_s rectYExp;
+    statement_s rectWExp;
+    statement_s rectHExp;
+    statement_s forecolorAExp;
+};
+static_assert(offsetof(itemDef_s, dvar) == 0x160, "");
+static_assert(offsetof(itemDef_s, typeData) == 0x190, "");
+static_assert(sizeof(itemDef_s) == 0x1D8, "");
 
 struct ScreenPlacement
 {
@@ -313,7 +547,11 @@ enum keyNum_t : __int32
     K_NONE = 0x0,
     K_TAB = 0x9,
     K_ENTER = 0xD,
+    K_DPAD_LEFT = 0x16,
+    K_DPAD_RIGHT = 0x17,
     K_ESCAPE = 0x1B,
+    K_APAD_LEFT = 0x1E,
+    K_APAD_RIGHT = 0x1F,
     K_SPACE = 0x20,
     K_BACKSPACE = 0x7F,
     K_CAPSLOCK = 0x97,

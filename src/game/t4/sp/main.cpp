@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "components/clipmap.h"
 #include "components/console.h"
+#include "components/fastfiles.h"
 #include "components/gsc_fields.h"
 #include "components/gsc.h"
 #include "components/scr_parser.h"
@@ -14,7 +15,11 @@ namespace sp
 
 T4_SP_Plugin::T4_SP_Plugin()
 {
+    // Default loc_warnings off to prevent console spam
+    *(volatile uint8_t *)0x8225FA17 = 0x00;
+
     RegisterModule(new Config());
+    RegisterModule(new FastFiles());
     RegisterModule(new clipmap());
     RegisterModule(new console());
     RegisterModule(new GSC());

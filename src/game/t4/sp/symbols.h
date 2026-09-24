@@ -44,6 +44,12 @@ static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x82
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8224D8E0);
 
+static auto Dvar_RegisterBool =
+    reinterpret_cast<void *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
+static auto Dvar_GetVariantString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x8228B5E0);
+static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x8228CF10);
+static auto Dvar_SetFromStringByName = reinterpret_cast<char *(*)(const char *dvarName, const char *value)>(0x8228D228);
+
 static auto ClientScr_ReadOnly =
     reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC6F8);
 static auto ClientScr_GetName = reinterpret_cast<void (*)(gclient_s *pSelf, const client_fields_s *pField)>(0x821BC730);
@@ -98,16 +104,28 @@ static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(scriptInstance_t inst, const char *filename, const char *extFilename,
                                const char *codePos, bool archive)>(0x82334558);
 static auto Scr_Error = reinterpret_cast<void (*)(const char *error, scriptInstance_t inst)>(0x823489A8);
+typedef void (*Scr_SetRuntimeError_t)(scriptInstance_t inst, const char *error, std::uint64_t source, int extraData);
+static auto Scr_SetRuntimeError = reinterpret_cast<Scr_SetRuntimeError_t>(0x82342700);
 static auto Scr_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName, int *type)>(0x821FE6F0);
 static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x821FCA38);
 static auto Player_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName)>(0x821C39B8);
 static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)(scriptInstance_t inst)>(0x82341FE8);
 static auto Scr_ObjectError = reinterpret_cast<void (*)(const char *error, scriptInstance_t inst)>(0x823428F8);
 static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index, scriptInstance_t inst)>(0x823480F0);
+static auto Scr_GetVector =
+    reinterpret_cast<void (*)(unsigned int index, float *vectorValue, scriptInstance_t inst, int errorOnUndefined)>(
+        0x82348330);
+static auto Scr_AddEntity = reinterpret_cast<void (*)(gentity_s *ent, scriptInstance_t inst)>(0x82211958);
 static auto Scr_ParamError =
     reinterpret_cast<void (*)(unsigned int index, const char *error, scriptInstance_t inst)>(0x82342878);
 static auto GetObjectType = reinterpret_cast<unsigned int (*)(unsigned int id, scriptInstance_t inst)>(0x82339DC8);
 static auto Scr_GetEntity = reinterpret_cast<gentity_s *(*)(unsigned int index)>(0x82211A08);
+static auto Scr_SetString =
+    reinterpret_cast<void (*)(unsigned __int16 *to, unsigned int stringValue, scriptInstance_t inst)>(0x823389B0);
+
+static auto G_Spawn = reinterpret_cast<gentity_s *(*)()>(0x82217D60);
+static auto G_ModelIndex = reinterpret_cast<int (*)(const char *name)>(0x82216660);
+static auto G_CallSpawnEntity = reinterpret_cast<bool (*)(gentity_s *ent)>(0x82211730);
 
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x821BCC90);
 static auto Scr_AddClassField =
@@ -135,7 +153,9 @@ static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int 
 static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82165290);
 
 static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x8226B7D0);
-static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x822755B8);
+static auto Item_Slider_HandleKey = reinterpret_cast<int (*)(UiContext *dc, itemDef_s *item, int key)>(0x82271BB8);
+static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *dc, const char *menuName)>(0x822755B8);
+static auto UI_PlayerStart = reinterpret_cast<void (*)()>(0x822675E8);
 
 struct Font_s;
 
@@ -147,12 +167,28 @@ static auto UI_DrawText =
                               float y, int horzAlign, int vertAlign, float scale, const float *color, int style)>(
         0x82266F28);
 
-struct XAssetType;
-struct XAssetHeader;
-
 static auto DB_FindXAssetHeader =
     reinterpret_cast<XAssetHeader (*)(XAssetType type, const char *name, bool errorIfMissing, int waitTime)>(
         0x8216B688);
+static auto DB_FindXAssetEntry = reinterpret_cast<XAssetEntry *(*)(XAssetType type, const char *name)>(0x82167FC0);
+
+typedef void (*DB_LoadXAssets_t)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
+static auto DB_LoadXAssets = reinterpret_cast<DB_LoadXAssets_t>(0x8216B128);
+
+typedef int (*Sys_CreateFile_t)(const char *filename, int desiredAccess, int shareMode, int securityAttributes,
+                                int creationDisposition, int flagsAndAttributes);
+static Sys_CreateFile_t Sys_CreateFile = reinterpret_cast<Sys_CreateFile_t>(0x823972F0);
+
+typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
+static DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x82159240);
+typedef int (*DB_GetXAssetTypeSize_t)(XAssetType type);
+static DB_GetXAssetTypeSize_t DB_GetXAssetTypeSize = reinterpret_cast<DB_GetXAssetTypeSize_t>(0x82159280);
+static const char **g_assetNames = reinterpret_cast<const char **>(0x824B3AB8);
+static int *g_poolSize = reinterpret_cast<int *>(0x824B3D40);
+static void **DB_XAssetPool = reinterpret_cast<void **>(0x824B3F80);
+static XZoneName *g_zoneNames = reinterpret_cast<XZoneName *>(0x8287BF50);
+static unsigned int *g_zoneIndex = reinterpret_cast<unsigned int *>(0x825A3B24);
+static bool *g_assetPoolsInitialized = reinterpret_cast<bool *>(0x8287C814);
 
 // imageTrack is unused internally, it seems to be remnant from `useFastFile` dvar
 // dev build could load raw font objects
