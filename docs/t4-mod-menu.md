@@ -316,7 +316,12 @@ from loading:
 - scripts that don't exist on every singleplayer map;
 - duplicate or colliding functions;
 - extra call arguments;
-- locals that are read but never assigned.
+- locals read before they're assigned on every path. This is the compiler's
+  `uninitialised variable` error, for example a variable set only inside a loop and read after it;
+- `break`/`continue` outside a loop, duplicate `case` values, and assignments to `self`.
+
+The flow rules were checked against about 750 stock scripts. None of the scripts that compile on a
+retail build are flagged.
 
 Builtin names come from `t4_sp_index.json`. You can regenerate it from your own game with
 `build_index.py`, using a dump written by `"dump_rawfile": true` in `codxe.json`.

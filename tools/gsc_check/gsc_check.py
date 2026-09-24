@@ -10,7 +10,8 @@ is slow, so this checker catches the same class of errors offline:
 - references to scripts that are not guaranteed to exist on every singleplayer map
   (e.g. maps\\_zombiemode_* scripts, which campaign levels do not contain)
 - duplicate functions, collisions with included scripts, too many call arguments
-- locals that are read but never assigned (usually typos)
+- locals read where they are not assigned on every path (the compiler's "uninitialised variable"
+  error), plus break/continue outside loops and assignments to self/level
 
 Builtin names come from t4_sp_index.json (see build_index.py); CoD Xe's own GSC builtins are read
 from src/game/t4/sp/components/gsc.cpp so the list stays in sync with the plugin.
@@ -118,6 +119,9 @@ VERIFIED_RARE = {
 }
 
 ENTITY_KEYWORDS = {"self", "level", "game", "anim"}
+
+# The compiler keeps locals in a fixed-size frame; stay well clear of the limit.
+MAX_LOCALS = 48
 BINARY_PRECEDENCE = [
     ("||",),
     ("&&",),
@@ -156,17 +160,39 @@ class Function:
         self.line = line
         self.calls = []
         self.pointers = []  # (path, name, line)
-        self.assigned = set()
-        self.used = []  # (name, line)
+        self.uninit = []  # (name, line)
+        self.locals = set(params)
+
+
+class Postfix:
+    """What parse_postfix saw: the local it starts from (if any) and the operations after it."""
+
+    def __init__(self, root_local, entity_root, chain, is_call, line):
+        self.root_local = root_local
+        self.entity_root = entity_root
+        self.chain = chain
+        self.is_call = is_call
+        self.line = line
 
 
 class Parser:
+    """Recursive descent parser for T4 GSC.
+
+    It also mirrors the compiler's "uninitialised variable" check, which is a *compile* error in
+    T4: a local may only be read where every path to the read has assigned it. Assignments inside
+    an if without else, inside a loop body or inside a switch case do not count after it. Paths
+    that end in return/break/continue are left out of the merge.
+    """
+
     def __init__(self, tokens):
         self.t = tokens
         self.i = 0
         self.includes = []
         self.functions = []
         self.fn = None
+        self.defined = set()  # locals definitely assigned on the current path
+        self.live = True  # False after return/break/continue until paths merge again
+        self.ctx = []  # enclosing loops/switches: {"kind": "loop"|"switch", "breaks": [set, ...]}
 
     # token helpers -------------------------------------------------------
     def peek(self, k=0):
@@ -197,6 +223,40 @@ class Parser:
         if tok.kind != "ident":
             raise ParseError(tok.line, "expected identifier, got %r" % tok.value)
         return tok
+
+    # definite assignment -------------------------------------------------
+    def use_local(self, name, line):
+        if name not in self.defined:
+            self.fn.uninit.append((name, line))
+
+    def assign_local(self, name):
+        self.defined.add(name)
+        self.fn.locals.add(name)
+
+    def terminate(self):
+        self.live = False
+
+    def merge(self, paths, fallback, was_live):
+        """Continue after a branch point. paths are the `defined` sets of every path that
+        reaches this point."""
+        if paths and was_live:
+            merged = set(paths[0])
+            for p in paths[1:]:
+                merged &= p
+            self.defined = merged
+            self.live = True
+        else:
+            self.defined = set(fallback)
+            self.live = False
+
+    def const_true_condition(self):
+        """True when the loop condition is a literal `1`/`true` followed by `)`."""
+        tok = self.peek()
+        if not self.at(")", 1):
+            return False
+        if tok.kind == "kw" and tok.value == "true":
+            return True
+        return tok.kind == "number" and float(tok.value) != 0
 
     # top level -----------------------------------------------------------
     def parse_file(self):
@@ -235,8 +295,10 @@ class Parser:
                 break
         self.expect(")")
         fn = Function(name.value.lower(), params, name.line)
-        fn.assigned.update(params)
         self.fn = fn
+        self.defined = set(params)
+        self.live = True
+        self.ctx = []
         self.parse_block()
         self.functions.append(fn)
         self.fn = None
@@ -250,7 +312,18 @@ class Parser:
             self.parse_statement()
         self.expect("}")
 
-    def parse_statement(self, in_switch=False):
+    def parse_loop_body(self, pre, was_live, infinite):
+        self.defined, self.live = set(pre), was_live
+        self.ctx.append({"kind": "loop", "breaks": []})
+        self.parse_statement()
+        ctx = self.ctx.pop()
+        if infinite:
+            # the only way out of `for(;;)` / `while(1)` is a break
+            self.merge(ctx["breaks"], pre, was_live)
+        else:
+            self.defined, self.live = set(pre), was_live
+
+    def parse_statement(self):
         tok = self.peek()
         if tok.kind == "op" and tok.value == "{":
             self.parse_block()
@@ -264,17 +337,26 @@ class Parser:
                 self.expect("(")
                 self.parse_expr()
                 self.expect(")")
+                pre, was_live = set(self.defined), self.live
                 self.parse_statement()
+                paths = [self.defined] if self.live else []
+                self.defined, self.live = set(pre), was_live
                 if self.at("else"):
                     self.next()
                     self.parse_statement()
+                    if self.live:
+                        paths.append(self.defined)
+                else:
+                    paths.append(pre)
+                self.merge(paths, pre, was_live)
                 return
             if v == "while":
                 self.next()
                 self.expect("(")
+                infinite = self.const_true_condition()
                 self.parse_expr()
                 self.expect(")")
-                self.parse_statement()
+                self.parse_loop_body(set(self.defined), self.live, infinite)
                 return
             if v == "for":
                 self.next()
@@ -282,13 +364,16 @@ class Parser:
                 if not self.at(";"):
                     self.parse_simple_statement()
                 self.expect(";")
-                if not self.at(";"):
+                infinite = self.at(";")
+                if not infinite:
+                    infinite = self.const_true_condition()
                     self.parse_expr()
                 self.expect(";")
+                pre, was_live = set(self.defined), self.live
                 if not self.at(")"):
-                    self.parse_simple_statement()
+                    self.parse_simple_statement()  # the increment; its assignments do not escape
                 self.expect(")")
-                self.parse_statement()
+                self.parse_loop_body(pre, was_live, infinite)
                 return
             if v == "switch":
                 self.next()
@@ -296,28 +381,65 @@ class Parser:
                 self.parse_expr()
                 self.expect(")")
                 self.expect("{")
-                seen_label = False
+                pre, was_live = set(self.defined), self.live
+                self.ctx.append({"kind": "switch", "breaks": []})
+                seen_label = has_default = False
+                case_values = set()
+                self.live = False
                 while not self.at("}"):
-                    if self.at("case"):
-                        self.next()
-                        lit = self.next()
-                        if lit.value == "-" and self.peek().kind == "number":
+                    if self.at("case") or self.at("default"):
+                        if self.at("case"):
+                            self.next()
                             lit = self.next()
-                        if lit.kind not in ("string", "number"):
-                            raise ParseError(lit.line, "case label must be a string or number literal")
+                            negative = ""
+                            if lit.value == "-" and self.peek().kind == "number":
+                                lit = self.next()
+                                negative = "-"
+                            if lit.kind not in ("string", "number"):
+                                raise ParseError(lit.line, "case label must be a string or number literal")
+                            value = (lit.kind, negative + lit.value.lower())
+                            if value in case_values:
+                                raise ParseError(lit.line, "duplicate case %s" % lit.value)
+                            case_values.add(value)
+                        else:
+                            if has_default:
+                                raise ParseError(self.peek().line, "switch has more than one default")
+                            self.next()
+                            has_default = True
                         self.expect(":")
                         seen_label = True
-                    elif self.at("default"):
-                        self.next()
-                        self.expect(":")
-                        seen_label = True
+                        # reachable by the jump from the switch (and maybe by fall-through)
+                        self.defined, self.live = set(pre), was_live
                     else:
                         if not seen_label:
                             raise ParseError(self.peek().line, "statement before first case label")
                         self.parse_statement()
                 self.expect("}")
+                ctx = self.ctx.pop()
+                paths = list(ctx["breaks"])
+                if self.live:
+                    paths.append(self.defined)
+                if not has_default:
+                    paths.append(pre)
+                self.merge(paths, pre, was_live)
                 return
-            if v in ("break", "continue", "waittillframeend", "breakpoint"):
+            if v == "break":
+                self.next()
+                self.expect(";")
+                if not self.ctx:
+                    raise ParseError(tok.line, "'break' outside of a loop or switch")
+                if self.live:
+                    self.ctx[-1]["breaks"].append(set(self.defined))
+                self.terminate()
+                return
+            if v == "continue":
+                self.next()
+                self.expect(";")
+                if not any(c["kind"] == "loop" for c in self.ctx):
+                    raise ParseError(tok.line, "'continue' outside of a loop")
+                self.terminate()
+                return
+            if v in ("waittillframeend", "breakpoint"):
                 self.next()
                 self.expect(";")
                 return
@@ -326,6 +448,7 @@ class Parser:
                 if not self.at(";"):
                     self.parse_expr()
                 self.expect(";")
+                self.terminate()
                 return
             if v == "wait":
                 self.next()
@@ -342,24 +465,41 @@ class Parser:
     def parse_simple_statement(self):
         """Assignment, increment/decrement or call. Anything else is a compile error."""
         start = self.peek()
-        target, is_call, lvalue_name = self.parse_postfix(statement=True)
-        if is_call:
+        pf = self.parse_postfix(statement=True)
+        if pf.is_call:
             return
+        root = pf.root_local
+        # a local, or anything ending in .field / [index] (including getEnt(...).field and (x).field)
+        assignable = (root is not None and not pf.chain) or (pf.chain and pf.chain[-1] in (".", "["))
+
         if self.at("++") or self.at("--"):
+            if not assignable:
+                raise ParseError(start.line, "cannot increment/decrement this expression")
             self.next()
-            if lvalue_name:
-                self.fn.used.append((lvalue_name, start.line))
+            if root:
+                self.use_local(root, pf.line)
             return
+
         tok = self.peek()
         if tok.kind == "op" and tok.value in ASSIGN_OPS:
-            self.next()
-            if lvalue_name:
-                if tok.value != "=":
-                    self.fn.used.append((lvalue_name, start.line))
-                self.fn.assigned.add(lvalue_name)
-            elif target == "rvalue":
+            if not assignable:
+                if pf.entity_root and not pf.chain:
+                    raise ParseError(tok.line, "cannot assign to '%s'" % start.value)
                 raise ParseError(tok.line, "left side of assignment is not assignable")
-            self.parse_expr()
+            self.next()
+            if root and not pf.chain:
+                if tok.value != "=":
+                    self.use_local(root, pf.line)
+                self.parse_expr()
+                self.assign_local(root)
+            elif root and tok.value == "=" and all(op == "[" for op in pf.chain):
+                # `arr[i] = x` / `arr[i][j] = x` create arr when it does not exist yet
+                self.parse_expr()
+                self.assign_local(root)
+            else:
+                if root:
+                    self.use_local(root, pf.line)
+                self.parse_expr()
             return
         raise ParseError(start.line, "statement has no effect (expected call or assignment)")
 
@@ -411,7 +551,7 @@ class Parser:
         n = 1
         while self.at(","):
             self.next()
-            self.fn.assigned.add(self.expect_ident().value.lower())
+            self.assign_local(self.expect_ident().value.lower())
             n += 1
         self.expect(")")
         return n
@@ -453,30 +593,38 @@ class Parser:
                 return "".join(parts)
             return None
 
+    def path_pointer_ahead(self):
+        j = 0
+        while True:
+            if self.peek(j).kind != "ident":
+                return False
+            nxt = self.peek(j + 1)
+            if nxt.kind == "op" and nxt.value == "\\":
+                j += 2
+                continue
+            return nxt.kind == "op" and nxt.value == "::"
+
     def looks_like_call_start(self):
         tok = self.peek()
         if self.at("[["):
             return True
         if tok.kind != "ident":
             return False
-        j = 1
-        while self.peek(j).kind == "op" and self.peek(j).value == "\\":
-            j += 2
-        if self.peek(j).kind == "op" and self.peek(j).value == "::":
+        if self.path_pointer_ahead():
             return True
         return self.peek(1).kind == "op" and self.peek(1).value == "("
 
     def parse_postfix(self, statement=False):
-        """Returns (kind, is_call, local_name_if_plain_local)."""
         tok = self.peek()
-        kind = "rvalue"
-        local_name = None
+        root_local = None
+        entity_root = False
         is_call = False
+        chain = []
 
         if tok.kind == "kw" and tok.value == "thread":
             self.next()
             self.parse_callee_call(False, True)
-            return ("call", True, None)
+            return Postfix(None, False, ["call"], True, tok.line)
         if tok.kind == "op" and tok.value == "::":
             self.next()
             name = self.expect_ident()
@@ -490,7 +638,7 @@ class Parser:
                 is_call = True
             else:
                 self.fn.pointers.append((path.lower(), name.value.lower(), name.line))
-        elif tok.kind == "ident" and self.peek(1).kind == "op" and self.peek(1).value == "(":
+        elif tok.kind == "ident" and self.at("(", 1):
             self.parse_callee_call(False, False)
             is_call = True
         elif self.at("[["):
@@ -498,9 +646,10 @@ class Parser:
             is_call = True
         elif tok.kind == "ident":
             self.next()
-            kind = "lvalue"
-            if tok.value.lower() not in ENTITY_KEYWORDS:
-                local_name = tok.value.lower()
+            if tok.value.lower() in ENTITY_KEYWORDS:
+                entity_root = True
+            else:
+                root_local = tok.value.lower()
         elif tok.kind == "kw" and tok.value in ("true", "false", "undefined"):
             self.next()
         elif tok.kind in ("number", "string"):
@@ -528,63 +677,35 @@ class Parser:
         else:
             raise ParseError(tok.line, "unexpected %r in expression" % tok.value)
 
-        # a bare local read (not the target of an assignment) is a use
-        kind, is_call, local_name = self.parse_postfix_tail(tok, kind, is_call, local_name)
-        if local_name and not statement:
-            self.fn.used.append((local_name, tok.line))
-        elif local_name and statement:
+        while True:
             nxt = self.peek()
-            if not (nxt.kind == "op" and (nxt.value in ASSIGN_OPS or nxt.value in ("++", "--"))):
-                self.fn.used.append((local_name, tok.line))
-        return (kind, is_call, local_name)
-
-    def path_pointer_ahead(self):
-        j = 0
-        while True:
-            if self.peek(j).kind != "ident":
-                return False
-            nxt = self.peek(j + 1)
-            if nxt.kind == "op" and nxt.value == "\\":
-                j += 2
-                continue
-            return nxt.kind == "op" and nxt.value == "::"
-
-    def parse_postfix_tail(self, first_tok, kind="rvalue", is_call=False, local_name=None):
-        while True:
-            tok = self.peek()
-            if tok.kind == "op" and tok.value == ".":
+            if nxt.kind == "op" and nxt.value == ".":
                 self.next()
                 self.expect_ident()
-                if local_name:
-                    self.fn.used.append((local_name, first_tok.line))
-                local_name = None
-                kind = "lvalue"
+                chain.append(".")
                 is_call = False
-            elif tok.kind == "op" and tok.value == "[" and not self.at("[["):
+            elif nxt.kind == "op" and nxt.value == "[" and not self.at("[["):
                 self.next()
                 self.parse_expr()
                 self.expect("]")
-                if local_name:
-                    # `arr[i] = x` needs arr to exist (or be auto-created); treat as assignment + use
-                    self.fn.assigned.add(local_name)
-                    local_name = None
-                kind = "lvalue"
+                chain.append("[")
                 is_call = False
-            elif (tok.kind == "kw" and tok.value == "thread") or self.looks_like_call_start():
-                # method call on the value we just parsed
-                if local_name:
-                    self.fn.used.append((local_name, first_tok.line))
-                    local_name = None
+            elif (nxt.kind == "kw" and nxt.value == "thread") or self.looks_like_call_start():
                 threaded = False
-                if tok.kind == "kw" and tok.value == "thread":
+                if nxt.kind == "kw" and nxt.value == "thread":
                     self.next()
                     threaded = True
                 self.parse_callee_call(True, threaded)
-                kind = "rvalue"
+                chain.append("call")
                 is_call = True
             else:
                 break
-        return kind, is_call, local_name
+
+        # Reads of a local are checked here; a statement's assignment target is checked by
+        # parse_simple_statement once it knows whether the local is being written.
+        if root_local and (not statement or "call" in chain):
+            self.use_local(root_local, tok.line)
+        return Postfix(root_local, entity_root, chain, is_call, tok.line)
 
 
 # ---------------------------------------------------------------------------
@@ -735,9 +856,16 @@ def main():
                         errors.append("%s: pointer %s::%s is not defined" % (where, path, name))
                 elif resolve_script_fn(name) is None:
                     errors.append("%s: pointer ::%s is not defined in file or includes" % (where, name))
-            for name, line in fn.used:
-                if name not in fn.assigned:
-                    errors.append("%s:%d: local '%s' is never assigned in %s()" % (key, line, name, fn.name))
+            seen = set()
+            for name, line in fn.uninit:
+                if (name, line) in seen:
+                    continue
+                seen.add((name, line))
+                errors.append("%s:%d: uninitialised variable '%s' in %s() - not assigned on every path "
+                              "before this read (the T4 compiler rejects this)" % (key, line, name, fn.name))
+            if len(fn.locals) > MAX_LOCALS:
+                warnings.append("%s:%d: %s() uses %d locals; keep it under %d" % (
+                    key, fn.line, fn.name, len(fn.locals), MAX_LOCALS))
 
     for (kind, name), count in sorted(used_builtins.items()):
         if count < args.rare and name not in VERIFIED_RARE:

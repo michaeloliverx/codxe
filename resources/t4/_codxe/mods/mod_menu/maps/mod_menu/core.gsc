@@ -551,6 +551,9 @@ mm_page_text(menu, page, pages, top)
 	if (count == 0)
 		return header + "\n(nothing here)";
 
+	// The T4 compiler rejects reading a local that is only assigned inside a loop, so assign
+	// text before the loop even though the loop always runs.
+	text = header;
 	for (maxLength = 24; maxLength >= 8; maxLength -= 2)
 	{
 		text = header;
