@@ -85,9 +85,12 @@ mm_player_init()
 	self.mm_access = false;
 	self.mm_host = false;
 	self.mm_wait_release = false;
+	self.mm_lowered = false;
 
 	while (!isAlive(self))
 		wait 0.1;
+
+	self mm_load_settings();
 
 	if (self mm_is_host())
 	{
@@ -105,8 +108,57 @@ mm_player_init()
 	if (self mm_has_access())
 	{
 		self iprintln("^5CoD Xe Menu ^7loaded");
-		self iprintln("Hold ^3[LT]^7 and press ^3[RS]^7 to open");
+		self iprintln(self mm_open_hint());
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Per-player settings. Stored in dvars so they survive loading the next level.
+// ---------------------------------------------------------------------------
+
+mm_setting_dvar(name)
+{
+	return "mm_" + name + "_" + self getEntityNumber();
+}
+
+mm_load_settings()
+{
+	self.mm_theme = mm_clamp(getDvarInt(self mm_setting_dvar("theme")), 0, level.mm.theme_names.size - 1);
+	self.mm_side = mm_clamp(getDvarInt(self mm_setting_dvar("side")), 0, 1);
+	self.mm_combo = mm_clamp(getDvarInt(self mm_setting_dvar("combo")), 0, 1);
+	self.mm_state["theme"] = self.mm_theme;
+	self.mm_state["side"] = self.mm_side;
+	self.mm_state["combo"] = self.mm_combo;
+}
+
+mm_save_setting(name, value)
+{
+	setDvar(self mm_setting_dvar(name), value);
+}
+
+mm_combo_names()
+{
+	names = [];
+	names[0] = "LT + RS";
+	names[1] = "Crouch + RS";
+	return names;
+}
+
+mm_open_hint()
+{
+	if (self.mm_combo == 1)
+		return "Crouch (^3B^7) and press ^3RS^7 (melee) to open the menu";
+	return "Hold ^3LT^7 (aim) and press ^3RS^7 (melee) to open the menu";
+}
+
+// Uses the aim/melee/stance *actions*, so it follows whatever button layout the player picked.
+mm_open_combo_pressed()
+{
+	if (!self meleeButtonPressed())
+		return false;
+	if (self.mm_combo == 1)
+		return self getStance() == "crouch";
+	return self adsButtonPressed();
 }
 
 mm_has_access()
@@ -183,7 +235,7 @@ mm_input_loop()
 			// Closing with RS must not instantly reopen while LT is still held.
 			if (!self meleeButtonPressed())
 				self.mm_wait_release = false;
-			if (!self.mm_wait_release && isAlive(self) && self adsButtonPressed() && self meleeButtonPressed())
+			if (!self.mm_wait_release && isAlive(self) && self mm_open_combo_pressed())
 			{
 				self.mm_wait_release = true;
 				self thread mm_open_menu();
@@ -203,6 +255,13 @@ mm_input_loop()
 			continue;
 		}
 
+		// Holding RS closes the menu from any page.
+		if (self.mm_hold["back"] == 12)
+		{
+			self thread mm_close();
+			continue;
+		}
+
 		if (self mm_button("select", self jumpButtonPressed() || self useButtonPressed(), false))
 		{
 			self thread mm_select();
@@ -211,8 +270,8 @@ mm_input_loop()
 
 		up = self adsButtonPressed() || self moveForwardButtonPressed() || self mm_dpad("DPAD_UP");
 		down = self attackButtonPressed() || self moveBackButtonPressed() || self mm_dpad("DPAD_DOWN");
-		left = self secondaryOffhandButtonPressed() || self moveLeftButtonPressed();
-		right = self fragButtonPressed() || self moveRightButtonPressed();
+		left = self secondaryOffhandButtonPressed() || self moveLeftButtonPressed() || self mm_dpad("DPAD_LEFT");
+		right = self fragButtonPressed() || self moveRightButtonPressed() || self mm_dpad("DPAD_RIGHT");
 
 		if (self mm_button("up", up, true))
 			self thread mm_move(-1);
@@ -291,6 +350,15 @@ mm_open_menu()
 	self.mm_open = true;
 	self freezeControls(true);
 	self disableOffhandWeapons();
+
+	// Lower the gun so RT (scroll down) can never fire. Vehicles and turrets manage their own
+	// weapon state, so leave those alone.
+	if (!self.usingvehicle && !self.usingturret)
+	{
+		self disableWeapons();
+		self.mm_lowered = true;
+	}
+
 	self mm_create_hud();
 	self mm_enter(self.mm_menu);
 	self mm_block_held_buttons();
@@ -303,6 +371,11 @@ mm_close()
 	self mm_destroy_hud();
 	self freezeControls(false);
 	self enableOffhandWeapons();
+	if (self.mm_lowered)
+	{
+		self enableWeapons();
+		self.mm_lowered = false;
+	}
 	self notify("mm_closed");
 }
 
@@ -391,9 +464,9 @@ mm_create_hud()
 	for (r = 0; r < rows; r++)
 		hud["val" + r] = self mm_hud_text(x + width - 10, self.mm_list_y + r * rowH, "right", level.mm.font_scale, 4);
 
-	hud["footer"] = self mm_hud_text(x + 10, y + height - 20, "left", 1.0, 4);
+	hud["footer"] = self mm_hud_text(x + 10, y + height - 20, "left", 0.9, 4);
 	hud["footer"].alpha = 0.65;
-	hud["footer"] setText("LT/RT move  A select  RS back  LB/RB adjust");
+	hud["footer"] setText("LT/RT Scroll  A Select  RS Back  LB/RB Adjust");
 
 	self.mm_hud = hud;
 	self.mm_page_key = "";
@@ -839,16 +912,33 @@ mm_add_choice(key, label, stateKey, func, choices, scope)
 mm_set_theme(index)
 {
 	self.mm_theme = index;
+	self mm_save_setting("theme", index);
 	self mm_apply_theme();
 }
 
 mm_set_side(index)
 {
 	self.mm_side = index;
+	self mm_save_setting("side", index);
 	if (!self.mm_open)
 		return;
 	self mm_create_hud();
 	self mm_render();
+}
+
+mm_set_combo(index)
+{
+	self.mm_combo = index;
+	self mm_save_setting("combo", index);
+	self iprintln(self mm_open_hint());
+}
+
+mm_controls_help()
+{
+	self iprintln("^3Scroll^7: LT / RT, left stick or D-pad");
+	self iprintln("^3Select^7: A (X also works)   ^3Back^7: RS   ^3Close^7: hold RS");
+	self iprintln("^3Change values^7: LB / RB or left stick left / right");
+	self iprintln(self mm_open_hint());
 }
 
 mm_set_all_access(on)

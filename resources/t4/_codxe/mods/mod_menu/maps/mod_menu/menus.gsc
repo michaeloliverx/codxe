@@ -180,7 +180,8 @@ fill_spawn_ai(key)
 build_world()
 {
 	mm_menu("world", "World & Physics", "main");
-	mm_add_slider("world", "Timescale", "timescale", maps\mod_menu\world::timescale_set, 0.1, 3, 0.1, 1, "level");
+	// Script time runs on game time, so the menu itself slows down with the timescale; 0.2 keeps it usable.
+	mm_add_slider("world", "Timescale", "timescale", maps\mod_menu\world::timescale_set, 0.2, 3, 0.1, 1, "level");
 	mm_add_slider("world", "Gravity", "gravity", maps\mod_menu\world::gravity_set, 50, 1600, 50, 800, "level");
 	mm_add_choice("world", "Ragdoll Gravity", "physgrav", maps\mod_menu\world::phys_gravity_set, maps\mod_menu\world::phys_gravity_names(), "level");
 	mm_add_toggle("world", "Hurricane Winds", "wind", maps\mod_menu\world::wind_set, "level");
@@ -349,6 +350,9 @@ build_settings()
 	sides[1] = "Left";
 	side = mm_add_choice("settings", "Menu Side", "side", ::mm_set_side, sides);
 	side.no_reset = true;
+	combo = mm_add_choice("settings", "Open With", "combo", ::mm_set_combo, mm_combo_names());
+	combo.no_reset = true;
+	mm_add_action("settings", "Controls Help", ::mm_controls_help);
 	mm_add_toggle("settings", "All Players Get Menu", "all_access", ::mm_set_all_access, "level");
 	mm_add_action("settings", "Reset All Mods", ::mm_reset_all);
 	mm_add_action("settings", "About", ::mm_about);

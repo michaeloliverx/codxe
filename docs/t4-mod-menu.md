@@ -5,10 +5,44 @@ Nazi Zombies, including split-screen and online co-op. It lives in
 [`resources/t4/_codxe/mods/mod_menu`](/resources/t4/_codxe/mods/mod_menu). The whole menu is plain
 GSC, loaded at runtime by CoD Xe's GSC loader.
 
-## Install
+## Setup
 
-1. Copy `resources/t4/_codxe` into your game directory, as for any CoD Xe mod.
-2. Set the active mod in `_codxe/codxe.json`:
+### What you need
+
+- Call of Duty: World at War with **Title Update 7** installed. See
+  [Installing title updates](title-updates.md).
+- CoD Xe running on either:
+  - an Xbox 360 that can run unsigned code, or
+  - [Xenia Canary](https://github.com/xenia-canary/xenia-canary) with plugins set up as described
+    in the [README](../README.md#xenia-canary-setup).
+- The game as an **extracted folder**, meaning the folder that contains `default.xex`. CoD Xe reads
+  its files from next to the running `default.xex` (`game:` in Xenia), so you can't add them to a
+  disc image.
+
+To check that CoD Xe is running, look for the CoD Xe version text drawn on the game's menus.
+
+### Install the menu
+
+1. Copy the `resources/t4/_codxe` folder from this repo (or a release zip) into the game folder, so
+   it sits next to `default.xex`:
+
+   ```text
+   <game folder>
+   |-- default.xex
+   `-- _codxe
+       |-- codxe.json
+       `-- mods
+           `-- mod_menu
+               `-- maps
+                   |-- _music.gsc
+                   `-- mod_menu
+                       |-- core.gsc
+                       |-- menus.gsc
+                       `-- ... (the other .gsc files)
+   ```
+
+2. Open `_codxe/codxe.json` in a text editor and set the active mod to `mod_menu`. The value must
+   match the folder name exactly:
 
    ```json
    {
@@ -16,24 +50,85 @@ GSC, loaded at runtime by CoD Xe's GSC loader.
    }
    ```
 
-3. Start any campaign mission or zombies map. After a few seconds the host sees
-   `CoD Xe Menu loaded`.
+3. Start the game and load any campaign mission or Nazi Zombies map. Once you can move, wait a
+   few seconds. Player 1 sees these messages on screen:
+
+   ```text
+   CoD Xe Menu loaded
+   Hold LT (aim) and press RS (melee) to open the menu
+   ```
+
+4. Hold **LT** and click **RS** (press the right stick in) to open the menu.
+
+`codxe.json` picks one mod for both singleplayer and multiplayer. The mod menu only contains
+singleplayer scripts, so multiplayer runs unmodded while it is active. To play the `codjumper`
+multiplayer mod, set `active_mod` back to `codjumper`.
+
+### Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| No "CoD Xe Menu loaded" message | CoD Xe isn't running (no version text on the menus), or `active_mod` isn't exactly `mod_menu`. Also check that `_codxe/mods/mod_menu/maps/_music.gsc` exists next to `default.xex` and that TU7 is installed. |
+| Message shows but the menu won't open | Only player 1 (the host) has the menu by default. Wait until any mission intro has finished. On a different button layout, use your **Aim** and **Melee** buttons (see [Button layouts](#button-layouts)). |
+| The level won't load after editing a script | A GSC compile error stops the level from loading. Run the [checker](#validating-gsc-changes) on your changes. |
+| Menu feels sluggish | Scripts run on game time, so the menu slows down with **World & Physics → Timescale**. Set it back to 1. |
 
 ## Controls
 
-| Action              | Buttons                                             |
-| ------------------- | --------------------------------------------------- |
-| Open / close        | Hold **LT** and press **RS** (knife)                |
-| Move up / down      | **LT** / **RT**, left stick, or D-pad (host)        |
-| Select              | **A** (or **X**)                                    |
-| Change a value      | **LB** / **RB** or left stick left / right          |
-| Back                | **RS**. Pressing it on the main menu closes it      |
+Everything is done with a standard Xbox 360 controller. The table shows the **Default** button
+layout.
 
-Controls are frozen while the menu is open. Toggles show `ON`/`OFF`, sliders show their number, and
-choices show the current option.
+| Button | Menu closed | Menu open |
+| --- | --- | --- |
+| **LT** | Hold, then press **RS** to open | Scroll up (hold to repeat) |
+| **RT** | | Scroll down (hold to repeat) |
+| **A** | | Select, toggle, or apply |
+| **X** | | Select (same as A) |
+| **RS** (click) | With LT held: open | Back one page. **Hold** to close from anywhere |
+| **LB** / **RB** | | Decrease / increase a value, or cycle a choice |
+| Left stick | | Up/down scrolls, left/right changes a value |
+| D-pad | | Up/down scrolls, left/right changes a value (player 1 only) |
+| **B** | Crouch, for the "Crouch + RS" open option | |
 
-Only the host gets the menu by default. Use **Players → (player) → Toggle Menu Access** or
-**Menu Settings → All Players Get Menu** to share it.
+While the menu is open you can't move and your gun is lowered, so RT can't fire and the bumpers
+can't throw grenades. Closing the menu gives everything back. Opening with LT + RS still plays a
+knife swing; that's normal.
+
+The page footer repeats the essentials: `LT/RT Scroll  A Select  RS Back  LB/RB Adjust`.
+**Menu Settings → Controls Help** prints the full list in-game.
+
+### Opening options
+
+**Menu Settings → Open With** switches between:
+
+- **LT + RS** (default): hold aim and click melee.
+- **Crouch + RS**: press B to crouch, then click melee. Pick this if you often knife while aiming
+  and the menu keeps opening in fights.
+
+The choice, theme and menu side are saved per player until you quit the game, so they carry over
+between missions.
+
+### Button layouts
+
+The menu reads game actions (aim, fire, jump, use, melee, grenades, movement), not physical
+buttons. On a different **Button Layout** or **Stick Layout** in the game's controller options,
+use the button that does that action. For example:
+
+- **Tactical** moves melee to **B**, so the menu opens with LT + B, and B is back.
+- **Southpaw** swaps the sticks, so scroll with whichever stick moves you.
+
+### D-pad
+
+The D-pad uses the stock `buttonPressed()` script function. It only reads player 1's controller,
+and some builds may only allow it in developer mode. If it doesn't respond, everything else
+still works.
+
+### Co-op
+
+Each split-screen or online player uses their own controller and has their own menu, cursor and
+theme. Only player 1 gets the menu by default. Share it with
+**Players → (player) → Toggle Menu Access**, or give everyone access with
+**Menu Settings → All Players Get Menu**.
 
 ## Features
 
@@ -150,7 +245,8 @@ Stones, Flak Jacket, Body Armor, Morphine Shot, Dirty Harry and Hardcore.
 For each co-op player: bring to you, go to them, god mode, menu access, launch them, revive, and
 give points (zombies).
 
-Menu Settings: 8 color themes, left/right placement, **Reset All Mods** and About.
+Menu Settings: 8 color themes, left/right placement, the open button combo, Controls Help,
+**Reset All Mods** and About.
 
 ## How it works
 
