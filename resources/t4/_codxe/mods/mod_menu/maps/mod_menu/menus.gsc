@@ -224,7 +224,6 @@ build_forge()
 {
 	mm_menu("forge", "Forge", "main");
 	mm_add_sub("forge", "Spawn Model", "models");
-	mm_add_toggle("forge", "Solid Spawns", "forge_solid", maps\mod_menu\forge::solid_set);
 	mm_add_toggle("forge", "Physics Spawns", "forge_physics", maps\mod_menu\forge::physics_set);
 	mm_add_toggle("forge", "Grab Mode (hold LB)", "pickup", maps\mod_menu\forge::pickup_set);
 	mm_add_action("forge", "Launch Aimed", maps\mod_menu\forge::launch_aimed);

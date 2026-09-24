@@ -11,7 +11,7 @@ GSC, loaded at runtime by CoD Xe's GSC loader.
 
 - Call of Duty: World at War with **Title Update 7** installed. See
   [Installing title updates](title-updates.md).
-- CoD Xe running on either:
+- CoD Xe **r345 or newer** running on either:
   - an Xbox 360 that can run unsigned code, or
   - [Xenia Canary](https://github.com/xenia-canary/xenia-canary) with plugins set up as described
     in the [README](../README.md#xenia-canary-setup).
@@ -19,7 +19,8 @@ GSC, loaded at runtime by CoD Xe's GSC loader.
   its files from next to the running `default.xex` (`game:` in Xenia), so you can't add them to a
   disc image.
 
-To check that CoD Xe is running, look for the CoD Xe version text drawn on the game's menus.
+To check that CoD Xe is running, look for the version text (for example `CoD Xe r345`) in the
+top-left corner of the game's menus.
 
 ### Install the menu
 
@@ -70,6 +71,7 @@ multiplayer mod, set `active_mod` back to `codjumper`.
 | --- | --- |
 | No "CoD Xe Menu loaded" message | CoD Xe isn't running (no version text on the menus), or `active_mod` isn't exactly `mod_menu`. Also check that `_codxe/mods/mod_menu/maps/_music.gsc` exists next to `default.xex` and that TU7 is installed. |
 | Message shows but the menu won't open | Only player 1 (the host) has the menu by default. Wait until any mission intro has finished. On a different button layout, use your **Aim** and **Melee** buttons (see [Button layouts](#button-layouts)). |
+| `Server script compile error` / `unknown function` | The scripts call something your CoD Xe build doesn't register. This usually means the mod files are newer than the CoD Xe build. Use matching files from the same release, or check them with `--codxe-ref` (see [Validating GSC changes](#validating-gsc-changes)). |
 | The level won't load after editing a script | A GSC compile error stops the level from loading. Run the [checker](#validating-gsc-changes) on your changes. |
 | Menu feels sluggish | Scripts run on game time, so the menu slows down with **World & Physics → Timescale**. Set it back to 1. |
 
@@ -227,8 +229,6 @@ tank or truck and press X).
 ### Forge
 
 - **Spawn Model** lists props the level placed plus weapon world models, so every entry is loaded.
-- **Solid Spawns** uses CoD Xe's `SpawnCollision()`, giving props with collision data real
-  collision.
 - **Physics Spawns** uses real physics where the model supports it.
 - **Grab Mode**: hold LB to pick up the prop you're aiming at, RB spins it, and letting go throws
   it.
@@ -272,8 +272,10 @@ Menu Settings: 8 color themes, left/right placement, the open button combo, Cont
 - **CoD Xe builtins used:**
   - the `god`, `noclip` and `ufo` client fields;
   - the `JumpButtonPressed`, `SecondaryOffhandButtonPressed`, `SprintButtonPressed` and
-    `Move*ButtonPressed` methods;
-  - `SpawnCollision()`.
+    `Move*ButtonPressed` methods.
+
+  All of these are in CoD Xe r345. `SpawnCollision()` (r347+) is deliberately not used: on a
+  build that doesn't register it, the level fails to load with `unknown function`.
 
 ## Known limitations
 
@@ -281,7 +283,8 @@ Menu Settings: 8 color themes, left/right placement, the open button combo, Cont
   **Unchanged** option only stops further changes.
 - D-pad navigation uses the stock `buttonPressed()`, which may be developer-only on retail builds.
   If it is, the menu quietly falls back to the other buttons.
-- Solid Spawns only gives collision to models that have collision data.
+- Spawned props aren't solid. Solid props would need `SpawnCollision()`, which older CoD Xe
+  builds don't have.
 - Death Cards appear only in the campaign menu.
 
 ## Adding features
@@ -323,5 +326,26 @@ from loading:
 The flow rules were checked against about 750 stock scripts. None of the scripts that compile on a
 retail build are flagged.
 
-Builtin names come from `t4_sp_index.json`. You can regenerate it from your own game with
-`build_index.py`, using a dump written by `"dump_rawfile": true` in `codxe.json`.
+CoD Xe builtins are read from `src/game/t4/sp/components/gsc.cpp`. To check against the build a
+player actually runs, pass its release number or commit:
+
+```sh
+python tools/gsc_check/gsc_check.py resources/t4/_codxe/mods/mod_menu --codxe-ref r345
+```
+
+### Building the builtin index from your own console
+
+Stock builtin names come from `tools/gsc_check/t4_sp_index.json`, which was built from PC scripts.
+To build an index from the exact Xbox 360 scripts:
+
+1. Set `"dump_rawfile": true` in `_codxe/codxe.json`. Mod scripts aren't loaded while dumping,
+   so the levels load normally.
+2. Load a campaign mission and each zombies map you care about. CoD Xe writes every script the
+   game compiles to `_codxe/dump`.
+3. Copy `_codxe/dump` to your PC and run:
+
+   ```sh
+   python tools/gsc_check/build_index.py path/to/dump
+   ```
+
+4. Set `"dump_rawfile": false` again.

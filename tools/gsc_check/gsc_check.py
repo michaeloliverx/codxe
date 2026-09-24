@@ -711,13 +711,35 @@ class Parser:
 # ---------------------------------------------------------------------------
 
 
-def load_codxe_builtins(cpp_path):
+def read_codxe_source(cpp_path, ref):
+    """Source of the CoD Xe file that registers T4 SP builtins, optionally as of a git ref.
+
+    `ref` may be a commit/branch/tag or a release revision like "r345" (CoD Xe release names are
+    the commit count), so a mod can be checked against the CoD Xe build a player actually runs.
+    """
+    import subprocess
+
+    if not ref:
+        if not cpp_path or not os.path.exists(cpp_path):
+            return ""
+        with open(cpp_path, encoding="utf-8") as f:
+            return f.read()
+
+    repo = os.path.join(HERE, "..", "..")
+    if re.match(r"^r\d+$", ref):
+        commits = subprocess.check_output(["git", "-C", repo, "rev-list", "--reverse", "HEAD"], text=True).split()
+        count = int(ref[1:])
+        if count < 1 or count > len(commits):
+            raise SystemExit("CoD Xe revision %s is not in this repository's history (shallow clone?)" % ref)
+        ref = commits[count - 1]
+    rel = os.path.relpath(os.path.abspath(cpp_path), os.path.abspath(repo)).replace("\\", "/")
+    return subprocess.check_output(["git", "-C", repo, "show", "%s:%s" % (ref, rel)], text=True)
+
+
+def load_codxe_builtins(cpp_path, ref=None):
     """Read the gsc::Entry tables codxe registers for T4 SP."""
     funcs, methods = set(), set()
-    if not cpp_path or not os.path.exists(cpp_path):
-        return funcs, methods
-    with open(cpp_path, encoding="utf-8") as f:
-        src = f.read()
+    src = read_codxe_source(cpp_path, ref)
     for m in re.finditer(r"gsc::Entry<(BuiltinMethod|BuiltinFunction)>\s+\w+\[\]\s*=\s*\{(.*?)\};", src, re.S):
         names = re.findall(r'\{\s*"([a-z0-9_]+)"', m.group(2))
         (methods if m.group(1) == "BuiltinMethod" else funcs).update(names)
@@ -744,13 +766,25 @@ def main():
     ap.add_argument("--rare", type=int, default=2, help="warn when a builtin appears in fewer stock files than this")
     ap.add_argument("--codxe-gsc", default=os.path.join(HERE, "..", "..", "src", "game", "t4", "sp", "components", "gsc.cpp"),
                     help="CoD Xe source file that registers extra T4 SP builtins")
+    ap.add_argument("--codxe-ref", default=None,
+                    help="check against the CoD Xe builtins of an older build instead of this checkout, "
+                         "e.g. r345 or a commit hash")
     args = ap.parse_args()
 
     with open(args.index) as f:
         index = json.load(f)
     builtin_f = dict(index["functions"])
     builtin_m = dict(index["methods"])
-    cx_f, cx_m = load_codxe_builtins(args.codxe_gsc)
+    # CoD Xe only registers builtins the 360 engine lacks (SpawnCollision, for example, exists in
+    # the PC scripts the index was built from but not on the console). So every name CoD Xe
+    # registers anywhere is dropped from the stock tables, and only the names the chosen CoD Xe
+    # build actually has are added back.
+    all_cx_f, all_cx_m = load_codxe_builtins(args.codxe_gsc)
+    for name in all_cx_f:
+        builtin_f.pop(name, None)
+    for name in all_cx_m:
+        builtin_m.pop(name, None)
+    cx_f, cx_m = load_codxe_builtins(args.codxe_gsc, args.codxe_ref)
     for name in cx_f:
         builtin_f[name] = 99
     for name in cx_m:
