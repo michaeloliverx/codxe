@@ -165,7 +165,8 @@ static Party_SetDisplayMapName_t Party_SetDisplayMapName = reinterpret_cast<Part
 
 static auto PM_FoliageSounds = reinterpret_cast<void (*)(pmove_t *pm)>(0x82335E90);
 static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233B470);
-static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233A938);
+static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t * pm)>(0x8233A938);
+static auto PM_CheckLadderMove = reinterpret_cast<void (*)(pmove_t * pm, pml_t * pml)>(0x823354D0);
 
 static auto R_AddCmdDrawText =
     reinterpret_cast<void (*)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale,
