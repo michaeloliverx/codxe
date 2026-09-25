@@ -1393,5 +1393,37 @@ enum connstate_t
     CA_ACTIVE = 0x9,
 };
 
+enum Vartype_t : __int32
+{
+    VAR_UNDEFINED = 0x0,
+    VAR_POINTER = 0x1,
+    VAR_STRING = 0x2,
+    VAR_ISTRING = 0x3,
+    VAR_VECTOR = 0x4,
+    VAR_FLOAT = 0x5,
+    VAR_INTEGER = 0x6,
+    VAR_CODEPOS = 0x7,
+    VAR_PRECODEPOS = 0x8,
+    VAR_FUNCTION = 0x9,
+};
+
+union VariableUnion
+{
+    int intValue;
+    unsigned int uintValue;
+    float floatValue;
+    const char* stringValue;
+    const char* codePosValue;
+    unsigned int pointerValue;
+};
+
+struct VariableValue
+{
+    VariableUnion u;
+    Vartype_t type;
+};
+
+static_assert(sizeof(VariableValue) == 0x8, "");
+
 } // namespace mp
 } // namespace t4
