@@ -125,6 +125,8 @@ static auto Scr_SetString =
 
 static auto G_Spawn = reinterpret_cast<gentity_s *(*)()>(0x82217D60);
 static auto G_ModelIndex = reinterpret_cast<int (*)(const char *name)>(0x82216660);
+static auto G_RegisterWeapon = reinterpret_cast<int (*)(const char *name, void (*onRegister)(int))>(0x821003D0);
+static auto g_registeredWeaponCount = reinterpret_cast<int *>(0x824EFA98);
 static auto G_CallSpawnEntity = reinterpret_cast<bool (*)(gentity_s *ent)>(0x82211730);
 
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x821BCC90);
