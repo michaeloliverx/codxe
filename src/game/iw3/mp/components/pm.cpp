@@ -8,8 +8,8 @@ namespace mp
 dvar_s *pm_multi_bounce = nullptr;
 dvar_s *pm_pc_mp_velocity_snap = nullptr;
 dvar_s *pm_fixed_fps_enable = nullptr;
-dvar_s* pm_fixed_fps = nullptr;
-dvar_s* bg_removeBarriers = nullptr;
+dvar_s *pm_fixed_fps = nullptr;
+dvar_s *bg_removeBarriers = nullptr;
 int MASK_PLAYER_CLIP = 0x10000;
 int MASK_BARRIER_CLIP = 0x400;
 
