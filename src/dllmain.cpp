@@ -123,6 +123,7 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
         DbgPrint("[codxe] Environment: %s\n", xbox::GetEnvironmentName(environment));
 
         g_plugin_manager = new PluginManager();
+        xbox::Notify("Plugin loaded");
 
         if (environment == xbox::ENVIRONMENT_XENIA)
         {
@@ -155,6 +156,7 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
     else if (reason == DLL_PROCESS_DETACH)
     {
         DbgPrint("[codxe] DLL_PROCESS_DETACH.\n");
+        xbox::NotifyAndWait("Plugin unloaded");
 
         if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
         {
