@@ -18,7 +18,7 @@ T4_SP_Plugin::T4_SP_Plugin()
     // Default loc_warnings off to prevent console spam
     *(volatile uint8_t *)0x8225FA17 = 0x00;
 
-    RegisterModule(new Config());
+    RegisterModule(new Config(Config::GAME_T4));
     RegisterModule(new FastFiles());
     RegisterModule(new clipmap());
     RegisterModule(new console());
