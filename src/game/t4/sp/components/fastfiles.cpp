@@ -7,10 +7,8 @@ namespace sp
 {
 namespace
 {
-const char *const CODXE_ZONE_DIRECTORY = "game:\\_codxe\\zone";
-const char *const CODXE_ZONE_OS_DIRECTORY = "D:\\_codxe\\zone";
-const char *const USERMAPS_DIRECTORY = "game:\\_codxe\\usermaps";
-const char *const USERMAPS_OS_DIRECTORY = "D:\\_codxe\\usermaps";
+const char *const CODXE_ZONE_DIRECTORY = "zone";
+const char *const USERMAPS_DIRECTORY = "usermaps";
 const char *const SOUND_REQUEST_PREFIX = "D:\\sounds\\";
 
 char activeUsermap[64] = "";
@@ -144,12 +142,16 @@ std::string ResolveFastfilePath(const char *filename)
     // Future active-mod replacements belong here, before usermap and global replacements.
 
     const std::string usermapPath = GetUsermapFastfilePath(zoneName.c_str(), USERMAPS_DIRECTORY);
-    if (!usermapPath.empty() && filesystem::FileExists(usermapPath.c_str()))
-        return GetUsermapFastfilePath(zoneName.c_str(), USERMAPS_OS_DIRECTORY);
+    if (!usermapPath.empty())
+    {
+        const std::string resolved = Config::ResolveDataPathForGameFile(usermapPath.c_str());
+        if (!resolved.empty())
+            return resolved;
+    }
 
     const std::string codxeZonePath = GetZoneFastfilePath(zoneName.c_str(), CODXE_ZONE_DIRECTORY);
-    if (!codxeZonePath.empty() && filesystem::FileExists(codxeZonePath.c_str()))
-        return GetZoneFastfilePath(zoneName.c_str(), CODXE_ZONE_OS_DIRECTORY);
+    if (!codxeZonePath.empty())
+        return Config::ResolveDataPathForGameFile(codxeZonePath.c_str());
 
     return std::string();
 }
@@ -157,7 +159,7 @@ std::string ResolveFastfilePath(const char *filename)
 bool UsermapExists(const char *usermapName)
 {
     const std::string path = GetUsermapFastfilePath(usermapName, USERMAPS_DIRECTORY);
-    return !path.empty() && filesystem::FileExists(path.c_str());
+    return !path.empty() && !Config::ResolveDataPath(path.c_str()).empty();
 }
 
 void SetActiveUsermap(const std::string &usermapName)
@@ -219,15 +221,10 @@ std::string ResolveLooseSoundPath(const char *filename)
     if (!IsSafeRelativePath(relativeSoundPath))
         return std::string();
 
-    const std::string deviceDirectory = filesystem::JoinPath(USERMAPS_DIRECTORY, activeUsermap);
-    const std::string deviceSoundDirectory = filesystem::JoinPath(deviceDirectory.c_str(), "sounds");
-    const std::string deviceSoundPath = filesystem::JoinPath(deviceSoundDirectory.c_str(), relativeSoundPath);
-    if (!filesystem::FileExists(deviceSoundPath.c_str()))
-        return std::string();
-
-    const std::string osDirectory = filesystem::JoinPath(USERMAPS_OS_DIRECTORY, activeUsermap);
-    const std::string osSoundDirectory = filesystem::JoinPath(osDirectory.c_str(), "sounds");
-    return filesystem::JoinPath(osSoundDirectory.c_str(), relativeSoundPath);
+    const std::string usermapDirectory = filesystem::JoinPath(USERMAPS_DIRECTORY, activeUsermap);
+    const std::string soundDirectory = filesystem::JoinPath(usermapDirectory.c_str(), "sounds");
+    const std::string soundPath = filesystem::JoinPath(soundDirectory.c_str(), relativeSoundPath);
+    return Config::ResolveDataPathForGameFile(soundPath.c_str());
 }
 
 int Sys_CreateFile_Hook(const char *filename, int desiredAccess, int shareMode, int securityAttributes,

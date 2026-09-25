@@ -18,7 +18,10 @@ T4_SP_Plugin::T4_SP_Plugin()
     // Default loc_warnings off to prevent console spam
     *(volatile uint8_t *)0x8225FA17 = 0x00;
 
-    RegisterModule(new Config());
+    // Default ui_autoContinue on so level loads do not wait for input in solo or split-screen.
+    *(volatile uint8_t *)0x82279B07 = 0x01;
+
+    RegisterModule(new Config(Config::GAME_T4));
     RegisterModule(new FastFiles());
     RegisterModule(new clipmap());
     RegisterModule(new console());

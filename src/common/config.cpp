@@ -18,11 +18,26 @@ char Config::active_mod[MAX_PATH] = {};
 bool Config::dump_rawfile = false;
 bool Config::dump_map_ents = false;
 char Config::mod_base_path[MAX_PATH] = {};
+std::string Config::data_root;
+bool Config::shared_layout_enabled = false;
+std::vector<std::string> Config::mounted_links;
 
 namespace
 {
 const char *CONFIG_DEVICE_LINK_NAME = "codxe:";
 const char *CONFIG_DEVICE_LINK_PATH = "codxe:\\";
+
+const char *GetGameDirectoryName(Config::GameId gameId)
+{
+    switch (gameId)
+    {
+    case Config::GAME_T4:
+        return "t4";
+    case Config::GAME_NONE:
+    default:
+        return nullptr;
+    }
+}
 
 bool StartsWith(const std::string &value, const char *prefix)
 {
@@ -50,11 +65,10 @@ bool TryGetDeviceRoot(const std::string &path, std::string &device_root)
     return true;
 }
 
-bool MountConfigDevice(const char *device_path)
+bool MountDevice(const char *link_name, const char *device_path)
 {
     const DWORD process_type = KeGetCurrentProcessType();
-    const std::string link_path =
-        std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + CONFIG_DEVICE_LINK_NAME;
+    const std::string link_path = std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + link_name;
 
     STRING link = {};
     STRING device = {};
@@ -68,13 +82,22 @@ bool MountConfigDevice(const char *device_path)
     return NT_SUCCESS(create_status);
 }
 
+void UnmountDevice(const char *link_name)
+{
+    const DWORD process_type = KeGetCurrentProcessType();
+    const std::string link_path = std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + link_name;
+    STRING link = {};
+    RtlInitAnsiString(&link, link_path.c_str());
+    ObDeleteSymbolicLink(&link);
+}
+
 bool BuildMountedConfigPath(const std::string &device_config_path, std::string &mounted_config_path)
 {
     std::string device_path;
     if (!TryGetDeviceRoot(device_config_path, device_path))
         return false;
 
-    if (!MountConfigDevice(device_path.c_str()))
+    if (!MountDevice(CONFIG_DEVICE_LINK_NAME, device_path.c_str()))
         return false;
 
     mounted_config_path = std::string(CONFIG_DEVICE_LINK_PATH) + device_config_path.substr(device_path.size());
@@ -143,8 +166,13 @@ bool ReadFileToString(const char *path, std::string &outString)
     return true;
 }
 
-Config::Config()
+Config::Config(GameId gameId)
 {
+    data_root = "game:\\_codxe";
+    mounted_links.clear();
+    const char *gameDirectoryName = GetGameDirectoryName(gameId);
+    shared_layout_enabled = gameDirectoryName != nullptr;
+
     std::string config_path = CONFIG_PATH;
 
     if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
@@ -173,14 +201,71 @@ Config::Config()
                     // XDK file APIs do not accept raw \Device\Mass0 paths here. A private symbolic
                     // link keeps the early config load executable-relative without relying on game:.
                     config_path = mounted_config_path;
+                    mounted_links.push_back(CONFIG_DEVICE_LINK_NAME);
                 }
             }
         }
     }
 
-    DbgPrint("[codxe][Config] Loading configuration from: %s\n", config_path.c_str());
+    if (shared_layout_enabled)
+    {
+        // Config loads before game: is retargeted on hardware, so inspect the
+        // executable-relative path while choosing the single active root.
+        const size_t slash = config_path.find_last_of("\\/");
+        const std::string local_directory = slash == std::string::npos ? std::string() : config_path.substr(0, slash);
+        const std::string nested_local_directory = filesystem::JoinPath(local_directory.c_str(), gameDirectoryName);
+        if (filesystem::DirectoryExists(nested_local_directory.c_str()))
+        {
+            data_root = std::string("game:\\_codxe\\") + gameDirectoryName;
+            config_path = filesystem::JoinPath(nested_local_directory.c_str(), "codxe.json");
+        }
+        else if (!local_directory.empty() && filesystem::DirectoryExists(local_directory.c_str()))
+        {
+            config_path = filesystem::JoinPath(local_directory.c_str(), "codxe.json");
+        }
+        else
+        {
+            data_root.clear();
+            if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
+            {
+                // Only the game directory accepts the legacy layout.
+                // Device mapping from NXE2GOD:
+                // https://github.com/Swizzy/XDK_Projects/blob/f94dcaa93054af745587bcca7ee475ae8130f26c/NXE2GOD/main.cpp#L400-L405
+                const char *const link_names[] = {
+                    "codxeusb0:", "codxeusb1:", "codxeusb2:", "codxeusb3:", "codxeusb4:", "codxehdd:"};
+                const char *const device_paths[] = {"\\Device\\Mass0", "\\Device\\Mass1",
+                                                    "\\Device\\Mass2", "\\Device\\Mass3",
+                                                    "\\Device\\Mass4", "\\Device\\Harddisk0\\Partition1"};
+                for (size_t i = 0; i < ARRAYSIZE(link_names); ++i)
+                {
+                    if (!MountDevice(link_names[i], device_paths[i]))
+                        continue;
 
-    if (!LoadFromFile(config_path.c_str()))
+                    const std::string root = std::string(link_names[i]) + "\\_codxe\\" + gameDirectoryName;
+                    if (!filesystem::DirectoryExists(root.c_str()))
+                    {
+                        UnmountDevice(link_names[i]);
+                        continue;
+                    }
+
+                    mounted_links.push_back(link_names[i]);
+                    data_root = root;
+                    config_path = filesystem::JoinPath(root.c_str(), "codxe.json");
+                    break;
+                }
+            }
+        }
+    }
+
+    bool loaded = false;
+    if (!data_root.empty())
+    {
+        DbgPrint("[codxe][Config] Selected data root: %s\n", data_root.c_str());
+        DbgPrint("[codxe][Config] Loading configuration from: %s\n", config_path.c_str());
+        loaded = LoadFromFile(config_path.c_str());
+    }
+
+    if (!loaded)
     {
         DbgPrint("[codxe][Config] Failed to load config file, using defaults\n");
     }
@@ -193,6 +278,11 @@ Config::~Config()
     mod_base_path[0] = '\0';
     dump_rawfile = false;
     dump_map_ents = false;
+    data_root.clear();
+    shared_layout_enabled = false;
+    for (size_t i = 0; i < mounted_links.size(); ++i)
+        UnmountDevice(mounted_links[i].c_str());
+    mounted_links.clear();
     DbgPrint("[codxe][Config] Configuration unloaded\n");
 }
 
@@ -286,5 +376,28 @@ std::string Config::ResolveModPath(const char *relativePath)
     if (!relativePath || !*relativePath || !mod_base_path[0])
         return std::string();
 
+    if (shared_layout_enabled)
+    {
+        const std::string mod_path = filesystem::JoinPath("mods", active_mod);
+        return ResolveDataPath(filesystem::JoinPath(mod_path.c_str(), relativePath).c_str());
+    }
+
     return filesystem::JoinPath(mod_base_path, relativePath);
+}
+
+std::string Config::ResolveDataPath(const char *relativePath)
+{
+    if (!relativePath || !*relativePath || data_root.empty())
+        return std::string();
+
+    const std::string path = filesystem::JoinPath(data_root.c_str(), relativePath);
+    return filesystem::FileExists(path.c_str()) ? path : std::string();
+}
+
+std::string Config::ResolveDataPathForGameFile(const char *relativePath)
+{
+    std::string path = ResolveDataPath(relativePath);
+    if (path.compare(0, 5, "game:") == 0)
+        path.replace(0, 5, "D:");
+    return path;
 }
