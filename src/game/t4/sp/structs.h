@@ -351,6 +351,15 @@ struct RawFile
 };
 static_assert(sizeof(RawFile) == 0xC, "");
 
+struct StringTable
+{
+    const char *name;
+    int columnCount;
+    int rowCount;
+    const char **values;
+};
+static_assert(sizeof(StringTable) == 0x10, "");
+
 enum MapType : __int32
 {
     MAPTYPE_NONE = 0x0,

@@ -66,13 +66,36 @@ struct UsermapEntry
 std::vector<UsermapEntry> usermaps;
 int selectedUsermap = 0;
 bool usermapsScanned = false;
+bool usermapDvarsRegistered = false;
+bool usermapNameLookupLogged = false;
+bool usermapPreviewLookupLogged = false;
 GfxImage *previewImage = nullptr;
 std::vector<unsigned char> defaultPreviewPixels;
 
 Detour UI_FeederCount_Detour;
 Detour UI_FeederItemText_Detour;
 Detour UI_FeederSelection_Detour;
-Detour UI_RunMenuScript_Detour;
+Detour StringTable_Lookup_Detour;
+
+void EnsureUsermapDvarsRegistered()
+{
+    if (usermapDvarsRegistered)
+        return;
+
+    Dvar_RegisterBool("ui_codxe_usermap_activate", false, DVAR_FLAG_NONE, "Activate the selected custom map");
+    Dvar_RegisterBool("ui_codxe_usermap_active", false, DVAR_FLAG_NONE, "A custom map is selected");
+    Dvar_RegisterBool("ui_codxe_usermap_has_preview", false, DVAR_FLAG_NONE,
+                      "The selected custom map has a preview image");
+    Dvar_RegisterString("ui_codxe_usermap_mode", "", DVAR_FLAG_NONE, "Custom map launch mode");
+    Dvar_RegisterString("ui_codxe_usermap_name", "", DVAR_FLAG_NONE, "Selected custom map display name");
+    Dvar_RegisterString("ui_codxe_usermap_description", "", DVAR_FLAG_NONE,
+                        "Selected custom map description");
+    Dvar_RegisterString("ui_codxe_usermap_count", "", DVAR_FLAG_NONE, "Selected custom map index");
+    Dvar_RegisterString("ui_codxe_usermap_preview_hint", "", DVAR_FLAG_NONE, "Custom map preview instructions");
+    Dvar_RegisterString("ui_codxe_usermap_mapname", "", DVAR_FLAG_NONE, "Selected custom map fastfile name");
+
+    usermapDvarsRegistered = true;
+}
 
 bool StartsWithIgnoreCase(const std::string &value, const char *prefix)
 {
@@ -430,8 +453,16 @@ void ActivateSelectedUsermap()
     const UsermapEntry &entry = usermaps[selectedUsermap];
     SetMenuDvar("ui_mapname", entry.name);
     SetMenuDvar("ui_preview_map", entry.name);
+    SetMenuDvar("ui_codxe_usermap_mapname", entry.name);
+    SetMenuDvar("ui_codxe_usermap_active", "1");
+    usermapNameLookupLogged = false;
+    usermapPreviewLookupLogged = false;
     SetMenuDvar("credits", "0");
     SetMenuDvar("credits_active", "0");
+
+    DbgPrint("[codxe][T4 SP][UI] Activated usermap: name=%s mode=%s ui_mapname=%s active=%s\n", entry.name.c_str(),
+             Dvar_GetVariantString("ui_codxe_usermap_mode"), Dvar_GetVariantString("ui_mapname"),
+             Dvar_GetVariantString("ui_codxe_usermap_active"));
 
     if (_stricmp(Dvar_GetVariantString("ui_codxe_usermap_mode"), "solo") == 0)
     {
@@ -488,29 +519,38 @@ void UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
     UpdateSelectedUsermap();
 }
 
-void UI_RunMenuScript_Hook(int localClientNum, const char **args, const char *actualScript)
+const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColumn, const char *value,
+                                    int valueColumn)
 {
-    if (args && *args)
+    if (table && table->name && value && comparisonColumn == 0 &&
+        _stricmp(table->name, "maps/mapsTable.csv") == 0 &&
+        std::strcmp(Dvar_GetVariantString("ui_codxe_usermap_active"), "1") == 0 &&
+        _stricmp(value, Dvar_GetVariantString("ui_codxe_usermap_mapname")) == 0)
     {
-        const char *cursor = *args;
-        char name[1024];
-        if (UI_ParseString(&cursor, name, ARRAYSIZE(name)))
+        if (valueColumn == 3)
         {
-            if (_stricmp(name, "codxeRefreshUsermaps") == 0)
+            if (!usermapNameLookupLogged)
             {
-                ScanUsermaps();
-                return;
+                DbgPrint("[codxe][T4 SP][UI] Supplying virtual mapsTable name for %s\n", value);
+                usermapNameLookupLogged = true;
             }
-            if (_stricmp(name, "codxeActivateUsermap") == 0)
+            return Dvar_GetVariantString("ui_codxe_usermap_name");
+        }
+        if (valueColumn == 4)
+        {
+            if (!usermapPreviewLookupLogged)
             {
-                ActivateSelectedUsermap();
-                return;
+                DbgPrint("[codxe][T4 SP][UI] Supplying virtual mapsTable preview for %s\n", value);
+                usermapPreviewLookupLogged = true;
             }
+            return CODXE_PREVIEW_IMAGE;
         }
     }
 
-    UI_RunMenuScript_Detour.GetOriginal<decltype(UI_RunMenuScript)>()(localClientNum, args, actualScript);
+    return StringTable_Lookup_Detour.GetOriginal<decltype(StringTable_Lookup)>()(table, comparisonColumn, value,
+                                                                                 valueColumn);
 }
+
 } // namespace
 
 void DrawBranding(int localClientNum)
@@ -526,6 +566,14 @@ Detour UI_Refresh_Detour;
 void UI_Refresh_Hook(int localClientNum)
 {
     UI_Refresh_Detour.GetOriginal<decltype(UI_Refresh)>()(localClientNum);
+
+    // Menu files can request activation using stock setdvar handling, avoiding a custom UI script command.
+    if (std::strcmp(Dvar_GetVariantString("ui_codxe_usermap_activate"), "1") == 0)
+    {
+        SetMenuDvar("ui_codxe_usermap_activate", "0");
+        ActivateSelectedUsermap();
+    }
+
     console::OnUIRefresh();
     DrawBranding(localClientNum);
 }
@@ -580,6 +628,11 @@ int Item_Slider_HandleKey_Hook(UiContext *dc, itemDef_s *item, int key)
 
 void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 {
+    EnsureUsermapDvarsRegistered();
+
+    if (std::strcmp(menuName, "codxe_usermaps") == 0)
+        ScanUsermaps();
+
     if (std::strcmp(menuName, "main_solo") == 0 || std::strcmp(menuName, "main_online") == 0)
         Campaign_UnlockAll();
 
@@ -606,13 +659,13 @@ ui::ui()
     UI_FeederSelection_Detour = Detour(UI_FeederSelection, UI_FeederSelection_Hook);
     UI_FeederSelection_Detour.Install();
 
-    UI_RunMenuScript_Detour = Detour(UI_RunMenuScript, UI_RunMenuScript_Hook);
-    UI_RunMenuScript_Detour.Install();
+    StringTable_Lookup_Detour = Detour(StringTable_Lookup, StringTable_Lookup_Hook);
+    StringTable_Lookup_Detour.Install();
 }
 
 ui::~ui()
 {
-    UI_RunMenuScript_Detour.Remove();
+    StringTable_Lookup_Detour.Remove();
     UI_FeederSelection_Detour.Remove();
     UI_FeederItemText_Detour.Remove();
     UI_FeederCount_Detour.Remove();
@@ -624,6 +677,9 @@ ui::~ui()
     defaultPreviewPixels.clear();
     selectedUsermap = 0;
     usermapsScanned = false;
+    usermapDvarsRegistered = false;
+    usermapNameLookupLogged = false;
+    usermapPreviewLookupLogged = false;
     previewImage = nullptr;
 }
 } // namespace sp

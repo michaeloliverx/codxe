@@ -46,6 +46,9 @@ static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const c
 
 static auto Dvar_RegisterBool =
     reinterpret_cast<void *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
+static auto Dvar_RegisterString =
+    reinterpret_cast<void *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
+        0x8228C760);
 static auto Dvar_GetVariantString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x8228B5E0);
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x8228CF10);
 static auto Dvar_SetFromStringByName = reinterpret_cast<char *(*)(const char *dvarName, const char *value)>(0x8228D228);
@@ -160,12 +163,12 @@ static auto UI_FeederItemText =
     reinterpret_cast<const char *(*)(int localClientNum, itemDef_s *item, float feederID, int index,
                                      unsigned int column, Material **handle)>(0x8226A920);
 static auto UI_FeederSelection = reinterpret_cast<void (*)(int localClientNum, float feederID, int index)>(0x8227F430);
-static auto UI_RunMenuScript =
-    reinterpret_cast<void (*)(int localClientNum, const char **args, const char *actualScript)>(0x822698E0);
-static auto UI_ParseString = reinterpret_cast<bool (*)(const char **args, char *out, int size)>(0x8226EB70);
 static auto Item_Slider_HandleKey = reinterpret_cast<int (*)(UiContext *dc, itemDef_s *item, int key)>(0x82271BB8);
 static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *dc, const char *menuName)>(0x822755B8);
 static auto UI_PlayerStart = reinterpret_cast<void (*)()>(0x822675E8);
+static auto StringTable_Lookup =
+    reinterpret_cast<const char *(*)(const StringTable *table, int comparisonColumn, const char *value,
+                                     int valueColumn)>(0x82287908);
 
 struct Font_s;
 
