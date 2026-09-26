@@ -6,6 +6,7 @@ namespace iw3
 {
 namespace mp
 {
+void ClearReplacedFunctions();
 class GSC : public Module
 {
   public:

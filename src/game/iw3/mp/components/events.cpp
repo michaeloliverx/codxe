@@ -113,6 +113,8 @@ void Events::Scr_ShutdownSystem_Hook(unsigned __int8 sys)
         vmShutdownHandlers[i]();
     }
 
+   ClearReplacedFunctions(); // must be done on shutdown, using on closevm doesn't work
+
     // Call original function after callbacks
     Scr_ShutdownSystem_Detour.GetOriginal<Scr_ShutdownSystem_t>()(sys);
 }
