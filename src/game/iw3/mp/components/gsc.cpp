@@ -25,7 +25,7 @@ static const gsc::Entry<BuiltinFunction> functions[] = {
     {"float", GScr_Float, BUILTIN_ANY},
     {"precachestring", Scr_PrecacheString_Stub, BUILTIN_ANY},
     {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
-    {"replaceFunc", GScr_ReplaceFunc, BUILTIN_ANY},
+    {"replacefunc", GScr_ReplaceFunc, BUILTIN_ANY},
 };
 
 static const gsc::Entry<BuiltinMethod> methods[] = {
@@ -86,7 +86,6 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
     return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
 }
 
-//replaceFunc
 Detour VM_Execute_Detour;
 
 const char* GetCodePosForParam(int index)
@@ -96,46 +95,21 @@ const char* GetCodePosForParam(int index)
     if (index < 0 || index >= numParams)
         return nullptr;
 
-    auto* top = *reinterpret_cast<VariableValue**>(0x82BA6DF8);
-    auto* value = top - index;
+    const VariableValue *value = &scrVmPub.top[-index];
 
     if (value->type != VAR_FUNCTION)
         return nullptr;
 
-    return value->codePosValue;
+    return value->u.codePosValue;
 }
 
-const char* IW3_GSC_ResolveReplaceFunc(const char* pos)
+extern "C" const char* IW3_GSC_GetReplacedPos(const char* pos)
 {
     if (!pos)
         return nullptr;
 
     const auto it = ReplacedFunctions.find(pos);
-
-    if (it == ReplacedFunctions.end())
-        return nullptr;
-
-    printf(
-        "[ReplaceFunc HIT] %p -> %p | count=%u\n",
-        pos,
-        it->second,
-        static_cast<unsigned int>(ReplacedFunctions.size())
-    );
-
-    return it->second;
-}
-
-extern "C" const char* IW3_GSC_GetReplacedPos(const char* pos)
-{
-    const char* replacement = IW3_GSC_ResolveReplaceFunc(pos);
-
-    if (replacement)
-    {
-        printf("[ReplaceFunc VM HIT] %p -> %p\n", pos, replacement);
-        return replacement;
-    }
-
-    return pos;
+    return it != ReplacedFunctions.end() ? it->second : pos;
 }
 
 extern "C" __declspec(naked) void VM_Execute_Hook()
@@ -164,7 +138,7 @@ void GScr_ReplaceFunc()
 {
     if (Scr_GetNumParam() != 2)
     {
-        printf("replaceFunc: needs two parameters\n");
+        Scr_Error("replacefunc: expected two function parameters");
         return;
     }
 
@@ -173,53 +147,22 @@ void GScr_ReplaceFunc()
 
     if (!what)
     {
-        printf("replaceFunc: first parameter is not a function\n");
+        Scr_Error("replacefunc: first parameter must be a function");
         return;
     }
 
     if (!with)
     {
-        printf("replaceFunc: second parameter is not a function\n");
+        Scr_Error("replacefunc: second parameter must be a function");
         return;
     }
 
-    printf(
-        "[ReplaceFunc REGISTER] %p -> %p | before=%u\n",
-        what,
-        with,
-        static_cast<unsigned int>(ReplacedFunctions.size())
-    );
-
     ReplacedFunctions[what] = with;
-
-    printf(
-        "[ReplaceFunc REGISTER] after=%u\n",
-        static_cast<unsigned int>(ReplacedFunctions.size())
-    );
 }
 
 void ClearReplacedFunctions()
 {
-    printf(
-        "[ReplaceFunc CLEAR] before=%u\n",
-        static_cast<unsigned int>(ReplacedFunctions.size())
-    );
-
-    for (auto it = ReplacedFunctions.begin(); it != ReplacedFunctions.end(); ++it)
-    {
-        printf(
-            "[ReplaceFunc CLEAR] removing %p -> %p\n",
-            it->first,
-            it->second
-        );
-    }
-
     ReplacedFunctions.clear();
-
-    printf(
-        "[ReplaceFunc CLEAR] after=%u\n",
-        static_cast<unsigned int>(ReplacedFunctions.size())
-    );
 }
 
 GSC::GSC()
@@ -230,6 +173,7 @@ GSC::GSC()
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
 
+    // Intercept TU4 VM_Execute's opcode fetch to redirect registered function code positions, then resume at 0x82212E40.
     VM_Execute_Detour = Detour(reinterpret_cast<void*>(0x82212E30), reinterpret_cast<const void*>(VM_Execute_Hook));
     VM_Execute_Detour.Install();
 

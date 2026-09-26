@@ -3779,18 +3779,64 @@ struct __declspec(align(2)) playerStatNetworkData
 };
 static_assert(sizeof(playerStatNetworkData) == 0x421C, "");
 
+struct VariableStackBuffer;
+
+union VariableUnion
+{
+    int intValue;
+    float floatValue;
+    unsigned int stringValue;
+    const float *vectorValue;
+    const char *codePosValue;
+    unsigned int pointerValue;
+    VariableStackBuffer *stackValue;
+    unsigned int entityOffset;
+};
+
 struct VariableValue
 {
-    union
-    {
-        int intValue;
-        float floatValue;
-        const char* stringValue;
-        const char* codePosValue;
-    };
-
+    VariableUnion u;
     int type;
 };
+static_assert(sizeof(VariableValue) == 0x8, "");
+
+struct function_stack_t
+{
+    const char *pos;
+    unsigned int localId;
+    unsigned int localVarCount;
+    VariableValue *top;
+    VariableValue *startTop;
+};
+
+struct function_frame_t
+{
+    function_stack_t fs;
+    int topType;
+};
+
+struct scrVmPub_t
+{
+    unsigned int *localVars;
+    VariableValue *maxstack;
+    int function_count;
+    function_frame_t *function_frame;
+    VariableValue *top;
+    bool debugCode;
+    bool abort_on_error;
+    bool terminal_error;
+    unsigned int inparamcount;
+    unsigned int outparamcount;
+    function_frame_t function_frame_start[32];
+    VariableValue stack[2048];
+};
+
+static_assert(sizeof(function_frame_t) == 0x18, "");
+static_assert(offsetof(scrVmPub_t, top) == 0x10, "");
+static_assert(offsetof(scrVmPub_t, outparamcount) == 0x1C, "");
+static_assert(offsetof(scrVmPub_t, function_frame_start) == 0x20, "");
+static_assert(offsetof(scrVmPub_t, stack) == 0x320, "");
+static_assert(sizeof(scrVmPub_t) == 0x4320, "");
 
 } // namespace mp
 } // namespace iw3
