@@ -550,6 +550,7 @@ static const char **var_typename = reinterpret_cast<const char **>(0x823A2820);
 static auto cgMedia = reinterpret_cast<cgMedia_t *>(0x823F28A8);
 static auto sharedUiInfo = reinterpret_cast<sharedUiInfo_t *>(0x849F8080);
 static auto scr_const = reinterpret_cast<scr_const_t *>(0x82A22F18);
+static scrVmPub_t &scrVmPub = *reinterpret_cast<scrVmPub_t *>(0x82E3B0B0);
 
 static int *g_trackLoadProgress = reinterpret_cast<int *>(0x824754FC);
 static int *g_totalSize = reinterpret_cast<int *>(0x824754F8);
