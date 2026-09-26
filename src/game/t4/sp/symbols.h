@@ -155,6 +155,14 @@ static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int 
 static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82165290);
 
 static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x8226B7D0);
+static auto UI_FeederCount = reinterpret_cast<int (*)(int localClientNum, float feederID)>(0x8226A580);
+static auto UI_FeederItemText =
+    reinterpret_cast<const char *(*)(int localClientNum, itemDef_s *item, float feederID, int index,
+                                     unsigned int column, Material **handle)>(0x8226A920);
+static auto UI_FeederSelection = reinterpret_cast<void (*)(int localClientNum, float feederID, int index)>(0x8227F430);
+static auto UI_RunMenuScript =
+    reinterpret_cast<void (*)(int localClientNum, const char **args, const char *actualScript)>(0x822698E0);
+static auto UI_ParseString = reinterpret_cast<bool (*)(const char **args, char *out, int size)>(0x8226EB70);
 static auto Item_Slider_HandleKey = reinterpret_cast<int (*)(UiContext *dc, itemDef_s *item, int key)>(0x82271BB8);
 static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *dc, const char *menuName)>(0x822755B8);
 static auto UI_PlayerStart = reinterpret_cast<void (*)()>(0x822675E8);
