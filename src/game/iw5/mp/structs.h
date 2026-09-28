@@ -1988,6 +1988,7 @@ typedef void (*PlayerCmd_GetViewmodel_t)(scr_entref_t entref);
 typedef void (*PlayerCmd_UFO_t)(scr_entref_t *entref);
 
 typedef void (*UI_DrawBuildNumber_t)(LocalClientNum_t localClientNum);
+typedef void (*UI_Refresh_t)(LocalClientNum_t localClientNum);
 
 typedef void (*UI_DrawText_t)(const ScreenPlacement *scrPlace, const char *text, int maxChars, Font_s *font, double x,
                               double y, int horzAlign, int vertAlign, double scale, const float *color, int style);
