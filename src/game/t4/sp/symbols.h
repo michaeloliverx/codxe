@@ -87,6 +87,11 @@ static auto Com_PrintMessage = reinterpret_cast<void (*)(int channel, const char
 static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration,
                                                         int pixelWidth, int flags)>(0x8214EA60);
 
+static auto R_ReportInvalidCodeImage =
+    reinterpret_cast<void (*)(const uint32_t *context, unsigned int codeTexture)>(0x8244F0C0);
+static auto R_GetTextureFromCode =
+    reinterpret_cast<uint32_t (*)(uint32_t source, unsigned int codeTexture, uint8_t *sampler)>(0x8244F0A0);
+
 static auto Con_OneTimeInit = reinterpret_cast<int (*)()>(0x8214DD00);
 
 typedef void (*Field_AdjustScroll_t)(const ScreenPlacement *scrPlace, field_t *edit);
