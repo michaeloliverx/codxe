@@ -88,8 +88,7 @@ void EnsureUsermapDvarsRegistered()
                       "The selected custom map has a preview image");
     Dvar_RegisterString("ui_codxe_usermap_mode", "", DVAR_FLAG_NONE, "Custom map launch mode");
     Dvar_RegisterString("ui_codxe_usermap_name", "", DVAR_FLAG_NONE, "Selected custom map display name");
-    Dvar_RegisterString("ui_codxe_usermap_description", "", DVAR_FLAG_NONE,
-                        "Selected custom map description");
+    Dvar_RegisterString("ui_codxe_usermap_description", "", DVAR_FLAG_NONE, "Selected custom map description");
     Dvar_RegisterString("ui_codxe_usermap_count", "", DVAR_FLAG_NONE, "Selected custom map index");
     Dvar_RegisterString("ui_codxe_usermap_preview_hint", "", DVAR_FLAG_NONE, "Custom map preview instructions");
     Dvar_RegisterString("ui_codxe_usermap_mapname", "", DVAR_FLAG_NONE, "Selected custom map fastfile name");
@@ -480,11 +479,9 @@ void UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
     UpdateSelectedUsermap();
 }
 
-const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColumn, const char *value,
-                                    int valueColumn)
+const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColumn, const char *value, int valueColumn)
 {
-    if (table && table->name && value && comparisonColumn == 0 &&
-        _stricmp(table->name, "maps/mapsTable.csv") == 0 &&
+    if (table && table->name && value && comparisonColumn == 0 && _stricmp(table->name, "maps/mapsTable.csv") == 0 &&
         std::strcmp(Dvar_GetVariantString("ui_codxe_usermap_active"), "1") == 0 &&
         _stricmp(value, Dvar_GetVariantString("ui_codxe_usermap_mapname")) == 0)
     {

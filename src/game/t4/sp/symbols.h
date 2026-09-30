@@ -166,9 +166,8 @@ static auto UI_FeederSelection = reinterpret_cast<void (*)(int localClientNum, f
 static auto Item_Slider_HandleKey = reinterpret_cast<int (*)(UiContext *dc, itemDef_s *item, int key)>(0x82271BB8);
 static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *dc, const char *menuName)>(0x822755B8);
 static auto UI_PlayerStart = reinterpret_cast<void (*)()>(0x822675E8);
-static auto StringTable_Lookup =
-    reinterpret_cast<const char *(*)(const StringTable *table, int comparisonColumn, const char *value,
-                                     int valueColumn)>(0x82287908);
+static auto StringTable_Lookup = reinterpret_cast<const char *(*)(const StringTable *table, int comparisonColumn,
+                                                                  const char *value, int valueColumn)>(0x82287908);
 
 struct Font_s;
 
