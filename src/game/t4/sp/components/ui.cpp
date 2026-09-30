@@ -5,7 +5,6 @@
 #include "common/endian.h"
 #include "image/xenos_texture.h"
 
-#include <cctype>
 #include <cstdlib>
 #include <cstdio>
 
@@ -17,6 +16,7 @@ namespace
 {
 const float CODXE_USERMAPS_FEEDER = 65.0f;
 const char *const CODXE_USERMAPS_DIRECTORY = "usermaps";
+const char *const CODXE_PREVIEW_MATERIAL = "$codxe_usermap_preview";
 const char *const CODXE_PREVIEW_IMAGE = "codxe_usermap_preview";
 
 const uint32_t DDS_MAGIC = MAKEFOURCC('D', 'D', 'S', ' ');
@@ -103,115 +103,76 @@ bool StartsWithIgnoreCase(const std::string &value, const char *prefix)
     return value.length() >= prefixLength && _strnicmp(value.c_str(), prefix, prefixLength) == 0;
 }
 
-std::string Trim(const std::string &value)
-{
-    size_t first = 0;
-    while (first < value.length() && std::isspace(static_cast<unsigned char>(value[first])))
-        ++first;
-
-    size_t last = value.length();
-    while (last > first && std::isspace(static_cast<unsigned char>(value[last - 1])))
-        --last;
-
-    return value.substr(first, last - first);
-}
-
-std::string ParseQuotedValue(const std::string &line)
-{
-    const size_t quote = line.find('"');
-    if (quote == std::string::npos)
-        return std::string();
-
-    std::string value;
-    bool escaped = false;
-    for (size_t i = quote + 1; i < line.length(); ++i)
-    {
-        const char c = line[i];
-        if (escaped)
-        {
-            value += c == 'n' ? '\n' : c;
-            escaped = false;
-        }
-        else if (c == '\\')
-        {
-            escaped = true;
-        }
-        else if (c == '"')
-        {
-            break;
-        }
-        else
-        {
-            value += c;
-        }
-    }
-
-    return value;
-}
-
-std::string GetMetadataLanguage()
-{
-    std::string language = Dvar_GetVariantString("language");
-    std::transform(language.begin(), language.end(), language.begin(),
-                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-    return std::string("LANG_") + language;
-}
-
 void ReadMetadata(const std::string &path, std::string &displayName, std::string &description)
 {
     const std::string contents = filesystem::ReadFileToString(path);
     if (contents.empty())
         return;
 
-    const std::string requestedLanguage = GetMetadataLanguage();
-    std::string reference;
-    std::string englishName;
-    std::string englishDescription;
-    std::istringstream stream(contents);
-    std::string line;
-
-    while (std::getline(stream, line))
+    HJSONREADER reader = XJSONCreateReader();
+    if (!reader || FAILED(XJSONSetBuffer(reader, contents.data(), static_cast<DWORD>(contents.size()), TRUE)))
     {
-        line = Trim(line);
-        if (StartsWithIgnoreCase(line, "REFERENCE"))
-        {
-            reference = Trim(line.substr(std::strlen("REFERENCE")));
-            continue;
-        }
-
-        const size_t separator = line.find_first_of(" \t");
-        if (separator == std::string::npos)
-            continue;
-
-        const std::string language = line.substr(0, separator);
-        if (!StartsWithIgnoreCase(language, "LANG_"))
-            continue;
-
-        const std::string value = ParseQuotedValue(line);
-        const bool isName = _stricmp(reference.c_str(), "USERMAP_NAME") == 0;
-        const bool isDescription = _stricmp(reference.c_str(), "USERMAP_DESCRIPTION") == 0;
-
-        if (_stricmp(language.c_str(), "LANG_ENGLISH") == 0)
-        {
-            if (isName)
-                englishName = value;
-            else if (isDescription)
-                englishDescription = value;
-        }
-
-        if (_stricmp(language.c_str(), requestedLanguage.c_str()) == 0)
-        {
-            if (isName)
-                displayName = value;
-            else if (isDescription)
-                description = value;
-        }
+        if (reader)
+            XJSONCloseReader(reader);
+        DbgPrint("[codxe][T4 SP][UI] Failed to parse usermap metadata: %s\n", path.c_str());
+        return;
     }
 
-    if (displayName.empty())
-        displayName = englishName;
-    if (description.empty())
-        description = englishDescription;
+    int depth = 0;
+    int version = 0;
+    JSONTOKENTYPE tokenType;
+    DWORD tokenLength;
+    DWORD parsed;
+    HRESULT result;
+    char propertyName[64];
+    char value[1024];
+
+    while ((result = XJSONReadToken(reader, &tokenType, &tokenLength, &parsed)) == S_OK)
+    {
+        if (tokenType == Json_BeginObject || tokenType == Json_BeginArray)
+        {
+            ++depth;
+            continue;
+        }
+        if (tokenType == Json_EndObject || tokenType == Json_EndArray)
+        {
+            --depth;
+            continue;
+        }
+        if (tokenType != Json_FieldName)
+            continue;
+
+        if (FAILED(XJSONGetTokenValue(reader, propertyName, ARRAYSIZE(propertyName))) ||
+            XJSONReadToken(reader, &tokenType, &tokenLength, &parsed) != S_OK)
+        {
+            result = E_FAIL;
+            break;
+        }
+
+        if (tokenType == Json_BeginObject || tokenType == Json_BeginArray)
+        {
+            ++depth;
+            continue;
+        }
+        if (depth != 1 || FAILED(XJSONGetTokenValue(reader, value, ARRAYSIZE(value))))
+            continue;
+
+        if (_stricmp(propertyName, "version") == 0 && tokenType == Json_Number)
+            version = std::strtol(value, nullptr, 10);
+        else if (_stricmp(propertyName, "name") == 0 && tokenType == Json_String)
+            displayName = value;
+        else if (_stricmp(propertyName, "description") == 0 && tokenType == Json_String)
+            description = value;
+    }
+
+    XJSONCloseReader(reader);
+
+    if (FAILED(result) || version != 1)
+    {
+        displayName.clear();
+        description.clear();
+        DbgPrint("[codxe][T4 SP][UI] Invalid or unsupported usermap metadata: %s\n", path.c_str());
+    }
 }
 
 bool IsSafeUsermapName(const char *name)
@@ -407,7 +368,7 @@ void ScanUsermaps()
 
         UsermapEntry entry;
         entry.name = name;
-        ReadMetadata(filesystem::JoinPath(directory.c_str(), "map.str"), entry.displayName, entry.description);
+        ReadMetadata(filesystem::JoinPath(directory.c_str(), "map.json"), entry.displayName, entry.description);
         if (entry.displayName.empty())
             entry.displayName = name;
 
@@ -543,7 +504,7 @@ const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColu
                 DbgPrint("[codxe][T4 SP][UI] Supplying virtual mapsTable preview for %s\n", value);
                 usermapPreviewLookupLogged = true;
             }
-            return CODXE_PREVIEW_IMAGE;
+            return CODXE_PREVIEW_MATERIAL;
         }
     }
 
