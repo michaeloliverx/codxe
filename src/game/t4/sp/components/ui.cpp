@@ -547,7 +547,7 @@ void Campaign_UnlockAll()
 Detour Menus_OpenByName_Detour;
 Detour Item_Slider_HandleKey_Detour;
 
-// Stock sliders move by 5% of their range; FOV needs one-degree steps.
+// Stock sliders move by 5% of their range; FOV controls need finer, predictable steps.
 int Item_Slider_HandleKey_Hook(UiContext *dc, itemDef_s *item, int key)
 {
     const auto original = Item_Slider_HandleKey_Detour.GetOriginal<decltype(Item_Slider_HandleKey)>();
@@ -562,7 +562,15 @@ int Item_Slider_HandleKey_Hook(UiContext *dc, itemDef_s *item, int key)
         return original(dc, item, key);
 
     const auto *dvarName = item->dvar;
-    if (!dvarName || std::strcmp(dvarName, "cg_fov") != 0)
+    if (!dvarName)
+        return original(dc, item, key);
+
+    float step;
+    if (std::strcmp(dvarName, "cg_fov") == 0)
+        step = 1.0f;
+    else if (std::strcmp(dvarName, "cg_fovScale") == 0)
+        step = 0.05f;
+    else
         return original(dc, item, key);
 
     const auto *limits = item->typeData.editField;
@@ -573,7 +581,7 @@ int Item_Slider_HandleKey_Hook(UiContext *dc, itemDef_s *item, int key)
     const int handled = original(dc, item, key);
     if (handled)
     {
-        float after = before + static_cast<float>(direction);
+        float after = before + static_cast<float>(direction) * step;
         if (after < limits->minVal)
             after = limits->minVal;
         else if (after > limits->maxVal)
