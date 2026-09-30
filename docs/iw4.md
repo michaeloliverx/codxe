@@ -141,6 +141,15 @@ Usage example:
 self.entityflags = 1;
 ```
 
+### Localized Game Data
+
+The language check on fastfiles is disabled, so game data from another language release (for example Russian or
+Japanese) can be used with the supported executable and title update.
+
+Copy `default.xex` and `default_mp.xex` from `Call of Duty - Modern Warfare 2 (USA, Europe)` into the localized game
+folder and launch `default_mp.xex`. Without this the game relaunches forever with `Language mismatch on download
+content.`, because the English title update's `patch_mp.ff` does not match the localized data.
+
 ## MP TU6: Loading Singleplayer Maps In Multiplayer
 
 Loading singleplayer maps in multiplayer is a best-effort approach. Many things are broken, including missing FX, player models, and crashes.
