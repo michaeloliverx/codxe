@@ -394,6 +394,15 @@ std::string Config::ResolveDataPath(const char *relativePath)
     return filesystem::FileExists(path.c_str()) ? path : std::string();
 }
 
+std::string Config::ResolveDataDirectory(const char *relativePath)
+{
+    if (!relativePath || !*relativePath || data_root.empty())
+        return std::string();
+
+    const std::string path = filesystem::JoinPath(data_root.c_str(), relativePath);
+    return filesystem::DirectoryExists(path.c_str()) ? path : std::string();
+}
+
 std::string Config::ResolveDataPathForGameFile(const char *relativePath)
 {
     std::string path = ResolveDataPath(relativePath);
