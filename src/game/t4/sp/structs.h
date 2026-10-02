@@ -351,9 +351,63 @@ struct RawFile
 };
 static_assert(sizeof(RawFile) == 0xC, "");
 
+struct StringTable
+{
+    const char *name;
+    int columnCount;
+    int rowCount;
+    const char **values;
+};
+static_assert(sizeof(StringTable) == 0x10, "");
+
+enum MapType : __int32
+{
+    MAPTYPE_NONE = 0x0,
+    MAPTYPE_INVALID1 = 0x1,
+    MAPTYPE_INVALID2 = 0x2,
+    MAPTYPE_2D = 0x3,
+    MAPTYPE_3D = 0x4,
+    MAPTYPE_CUBE = 0x5,
+    MAPTYPE_COUNT = 0x6,
+};
+
+union GfxTexture
+{
+    D3DBaseTexture *basemap;
+    D3DTexture *map;
+    D3DVolumeTexture *volmap;
+    D3DCubeTexture *cubemap;
+    void *loadDef;
+};
+
+struct CardMemory
+{
+    int platform[1];
+};
+
+struct GfxImage
+{
+    MapType mapType;
+    GfxTexture texture;
+    unsigned __int8 semantic;
+    CardMemory cardMemory;
+    unsigned __int16 width;
+    unsigned __int16 height;
+    unsigned __int16 depth;
+    unsigned __int8 category;
+    bool delayLoadPixels;
+    unsigned __int8 *pixels;
+    unsigned int baseSize;
+    unsigned __int16 streamSlot;
+    bool streaming;
+    const char *name;
+};
+static_assert(sizeof(GfxImage) == 0x28, "");
+
 union XAssetHeader
 {
     void *data;
+    GfxImage *image;
     RawFile *rawfile;
 };
 
@@ -402,6 +456,131 @@ struct XZoneInfo
 static_assert(sizeof(XZoneInfo) == 0xC, "");
 
 struct UiContext;
+struct Material;
+struct menuDef_t;
+struct snd_alias_list_t;
+struct listBoxDef_s;
+struct multiDef_s;
+struct expressionEntry;
+
+struct rectDef_s
+{
+    float x;
+    float y;
+    float w;
+    float h;
+    int horzAlign;
+    int vertAlign;
+};
+static_assert(sizeof(rectDef_s) == 0x18, "");
+
+struct windowDef_t
+{
+    const char *name;
+    rectDef_s rect;
+    rectDef_s rectClient;
+    const char *group;
+    int style;
+    int border;
+    int ownerDraw;
+    int ownerDrawFlags;
+    float borderSize;
+    int staticFlags;
+    int dynamicFlags[4];
+    int nextTime;
+    float foreColor[4];
+    float backColor[4];
+    float borderColor[4];
+    float outlineColor[4];
+    Material *background;
+};
+static_assert(sizeof(windowDef_t) == 0xA8, "");
+
+struct statement_s
+{
+    int numEntries;
+    expressionEntry **entries;
+};
+static_assert(sizeof(statement_s) == 0x8, "");
+
+struct ItemKeyHandler
+{
+    int key;
+    const char *action;
+    ItemKeyHandler *next;
+};
+
+struct editFieldDef_s
+{
+    float minVal;
+    float maxVal;
+    float defVal;
+    float range;
+    int maxChars;
+    int maxCharsGotoNext;
+    int maxPaintChars;
+    int paintOffset;
+};
+static_assert(sizeof(editFieldDef_s) == 0x20, "");
+
+union itemDefData_t
+{
+    listBoxDef_s *listBox;
+    editFieldDef_s *editField;
+    multiDef_s *multi;
+    const char *enumDvarName;
+    void *data;
+};
+
+struct itemDef_s
+{
+    windowDef_t window;
+    rectDef_s textRect[4];
+    int type;
+    int dataType;
+    int alignment;
+    int fontEnum;
+    int textAlignMode;
+    float textalignx;
+    float textaligny;
+    float textscale;
+    int textStyle;
+    int gameMsgWindowIndex;
+    int gameMsgWindowMode;
+    const char *text;
+    int itemFlags;
+    menuDef_t *parent;
+    const char *mouseEnterText;
+    const char *mouseExitText;
+    const char *mouseEnter;
+    const char *mouseExit;
+    const char *action;
+    const char *onAccept;
+    const char *onFocus;
+    const char *leaveFocus;
+    const char *dvar;
+    const char *dvarTest;
+    const char *onListboxSelectionChange;
+    ItemKeyHandler *onKey;
+    const char *enableDvar;
+    int dvarFlags;
+    snd_alias_list_t *focusSound;
+    float special;
+    int cursorPos[4];
+    itemDefData_t typeData;
+    int imageTrack;
+    statement_s visibleExp;
+    statement_s textExp;
+    statement_s materialExp;
+    statement_s rectXExp;
+    statement_s rectYExp;
+    statement_s rectWExp;
+    statement_s rectHExp;
+    statement_s forecolorAExp;
+};
+static_assert(offsetof(itemDef_s, dvar) == 0x160, "");
+static_assert(offsetof(itemDef_s, typeData) == 0x190, "");
+static_assert(sizeof(itemDef_s) == 0x1D8, "");
 
 struct ScreenPlacement
 {
@@ -422,7 +601,11 @@ enum keyNum_t : __int32
     K_NONE = 0x0,
     K_TAB = 0x9,
     K_ENTER = 0xD,
+    K_DPAD_LEFT = 0x16,
+    K_DPAD_RIGHT = 0x17,
     K_ESCAPE = 0x1B,
+    K_APAD_LEFT = 0x1E,
+    K_APAD_RIGHT = 0x1F,
     K_SPACE = 0x20,
     K_BACKSPACE = 0x7F,
     K_CAPSLOCK = 0x97,
