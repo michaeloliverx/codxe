@@ -213,5 +213,8 @@ static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name, int 
 
 static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x82294218);
 
+typedef int (*Scr_ShutdownSystem_t)(scriptInstance_t inst, int sys, int bComplete);
+static auto Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x82341D20);
+
 } // namespace sp
 } // namespace t4
