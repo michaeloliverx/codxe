@@ -68,9 +68,6 @@ Detour Load_MapEntsPtr_Detour;
 
 void Load_MapEntsPtr_Hook()
 {
-    // TODO: don't write null byte to file
-    // and add null byte to entityString when reading from file
-
     DbgPrint("Load_MapEntsPtr_Hook\n");
 
     // TODO: write comment what this is ***
@@ -84,11 +81,15 @@ void Load_MapEntsPtr_Hook()
     {
         MapEnts *mapEnts = *varMapEntsPtr;
 
-        // Write stock map ents to disk
-        const std::string filePath = map_ents::BuildPath("game:\\dump", mapEnts->name);
-        if (!filePath.empty())
+        // Dump stock map ents if enabled (numEntityChars includes the null terminator, which is not written)
+        if (Config::dump_map_ents && mapEnts->numEntityChars > 0)
         {
-            filesystem::WriteFileToDisk(filePath.c_str(), mapEnts->entityString, mapEnts->numEntityChars);
+            const std::string dumpPath = map_ents::BuildPath(DUMP_DIR, mapEnts->name);
+            if (!dumpPath.empty())
+            {
+                filesystem::WriteFileToDisk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
+                DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
+            }
         }
 
         // Load map ents from file
