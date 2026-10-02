@@ -4,11 +4,13 @@
 #include "gsc_functions.h"
 #include "gsc_methods.h"
 #include "sv_bots.h"
+#include <unordered_map>
 
 namespace iw3
 {
 namespace mp
 {
+static std::unordered_map<const char*, const char*> ReplacedFunctions;
 namespace
 {
 static const gsc::Entry<BuiltinFunction> functions[] = {
@@ -23,6 +25,7 @@ static const gsc::Entry<BuiltinFunction> functions[] = {
     {"float", GScr_Float, BUILTIN_ANY},
     {"precachestring", Scr_PrecacheString_Stub, BUILTIN_ANY},
     {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
+    {"replacefunc", GScr_ReplaceFunc, BUILTIN_ANY},
 };
 
 static const gsc::Entry<BuiltinMethod> methods[] = {
@@ -83,6 +86,85 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
     return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
 }
 
+Detour VM_Execute_Detour;
+
+const char* GetCodePosForParam(int index)
+{
+    const int numParams = static_cast<int>(Scr_GetNumParam());
+
+    if (index < 0 || index >= numParams)
+        return nullptr;
+
+    const VariableValue *value = &scrVmPub.top[-index];
+
+    if (value->type != VAR_FUNCTION)
+        return nullptr;
+
+    return value->u.codePosValue;
+}
+
+extern "C" const char* IW3_GSC_GetReplacedPos(const char* pos)
+{
+    if (!pos)
+        return nullptr;
+
+    const auto it = ReplacedFunctions.find(pos);
+    return it != ReplacedFunctions.end() ? it->second : pos;
+}
+
+extern "C" __declspec(naked) void VM_Execute_Hook()
+{
+    __asm
+    {
+        mr      r3, r11
+        bl      IW3_GSC_GetReplacedPos
+
+        mr      r11, r3
+        mr      r10, r3
+
+        lbz     r11, 0(r11)
+        addi    r10, r10, 1
+        cmplwi  cr6, r11, 0x86
+        stw     r11, 0x400(r17)
+
+        lis     r12, 0x8221
+        ori     r12, r12, 0x2E40
+        mtctr   r12
+        bctr
+    }
+}
+
+void GScr_ReplaceFunc()
+{
+    if (Scr_GetNumParam() != 2)
+    {
+        Scr_Error("replacefunc: expected two function parameters");
+        return;
+    }
+
+    const char* what = GetCodePosForParam(0);
+    const char* with = GetCodePosForParam(1);
+
+    if (!what)
+    {
+        Scr_Error("replacefunc: first parameter must be a function");
+        return;
+    }
+
+    if (!with)
+    {
+        Scr_Error("replacefunc: second parameter must be a function");
+        return;
+    }
+
+    ReplacedFunctions[what] = with;
+}
+
+void ClearReplacedFunctions()
+{
+    ReplacedFunctions.clear();
+}
+
 GSC::GSC()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
@@ -90,6 +172,10 @@ GSC::GSC()
 
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
+
+    // Intercept TU4 VM_Execute's opcode fetch to redirect registered function code positions, then resume at 0x82212E40.
+    VM_Execute_Detour = Detour(reinterpret_cast<void*>(0x82212E30), reinterpret_cast<const void*>(VM_Execute_Hook));
+    VM_Execute_Detour.Install();
 
     InitializeHudElemMethods();
 }
@@ -106,6 +192,8 @@ GSC::~GSC()
     Scr_GetFunction_Detour.Remove();
 
     Scr_GetMethod_Detour.Remove();
+
+    VM_Execute_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw3
