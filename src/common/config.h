@@ -26,6 +26,7 @@ class Config : public Module
     static const char *GetActiveMod();
     static std::string ResolveModPath(const char *relativePath);
     static std::string ResolveDataPath(const char *relativePath);
+    static std::string ResolveDataDirectory(const char *relativePath);
     static std::string ResolveDataPathForGameFile(const char *relativePath);
 
   private:
