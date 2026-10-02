@@ -55,6 +55,21 @@ void DisableDvarProtection()
     *(volatile uint8_t *)0x822CBDEB = 0x0;
 }
 
+void AllowMixedLanguageFastfiles()
+{
+    // Every fastfile header carries a language mask (4 bytes after the build time: English 0x1, Russian 0x40,
+    // Japanese 0x400). The first zone loaded sets the game's mask (0x825CE4E4); any later zone that shares no
+    // bit with it ends in Com_Error "Language mismatch on download content." - which is what the English title
+    // update's patch_mp.ff does to another language's disc data, as an endless relaunch.
+    // Take the "languages match" branch always, so a localized copy runs on the supported (English) executable
+    // and title update without touching its files.
+    // .text:821AFE24                 and       r11, r6, r5
+    // .text:821AFE28                 cmplwi    cr6, r11, 0
+    // .text:821AFE2C                 bne       cr6, loc_821AFE48
+    if (*reinterpret_cast<volatile uint32_t *>(0x821AFE2C) == 0x409A001C)
+        ppc::Branch(0x821AFE2C, 0x821AFE48);
+}
+
 patches::patches()
 {
 #ifndef NDEBUG
@@ -65,6 +80,7 @@ patches::patches()
     DisableFastfileAuth();
     EnableBouncing();
     DisableDvarProtection();
+    AllowMixedLanguageFastfiles();
 }
 
 patches::~patches()

@@ -46,6 +46,9 @@ static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const c
 
 static auto Dvar_RegisterBool =
     reinterpret_cast<void *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
+static auto Dvar_RegisterString =
+    reinterpret_cast<void *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
+        0x8228C760);
 static auto Dvar_GetVariantString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x8228B5E0);
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x8228CF10);
 static auto Dvar_SetFromStringByName = reinterpret_cast<char *(*)(const char *dvarName, const char *value)>(0x8228D228);
@@ -83,6 +86,11 @@ static auto Com_PrintError = reinterpret_cast<void (*)(int channel, const char *
 static auto Com_PrintMessage = reinterpret_cast<void (*)(int channel, const char *msg, int error)>(0x8224F804);
 static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration,
                                                         int pixelWidth, int flags)>(0x8214EA60);
+
+static auto R_ReportInvalidCodeImage =
+    reinterpret_cast<void (*)(const uint32_t *context, unsigned int codeTexture)>(0x8244F0C0);
+static auto R_GetTextureFromCode =
+    reinterpret_cast<uint32_t (*)(uint32_t source, unsigned int codeTexture, uint8_t *sampler)>(0x8244F0A0);
 
 static auto Con_OneTimeInit = reinterpret_cast<int (*)()>(0x8214DD00);
 
@@ -125,6 +133,8 @@ static auto Scr_SetString =
 
 static auto G_Spawn = reinterpret_cast<gentity_s *(*)()>(0x82217D60);
 static auto G_ModelIndex = reinterpret_cast<int (*)(const char *name)>(0x82216660);
+static auto G_RegisterWeapon = reinterpret_cast<int (*)(const char *name, void (*onRegister)(int))>(0x821003D0);
+static auto g_registeredWeaponCount = reinterpret_cast<int *>(0x824EFA98);
 static auto G_CallSpawnEntity = reinterpret_cast<bool (*)(gentity_s *ent)>(0x82211730);
 
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x821BCC90);
@@ -153,9 +163,16 @@ static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int 
 static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82165290);
 
 static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x8226B7D0);
+static auto UI_FeederCount = reinterpret_cast<int (*)(int localClientNum, float feederID)>(0x8226A580);
+static auto UI_FeederItemText =
+    reinterpret_cast<const char *(*)(int localClientNum, itemDef_s *item, float feederID, int index,
+                                     unsigned int column, Material **handle)>(0x8226A920);
+static auto UI_FeederSelection = reinterpret_cast<void (*)(int localClientNum, float feederID, int index)>(0x8227F430);
 static auto Item_Slider_HandleKey = reinterpret_cast<int (*)(UiContext *dc, itemDef_s *item, int key)>(0x82271BB8);
 static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *dc, const char *menuName)>(0x822755B8);
 static auto UI_PlayerStart = reinterpret_cast<void (*)()>(0x822675E8);
+static auto StringTable_Lookup = reinterpret_cast<const char *(*)(const StringTable *table, int comparisonColumn,
+                                                                  const char *value, int valueColumn)>(0x82287908);
 
 struct Font_s;
 
