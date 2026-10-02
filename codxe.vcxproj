@@ -173,6 +173,7 @@
       <ClCompile Include="src\game\iw5\mp\patches.cpp" />
       <ClCompile Include="src\game\iw5\mp\pm.cpp" />
       <ClCompile Include="src\game\iw5\mp\gsc.cpp" />
+      <ClCompile Include="src\game\iw5\mp\console.cpp" />
 
       <ClCompile Include="src\game\t4\mp\main.cpp" />
       <ClCompile Include="src\game\t4\mp\symbols.cpp" />

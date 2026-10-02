@@ -6,6 +6,7 @@
 #include "pm.h"
 #include "gsc.h"
 #include "bots.h"
+#include "console.h"
 #include "events.h"
 
 namespace iw5
@@ -226,6 +227,7 @@ IW5_MP_Plugin::IW5_MP_Plugin()
     RegisterModule(new PlayerMovement());
     RegisterModule(new GSC());
     RegisterModule(new Bots());
+    RegisterModule(new Console());
 
     DB_FindXAssetHeader_Detour = Detour(DB_FindXAssetHeader, DB_FindXAssetHeader_Hook);
     DB_FindXAssetHeader_Detour.Install();
