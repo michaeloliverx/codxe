@@ -95,6 +95,27 @@ static_assert(offsetof(dvar_s, domain) == 0x50, "");
 static_assert(offsetof(dvar_s, hashNext) == 0x58, "");
 static_assert(sizeof(dvar_s) == 0x5C, "");
 
+struct ClientViewParams
+{
+    float x;
+    float y;
+    float width;
+    float height;
+};
+static_assert(sizeof(ClientViewParams) == 0x10, "");
+static_assert(offsetof(ClientViewParams, x) == 0x0, "");
+static_assert(offsetof(ClientViewParams, y) == 0x4, "");
+static_assert(offsetof(ClientViewParams, width) == 0x8, "");
+static_assert(offsetof(ClientViewParams, height) == 0xC, "");
+
+// Partial TU7 layout containing the split-screen mask selector used by RB_DrawView.
+struct GfxBackEndData
+{
+    char pad_0[899216];
+    uint32_t splitScreenOverlay;
+};
+static_assert(offsetof(GfxBackEndData, splitScreenOverlay) == 899216, "");
+
 // usercmd_t->button bits
 enum button_mask
 {

@@ -7,25 +7,9 @@ namespace sp
 {
 namespace
 {
-struct ClientViewParams
-{
-    float x, y, width, height;
-};
-static_assert(sizeof(ClientViewParams) == 16, "");
-
-// TU7 cg_view.cpp: [display mode][client count - 1][client index].
-// CG_InitView copies the defaults to the transition start, target, and current tables.
-auto defaultViewParams = reinterpret_cast<ClientViewParams *>(0x824B2DD0);
-auto startViewParams = reinterpret_cast<ClientViewParams *>(0x8251E0C0);
-auto targetViewParams = reinterpret_cast<ClientViewParams *>(0x8251E038);
-auto currentViewParams = reinterpret_cast<ClientViewParams *>(0x8251E140);
 ClientViewParams stockViewParams[8];
 const ClientViewParams horizontalViewParams[2] = {{0.0f, 0.0f, 1.0f, 0.5f}, {0.0f, 0.5f, 1.0f, 0.5f}};
 
-typedef unsigned int (*CG_SetView_t)(int localClientNum, int activeClientIndex, int activeClientCount);
-typedef unsigned int (*CG_UpdateView_t)(int time);
-typedef void *(*RB_DrawView_t)(uint32_t view);
-auto CL_LocalClientActiveCount = reinterpret_cast<int (*)()>(0x822E5AF8);
 Detour setViewDetour;
 Detour updateViewDetour;
 Detour drawViewDetour;
@@ -108,15 +92,14 @@ unsigned int CG_UpdateView_Hook(int time)
 
 void *RB_DrawView_Hook(uint32_t view)
 {
-    const auto backend = *reinterpret_cast<const uint32_t *>(0x84F1F0A0);
-    auto *splitScreenOverlay = reinterpret_cast<uint32_t *>(backend + 899216);
-    const auto overlay = *splitScreenOverlay;
+    auto &splitScreenOverlay = (*backEndData)->splitScreenOverlay;
+    const auto overlay = splitScreenOverlay;
     // 1 draws splitscreen_sidebars(_wide); 2 draws the fixed 4:3 centre bar.
     // Both masks describe the stock layout and would cover the new viewports.
     if (HorizontalEnabled() && (overlay == 1 || overlay == 2))
-        *splitScreenOverlay = 0;
+        splitScreenOverlay = 0;
     const auto result = drawViewDetour.GetOriginal<RB_DrawView_t>()(view);
-    *splitScreenOverlay = overlay;
+    splitScreenOverlay = overlay;
     return result;
 }
 } // namespace
@@ -131,9 +114,9 @@ SplitScreen::SplitScreen()
 {
     std::memcpy(stockViewParams, defaultViewParams, sizeof(stockViewParams));
 
-    setViewDetour = Detour(reinterpret_cast<void *>(0x8213C880), CG_SetView_Hook);
-    updateViewDetour = Detour(reinterpret_cast<void *>(0x8213DFA0), CG_UpdateView_Hook);
-    drawViewDetour = Detour(reinterpret_cast<void *>(0x82423B18), RB_DrawView_Hook);
+    setViewDetour = Detour(CG_SetView, CG_SetView_Hook);
+    updateViewDetour = Detour(CG_UpdateView, CG_UpdateView_Hook);
+    drawViewDetour = Detour(RB_DrawView, RB_DrawView_Hook);
     const bool setInstalled = setViewDetour.Install();
     const bool updateInstalled = updateViewDetour.Install();
     const bool drawInstalled = drawViewDetour.Install();
