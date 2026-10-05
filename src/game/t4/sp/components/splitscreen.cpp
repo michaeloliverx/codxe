@@ -1,0 +1,159 @@
+#include "pch.h"
+#include "splitscreen.h"
+
+namespace t4
+{
+namespace sp
+{
+namespace
+{
+struct ClientViewParams
+{
+    float x, y, width, height;
+};
+static_assert(sizeof(ClientViewParams) == 16, "");
+
+// TU7 cg_view.cpp: [display mode][client count - 1][client index].
+// CG_InitView copies the defaults to the transition start, target, and current tables.
+auto defaultViewParams = reinterpret_cast<ClientViewParams *>(0x824B2DD0);
+auto startViewParams = reinterpret_cast<ClientViewParams *>(0x8251E0C0);
+auto targetViewParams = reinterpret_cast<ClientViewParams *>(0x8251E038);
+auto currentViewParams = reinterpret_cast<ClientViewParams *>(0x8251E140);
+ClientViewParams stockViewParams[8];
+const ClientViewParams horizontalViewParams[2] = {{0.0f, 0.0f, 1.0f, 0.5f}, {0.0f, 0.5f, 1.0f, 0.5f}};
+
+typedef unsigned int (*CG_SetView_t)(int localClientNum, int activeClientIndex, int activeClientCount);
+typedef unsigned int (*CG_UpdateView_t)(int time);
+typedef void *(*RB_DrawView_t)(uint32_t view);
+auto CL_LocalClientActiveCount = reinterpret_cast<int (*)()>(0x822E5AF8);
+Detour setViewDetour;
+Detour updateViewDetour;
+Detour drawViewDetour;
+const dvar_s *horizontalDvar = nullptr;
+bool horizontalLayout = false;
+
+bool HorizontalEnabled()
+{
+    return horizontalDvar && horizontalDvar->current.enabled;
+}
+
+void RemapView(ClientViewParams &view, const ClientViewParams &from, const ClientViewParams &to)
+{
+    // T4 interpolates each rectangle between its split-screen layout and (0, 0, 1, 1).
+    // Height identifies that interpolation even when the horizontal layout has x == 0.
+    float fullscreenFraction = (view.height - from.height) / (1.0f - from.height);
+    if (fullscreenFraction < 0.0f)
+        fullscreenFraction = 0.0f;
+    else if (fullscreenFraction > 1.0f)
+        fullscreenFraction = 1.0f;
+    view.x = to.x * (1.0f - fullscreenFraction);
+    view.y = to.y * (1.0f - fullscreenFraction);
+    view.width = to.width + (1.0f - to.width) * fullscreenFraction;
+    view.height = to.height + (1.0f - to.height) * fullscreenFraction;
+}
+
+void ApplyLayout(bool horizontal)
+{
+    for (int displayMode = 0; displayMode < 2; ++displayMode)
+    {
+        for (int client = 0; client < 2; ++client)
+        {
+            const int index = displayMode * 4 + 2 + client;
+            const auto &from = horizontalLayout ? horizontalViewParams[client] : stockViewParams[index];
+            const auto &to = horizontal ? horizontalViewParams[client] : stockViewParams[index];
+            RemapView(startViewParams[index], from, to);
+            RemapView(targetViewParams[index], from, to);
+            RemapView(currentViewParams[index], from, to);
+            defaultViewParams[index] = to;
+        }
+    }
+    horizontalLayout = horizontal;
+}
+
+bool UpdateLayout()
+{
+    const bool horizontal = HorizontalEnabled();
+    if (horizontal == horizontalLayout)
+        return false;
+
+    ApplyLayout(horizontal);
+    DbgPrint("[codxe][T4 SP][SplitScreen] cg_splitScreenHorizontal=%d\n", horizontal);
+    return true;
+}
+
+unsigned int CG_SetView_Hook(int localClientNum, int activeClientIndex, int activeClientCount)
+{
+    const bool changed = UpdateLayout();
+    if (changed && activeClientCount == 2 && localClientNum >= 0 && localClientNum < 2)
+    {
+        // Refresh the other player's viewport and HUD placement when toggled during setup.
+        setViewDetour.GetOriginal<CG_SetView_t>()(localClientNum ^ 1, activeClientIndex ^ 1, activeClientCount);
+    }
+    return setViewDetour.GetOriginal<CG_SetView_t>()(localClientNum, activeClientIndex, activeClientCount);
+}
+
+unsigned int CG_UpdateView_Hook(int time)
+{
+    const bool changed = UpdateLayout();
+    const auto result = updateViewDetour.GetOriginal<CG_UpdateView_t>()(time);
+    if (changed && CL_LocalClientActiveCount() == 2)
+    {
+        // The stock updater only calls CG_SetView while an animation changes the rectangle.
+        // Recalculate both clients even when they are already at their split-screen endpoints.
+        for (int client = 0; client < 2; ++client)
+            setViewDetour.GetOriginal<CG_SetView_t>()(client, client, 2);
+    }
+    return result;
+}
+
+void *RB_DrawView_Hook(uint32_t view)
+{
+    const auto backend = *reinterpret_cast<const uint32_t *>(0x84F1F0A0);
+    auto *splitScreenOverlay = reinterpret_cast<uint32_t *>(backend + 899216);
+    const auto overlay = *splitScreenOverlay;
+    // 1 draws splitscreen_sidebars(_wide); 2 draws the fixed 4:3 centre bar.
+    // Both masks describe the stock layout and would cover the new viewports.
+    if (HorizontalEnabled() && (overlay == 1 || overlay == 2))
+        *splitScreenOverlay = 0;
+    const auto result = drawViewDetour.GetOriginal<RB_DrawView_t>()(view);
+    *splitScreenOverlay = overlay;
+    return result;
+}
+} // namespace
+
+void SplitScreen::OnDvarInit()
+{
+    horizontalDvar = Dvar_RegisterBool("cg_splitScreenHorizontal", false, DVAR_FLAG_NONE,
+                                       "Use full-width top and bottom views for two players");
+}
+
+SplitScreen::SplitScreen()
+{
+    std::memcpy(stockViewParams, defaultViewParams, sizeof(stockViewParams));
+
+    setViewDetour = Detour(reinterpret_cast<void *>(0x8213C880), CG_SetView_Hook);
+    updateViewDetour = Detour(reinterpret_cast<void *>(0x8213DFA0), CG_UpdateView_Hook);
+    drawViewDetour = Detour(reinterpret_cast<void *>(0x82423B18), RB_DrawView_Hook);
+    const bool setInstalled = setViewDetour.Install();
+    const bool updateInstalled = updateViewDetour.Install();
+    const bool drawInstalled = drawViewDetour.Install();
+    DbgPrint("[codxe][T4 SP][SplitScreen] Hooks: set=%d update=%d draw=%d\n", setInstalled, updateInstalled,
+             drawInstalled);
+    if (!setInstalled || !updateInstalled || !drawInstalled)
+    {
+        drawViewDetour.Remove();
+        updateViewDetour.Remove();
+        setViewDetour.Remove();
+    }
+}
+
+SplitScreen::~SplitScreen()
+{
+    drawViewDetour.Remove();
+    updateViewDetour.Remove();
+    setViewDetour.Remove();
+    if (horizontalLayout)
+        ApplyLayout(false);
+}
+} // namespace sp
+} // namespace t4

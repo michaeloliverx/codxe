@@ -193,10 +193,12 @@
 
       <ClCompile Include="src\game\t4\sp\components\clipmap.cpp" />
       <ClCompile Include="src\game\t4\sp\components\console.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\events.cpp" />
       <ClCompile Include="src\game\t4\sp\components\fastfiles.cpp" />
       <ClCompile Include="src\game\t4\sp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\t4\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\t4\sp\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\splitscreen.cpp" />
       <ClCompile Include="src\game\t4\sp\components\ui.cpp" />
       <ClCompile Include="src\game\t4\sp\main.cpp" />
 
@@ -340,10 +342,12 @@
 
       <ClInclude Include="src\game\t4\sp\components\clipmap.h" />
       <ClInclude Include="src\game\t4\sp\components\console.h" />
+      <ClInclude Include="src\game\t4\sp\components\events.h" />
       <ClInclude Include="src\game\t4\sp\components\fastfiles.h" />
       <ClInclude Include="src\game\t4\sp\components\gsc_fields.h" />
       <ClInclude Include="src\game\t4\sp\components\gsc.h" />
       <ClInclude Include="src\game\t4\sp\components\scr_parser.h" />
+      <ClInclude Include="src\game\t4\sp\components\splitscreen.h" />
       <ClInclude Include="src\game\t4\sp\components\ui.h" />
       <ClInclude Include="src\game\t4\sp\main.h" />
       <ClInclude Include="src\game\t4\sp\structs.h" />

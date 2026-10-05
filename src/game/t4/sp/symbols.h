@@ -44,10 +44,12 @@ static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x82
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8224D8E0);
 
+static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x82250718);
+
 static auto Dvar_RegisterBool =
-    reinterpret_cast<void *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
+    reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
 static auto Dvar_RegisterString =
-    reinterpret_cast<void *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
+    reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
         0x8228C760);
 static auto Dvar_GetVariantString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x8228B5E0);
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x8228CF10);
