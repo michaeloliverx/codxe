@@ -2973,7 +2973,6 @@ static_assert(offsetof(cg_s, viewModelPose) == 984288, "");
 // static_assert(offsetof(cg_s, playerTeleported) == 985552, "");
 // static_assert(offsetof(cg_s, vehicleFrame) == 985696, "");
 
-struct pml_t;
 enum fieldtype_t
 {
     F_INT = 0x0,
@@ -3778,6 +3777,77 @@ struct __declspec(align(2)) playerStatNetworkData
     bool firstTimeRunning;
 };
 static_assert(sizeof(playerStatNetworkData) == 0x421C, "");
+
+enum
+{
+    PMF_PRONE = 1 << 0,
+    PMF_DUCKED = 1 << 1,
+    PMF_MANTLE = 1 << 2,
+    PMF_LADDER = 1 << 3,
+    PMF_SIGHT_AIMING = 1 << 4,
+    PMF_BACKWARDS_RUN = 1 << 5,
+    PMF_WALKING = 1 << 6,
+    PMF_TIME_HARDLANDING = 1 << 7,
+    PMF_TIME_KNOCKBACK = 1 << 8,
+    PMF_PRONEMOVE_OVERRIDDEN = 1 << 9,
+    PMF_RESPAWNED = 1 << 10,
+    PMF_FROZEN = 1 << 11,
+    PMF_LADDER_FALL = 1 << 12,
+    PMF_JUMPING = 1 << 13,
+    PMF_SPRINTING = 1 << 14,
+    PMF_SHELLSHOCKED = 1 << 15,
+    PMF_MELEE_CHARGE = 1 << 16,
+    PMF_NO_SPRINT = 1 << 17,
+    PMF_NO_JUMP = 1 << 18,
+    PMF_REMOTE_CONTROLLING = 1 << 19,
+    PMF_ANIM_SCRIPTED = 1 << 20,
+    PMF_UNK1 = 1 << 21,
+    PMF_DIVING = 1 << 22,
+};
+
+enum TraceHitType : __int32
+{
+    TRACE_HITTYPE_NONE = 0x0,
+    TRACE_HITTYPE_ENTITY = 0x1,
+    TRACE_HITTYPE_DYNENT_MODEL = 0x2,
+    TRACE_HITTYPE_DYNENT_BRUSH = 0x3,
+    TRACE_HITTYPE_GLASS = 0x4,
+};
+
+struct __declspec(align(4)) trace_t
+{
+    float fraction;
+    float normal[3];
+    int surfaceFlags;
+    int contents;
+    const char* material;
+    TraceHitType hitType;
+    unsigned __int16 hitId;
+    float fractionForHitType;
+    unsigned __int16 modelIndex;
+    unsigned __int16 partName;
+    unsigned __int16 partGroup;
+    bool allsolid;
+    bool startsolid;
+    bool walkable;
+};
+
+struct pml_t
+{
+    float forward[3];
+    float right[3];
+    float up[3];
+    float frametime;
+    int msec;
+    int walking;
+    int groundPlane;
+    int almostGroundPlane;
+    trace_t groundTrace;
+    float impactSpeed;
+    float previous_origin[3];
+    float previous_velocity[3];
+    unsigned int holdrand;
+};
 
 } // namespace mp
 } // namespace iw3
