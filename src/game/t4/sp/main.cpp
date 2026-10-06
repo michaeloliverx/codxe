@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "components/clipmap.h"
 #include "components/console.h"
+#include "components/debug.h"
 #include "components/events.h"
 #include "components/fastfiles.h"
 #include "components/gsc_fields.h"
@@ -47,6 +48,10 @@ uint32_t R_GetTextureFromCode_Hook(uint32_t source, unsigned int codeTexture, ui
 
 T4_SP_Plugin::T4_SP_Plugin()
 {
+#ifndef NDEBUG
+    RegisterModule(new Debug());
+#endif
+
     R_GetTextureFromCode_Detour = Detour(R_GetTextureFromCode, R_GetTextureFromCode_Hook);
     R_GetTextureFromCode_Detour.Install();
 

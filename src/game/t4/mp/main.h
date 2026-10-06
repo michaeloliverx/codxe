@@ -10,7 +10,6 @@ class T4_MP_Plugin : public Plugin
 {
   public:
     T4_MP_Plugin();
-    ~T4_MP_Plugin();
 };
 
 } // namespace mp
