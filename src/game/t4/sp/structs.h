@@ -10,6 +10,112 @@ enum DvarFlags : unsigned __int16
     DVAR_FLAG_EXTERNAL = 0x4000,
 };
 
+enum dvarType_t : __int8
+{
+    DVAR_TYPE_BOOL = 0x0,
+    DVAR_TYPE_FLOAT = 0x1,
+    DVAR_TYPE_FLOAT_2 = 0x2,
+    DVAR_TYPE_FLOAT_3 = 0x3,
+    DVAR_TYPE_FLOAT_4 = 0x4,
+    DVAR_TYPE_INT = 0x5,
+    DVAR_TYPE_ENUM = 0x6,
+    DVAR_TYPE_STRING = 0x7,
+    DVAR_TYPE_COLOR = 0x8,
+    DVAR_TYPE_COUNT = 0x9,
+};
+
+union DvarValue
+{
+    bool enabled;
+    int integer;
+    unsigned int unsignedInt;
+    float value;
+    float vector[4];
+    const char *string;
+    char color[4];
+};
+static_assert(sizeof(DvarValue) == 0x10, "");
+
+struct DvarLimits_enum
+{
+    int stringCount;
+    const char **strings;
+};
+static_assert(sizeof(DvarLimits_enum) == 0x8, "");
+
+struct DvarLimits_minmax
+{
+    int min;
+    int max;
+};
+static_assert(sizeof(DvarLimits_minmax) == 0x8, "");
+
+struct DvarLimits_float_minmax
+{
+    float min;
+    float max;
+};
+static_assert(sizeof(DvarLimits_float_minmax) == 0x8, "");
+
+union DvarLimits
+{
+    DvarLimits_enum enumeration;
+    DvarLimits_minmax integer;
+    DvarLimits_float_minmax value;
+    DvarLimits_float_minmax vector;
+};
+static_assert(sizeof(DvarLimits) == 0x8, "");
+
+struct dvar_s
+{
+    const char *name;
+    const char *description;
+    DvarFlags flags;
+    dvarType_t type;
+    char modified;
+    char saveRestorable;
+    DvarValue current;
+    DvarValue latched;
+    DvarValue reset;
+    DvarValue saved;
+    DvarLimits domain;
+    dvar_s *hashNext;
+};
+static_assert(offsetof(dvar_s, name) == 0x0, "");
+static_assert(offsetof(dvar_s, description) == 0x4, "");
+static_assert(offsetof(dvar_s, flags) == 0x8, "");
+static_assert(offsetof(dvar_s, type) == 0xA, "");
+static_assert(offsetof(dvar_s, modified) == 0xB, "");
+static_assert(offsetof(dvar_s, saveRestorable) == 0xC, "");
+static_assert(offsetof(dvar_s, current) == 0x10, "");
+static_assert(offsetof(dvar_s, latched) == 0x20, "");
+static_assert(offsetof(dvar_s, reset) == 0x30, "");
+static_assert(offsetof(dvar_s, saved) == 0x40, "");
+static_assert(offsetof(dvar_s, domain) == 0x50, "");
+static_assert(offsetof(dvar_s, hashNext) == 0x58, "");
+static_assert(sizeof(dvar_s) == 0x5C, "");
+
+struct ClientViewParams
+{
+    float x;
+    float y;
+    float width;
+    float height;
+};
+static_assert(sizeof(ClientViewParams) == 0x10, "");
+static_assert(offsetof(ClientViewParams, x) == 0x0, "");
+static_assert(offsetof(ClientViewParams, y) == 0x4, "");
+static_assert(offsetof(ClientViewParams, width) == 0x8, "");
+static_assert(offsetof(ClientViewParams, height) == 0xC, "");
+
+// Partial TU7 layout containing the split-screen mask selector used by RB_DrawView.
+struct GfxBackEndData
+{
+    char pad_0[899216];
+    uint32_t splitScreenOverlay;
+};
+static_assert(offsetof(GfxBackEndData, splitScreenOverlay) == 899216, "");
+
 // usercmd_t->button bits
 enum button_mask
 {

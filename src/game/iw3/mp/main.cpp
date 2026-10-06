@@ -5,6 +5,7 @@
 #include "components/command.h"
 #include "components/cmds.h"
 #include "components/console.h"
+#include "components/debug.h"
 #include "components/events.h"
 #include "components/fastfiles.h"
 #include "components/gsc.h"
@@ -28,6 +29,10 @@ namespace mp
 {
 IW3_MP_Plugin::IW3_MP_Plugin()
 {
+#ifndef NDEBUG
+    RegisterModule(new Debug());
+#endif
+
     // default loc_warnings off to prevent console spam
     *(volatile uint8_t *)0x821FB069 = 0xE1;
 
@@ -54,10 +59,6 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new scr_parser());
     RegisterModule(new Stats());
     RegisterModule(new sv_bots());
-}
-
-IW3_MP_Plugin::~IW3_MP_Plugin()
-{
 }
 
 } // namespace mp

@@ -174,6 +174,7 @@ static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, 
 static auto Scr_GetInt =
     reinterpret_cast<int (*)(unsigned int index, scriptInstance_t inst, __int64 a3, __int64 a4)>(0x8234AFD0);
 static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)(scriptInstance_t inst)>(0x82345650);
+static scrVmPub_t *scrVmPub = reinterpret_cast<scrVmPub_t *>(0x85AF2F98);
 static auto Scr_GetObjectField =
     reinterpret_cast<void (*)(unsigned int classnum, int entnum, int offset, scriptInstance_t inst)>(0x822556B0);
 static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index, scriptInstance_t inst)>(0x8234B550);
