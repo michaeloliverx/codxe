@@ -3,6 +3,7 @@
 #include "components/branding.h"
 #include "components/brush_collision.h"
 #include "components/console.h"
+#include "components/debug.h"
 #include "components/events.h"
 #include "components/fastfiles.h"
 #include "components/gsc_fields.h"
@@ -22,6 +23,10 @@ namespace mp
 
 T4_MP_Plugin::T4_MP_Plugin()
 {
+#ifndef NDEBUG
+    RegisterModule(new Debug());
+#endif
+
     RegisterModule(new Config());
     RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
     RegisterModule(new Branding());
@@ -37,10 +42,6 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Patches());
     RegisterModule(new stats());
     RegisterModule(new ui());
-}
-
-T4_MP_Plugin::~T4_MP_Plugin()
-{
 }
 
 } // namespace mp

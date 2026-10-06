@@ -8,6 +8,7 @@ namespace t4
 {
 namespace mp
 {
+std::unordered_map<const char *, const char *> GSCFunctions::ReplacedFunctions;
 static void CloseAllScriptFiles()
 {
     script_files::CloseAll();
@@ -15,6 +16,7 @@ static void CloseAllScriptFiles()
 
 void GSCFunctions::OnVMShutdown()
 {
+    ReplacedFunctions.clear();
     CloseAllScriptFiles();
 }
 
@@ -172,8 +174,88 @@ void GSCrGetPlayerclipBrushesContainingPoint()
     }
 }
 
+Detour GSCFunctions::VM_Execute_Detour;
+
+const char *GSCFunctions::GetCodePosForParam(int index)
+{
+    const int numParams = static_cast<int>(Scr_GetNumParam(SCRIPTINSTANCE_SERVER));
+
+    if (index < 0 || index >= numParams)
+        return nullptr;
+
+    const VariableValue *value = &scrVmPub[SCRIPTINSTANCE_SERVER].top[-index];
+
+    if (value->type != VAR_FUNCTION)
+        return nullptr;
+
+    return value->u.codePosValue;
+}
+
+const char *GSCFunctions::GetReplacedPos(const char *pos, scriptInstance_t inst)
+{
+    if (inst != SCRIPTINSTANCE_SERVER || !pos || ReplacedFunctions.empty())
+        return pos;
+
+    const auto it = ReplacedFunctions.find(pos);
+    return it != ReplacedFunctions.end() ? it->second : pos;
+}
+
+extern "C" const char *T4_GetReplacedPos(const char *pos, scriptInstance_t inst)
+{
+    return GSCFunctions::GetReplacedPos(pos, inst);
+}
+
+__declspec(naked) void GSCFunctions::VM_Execute_Hook()
+{
+    __asm
+    {
+        mr      r3, r10
+        mr      r4, r31
+        bl      T4_GetReplacedPos
+
+        mr      r10, r3
+
+        addi    r11, r10, 1
+        lbz     r9, 0(r10)
+        addi    r10, r27, -0x4068
+        slwi    r21, r31, 2
+
+        lis     r12, 0x8234
+        ori     r12, r12, 0x6480
+        mtctr   r12
+        bctr
+    }
+}
+
+void GSCFunctions::ReplaceFunc()
+{
+    if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 2)
+    {
+        Scr_Error("replacefunc: expected two function parameters", SCRIPTINSTANCE_SERVER);
+        return;
+    }
+
+    const char *what = GetCodePosForParam(0);
+    const char *with = GetCodePosForParam(1);
+
+    if (!what)
+    {
+        Scr_Error("replacefunc: first parameter must be a function", SCRIPTINSTANCE_SERVER);
+        return;
+    }
+
+    if (!with)
+    {
+        Scr_Error("replacefunc: second parameter must be a function", SCRIPTINSTANCE_SERVER);
+        return;
+    }
+
+    ReplacedFunctions[what] = with;
+}
+
 static const gsc::Entry<BuiltinFunction> functions[] = {
     {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
+    {"replacefunc", GSCFunctions::ReplaceFunc, BUILTIN_ANY},
     {"getplayerclipbrushescontainingpoint", GSCrGetPlayerclipBrushesContainingPoint, BUILTIN_ANY},
     {"fs_testfile", GScr_FS_TestFile, BUILTIN_ANY},
     {"fs_fopen", GScr_FS_FOpen, BUILTIN_ANY},
@@ -191,7 +273,10 @@ BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
     {
         const gsc::Entry<BuiltinFunction> *function = gsc::Find(*pName, functions);
         if (function)
+        {
+            *type = function->type;
             return function->actionFunc;
+        }
     }
     return Scr_GetFunction_Detour.GetOriginal<decltype(&Scr_GetFunction_Hook)>()(pName, type);
 }
@@ -200,11 +285,17 @@ GSCFunctions::GSCFunctions()
 {
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
+
+    // Intercept TU7 VM_Execute's opcode fetch, then resume at 0x82346480.
+    VM_Execute_Detour = Detour(reinterpret_cast<void *>(0x82346470), reinterpret_cast<const void *>(VM_Execute_Hook));
+    VM_Execute_Detour.Install();
 }
 
 GSCFunctions::~GSCFunctions()
 {
     Scr_GetFunction_Detour.Remove();
+    VM_Execute_Detour.Remove();
+    ReplacedFunctions.clear();
     CloseAllScriptFiles();
 }
 } // namespace mp

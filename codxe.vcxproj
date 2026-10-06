@@ -111,6 +111,7 @@
       <ClCompile Include="src\game\iw3\mp\components\command.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\console.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\debug.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\events.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_fields.cpp" />
@@ -179,6 +180,7 @@
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
       <ClCompile Include="src\game\t4\mp\components\console.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\debug.cpp" />
       <ClCompile Include="src\game\t4\mp\components\events.cpp" />
       <ClCompile Include="src\game\t4\mp\components\fastfiles.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_fields.cpp" />
@@ -193,10 +195,13 @@
 
       <ClCompile Include="src\game\t4\sp\components\clipmap.cpp" />
       <ClCompile Include="src\game\t4\sp\components\console.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\debug.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\events.cpp" />
       <ClCompile Include="src\game\t4\sp\components\fastfiles.cpp" />
       <ClCompile Include="src\game\t4\sp\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\t4\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\t4\sp\components\scr_parser.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\splitscreen.cpp" />
       <ClCompile Include="src\game\t4\sp\components\ui.cpp" />
       <ClCompile Include="src\game\t4\sp\main.cpp" />
 
@@ -260,6 +265,7 @@
       <ClInclude Include="src\game\iw3\mp\components\command.h" />
       <ClInclude Include="src\game\iw3\mp\components\cmds.h" />
       <ClInclude Include="src\game\iw3\mp\components\console.h" />
+      <ClInclude Include="src\game\iw3\mp\components\debug.h" />
       <ClInclude Include="src\game\iw3\mp\components\clipmap.h" />
       <ClInclude Include="src\game\iw3\mp\components\gsc.h" />
       <ClInclude Include="src\game\iw3\mp\components\gsc_fields.h" />
@@ -326,6 +332,7 @@
       <ClInclude Include="src\game\t4\mp\components\branding.h" />
       <ClInclude Include="src\game\t4\mp\components\brush_collision.h" />
       <ClInclude Include="src\game\t4\mp\components\console.h" />
+      <ClInclude Include="src\game\t4\mp\components\debug.h" />
       <ClInclude Include="src\game\t4\mp\components\events.h" />
       <ClInclude Include="src\game\t4\mp\components\fastfiles.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_fields.h" />
@@ -340,10 +347,13 @@
 
       <ClInclude Include="src\game\t4\sp\components\clipmap.h" />
       <ClInclude Include="src\game\t4\sp\components\console.h" />
+      <ClInclude Include="src\game\t4\sp\components\debug.h" />
+      <ClInclude Include="src\game\t4\sp\components\events.h" />
       <ClInclude Include="src\game\t4\sp\components\fastfiles.h" />
       <ClInclude Include="src\game\t4\sp\components\gsc_fields.h" />
       <ClInclude Include="src\game\t4\sp\components\gsc.h" />
       <ClInclude Include="src\game\t4\sp\components\scr_parser.h" />
+      <ClInclude Include="src\game\t4\sp\components\splitscreen.h" />
       <ClInclude Include="src\game\t4\sp\components\ui.h" />
       <ClInclude Include="src\game\t4\sp\main.h" />
       <ClInclude Include="src\game\t4\sp\structs.h" />

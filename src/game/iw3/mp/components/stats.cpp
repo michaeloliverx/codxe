@@ -490,6 +490,11 @@ void LoadOrInitializeStats(unsigned int controllerIndex)
     }
 }
 
+bool IsSignedInToLive(unsigned int controllerIndex)
+{
+    return XUserGetSigninState(controllerIndex) == eXUserSigninState_SignedInToLive;
+}
+
 bool IsOfflineGame()
 {
     return Dvar_GetBool("systemlink") || Dvar_GetBool("splitscreen");
@@ -497,7 +502,7 @@ bool IsOfflineGame()
 
 void LiveStorage_ReadStats_Hook(unsigned int controllerIndex)
 {
-    if (XUserGetSigninState(controllerIndex) != eXUserSigninState_SignedInToLive)
+    if (!IsSignedInToLive(controllerIndex))
     {
         LoadOrInitializeStats(controllerIndex);
         return;
@@ -527,6 +532,11 @@ void Stats::LoadStatsScript(int localClientNum, const char ** /*args*/)
                        controllerIndex, localClientNum);
         return;
     }
+
+    // Xbox Live profiles keep their Live stats: offline stats (unlocked on first use) are only for profiles that
+    // are not signed in to Live, as in LiveStorage_ReadStats_Hook
+    if (IsSignedInToLive(controllerIndex))
+        return;
 
     LoadOrInitializeStats(controllerIndex);
 }
