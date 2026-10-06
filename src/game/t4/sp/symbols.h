@@ -33,6 +33,14 @@ static auto conDisplayLineOffset = reinterpret_cast<int *>(0x8252EE0C);
 static auto conOutputVisible = reinterpret_cast<unsigned __int8 *>(0x8252EE14);
 static auto conVisibleLineCount = reinterpret_cast<int *>(0x8252EE1C);
 
+// TU7 cg_view.cpp: [display mode][client count - 1][client index], flattened to eight entries.
+// CG_InitView copies the defaults to the transition start, target, and current tables.
+static auto defaultViewParams = reinterpret_cast<ClientViewParams *>(0x824B2DD0);
+static auto startViewParams = reinterpret_cast<ClientViewParams *>(0x8251E0C0);
+static auto targetViewParams = reinterpret_cast<ClientViewParams *>(0x8251E038);
+static auto currentViewParams = reinterpret_cast<ClientViewParams *>(0x8251E140);
+static auto backEndData = reinterpret_cast<GfxBackEndData **>(0x84F1F0A0);
+
 // Functions
 static auto BG_AddPredictableEventToPlayerstate =
     reinterpret_cast<void (*)(unsigned __int8 newEvent, unsigned __int8 eventParm, struct playerState_s *ps)>(
@@ -41,13 +49,24 @@ static auto BG_AddPredictableEventToPlayerstate =
 static auto CM_EntityString = reinterpret_cast<const char *(*)()>(0x82241C88);
 static auto CL_CmdButtons = reinterpret_cast<void (*)(int a1, usercmd_s *a2)>(0x822E38F8);
 static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x822E44B8);
+static auto CL_LocalClientActiveCount = reinterpret_cast<int (*)()>(0x822E5AF8);
+
+typedef unsigned int (*CG_SetView_t)(int localClientNum, int activeClientIndex, int activeClientCount);
+static auto CG_SetView = reinterpret_cast<CG_SetView_t>(0x8213C880);
+typedef unsigned int (*CG_UpdateView_t)(int time);
+static auto CG_UpdateView = reinterpret_cast<CG_UpdateView_t>(0x8213DFA0);
+typedef void *(*RB_DrawView_t)(uint32_t view);
+static auto RB_DrawView = reinterpret_cast<RB_DrawView_t>(0x82423B18);
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8224D8E0);
 
+static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x82250718);
+
 static auto Dvar_RegisterBool =
-    reinterpret_cast<void *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
+    reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(
+        0x8228C588);
 static auto Dvar_RegisterString =
-    reinterpret_cast<void *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
+    reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
         0x8228C760);
 static auto Dvar_GetVariantString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x8228B5E0);
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x8228CF10);

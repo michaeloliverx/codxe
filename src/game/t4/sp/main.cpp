@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "components/clipmap.h"
 #include "components/console.h"
+#include "components/events.h"
 #include "components/fastfiles.h"
 #include "components/gsc_fields.h"
 #include "components/gsc.h"
 #include "components/scr_parser.h"
+#include "components/splitscreen.h"
 #include "components/ui.h"
 #include "main.h"
 
@@ -55,12 +57,14 @@ T4_SP_Plugin::T4_SP_Plugin()
     *(volatile uint8_t *)0x82279B07 = 0x01;
 
     RegisterModule(new Config(Config::GAME_T4));
+    RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
     RegisterModule(new FastFiles());
     RegisterModule(new clipmap());
     RegisterModule(new console());
     RegisterModule(new GSC());
     RegisterModule(new GSCFields());
     RegisterModule(new scr_parser());
+    RegisterModule(new SplitScreen());
     RegisterModule(new ui());
 }
 
