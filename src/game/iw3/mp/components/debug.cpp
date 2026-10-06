@@ -10,7 +10,7 @@ Detour Debug::ConsolePrintDetour;
 void Debug::CL_ConsolePrint_Hook(int localClientNum, int channel, const char *txt, int duration, int pixelWidth,
                                  int flags)
 {
-    DbgPrint("[codxe][IW3][CL_ConsolePrint] %s", txt);
+    DbgPrint("[codxe][CL_ConsolePrint] %s", txt);
     ConsolePrintDetour.GetOriginal<decltype(CL_ConsolePrint)>()(localClientNum, channel, txt, duration, pixelWidth,
                                                                 flags);
 }

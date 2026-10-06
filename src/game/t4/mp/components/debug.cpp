@@ -9,7 +9,7 @@ Detour Debug::ConsolePrintDetour;
 
 void Debug::CL_ConsolePrint_Hook(int channel, const char *text, int flags)
 {
-    DbgPrint("[codxe][T4][CL_ConsolePrint] %s", text);
+    DbgPrint("[codxe][CL_ConsolePrint] %s", text);
     ConsolePrintDetour.GetOriginal<CL_ConsolePrint_t>()(channel, text, flags);
 }
 
