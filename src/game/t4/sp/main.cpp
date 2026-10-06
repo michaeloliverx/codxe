@@ -48,8 +48,9 @@ uint32_t R_GetTextureFromCode_Hook(uint32_t source, unsigned int codeTexture, ui
 
 T4_SP_Plugin::T4_SP_Plugin()
 {
-    // Uncomment to forward engine console output to DbgPrint during development.
-    // RegisterModule(new Debug());
+#ifndef NDEBUG
+    RegisterModule(new Debug());
+#endif
 
     R_GetTextureFromCode_Detour = Detour(R_GetTextureFromCode, R_GetTextureFromCode_Hook);
     R_GetTextureFromCode_Detour.Install();

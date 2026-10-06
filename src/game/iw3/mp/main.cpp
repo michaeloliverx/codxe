@@ -29,8 +29,9 @@ namespace mp
 {
 IW3_MP_Plugin::IW3_MP_Plugin()
 {
-    // Uncomment to forward engine console output to DbgPrint during development.
-    // RegisterModule(new Debug());
+#ifndef NDEBUG
+    RegisterModule(new Debug());
+#endif
 
     // default loc_warnings off to prevent console spam
     *(volatile uint8_t *)0x821FB069 = 0xE1;

@@ -23,8 +23,9 @@ namespace mp
 
 T4_MP_Plugin::T4_MP_Plugin()
 {
-    // Uncomment to forward engine console output to DbgPrint during development.
-    // RegisterModule(new Debug());
+#ifndef NDEBUG
+    RegisterModule(new Debug());
+#endif
 
     RegisterModule(new Config());
     RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
