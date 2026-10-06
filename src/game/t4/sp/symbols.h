@@ -63,7 +63,8 @@ static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const c
 static auto Com_InitDvars = reinterpret_cast<void (*)()>(0x82250718);
 
 static auto Dvar_RegisterBool =
-    reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(0x8228C588);
+    reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(
+        0x8228C588);
 static auto Dvar_RegisterString =
     reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
         0x8228C760);
