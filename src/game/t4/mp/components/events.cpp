@@ -59,14 +59,13 @@ Detour Events::Cmd_Init_Detour;
 
 void *Events::Scr_ShutdownSystem_Hook(scriptInstance_t inst, int sys, int bComplete)
 {
-    for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+    // These handlers own server script state.
+    if (inst == SCRIPTINSTANCE_SERVER)
     {
-        vmShutdownHandlers[i]();
-    }
-
-    if (bComplete)
-    {
-        GSCFunctions::ClearReplacedFunctions();
+        for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+        {
+            vmShutdownHandlers[i]();
+        }
     }
 
     return Scr_ShutdownSystem_Detour.GetOriginal<Scr_ShutdownSystem_t>()(inst, sys, bComplete);
