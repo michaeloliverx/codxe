@@ -815,7 +815,7 @@ static_assert(offsetof(BuiltinMethodDef, type) == 0x8, "");
 enum DvarFlags : unsigned __int16
 {
     DVAR_FLAG_NONE = 0x0,
-    DVAR_CODINFO = 0x100, // On change, this is sent to all clients (if you are host)
+    DVAR_CODINFO = 0x08, // On change, this is sent to all clients (if you are host) - 8u is correct and stops lag for other clients and ensure proper updates
 };
 
 enum dvarType_t : __int8
