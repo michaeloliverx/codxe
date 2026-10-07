@@ -73,6 +73,11 @@ static auto PlayerCmd_UFO = reinterpret_cast<PlayerCmd_UFO_t>(0x82236588);
 static auto va = reinterpret_cast<char *(*)(const char *format, ...)>(0x823365F0);
 
 static auto UI_DrawBuildNumber = reinterpret_cast<UI_DrawBuildNumber_t>(0x822ECA88);
+// Per-frame UI refresh, called from both the menu and the in-game frame draw (0x8217CF90 / 0x8217CB60).
+// Calls UI_DrawBuildNumber when disconnected with a menu open.
+static auto UI_Refresh = reinterpret_cast<UI_Refresh_t>(0x822F82E8);
+
+static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82287F68);
 static auto UI_DrawText = reinterpret_cast<UI_DrawText_t>(0x822EC490);
 
 static auto Weapon_RocketLauncher_Fire = reinterpret_cast<Weapon_RocketLauncher_Fire_t>(0x82271710);
