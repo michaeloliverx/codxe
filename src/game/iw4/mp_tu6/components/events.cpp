@@ -74,9 +74,13 @@ Detour Events::Cmd_Init_Detour;
 
 void Events::Scr_ShutdownSystem_Hook(unsigned __int8 sys)
 {
-    for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+    // VM state should only be cleared when the game script system itself is being shut down.
+    if (sys == iw4::mp_tu6::SCRIPT_USER_GAME)
     {
-        vmShutdownHandlers[i]();
+        for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+        {
+            vmShutdownHandlers[i]();
+        }
     }
 
     Scr_ShutdownSystem_Detour.GetOriginal<iw4::mp_tu6::Scr_ShutdownSystem_t>()(sys);
