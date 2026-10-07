@@ -9,6 +9,7 @@ MSBUILD_ARGS = ["/m", "/p:BuildInParallel=true"]
 BINARY_PATH = r"build\Release\bin\codxe.xex"
 STAGING_DIR = r"build\staging"
 RESOURCES_PATH = r"resources"
+DATA_PATH = r"_codxe"
 VERSION_HEADER_PATH = r"build\Release\obj\git_version.h"
 
 
@@ -54,6 +55,13 @@ if os.path.exists(RESOURCES_PATH):
     print("Resources directory copied successfully")
 else:
     print(f"Resources directory not found at {RESOURCES_PATH}")
+    exit(1)
+
+if os.path.isdir(DATA_PATH):
+    shutil.copytree(DATA_PATH, os.path.join(STAGING_DIR, "_codxe"), dirs_exist_ok=True)
+    print("CoD Xe data directory copied successfully")
+else:
+    print(f"CoD Xe data directory not found at {DATA_PATH}")
     exit(1)
 
 print("Copying binary to all title ID directories...")
