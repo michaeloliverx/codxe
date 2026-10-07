@@ -78,14 +78,14 @@ void ScanUsermaps()
     usermapsScanned = true;
     UIFeeder::SetSelectedIndex(USERMAPS_FEEDER_ID, selectedUsermap);
 
-    const char *usermapsDirectory = FastFiles::GetUsermapsDirectory();
-    const std::string searchPattern = filesystem::JoinPath(usermapsDirectory, "*");
+    const std::string usermapsDirectory = FastFiles::GetUsermapsDirectory();
+    const std::string searchPattern = filesystem::JoinPath(usermapsDirectory.c_str(), "*");
     WIN32_FIND_DATAA findData;
     HANDLE findHandle = FindFirstFileA(searchPattern.c_str(), &findData);
     if (findHandle == INVALID_HANDLE_VALUE)
     {
         UpdateUsermapCounter();
-        DbgPrint("[codxe][IW3][UIFeeder] Usermap directory is unavailable: %s\n", usermapsDirectory);
+        DbgPrint("[codxe][IW3][UIFeeder] Usermap directory is unavailable: %s\n", usermapsDirectory.c_str());
         return;
     }
 
@@ -104,7 +104,7 @@ void ScanUsermaps()
 
         FeederEntry entry;
         entry.name = name;
-        const std::string directory = filesystem::JoinPath(usermapsDirectory, name.c_str());
+        const std::string directory = filesystem::JoinPath(usermapsDirectory.c_str(), name.c_str());
         entry.displayName = ReadDisplayName(filesystem::JoinPath(directory.c_str(), "description.txt"), name);
         usermaps.push_back(entry);
     } while (FindNextFileA(findHandle, &findData) != 0);
@@ -126,7 +126,7 @@ void ScanUsermaps()
     UpdateUsermapCounter();
 
     DbgPrint("[codxe][IW3][UIFeeder] Found %u usermap(s) in %s\n", static_cast<unsigned int>(usermaps.size()),
-             usermapsDirectory);
+             usermapsDirectory.c_str());
 }
 
 void EnsureUsermapsScanned()

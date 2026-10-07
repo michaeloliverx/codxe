@@ -52,7 +52,7 @@ void DumpSource(const char *scriptPath, const char *contents)
     if (!scriptPath || !contents)
         return;
 
-    const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, scriptPath);
+    const std::string dumpPath = Config::BuildDataPath(filesystem::JoinPath("dump", scriptPath).c_str());
     if (dumpPath.empty())
         return;
 

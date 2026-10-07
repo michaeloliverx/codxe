@@ -14,8 +14,8 @@ const char *const MOD_ZONE = "mod";
 const char *const MOD_FASTFILE = "mod.ff";
 const char *const CODXE_COMMON_ZONE = "codxe_common_mp";
 const char *const CODXE_UI_ZONE = "codxe_ui_mp";
-const char *const CODXE_ZONE_DIRECTORY = "game:\\_codxe\\zone";
-const char *const USERMAPS_DIRECTORY = "game:\\_codxe\\usermaps";
+const char *const CODXE_ZONE_DIRECTORY = "zone";
+const char *const USERMAPS_DIRECTORY = "usermaps";
 const char *const FASTFILE_EXTENSION = ".ff";
 
 bool IsSafeZoneName(const char *name)
@@ -39,7 +39,7 @@ std::string GetCodxeZoneFastfilePath(const char *zoneName)
         return std::string();
 
     const std::string filename = std::string(zoneName) + FASTFILE_EXTENSION;
-    return filesystem::JoinPath(CODXE_ZONE_DIRECTORY, filename.c_str());
+    return Config::BuildDataPath(filesystem::JoinPath(CODXE_ZONE_DIRECTORY, filename.c_str()).c_str());
 }
 
 bool ContainsZone(const XZoneInfo *zoneInfo, unsigned int zoneCount, const char *name)
@@ -109,9 +109,9 @@ std::string FastFiles::GetModFastfilePath()
     return ModList::ResolvePath(MOD_FASTFILE);
 }
 
-const char *FastFiles::GetUsermapsDirectory()
+std::string FastFiles::GetUsermapsDirectory()
 {
-    return USERMAPS_DIRECTORY;
+    return Config::BuildDataPath(USERMAPS_DIRECTORY);
 }
 
 std::string FastFiles::GetUsermapFastfilePath(const char *zoneName)
@@ -128,7 +128,7 @@ std::string FastFiles::GetUsermapFastfilePath(const char *zoneName)
         directory.erase(directory.length() - 5);
 
     const std::string usermapDirectory = filesystem::JoinPath(USERMAPS_DIRECTORY, directory.c_str());
-    return filesystem::JoinPath(usermapDirectory.c_str(), (filename + ".ff").c_str());
+    return Config::BuildDataPath(filesystem::JoinPath(usermapDirectory.c_str(), (filename + ".ff").c_str()).c_str());
 }
 
 int FastFiles::DB_BuildOSPath_Hook(const char *zoneName, unsigned int size, char *filename)

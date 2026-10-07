@@ -8,16 +8,8 @@ namespace mp_tu6
 namespace
 {
 const char *const CODXE_PATCH_ZONE = "codxe_patch_mp";
-const char *const CODXE_PATCH_FILENAME = "codxe_patch_mp.ff";
-const char *const CODXE_PATCH_RELATIVE_PATH = "_codxe\\zone\\codxe_patch_mp.ff";
-const char *const CODXE_PATCH_PATH = "game:\\_codxe\\zone\\codxe_patch_mp.ff";
 const char *const CODXE_UI_ZONE = "codxe_ui_mp";
-const char *const CODXE_UI_FILENAME = "codxe_ui_mp.ff";
-const char *const CODXE_UI_RELATIVE_PATH = "_codxe\\zone\\codxe_ui_mp.ff";
-const char *const CODXE_UI_PATH = "game:\\_codxe\\zone\\codxe_ui_mp.ff";
-const char *const CODXE_ZONE_RELATIVE_DIRECTORY = "_codxe\\zone\\";
 const char *const CODXE_IMAGEFILE_FILENAME = "imagefile5.pak";
-const char *const GAME_DEVICE_PREFIX = "game:\\";
 const char *const FASTFILE_EXTENSION = ".ff";
 const unsigned int MAX_ZONE_COUNT = 32;
 
@@ -86,8 +78,8 @@ bool IsSafeFastfileName(const char *filename)
 void DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)
 {
     auto original = DB_LoadXAssets_Detour.GetOriginal<DB_LoadXAssets_t>();
-    const bool patchFileExists = filesystem::FileExists(CODXE_PATCH_PATH);
-    const bool uiFileExists = filesystem::FileExists(CODXE_UI_PATH);
+    const bool patchFileExists = !Config::ResolveDataPath("zone\\codxe_patch_mp.ff").empty();
+    const bool uiFileExists = !Config::ResolveDataPath("zone\\codxe_ui_mp.ff").empty();
     const XZoneInfo *stockPatchZone = FindZone(zoneInfo, zoneCount, "patch_mp");
     const XZoneInfo *stockUiZone = FindZone(zoneInfo, zoneCount, "ui_mp");
     const bool injectPatch = patchFileExists && stockPatchZone;
@@ -133,28 +125,12 @@ SysFile Sys_CreateFile_Hook(const char *dir, const char *filename)
 {
     auto original = Sys_CreateFile_Detour.GetOriginal<Sys_CreateFile_t>();
 
-    if (filename && std::strcmp(filename, CODXE_PATCH_FILENAME) == 0)
-        return original(dir, CODXE_PATCH_RELATIVE_PATH);
-
-    if (filename && std::strcmp(filename, CODXE_UI_FILENAME) == 0)
-        return original(dir, CODXE_UI_RELATIVE_PATH);
-
-    if (filename && std::strcmp(filename, CODXE_IMAGEFILE_FILENAME) == 0)
+    if (filename && (std::strcmp(filename, CODXE_IMAGEFILE_FILENAME) == 0 || IsSafeFastfileName(filename)))
     {
-        const std::string relativePath = std::string(CODXE_ZONE_RELATIVE_DIRECTORY) + filename;
-        const std::string devicePath = std::string(GAME_DEVICE_PREFIX) + relativePath;
-
-        if (filesystem::FileExists(devicePath.c_str()))
-            return original(dir, relativePath.c_str());
-    }
-
-    if (IsSafeFastfileName(filename))
-    {
-        const std::string relativePath = std::string(CODXE_ZONE_RELATIVE_DIRECTORY) + filename;
-        const std::string devicePath = std::string(GAME_DEVICE_PREFIX) + relativePath;
-
-        if (filesystem::FileExists(devicePath.c_str()))
-            return original(dir, relativePath.c_str());
+        const std::string path = Config::ResolveDataPath(filesystem::JoinPath("zone", filename).c_str());
+        // Sys_CreateFile prepends the title directory, so pass a title-relative filename.
+        if (path.compare(0, 6, "game:\\") == 0)
+            return original(dir, path.substr(6).c_str());
     }
 
     return original(dir, filename);

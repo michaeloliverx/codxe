@@ -398,7 +398,7 @@ std::string GetStatsPath(unsigned int controllerIndex)
         _snprintf_s(filename, ARRAYSIZE(filename), _TRUNCATE, "controller_%u.stat", controllerIndex);
     }
 
-    return filesystem::JoinPath("game:\\_codxe\\players", filename);
+    return Config::BuildDataPath(filesystem::JoinPath("players", filename).c_str());
 }
 
 bool LoadStats(unsigned int controllerIndex)

@@ -9,7 +9,7 @@ namespace sp
 QOS_SP_Plugin::QOS_SP_Plugin()
 {
     DbgPrint("QOS SP: Registering modules\n");
-    RegisterModule(new Config());
+    RegisterModule(new Config(Config::GAME_QOS));
     RegisterModule(new scr_parser());
 }
 

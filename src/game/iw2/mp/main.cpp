@@ -11,7 +11,7 @@ namespace mp
 
 IW2_MP_Plugin::IW2_MP_Plugin()
 {
-    RegisterModule(new Config());
+    RegisterModule(new Config(Config::GAME_IW2));
     RegisterModule(new GSC());
     RegisterModule(new scr_parser());
     RegisterModule(new PlayerMovement());

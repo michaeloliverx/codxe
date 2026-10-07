@@ -38,6 +38,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
 
     // Special modules need to be registered first
     RegisterModule(new Patches());
+    RegisterModule(new Config(Config::GAME_IW3));
     RegisterModule(new Events());
     RegisterModule(new command());
     RegisterModule(new UIScript());

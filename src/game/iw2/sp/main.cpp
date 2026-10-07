@@ -9,7 +9,7 @@ namespace sp
 
 IW2_SP_Plugin::IW2_SP_Plugin()
 {
-    RegisterModule(new Config());
+    RegisterModule(new Config(Config::GAME_IW2));
     RegisterModule(new scr_parser());
 }
 

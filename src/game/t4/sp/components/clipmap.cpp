@@ -68,7 +68,7 @@ void Load_clipMap_t_Hook(bool atStreamStart)
     // Dump map entities if enabled
     if (Config::dump_map_ents)
     {
-        const std::string dumpPath = map_ents::BuildPath(DUMP_DIR, mapEnts->name);
+        const std::string dumpPath = map_ents::BuildPath(Config::BuildDataPath("dump").c_str(), mapEnts->name);
         if (!dumpPath.empty())
         {
             filesystem::WriteFileToDisk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);

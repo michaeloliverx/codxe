@@ -13,6 +13,7 @@ namespace mp
 
 IW4_MP_Plugin::IW4_MP_Plugin()
 {
+    RegisterModule(new Config(Config::GAME_IW4));
     RegisterModule(new Events());
     RegisterModule(new fastfiles());
     RegisterModule(new Branding());
