@@ -1,24 +1,14 @@
 #pragma once
 
 #include "pch.h"
+#include "game_id.h"
 
 bool ReadFileToString(const char *path, std::string &outString);
 
 class Config : public Module
 {
   public:
-    enum GameId
-    {
-        GAME_IW2,
-        GAME_IW3,
-        GAME_IW4,
-        GAME_IW5,
-        GAME_T4,
-        GAME_T5,
-        GAME_QOS,
-    };
-
-    explicit Config(GameId gameId, bool allowSharedStorage = false);
+    explicit Config(GameId::Type gameId, bool allowSharedStorage = false);
     ~Config();
 
     static bool dump_rawfile;

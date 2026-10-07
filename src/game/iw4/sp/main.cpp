@@ -33,7 +33,7 @@ IW4_SP_Plugin::IW4_SP_Plugin()
 
     RemoveIdleGunSway();
 
-    RegisterModule(new Config(Config::GAME_IW4));
+    RegisterModule(new Config(GameId::IW4));
     RegisterModule(new cg());
     RegisterModule(new clipmap());
     RegisterModule(new GSCFields());

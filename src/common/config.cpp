@@ -21,29 +21,6 @@ namespace
 const char *CONFIG_DEVICE_LINK_NAME = "codxe:";
 const char *CONFIG_DEVICE_LINK_PATH = "codxe:\\";
 
-const char *GetGameDirectoryName(Config::GameId gameId)
-{
-    switch (gameId)
-    {
-    case Config::GAME_IW2:
-        return "iw2";
-    case Config::GAME_IW3:
-        return "iw3";
-    case Config::GAME_IW4:
-        return "iw4";
-    case Config::GAME_IW5:
-        return "iw5";
-    case Config::GAME_T4:
-        return "t4";
-    case Config::GAME_T5:
-        return "t5";
-    case Config::GAME_QOS:
-        return "qos";
-    default:
-        return nullptr;
-    }
-}
-
 bool StartsWith(const std::string &value, const char *prefix)
 {
     return strncmp(value.c_str(), prefix, strlen(prefix)) == 0;
@@ -171,11 +148,11 @@ bool ReadFileToString(const char *path, std::string &outString)
     return true;
 }
 
-Config::Config(GameId gameId, bool allowSharedStorage)
+Config::Config(GameId::Type gameId, bool allowSharedStorage)
 {
     data_root = "game:\\_codxe";
     mounted_links.clear();
-    const char *gameDirectoryName = GetGameDirectoryName(gameId);
+    const char *gameDirectoryName = GameId::ToString(gameId);
     std::string config_path = filesystem::JoinPath(data_root.c_str(), "codxe.json");
 
     if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)

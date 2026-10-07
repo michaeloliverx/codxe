@@ -14,7 +14,7 @@ namespace mp
 QOS_MP_Plugin::QOS_MP_Plugin()
 {
     DbgPrint("QOS SP: Registering modules\n");
-    RegisterModule(new Config(Config::GAME_QOS));
+    RegisterModule(new Config(GameId::QOS));
     RegisterModule(new Events());
     RegisterModule(new clipmap());
     RegisterModule(new GSC());

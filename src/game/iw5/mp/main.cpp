@@ -219,7 +219,7 @@ bool DB_IsXAssetDefault_Hook(XAssetType type, const char *name)
 
 IW5_MP_Plugin::IW5_MP_Plugin()
 {
-    RegisterModule(new Config(Config::GAME_IW5));
+    RegisterModule(new Config(GameId::IW5));
     RegisterModule(new Events());
     RegisterModule(new Branding());
     RegisterModule(new patches());

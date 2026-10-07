@@ -146,7 +146,7 @@ void Cmd_Dumpraw_f()
 IW3_SP_Plugin::IW3_SP_Plugin()
 {
     DbgPrint("IW3 SP: Plugin loaded\n");
-    RegisterModule(new Config(Config::GAME_IW3));
+    RegisterModule(new Config(GameId::IW3));
     RegisterModule(new Events());
     RegisterModule(new command());
     RegisterModule(new scr_parser());
