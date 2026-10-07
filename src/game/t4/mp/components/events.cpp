@@ -57,10 +57,10 @@ void Events::Cmd_Init_Hook()
 
 Detour Events::Cmd_Init_Detour;
 
-void *Events::Scr_ShutdownSystem_Hook(scriptInstance_t inst, int sys, int bComplete)
+void *Events::Scr_ShutdownSystem_Hook(scriptInstance_t inst, scrSystem_t sys, int bComplete)
 {
-    // These handlers own server script state.
-    if (inst == SCRIPTINSTANCE_SERVER)
+    // These handlers own server script state and run only on complete shutdowns.
+    if (inst == SCRIPTINSTANCE_SERVER && bComplete)
     {
         for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
         {

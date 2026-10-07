@@ -106,15 +106,18 @@ void Events::Load_DelayStream_Hook()
 
 Detour Events::Load_DelayStream_Detour;
 
-void Events::Scr_ShutdownSystem_Hook(unsigned __int8 sys)
+void Events::Scr_ShutdownSystem_Hook(int bComplete)
 {
-    for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+    if (bComplete)
     {
-        vmShutdownHandlers[i]();
+        for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+        {
+            vmShutdownHandlers[i]();
+        }
     }
 
     // Call original function after callbacks
-    Scr_ShutdownSystem_Detour.GetOriginal<Scr_ShutdownSystem_t>()(sys);
+    Scr_ShutdownSystem_Detour.GetOriginal<Scr_ShutdownSystem_t>()(bComplete);
 }
 
 Detour Events::Scr_ShutdownSystem_Detour;

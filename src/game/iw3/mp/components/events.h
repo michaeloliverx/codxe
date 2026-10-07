@@ -24,7 +24,7 @@ class Events : public Module
     static void Load_DelayStream_Hook();
 
     static Detour Scr_ShutdownSystem_Detour;
-    static void Scr_ShutdownSystem_Hook(unsigned __int8 sys);
+    static void Scr_ShutdownSystem_Hook(int bComplete);
 
     static Detour Com_InitDvars_Detour;
     static void Com_InitDvars_Hook();
