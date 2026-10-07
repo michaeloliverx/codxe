@@ -217,6 +217,8 @@ static auto Scr_GetMethod =
 
 static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x822ADC88);
 
+static scrVmPub_t& scrVmPub = *reinterpret_cast<scrVmPub_t*>(0x83616678);
+
 typedef void (*PlayerCmd_GetGuid_t)(scr_entref_t entref);
 static PlayerCmd_GetGuid_t PlayerCmd_GetGuid = reinterpret_cast<PlayerCmd_GetGuid_t>(0x82223C18);
 
