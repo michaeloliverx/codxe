@@ -131,6 +131,15 @@ SysFile Sys_CreateFile_Hook(const char *dir, const char *filename)
         // Sys_CreateFile prepends the title directory, so pass a title-relative filename.
         if (path.compare(0, 6, "game:\\") == 0)
             return original(dir, path.substr(6).c_str());
+
+        // External roots use a device link directly, with the stock async/unbuffered read flags.
+        if (!path.empty())
+        {
+            SysFile file = {CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                        FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, nullptr),
+                            0};
+            return file;
+        }
     }
 
     return original(dir, filename);

@@ -148,7 +148,7 @@ bool ReadFileToString(const char *path, std::string &outString)
     return true;
 }
 
-Config::Config(GameId::Type gameId, bool allowSharedStorage)
+Config::Config(GameId::Type gameId)
 {
     data_root = "game:\\_codxe";
     mounted_links.clear();
@@ -203,9 +203,11 @@ Config::Config(GameId::Type gameId, bool allowSharedStorage)
         {
             config_path = filesystem::JoinPath(local_directory.c_str(), "codxe.json");
         }
-        else if (allowSharedStorage)
+        else
         {
-            data_root.clear();
+            // If no existing root is found, new files use the local nested layout.
+            data_root = std::string("game:\\_codxe\\") + gameDirectoryName;
+            config_path = filesystem::JoinPath(nested_local_directory.c_str(), "codxe.json");
             if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
             {
                 // Only the game directory accepts the legacy layout.
@@ -234,12 +236,6 @@ Config::Config(GameId::Type gameId, bool allowSharedStorage)
                     break;
                 }
             }
-        }
-        else
-        {
-            // A fresh install writes to the new layout. Do not reselect the root per file.
-            data_root = std::string("game:\\_codxe\\") + gameDirectoryName;
-            config_path = filesystem::JoinPath(nested_local_directory.c_str(), "codxe.json");
         }
     }
 

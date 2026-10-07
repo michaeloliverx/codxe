@@ -8,11 +8,11 @@ The raw GSC loader enables loading `.gsc` scripts directly from the mod director
 
 Create a `_codxe\<gameID>\mods` folder in your game directory, and place a `codxe.json` in `_codxe\<gameID>` to define which mod is active. Use `iw2`, `iw3`, `iw4`, `iw5`, `t4`, `t5`, or `qos` for the game ID.
 
-The repository and release archive contain one top-level [`_codxe`](/_codxe) folder with a subdirectory for each game. Copy that folder into your game directory, preserving `_codxe\<gameID>\...`. T4 singleplayer also supports copying the same folder to a USB or HDD root. Title updates and Xenia files remain separate from the game data.
+The repository and release archive contain one top-level [`_codxe`](/_codxe) folder with a subdirectory for each game. Copy that folder into your game directory or a USB/HDD root, preserving `_codxe\<gameID>\...`. All supported games that use CoD Xe data share this layout. Title updates and Xenia files remain separate from the game data.
 
 CoD Xe selects one data root at startup. If `_codxe\<gameID>` exists, all config, mod, fastfile, usermap, internal asset, dump, and player stats paths use that root. Missing files never fall back to the legacy `_codxe` root. The old layout remains supported when the nested directory does not exist. Keep all data for a game together when migrating.
 
-When neither local directory exists, new data uses `_codxe\<gameID>`. T4 singleplayer retains its USB/HDD lookup and requires an existing data root; see the [T4 guide](t4.md).
+On Xbox hardware, when neither local directory exists, CoD Xe searches `Usb0:\_codxe\<gameID>` through `Usb4:\_codxe\<gameID>`, then `Hdd1:\_codxe\<gameID>`. The first existing directory becomes the only active root for reads and writes. USB/HDD roots only accept the nested layout. If no existing root is found, new files use the local `_codxe\<gameID>` directory. Xenia uses the local directories.
 
 In `codxe.json`, set `"active_mod"` to the name of your mod folder:
 

@@ -8,7 +8,7 @@ bool ReadFileToString(const char *path, std::string &outString);
 class Config : public Module
 {
   public:
-    explicit Config(GameId::Type gameId, bool allowSharedStorage = false);
+    explicit Config(GameId::Type gameId);
     ~Config();
 
     static bool dump_rawfile;

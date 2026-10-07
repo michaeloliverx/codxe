@@ -43,12 +43,10 @@ void CreateDirectories(const char *path)
     NormalizePathSeparators(&directory[0]);
 
     char *p = &directory[0];
-    const bool hasDrivePrefix = directory.size() >= 3 && p[1] == ':' && p[2] == '\\';
-    const bool hasGamePrefix = directory.size() >= 6 && strncmp(p, "game:\\", 6) == 0;
-
-    // Skip leading drive letter (e.g., "C:\") or "game:\" prefix
-    if (hasDrivePrefix || hasGamePrefix)
-        p += (hasDrivePrefix ? 3 : 6); // Move past "C:\" or "game:\"
+    const size_t rootSeparator = directory.find('\\');
+    // Skip the device root, including multi-character links such as game: and codxeusb0:.
+    if (rootSeparator != std::string::npos && rootSeparator > 0 && directory[rootSeparator - 1] == ':')
+        p += rootSeparator + 1;
 
     for (; *p; p++)
     {
@@ -75,10 +73,9 @@ void CreateParentDirectories(const char *path)
     if (lastSeparator == std::string::npos)
         return;
 
-    const bool isDriveRoot = lastSeparator == 2 && directory.size() > 1 && directory[1] == ':';
-    const bool isGameRoot =
-        lastSeparator == 5 && directory.size() >= 6 && strncmp(directory.c_str(), "game:\\", 6) == 0;
-    if (isDriveRoot || isGameRoot)
+    const bool isDeviceRoot =
+        lastSeparator > 0 && directory[lastSeparator - 1] == ':' && directory.find('\\') == lastSeparator;
+    if (isDeviceRoot)
     {
         return;
     }
