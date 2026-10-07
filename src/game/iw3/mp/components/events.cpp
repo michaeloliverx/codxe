@@ -108,9 +108,12 @@ Detour Events::Load_DelayStream_Detour;
 
 void Events::Scr_ShutdownSystem_Hook(unsigned __int8 sys)
 {
-    for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+    if (sys == SCRIPT_USER_GAME)
     {
-        vmShutdownHandlers[i]();
+        for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+        {
+            vmShutdownHandlers[i]();
+        }
     }
 
     // Call original function after callbacks

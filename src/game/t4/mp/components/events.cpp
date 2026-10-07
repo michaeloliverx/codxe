@@ -62,9 +62,12 @@ void *Events::Scr_ShutdownSystem_Hook(scriptInstance_t inst, int sys, int bCompl
     // These handlers own server script state.
     if (inst == SCRIPTINSTANCE_SERVER)
     {
-        for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+        if (bComplete) // ensures it only clears on game end
         {
-            vmShutdownHandlers[i]();
+            for (size_t i = 0; i < ARRAYSIZE(vmShutdownHandlers); ++i)
+            {
+                vmShutdownHandlers[i]();
+            }
         }
     }
 
