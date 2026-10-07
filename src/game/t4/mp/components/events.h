@@ -20,7 +20,7 @@ class Events : public Module
     static void Cmd_Init_Hook();
 
     static Detour Scr_ShutdownSystem_Detour;
-    static void *Scr_ShutdownSystem_Hook(scriptInstance_t inst, int sys, int bComplete);
+    static void *Scr_ShutdownSystem_Hook(scriptInstance_t inst, scrSystem_t sys, int bComplete);
 
     static Detour UI_Refresh_Detour;
     static int UI_Refresh_Hook(int localClientNum);

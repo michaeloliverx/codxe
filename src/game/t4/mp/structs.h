@@ -767,6 +767,11 @@ enum svscmd_type
     SV_CMD_RELIABLE = 0x1,
 };
 
+enum scrSystem_t : __int32
+{
+    SCR_SYS_GAME = 0x1,
+};
+
 enum scriptInstance_t : __int32
 {
     SCRIPTINSTANCE_SERVER = 0x0,
