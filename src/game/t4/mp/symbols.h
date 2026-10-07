@@ -189,7 +189,7 @@ static auto Scr_SetClientField =
     reinterpret_cast<void (*)(gclient_s *client, int offset, scriptInstance_t inst)>(0x8220A2D0);
 static auto Scr_SetGenericField =
     reinterpret_cast<void (*)(unsigned __int8 *b, fieldtype_t type, int ofs, scriptInstance_t inst)>(0x82254E90);
-typedef void *(*Scr_ShutdownSystem_t)(scriptInstance_t inst, int sys, int bComplete);
+typedef void *(*Scr_ShutdownSystem_t)(scriptInstance_t inst, scrSystem_t sys, int bComplete);
 static Scr_ShutdownSystem_t Scr_ShutdownSystem = reinterpret_cast<Scr_ShutdownSystem_t>(0x82345388);
 
 static auto String_Parse = reinterpret_cast<int (*)(const char **p, char *out, int len)>(0x822A8680);

@@ -3838,11 +3838,5 @@ static_assert(offsetof(scrVmPub_t, function_frame_start) == 0x20, "");
 static_assert(offsetof(scrVmPub_t, stack) == 0x320, "");
 static_assert(sizeof(scrVmPub_t) == 0x4320, "");
 
-enum ScriptSystemUser : unsigned __int8
-{
-    SCRIPT_USER_PREGAME = 0x0,
-    SCRIPT_USER_GAME = 0x1,
-};
-
 } // namespace mp
 } // namespace iw3
