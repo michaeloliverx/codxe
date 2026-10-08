@@ -20,6 +20,7 @@ namespace
 {
 const char *CONFIG_DEVICE_LINK_NAME = "codxe:";
 const char *CONFIG_DEVICE_LINK_PATH = "codxe:\\";
+const char *const DEVICE_LINK_NAMESPACES[] = {"\\System??\\", "\\??\\"};
 
 bool StartsWith(const std::string &value, const char *prefix)
 {
@@ -47,30 +48,41 @@ bool TryGetDeviceRoot(const std::string &path, std::string &device_root)
     return true;
 }
 
-bool MountDevice(const char *link_name, const char *device_path)
-{
-    const DWORD process_type = KeGetCurrentProcessType();
-    const std::string link_path = std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + link_name;
-
-    STRING link = {};
-    STRING device = {};
-    RtlInitAnsiString(&link, link_path.c_str());
-    RtlInitAnsiString(&device, device_path);
-
-    const NTSTATUS delete_status = ObDeleteSymbolicLink(&link);
-    const NTSTATUS create_status = ObCreateSymbolicLink(&link, &device);
-    UNREFERENCED_PARAMETER(delete_status);
-
-    return NT_SUCCESS(create_status);
-}
-
 void UnmountDevice(const char *link_name)
 {
-    const DWORD process_type = KeGetCurrentProcessType();
-    const std::string link_path = std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + link_name;
-    STRING link = {};
-    RtlInitAnsiString(&link, link_path.c_str());
-    ObDeleteSymbolicLink(&link);
+    for (size_t i = 0; i < ARRAYSIZE(DEVICE_LINK_NAMESPACES); ++i)
+    {
+        const std::string link_path = std::string(DEVICE_LINK_NAMESPACES[i]) + link_name;
+        STRING link = {};
+        RtlInitAnsiString(&link, link_path.c_str());
+        ObDeleteSymbolicLink(&link);
+    }
+}
+
+bool MountDevice(const char *link_name, const char *device_path)
+{
+    STRING device = {};
+    RtlInitAnsiString(&device, device_path);
+
+    // Plugin setup runs in the system process; game reads and writes run in the title process.
+    // DOS device links are namespace-specific, so both must point to the same selected device.
+    for (size_t i = 0; i < ARRAYSIZE(DEVICE_LINK_NAMESPACES); ++i)
+    {
+        const std::string link_path = std::string(DEVICE_LINK_NAMESPACES[i]) + link_name;
+        STRING link = {};
+        RtlInitAnsiString(&link, link_path.c_str());
+        ObDeleteSymbolicLink(&link);
+        const NTSTATUS status = ObCreateSymbolicLink(&link, &device);
+        if (!NT_SUCCESS(status))
+        {
+            DbgPrint("[codxe][Config] Failed to mount %s -> %s: status=0x%08X\n", link_path.c_str(), device_path,
+                     status);
+            UnmountDevice(link_name);
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool BuildMountedConfigPath(const std::string &device_config_path, std::string &mounted_config_path)
