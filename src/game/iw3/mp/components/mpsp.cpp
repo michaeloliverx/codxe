@@ -114,7 +114,7 @@ namespace Asset
 
 std::string get_load_dir()
 {
-    return "game:\\_codxe\\internal";
+    return Config::BuildDataPath("internal");
 }
 namespace MapEnts_
 {

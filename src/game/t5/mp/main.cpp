@@ -10,7 +10,7 @@ namespace mp
 T5_MP_Plugin::T5_MP_Plugin()
 {
     DbgPrint("T5 MP: Registering modules\n");
-    RegisterModule(new Config());
+    RegisterModule(new Config(GameId::T5));
     RegisterModule(new scr_parser());
 }
 

@@ -84,7 +84,7 @@ void Load_MapEntsPtr_Hook()
         // Dump stock map ents if enabled (numEntityChars includes the null terminator, which is not written)
         if (Config::dump_map_ents && mapEnts->numEntityChars > 0)
         {
-            const std::string dumpPath = map_ents::BuildPath(DUMP_DIR, mapEnts->name);
+            const std::string dumpPath = map_ents::BuildPath(Config::BuildDataPath("dump").c_str(), mapEnts->name);
             if (!dumpPath.empty())
             {
                 filesystem::WriteFileToDisk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
@@ -138,7 +138,7 @@ void Cmd_Dumpraw_f()
     for (int i = 0; i < count; i++)
     {
         auto rawfile = files[i].rawfile;
-        const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, rawfile->name);
+        const std::string dumpPath = Config::BuildDataPath(filesystem::JoinPath("dump", rawfile->name).c_str());
         filesystem::WriteFileToDisk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
     }
 }
@@ -146,7 +146,7 @@ void Cmd_Dumpraw_f()
 IW3_SP_Plugin::IW3_SP_Plugin()
 {
     DbgPrint("IW3 SP: Plugin loaded\n");
-    RegisterModule(new Config());
+    RegisterModule(new Config(GameId::IW3));
     RegisterModule(new Events());
     RegisterModule(new command());
     RegisterModule(new scr_parser());

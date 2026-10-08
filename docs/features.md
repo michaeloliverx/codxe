@@ -6,7 +6,13 @@ The raw GSC loader enables loading `.gsc` scripts directly from the mod director
 
 ### Setup
 
-Create a `_codxe\mods` folder in your game directory, and place a `codxe.json` in `_codxe` to define which mod is active.
+Create a `_codxe\<gameID>\mods` folder in your game directory, and place a `codxe.json` in `_codxe\<gameID>` to define which mod is active. Use `iw2`, `iw3`, `iw4`, `iw5`, `t4`, `t5`, or `qos` for the game ID.
+
+The repository and release archive contain one top-level [`_codxe`](/_codxe) folder with a subdirectory for each game. Copy that folder into your game directory or a USB/HDD root, preserving `_codxe\<gameID>\...`. All supported games that use CoD Xe data share this layout. Title updates and Xenia files remain separate from the game data.
+
+CoD Xe selects one data root at startup. If `_codxe\<gameID>` exists, all config, mod, fastfile, usermap, internal asset, dump, and player stats paths use that root. Missing files never fall back to the legacy `_codxe` root. The old layout remains supported when the nested directory does not exist. Keep all data for a game together when migrating.
+
+On Xbox hardware, when neither local directory exists, CoD Xe searches `Usb0:\_codxe\<gameID>` through `Usb4:\_codxe\<gameID>`, then `Hdd1:\_codxe\<gameID>`. The first existing directory becomes the only active root for reads and writes. USB/HDD roots only accept the nested layout. If no existing root is found, new files use the local `_codxe\<gameID>` directory. Xenia uses the local directories.
 
 In `codxe.json`, set `"active_mod"` to the name of your mod folder:
 
@@ -19,7 +25,7 @@ In `codxe.json`, set `"active_mod"` to the name of your mod folder:
 Once configured, the engine will redirect script lookups to:
 
 ```text
-game:\_codxe\mods\my_mod\
+game:\_codxe\<gameID>\mods\my_mod\
 ```
 
 Example tree structure:
@@ -27,14 +33,15 @@ Example tree structure:
 ```text
 game:.
 `-- _codxe
-    |-- codxe.json
-    `-- mods
-        `-- my_mod
-            `-- maps
-                `-- mp
-                    `-- gametypes
-                        |-- _callbacksetup.gsc
-                        `-- custom_logic.gsc
+    `-- <gameID>
+        |-- codxe.json
+        `-- mods
+            `-- my_mod
+                `-- maps
+                    `-- mp
+                        `-- gametypes
+                            |-- _callbacksetup.gsc
+                            `-- custom_logic.gsc
 ```
 
 The underscore keeps the folder at the top of file listings and separates CoD Xe system files from the game's core content.
@@ -46,7 +53,7 @@ The loader operates using a virtual filesystem. All `.gsc` scripts, whether load
 For example:
 
 - A file in `common_mp.ff/maps/mp/gametypes/_callbacksetup.gsc`
-- Can be overridden by `game:\_codxe\mods\my_mod\maps\mp\gametypes\_callbacksetup.gsc`
+- Can be overridden by `game:\_codxe\<gameID>\mods\my_mod\maps\mp\gametypes\_callbacksetup.gsc`
 
 Your version will take precedence over the copy embedded in the original fastfile. You can also add new scripts and call them from overridden entry points such as `_callbacksetup.gsc`.
 

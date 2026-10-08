@@ -22,7 +22,7 @@ namespace mp_tu6
 
 IW4_MP_TU6_Plugin::IW4_MP_TU6_Plugin()
 {
-    RegisterModule(new Config());
+    RegisterModule(new Config(GameId::IW4));
     RegisterModule(new Events()); // Must be registered first to ensure hooks are in place
     RegisterModule(new fastfiles());
     RegisterModule(new cg());

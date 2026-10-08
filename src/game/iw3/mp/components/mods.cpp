@@ -11,7 +11,6 @@ namespace mp
 namespace
 {
 const float MODS_FEEDER_ID = 9.0f;
-const char *const MODS_DIRECTORY = "game:\\_codxe\\mods";
 const char *const FS_GAME_PREFIX = "mods/";
 
 bool IsSafeModName(const char *name)
@@ -85,7 +84,7 @@ std::string ModList::GetActiveName()
 std::string ModList::GetActivePath()
 {
     const std::string name = GetActiveName();
-    return name.empty() ? std::string() : filesystem::JoinPath(MODS_DIRECTORY, name.c_str());
+    return name.empty() ? std::string() : Config::BuildDataPath(filesystem::JoinPath("mods", name.c_str()).c_str());
 }
 
 std::string ModList::ResolvePath(const char *relativePath)
@@ -102,7 +101,7 @@ bool ModList::RunMod(const char *name)
     if (!fs_game || !IsSafeModName(name))
         return false;
 
-    const std::string modPath = filesystem::JoinPath(MODS_DIRECTORY, name);
+    const std::string modPath = Config::BuildDataPath(filesystem::JoinPath("mods", name).c_str());
     if (!filesystem::DirectoryExists(modPath.c_str()))
     {
         Com_PrintError(CON_CHANNEL_ERROR, "Mod directory does not exist: %s\n", modPath.c_str());
@@ -139,12 +138,13 @@ void ModList::ScanMods()
     ModsScanned = true;
     UIFeeder::SetSelectedIndex(MODS_FEEDER_ID, CurrentMod);
 
-    const std::string searchPattern = filesystem::JoinPath(MODS_DIRECTORY, "*");
+    const std::string modsDirectory = Config::BuildDataPath("mods");
+    const std::string searchPattern = filesystem::JoinPath(modsDirectory.c_str(), "*");
     WIN32_FIND_DATAA findData;
     HANDLE findHandle = FindFirstFileA(searchPattern.c_str(), &findData);
     if (findHandle == INVALID_HANDLE_VALUE)
     {
-        DbgPrint("[codxe][IW3][ModList] Mod directory is unavailable: %s\n", MODS_DIRECTORY);
+        DbgPrint("[codxe][IW3][ModList] Mod directory is unavailable: %s\n", modsDirectory.c_str());
         return;
     }
 
@@ -156,7 +156,7 @@ void ModList::ScanMods()
 
         FeederEntry entry;
         entry.name = name;
-        const std::string directory = filesystem::JoinPath(MODS_DIRECTORY, name.c_str());
+        const std::string directory = Config::BuildDataPath(filesystem::JoinPath("mods", name.c_str()).c_str());
         entry.displayName = ReadDisplayName(filesystem::JoinPath(directory.c_str(), "description.txt"), name);
         Mods.push_back(entry);
     } while (FindNextFileA(findHandle, &findData) != 0);
@@ -176,7 +176,8 @@ void ModList::ScanMods()
 
     UIFeeder::SetSelectedIndex(MODS_FEEDER_ID, CurrentMod);
 
-    DbgPrint("[codxe][IW3][ModList] Found %u mod(s) in %s\n", static_cast<unsigned int>(Mods.size()), MODS_DIRECTORY);
+    DbgPrint("[codxe][IW3][ModList] Found %u mod(s) in %s\n", static_cast<unsigned int>(Mods.size()),
+             modsDirectory.c_str());
 }
 
 void ModList::EnsureModsScanned()

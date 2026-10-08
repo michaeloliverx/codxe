@@ -27,7 +27,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Debug());
 #endif
 
-    RegisterModule(new Config());
+    RegisterModule(new Config(GameId::T4));
     RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());

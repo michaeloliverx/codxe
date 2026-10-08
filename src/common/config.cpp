@@ -9,35 +9,18 @@
 #define INVALID_FILE_SIZE ((DWORD) - 1)
 #endif
 
-const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
-const char *MOD_DIR = "game:\\_codxe\\mods";
-const char *DUMP_DIR = "game:\\_codxe\\dump";
-
 // Default values
 char Config::active_mod[MAX_PATH] = {};
 bool Config::dump_rawfile = false;
 bool Config::dump_map_ents = false;
-char Config::mod_base_path[MAX_PATH] = {};
 std::string Config::data_root;
-bool Config::shared_layout_enabled = false;
 std::vector<std::string> Config::mounted_links;
 
 namespace
 {
 const char *CONFIG_DEVICE_LINK_NAME = "codxe:";
 const char *CONFIG_DEVICE_LINK_PATH = "codxe:\\";
-
-const char *GetGameDirectoryName(Config::GameId gameId)
-{
-    switch (gameId)
-    {
-    case Config::GAME_T4:
-        return "t4";
-    case Config::GAME_NONE:
-    default:
-        return nullptr;
-    }
-}
+const char *const DEVICE_LINK_NAMESPACES[] = {"\\System??\\", "\\??\\"};
 
 bool StartsWith(const std::string &value, const char *prefix)
 {
@@ -65,30 +48,41 @@ bool TryGetDeviceRoot(const std::string &path, std::string &device_root)
     return true;
 }
 
-bool MountDevice(const char *link_name, const char *device_path)
-{
-    const DWORD process_type = KeGetCurrentProcessType();
-    const std::string link_path = std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + link_name;
-
-    STRING link = {};
-    STRING device = {};
-    RtlInitAnsiString(&link, link_path.c_str());
-    RtlInitAnsiString(&device, device_path);
-
-    const NTSTATUS delete_status = ObDeleteSymbolicLink(&link);
-    const NTSTATUS create_status = ObCreateSymbolicLink(&link, &device);
-    UNREFERENCED_PARAMETER(delete_status);
-
-    return NT_SUCCESS(create_status);
-}
-
 void UnmountDevice(const char *link_name)
 {
-    const DWORD process_type = KeGetCurrentProcessType();
-    const std::string link_path = std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + link_name;
-    STRING link = {};
-    RtlInitAnsiString(&link, link_path.c_str());
-    ObDeleteSymbolicLink(&link);
+    for (size_t i = 0; i < ARRAYSIZE(DEVICE_LINK_NAMESPACES); ++i)
+    {
+        const std::string link_path = std::string(DEVICE_LINK_NAMESPACES[i]) + link_name;
+        STRING link = {};
+        RtlInitAnsiString(&link, link_path.c_str());
+        ObDeleteSymbolicLink(&link);
+    }
+}
+
+bool MountDevice(const char *link_name, const char *device_path)
+{
+    STRING device = {};
+    RtlInitAnsiString(&device, device_path);
+
+    // Plugin setup runs in the system process; game reads and writes run in the title process.
+    // DOS device links are namespace-specific, so both must point to the same selected device.
+    for (size_t i = 0; i < ARRAYSIZE(DEVICE_LINK_NAMESPACES); ++i)
+    {
+        const std::string link_path = std::string(DEVICE_LINK_NAMESPACES[i]) + link_name;
+        STRING link = {};
+        RtlInitAnsiString(&link, link_path.c_str());
+        ObDeleteSymbolicLink(&link);
+        const NTSTATUS status = ObCreateSymbolicLink(&link, &device);
+        if (!NT_SUCCESS(status))
+        {
+            DbgPrint("[codxe][Config] Failed to mount %s -> %s: status=0x%08X\n", link_path.c_str(), device_path,
+                     status);
+            UnmountDevice(link_name);
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool BuildMountedConfigPath(const std::string &device_config_path, std::string &mounted_config_path)
@@ -166,14 +160,12 @@ bool ReadFileToString(const char *path, std::string &outString)
     return true;
 }
 
-Config::Config(GameId gameId)
+Config::Config(GameId::Type gameId)
 {
     data_root = "game:\\_codxe";
     mounted_links.clear();
-    const char *gameDirectoryName = GetGameDirectoryName(gameId);
-    shared_layout_enabled = gameDirectoryName != nullptr;
-
-    std::string config_path = CONFIG_PATH;
+    const char *gameDirectoryName = GameId::ToString(gameId);
+    std::string config_path = filesystem::JoinPath(data_root.c_str(), "codxe.json");
 
     if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
     {
@@ -192,7 +184,7 @@ Config::Config(GameId gameId)
             if (slash != std::string::npos)
             {
                 // On hardware Config is constructed before game: is retargeted to the new title.
-                // Only the config file load needs this early executable-relative path.
+                // Root selection and config loading need this early executable-relative path.
                 config_path = full_path.substr(0, slash) + "\\_codxe\\codxe.json";
 
                 std::string mounted_config_path;
@@ -207,7 +199,7 @@ Config::Config(GameId gameId)
         }
     }
 
-    if (shared_layout_enabled)
+    if (gameDirectoryName != nullptr)
     {
         // Config loads before game: is retargeted on hardware, so inspect the
         // executable-relative path while choosing the single active root.
@@ -225,7 +217,9 @@ Config::Config(GameId gameId)
         }
         else
         {
-            data_root.clear();
+            // If no existing root is found, new files use the local nested layout.
+            data_root = std::string("game:\\_codxe\\") + gameDirectoryName;
+            config_path = filesystem::JoinPath(nested_local_directory.c_str(), "codxe.json");
             if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
             {
                 // Only the game directory accepts the legacy layout.
@@ -275,11 +269,9 @@ Config::~Config()
 {
     // Reset to defaults on cleanup
     active_mod[0] = '\0';
-    mod_base_path[0] = '\0';
     dump_rawfile = false;
     dump_map_ents = false;
     data_root.clear();
-    shared_layout_enabled = false;
     for (size_t i = 0; i < mounted_links.size(); ++i)
         UnmountDevice(mounted_links[i].c_str());
     mounted_links.clear();
@@ -341,13 +333,6 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
     DbgPrint("  Dump Raw Scripts: %s\n", dump_rawfile ? "true" : "false");
     DbgPrint("  Dump Map Entities: %s\n", dump_map_ents ? "true" : "false");
 
-    if (active_mod[0] != '\0')
-    {
-        // Config loads before game: is guaranteed to point at the new executable root on hardware.
-        // Keep the intended path and let later game-lifecycle file accesses validate it naturally.
-        _snprintf_s(mod_base_path, ARRAYSIZE(mod_base_path), _TRUNCATE, "%s\\%s", MOD_DIR, active_mod);
-    }
-
     return true;
 }
 
@@ -373,16 +358,19 @@ const char *Config::GetActiveMod()
 
 std::string Config::ResolveModPath(const char *relativePath)
 {
-    if (!relativePath || !*relativePath || !mod_base_path[0])
+    if (!relativePath || !*relativePath || !active_mod[0])
         return std::string();
 
-    if (shared_layout_enabled)
-    {
-        const std::string mod_path = filesystem::JoinPath("mods", active_mod);
-        return ResolveDataPath(filesystem::JoinPath(mod_path.c_str(), relativePath).c_str());
-    }
+    const std::string mod_path = filesystem::JoinPath("mods", active_mod);
+    return BuildDataPath(filesystem::JoinPath(mod_path.c_str(), relativePath).c_str());
+}
 
-    return filesystem::JoinPath(mod_base_path, relativePath);
+std::string Config::BuildDataPath(const char *relativePath)
+{
+    if (!relativePath || data_root.empty())
+        return std::string();
+
+    return filesystem::JoinPath(data_root.c_str(), relativePath);
 }
 
 std::string Config::ResolveDataPath(const char *relativePath)
@@ -390,7 +378,7 @@ std::string Config::ResolveDataPath(const char *relativePath)
     if (!relativePath || !*relativePath || data_root.empty())
         return std::string();
 
-    const std::string path = filesystem::JoinPath(data_root.c_str(), relativePath);
+    const std::string path = BuildDataPath(relativePath);
     return filesystem::FileExists(path.c_str()) ? path : std::string();
 }
 
@@ -399,7 +387,7 @@ std::string Config::ResolveDataDirectory(const char *relativePath)
     if (!relativePath || !*relativePath || data_root.empty())
         return std::string();
 
-    const std::string path = filesystem::JoinPath(data_root.c_str(), relativePath);
+    const std::string path = BuildDataPath(relativePath);
     return filesystem::DirectoryExists(path.c_str()) ? path : std::string();
 }
 

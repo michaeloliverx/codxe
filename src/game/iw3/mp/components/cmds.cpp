@@ -16,7 +16,7 @@ void Cmd_Dumpraw_f()
     for (int i = 0; i < count; i++)
     {
         auto rawfile = files[i].rawfile;
-        const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, rawfile->name);
+        const std::string dumpPath = Config::BuildDataPath(filesystem::JoinPath("dump", rawfile->name).c_str());
         filesystem::WriteFileToDisk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
     }
 }

@@ -412,7 +412,7 @@ std::string GetImageDumpPath(const char *imageName)
     sanitizedName.erase(std::remove_if(sanitizedName.begin(), sanitizedName.end(), [](char c) { return c == '*'; }),
                         sanitizedName.end());
     const std::string relativePath = GetImageRelativePath(sanitizedName.c_str());
-    return filesystem::JoinPath(DUMP_DIR, relativePath.c_str());
+    return Config::BuildDataPath(filesystem::JoinPath("dump", relativePath.c_str()).c_str());
 }
 
 bool ReadBinaryFile(const std::string &path, std::vector<uint8_t> *data)
@@ -685,7 +685,7 @@ void Cmd_imagedump()
     ImageList imageList;
     R_GetImageList(&imageList);
 
-    const std::string imageDumpDirectory = filesystem::JoinPath(DUMP_DIR, "images");
+    const std::string imageDumpDirectory = Config::BuildDataPath(filesystem::JoinPath("dump", "images").c_str());
     filesystem::CreateDirectories(imageDumpDirectory.c_str());
 
     for (unsigned int i = 0; i < imageList.count; ++i)

@@ -12,7 +12,7 @@ class FastFiles : public Module
     FastFiles();
     ~FastFiles();
 
-    static const char *GetUsermapsDirectory();
+    static std::string GetUsermapsDirectory();
     static std::string GetUsermapFastfilePath(const char *zoneName);
     static void ReloadModZone();
 

@@ -10,7 +10,7 @@ namespace sp
 T5_SP_Plugin::T5_SP_Plugin()
 {
     DbgPrint("T5 SP: Registering modules\n");
-    RegisterModule(new Config());
+    RegisterModule(new Config(GameId::T5));
     RegisterModule(new scr_parser());
 }
 
