@@ -20,8 +20,6 @@ namespace
 // TU7's Back/devgui binding permits scores in network games and split-screen only.
 // Extend its final mode check to Zombies; retain native binding and menu handling.
 const uintptr_t SOLO_SCORE_GATE = 0x82153F04;
-const uint32_t soloScoreOriginal[] = {0x3D60843C, 0x816B68E0, 0x894B0010, 0x2B0A0000};
-bool soloScoreInstalled = false;
 
 __declspec(naked) void SoloZombieScoreGate()
 {
@@ -655,14 +653,10 @@ void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 
 ui::ui()
 {
-    if (memcmp(reinterpret_cast<const void *>(SOLO_SCORE_GATE), soloScoreOriginal, sizeof(soloScoreOriginal)) == 0)
-    {
+    const auto soloScorePatchSize =
         Detour::WriteFarBranch(reinterpret_cast<void *>(SOLO_SCORE_GATE), SoloZombieScoreGate, false);
-        KeFlushCacheRange(reinterpret_cast<void *>(SOLO_SCORE_GATE), sizeof(soloScoreOriginal));
-        soloScoreInstalled = true;
-    }
-    else
-        DbgPrint("[codxe][T4 SP] Unexpected TU7 scoreboard gate; fix not installed\n");
+    KeFlushCacheRange(reinterpret_cast<void *>(SOLO_SCORE_GATE), soloScorePatchSize);
+
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
 
@@ -687,12 +681,6 @@ ui::ui()
 
 ui::~ui()
 {
-    if (soloScoreInstalled && MmIsAddressValid(reinterpret_cast<void *>(SOLO_SCORE_GATE)))
-    {
-        memcpy(reinterpret_cast<void *>(SOLO_SCORE_GATE), soloScoreOriginal, sizeof(soloScoreOriginal));
-        KeFlushCacheRange(reinterpret_cast<void *>(SOLO_SCORE_GATE), sizeof(soloScoreOriginal));
-    }
-    soloScoreInstalled = false;
     StringTable_Lookup_Detour.Remove();
     UI_FeederSelection_Detour.Remove();
     UI_FeederItemText_Detour.Remove();
