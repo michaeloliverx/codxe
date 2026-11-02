@@ -8,7 +8,6 @@ class Fov : public Module
 {
   public:
     Fov();
-    ~Fov();
     static void OnDvarInit();
 };
 } // namespace sp

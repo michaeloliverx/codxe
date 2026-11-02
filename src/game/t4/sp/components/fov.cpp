@@ -12,7 +12,6 @@ namespace
 {
 const dvar_s *userFov = nullptr;
 const dvar_s *userScale = nullptr;
-bool hooksInstalled = false;
 
 float ApplyUserFov(float stock)
 {
@@ -28,7 +27,7 @@ float ApplyUserScale(float stock)
 }
 
 // Mid-function hooks must preserve volatile state across the C++ helper call.
-// The checked TU7 sites have dead r0/CTR; far branches use only those registers.
+// The TU7 sites have dead r0/CTR; far branches use only those registers.
 __declspec(naked) void FovThunk()
 {
     __asm
@@ -317,15 +316,14 @@ struct ReadHook
 {
     uintptr_t address;
     void (*target)();
-    uint32_t expected[4];
 };
 
 const ReadHook readHooks[] = {
-    {0x82107C18, BaseFovHook, {0x3B8BF058, 0x817BD3AC, 0x7FA8E02E, 0xC38B0010}},
-    {0x82107D00, RecoveryFovHook, {0xC9A10050, 0xFD60069C, 0xFD806E9C, 0xC14B0010}},
-    {0x82107DF0, ScaleFovHook, {0xC00B0010, 0xEDA00732, 0xC18A0010, 0xED6C6828}},
-    {0x82107F00, RatioFovHook, {0x8165D3AC, 0xC00B0010, 0xEDA00772, 0xEC2D0732}},
-    {0x820E109C, ProjectionFovHook, {0x816AD3AC, 0xC0EB0010, 0xECC70032, 0xEC2607B2}},
+    {0x82107C18, BaseFovHook},
+    {0x82107D00, RecoveryFovHook},
+    {0x82107DF0, ScaleFovHook},
+    {0x82107F00, RatioFovHook},
+    {0x820E109C, ProjectionFovHook},
 };
 } // namespace
 
@@ -339,39 +337,12 @@ void Fov::OnDvarInit()
 
 Fov::Fov()
 {
-    // Check the complete patch set before changing any code.
     for (size_t i = 0; i < ARRAYSIZE(readHooks); ++i)
     {
         const auto &hook = readHooks[i];
-        if (memcmp(reinterpret_cast<const void *>(hook.address), hook.expected, sizeof(hook.expected)) != 0)
-        {
-            DbgPrint("[codxe][T4 SP][FOV] Unexpected TU7 instructions at %08X; hooks not installed\n", hook.address);
-            return;
-        }
+        const auto patchSize = Detour::WriteFarBranch(reinterpret_cast<void *>(hook.address), hook.target, false);
+        KeFlushCacheRange(reinterpret_cast<void *>(hook.address), patchSize);
     }
-    for (size_t i = 0; i < ARRAYSIZE(readHooks); ++i)
-    {
-        const auto &hook = readHooks[i];
-        Detour::WriteFarBranch(reinterpret_cast<void *>(hook.address), hook.target, false);
-        KeFlushCacheRange(reinterpret_cast<void *>(hook.address), sizeof(hook.expected));
-    }
-    hooksInstalled = true;
-}
-
-Fov::~Fov()
-{
-    if (!hooksInstalled)
-        return;
-    for (size_t i = 0; i < ARRAYSIZE(readHooks); ++i)
-    {
-        const auto &hook = readHooks[i];
-        if (MmIsAddressValid(reinterpret_cast<void *>(hook.address)))
-        {
-            memcpy(reinterpret_cast<void *>(hook.address), hook.expected, sizeof(hook.expected));
-            KeFlushCacheRange(reinterpret_cast<void *>(hook.address), sizeof(hook.expected));
-        }
-    }
-    hooksInstalled = false;
 }
 } // namespace sp
 } // namespace t4

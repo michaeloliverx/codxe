@@ -41,7 +41,6 @@ static auto targetViewParams = reinterpret_cast<ClientViewParams *>(0x8251E038);
 static auto currentViewParams = reinterpret_cast<ClientViewParams *>(0x8251E140);
 static auto backEndData = reinterpret_cast<GfxBackEndData **>(0x84F1F0A0);
 
-// TU7 renderer ownership and GPU synchronization for CPU texture uploads.
 static auto gfxDevice = reinterpret_cast<D3DDevice **>(0x84B58588);
 static auto R_SyncRenderThread = reinterpret_cast<void (*)()>(0x824339B8);
 static auto D3DDevice_BlockUntilIdle_Native = reinterpret_cast<void (*)(D3DDevice *)>(0x82371BA0);
