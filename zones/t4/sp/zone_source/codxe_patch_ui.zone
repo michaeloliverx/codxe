@@ -1,0 +1,13 @@
+// Extend the stock TU7 UI patch while keeping its original assets intact.
+>game,T4
+>platform,xbox360
+>name,patch_ui
+
+// One resident material is reused for loose per-map preview.dds files.
+material,$codxe_usermap_preview
+// T4 initializes its UI from this exact menulist. Extend the stock list so
+// the engine registers the otherwise new codxe_usermaps menu.
+menulist,ui/menus.txt
+
+// Include every asset from the original TU7 patch_ui zone.
+include,patch_ui

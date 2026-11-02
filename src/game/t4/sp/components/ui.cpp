@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ui.h"
+#include "usermap_arena.h"
 #include "console.h"
 
 #include "common/endian.h"
@@ -8,12 +9,41 @@
 #include <cstdlib>
 #include <cstdio>
 
+extern "C" VOID NTAPI KeFlushCacheRange(PVOID address, DWORD size);
+
 namespace t4
 {
 namespace sp
 {
 namespace
 {
+// TU7's Back/devgui binding permits scores in network games and split-screen only.
+// Extend its final mode check to Zombies; retain native binding and menu handling.
+const uintptr_t SOLO_SCORE_GATE = 0x82153F04;
+const uint32_t soloScoreOriginal[] = {0x3D60843C, 0x816B68E0, 0x894B0010, 0x2B0A0000};
+bool soloScoreInstalled = false;
+
+__declspec(naked) void SoloZombieScoreGate()
+{
+    __asm
+    {
+        lis r11, 0x843C
+        lwz r11, 0x68E0(r11)
+        lbz r10, 16(r11)
+        cmplwi cr6, r10, 0
+        bne cr6, scoreModeReady
+        lis r11, 0x843C
+        lwz r11, -3204(r11)
+        lbz r10, 16(r11)
+        cmplwi cr6, r10, 0
+    scoreModeReady:
+        lis r0, 0x8215
+        ori r0, r0, 0x3F14
+        mtctr r0
+        bctr
+    }
+}
+
 const float CODXE_USERMAPS_FEEDER = 65.0f;
 const char *const CODXE_USERMAPS_DIRECTORY = "usermaps";
 const char *const CODXE_PREVIEW_MATERIAL = "$codxe_usermap_preview";
@@ -102,7 +132,7 @@ bool StartsWithIgnoreCase(const std::string &value, const char *prefix)
     return value.length() >= prefixLength && _strnicmp(value.c_str(), prefix, prefixLength) == 0;
 }
 
-void ReadMetadata(const std::string &path, std::string &displayName, std::string &description)
+void ReadJsonMetadata(const std::string &path, std::string &displayName, std::string &description)
 {
     const std::string contents = filesystem::ReadFileToString(path);
     if (contents.empty())
@@ -225,6 +255,23 @@ bool GetPreviewStorage(GfxImage *image, unsigned char **destination, size_t *siz
     return true;
 }
 
+bool UploadPreviewPixels(unsigned char *destination, const unsigned char *source, size_t size)
+{
+    if (!*gfxDevice)
+        return false;
+
+    // The frontend and GPU can both still reference this resident texture.
+    // Finish those reads before overwriting it, then invalidate the GPU cache.
+    // R_SyncRenderThread takes device ownership; the normal frame submission
+    // hands it back. Do not wake the backend midway through this UI frame.
+    R_SyncRenderThread();
+    D3DDevice_BlockUntilIdle_Native(*gfxDevice);
+    XMemCpyStreaming_WriteCombined(destination, source, size);
+    __sync();
+    D3D_InvalidateCaches(*gfxDevice, destination, static_cast<unsigned int>(size));
+    return true;
+}
+
 void RestoreDefaultPreview()
 {
     GfxImage *image = GetPreviewImage();
@@ -233,7 +280,7 @@ void RestoreDefaultPreview()
     if (!GetPreviewStorage(image, &destination, &destinationSize) || defaultPreviewPixels.size() != destinationSize)
         return;
 
-    XMemCpyStreaming_WriteCombined(destination, defaultPreviewPixels.data(), destinationSize);
+    UploadPreviewPixels(destination, defaultPreviewPixels.data(), destinationSize);
 }
 
 bool ReplacePreview(const std::string &path)
@@ -287,8 +334,7 @@ bool ReplacePreview(const std::string &path)
         return false;
     }
 
-    XMemCpyStreaming_WriteCombined(destination, tiled.data(), tiled.size());
-    return true;
+    return UploadPreviewPixels(destination, tiled.data(), tiled.size());
 }
 
 void SetMenuDvar(const char *name, const std::string &value)
@@ -316,7 +362,7 @@ void UpdateSelectedUsermap()
     SetMenuDvar("ui_codxe_usermap_name", entry.displayName);
     SetMenuDvar("ui_codxe_usermap_description", entry.description);
     SetMenuDvar("ui_codxe_usermap_count", count);
-    SetMenuDvar("ui_codxe_usermap_preview_hint", std::string("Add preview.dds to _codxe/t4/usermaps/") + entry.name);
+    SetMenuDvar("ui_codxe_usermap_preview_hint", std::string("Add preview.dds to _codxe/usermaps/") + entry.name);
 
     const bool replaced = !entry.previewPath.empty() && ReplacePreview(entry.previewPath);
     SetMenuDvar("ui_codxe_usermap_has_preview", replaced ? "1" : "0");
@@ -367,7 +413,9 @@ void ScanUsermaps()
 
         UsermapEntry entry;
         entry.name = name;
-        ReadMetadata(filesystem::JoinPath(directory.c_str(), "map.json"), entry.displayName, entry.description);
+        const std::string arenaPath = filesystem::JoinPath(directory.c_str(), "map.arena");
+        if (!arena::Parse(filesystem::ReadFileToString(arenaPath), name, entry.displayName, entry.description))
+            ReadJsonMetadata(filesystem::JoinPath(directory.c_str(), "map.json"), entry.displayName, entry.description);
         if (entry.displayName.empty())
             entry.displayName = name;
 
@@ -563,9 +611,9 @@ int Item_Slider_HandleKey_Hook(UiContext *dc, itemDef_s *item, int key)
         return original(dc, item, key);
 
     float step;
-    if (std::strcmp(dvarName, "cg_fov") == 0)
+    if (std::strcmp(dvarName, "cg_fov_user") == 0)
         step = 1.0f;
-    else if (std::strcmp(dvarName, "cg_fovScale") == 0)
+    else if (std::strcmp(dvarName, "cg_fovscale_user") == 0)
         step = 0.05f;
     else
         return original(dc, item, key);
@@ -607,6 +655,14 @@ void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 
 ui::ui()
 {
+    if (memcmp(reinterpret_cast<const void *>(SOLO_SCORE_GATE), soloScoreOriginal, sizeof(soloScoreOriginal)) == 0)
+    {
+        Detour::WriteFarBranch(reinterpret_cast<void *>(SOLO_SCORE_GATE), SoloZombieScoreGate, false);
+        KeFlushCacheRange(reinterpret_cast<void *>(SOLO_SCORE_GATE), sizeof(soloScoreOriginal));
+        soloScoreInstalled = true;
+    }
+    else
+        DbgPrint("[codxe][T4 SP] Unexpected TU7 scoreboard gate; fix not installed\n");
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
 
@@ -631,6 +687,12 @@ ui::ui()
 
 ui::~ui()
 {
+    if (soloScoreInstalled && MmIsAddressValid(reinterpret_cast<void *>(SOLO_SCORE_GATE)))
+    {
+        memcpy(reinterpret_cast<void *>(SOLO_SCORE_GATE), soloScoreOriginal, sizeof(soloScoreOriginal));
+        KeFlushCacheRange(reinterpret_cast<void *>(SOLO_SCORE_GATE), sizeof(soloScoreOriginal));
+    }
+    soloScoreInstalled = false;
     StringTable_Lookup_Detour.Remove();
     UI_FeederSelection_Detour.Remove();
     UI_FeederItemText_Detour.Remove();

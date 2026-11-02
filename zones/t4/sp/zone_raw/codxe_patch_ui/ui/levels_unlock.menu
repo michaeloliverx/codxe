@@ -1,0 +1,1071 @@
+{
+    menuDef
+    {
+        name                        "levels_unlock"
+        rect                        0 0 640 470 4 4
+        style                       1
+        borderSize                  1
+        focuscolor                  0.95294 0.72156 0.21176 1
+        soundLoop                   "music_mainmenu"
+        fadeClamp                   1
+        fadeCycle                   1
+        fadeAmount                  0.1
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            text                        ""
+            rect                        0 0 0 0 0 0
+            decoration
+            visible                     1
+            execKeyInt 2
+            {
+                close levels_unlock;
+            }
+        }
+        onClose
+        {
+            exec endsplitscreensignin;
+        }
+        itemDef
+        {
+            rect                        -600 -800 2000 2000 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 0.65
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        0 64 640 1 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.5 0.5 0.5 0.65
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        0 65 640 355 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "menu_background_coop_blurred"
+        }
+        itemDef
+        {
+            rect                        0 443 640 0.5 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.5 0.5 0.5 0.65
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_SAVECUSTOMMODE"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 54 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && 1);
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 54 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.25
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 55 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 54 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && 1);
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_prototype;
+                show name_nazi_zombie_prototype;
+                show desc_nazi_zombie_prototype;
+                show easy_nazi_zombie_prototype;
+                show regular_nazi_zombie_prototype;
+                show hardened_nazi_zombie_prototype;
+                show veteran_nazi_zombie_prototype;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar credits 0;
+                setdvar credits_active 0;
+                exec "devmap nazi_zombie_prototype";
+            }
+            exp text                    ("@MENU_LEVEL_ZOMBIE_PROTOTYPE");
+        }
+        itemDef
+        {
+            rect                        0 54 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(!1);
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_prototype;
+                show name_nazi_zombie_prototype;
+                show desc_nazi_zombie_prototype;
+                show easy_nazi_zombie_prototype;
+                show regular_nazi_zombie_prototype;
+                show hardened_nazi_zombie_prototype;
+                show veteran_nazi_zombie_prototype;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                exec "xsignin 0 ";
+                exec xshowmarketplace;
+            }
+            exp text                    ("");
+        }
+        itemDef
+        {
+            rect                        0 54 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(!1);
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 54 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(!1);
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@MENU_LEVEL_ZOMBIE_PROTOTYPE");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_prototype"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarstring("language") != "german" && (1));
+            textscale                   0.55
+            exp material                ("loadscreen_nazi_zombie_prototype");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_prototype"
+            group                       "map_image_group"
+            rect                        0 -55 275 164 2 2
+            decoration
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1));
+            textalign                   8
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.953 0.722 0.212 1
+            exp text                    ("@MENU_LEVEL_ZOMBIE_PROTOTYPE");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_prototype"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && 1);
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_LEVEL_DESC_ZOM_PROTO");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_prototype"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && !1);
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PLATFORM_MISSINGMAP");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_prototype"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarint("mis_01") < (15) && (1) && dvarint("mis_01_unlock") > (15) && dvarstring("language") != "german");
+            textscale                   0.55
+            exp material                ("mission_screen_nazi_zombie_prototype_lock");
+        }
+        itemDef
+        {
+            rect                        0 74 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && dvarbool("dlcmappack1"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 74 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.25
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 75 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 74 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && dvarbool("dlcmappack1"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_asylum;
+                show name_nazi_zombie_asylum;
+                show desc_nazi_zombie_asylum;
+                show easy_nazi_zombie_asylum;
+                show regular_nazi_zombie_asylum;
+                show hardened_nazi_zombie_asylum;
+                show veteran_nazi_zombie_asylum;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar credits 0;
+                setdvar credits_active 0;
+                exec "devmap nazi_zombie_asylum";
+            }
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_ASYLUM");
+        }
+        itemDef
+        {
+            rect                        0 74 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack1"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_asylum;
+                show name_nazi_zombie_asylum;
+                show desc_nazi_zombie_asylum;
+                show easy_nazi_zombie_asylum;
+                show regular_nazi_zombie_asylum;
+                show hardened_nazi_zombie_asylum;
+                show veteran_nazi_zombie_asylum;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                exec "xsignin 0 ";
+                exec xshowmarketplace;
+            }
+            exp text                    ("");
+        }
+        itemDef
+        {
+            rect                        0 74 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack1"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 74 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack1"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_ASYLUM");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_asylum"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarstring("language") != "german" && (1));
+            textscale                   0.55
+            exp material                ("loadscreen_nazi_zombie_asylum_mini");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_asylum"
+            group                       "map_image_group"
+            rect                        0 -55 275 164 2 2
+            decoration
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1));
+            textalign                   8
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.953 0.722 0.212 1
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_ASYLUM");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_asylum"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && dvarbool("dlcmappack1"));
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PATCH_LEVEL_DESC_ZOM_ASYLUM");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_asylum"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && !dvarbool("dlcmappack1"));
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PLATFORM_MISSINGMAP");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_asylum"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarint("mis_01") < (15) && (1) && dvarint("mis_01_unlock") > (15) && dvarstring("language") != "german");
+            textscale                   0.55
+            exp material                ("mission_screen_nazi_zombie_asylum_lock");
+        }
+        itemDef
+        {
+            rect                        0 94 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && dvarbool("dlcmappack2"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 94 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.25
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 95 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 94 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && dvarbool("dlcmappack2"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 4;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_sumpf;
+                show name_nazi_zombie_sumpf;
+                show desc_nazi_zombie_sumpf;
+                show easy_nazi_zombie_sumpf;
+                show regular_nazi_zombie_sumpf;
+                show hardened_nazi_zombie_sumpf;
+                show veteran_nazi_zombie_sumpf;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar credits 0;
+                setdvar credits_active 0;
+                exec "devmap nazi_zombie_sumpf";
+            }
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_SUMPF");
+        }
+        itemDef
+        {
+            rect                        0 94 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack2"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 4;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_sumpf;
+                show name_nazi_zombie_sumpf;
+                show desc_nazi_zombie_sumpf;
+                show easy_nazi_zombie_sumpf;
+                show regular_nazi_zombie_sumpf;
+                show hardened_nazi_zombie_sumpf;
+                show veteran_nazi_zombie_sumpf;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                exec "xsignin 0 ";
+                exec xshowmarketplace;
+            }
+            exp text                    ("");
+        }
+        itemDef
+        {
+            rect                        0 94 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack2"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 94 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack2"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_SUMPF");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_sumpf"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarstring("language") != "german" && (1));
+            textscale                   0.55
+            exp material                ("loadscreen_nazi_zombie_sumpf_mini");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_sumpf"
+            group                       "map_image_group"
+            rect                        0 -55 275 164 2 2
+            decoration
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1));
+            textalign                   8
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.953 0.722 0.212 1
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_SUMPF");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_sumpf"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && dvarbool("dlcmappack2"));
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PATCH_LEVEL_DESC_ZOM_SUMPF");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_sumpf"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && !dvarbool("dlcmappack2"));
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PLATFORM_MISSINGMAP");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_sumpf"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarint("mis_01") < (15) && (1) && dvarint("mis_01_unlock") > (15) && dvarstring("language") != "german");
+            textscale                   0.55
+            exp material                ("mission_screen_nazi_zombie_sumpf_lock");
+        }
+        itemDef
+        {
+            rect                        0 114 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && dvarbool("dlcmappack3"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 114 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.25
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 115 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "acts" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 114 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && "NOT_CHEAT_CONDITION" && dvarbool("dlcmappack3"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 5;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_factory;
+                show name_nazi_zombie_factory;
+                show desc_nazi_zombie_factory;
+                show easy_nazi_zombie_factory;
+                show regular_nazi_zombie_factory;
+                show hardened_nazi_zombie_factory;
+                show veteran_nazi_zombie_factory;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar credits 0;
+                setdvar credits_active 0;
+                exec "devmap nazi_zombie_factory";
+            }
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_FACTORY");
+        }
+        itemDef
+        {
+            rect                        0 114 250 19 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack3"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 5;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+                show image_nazi_zombie_factory;
+                show name_nazi_zombie_factory;
+                show desc_nazi_zombie_factory;
+                show easy_nazi_zombie_factory;
+                show regular_nazi_zombie_factory;
+                show hardened_nazi_zombie_factory;
+                show veteran_nazi_zombie_factory;
+                uiscript loadMissionDifficultyOffset 15;
+                play mouse_over;
+                exec "set ui_load_index 15";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                exec "xsignin 0 ";
+                exec xshowmarketplace;
+            }
+            exp text                    ("");
+        }
+        itemDef
+        {
+            rect                        0 114 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack3"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 114 250 19 1 1
+            decoration
+            borderSize                  1
+            visible                     when(!dvarbool("dlcmappack3"));
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_FACTORY");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_factory"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarstring("language") != "german" && (1));
+            textscale                   0.55
+            exp material                ("loadscreen_nazi_zombie_factory_mini");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_factory"
+            group                       "map_image_group"
+            rect                        0 -55 275 164 2 2
+            decoration
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1));
+            textalign                   8
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.953 0.722 0.212 1
+            exp text                    ("@PATCH_LEVEL_ZOMBIE_FACTORY");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_factory"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && dvarbool("dlcmappack3"));
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PATCH_LEVEL_DESC_ZOM_FACTORY");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_factory"
+            group                       "map_image_group"
+            rect                        0 56 275 164 2 2
+            decoration
+            autowrapped
+            type                        1
+            borderSize                  1
+            visible                     when(dvarstring("language") != "german" && (1) && !dvarbool("dlcmappack3"));
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PLATFORM_MISSINGMAP");
+        }
+        itemDef
+        {
+            name                        "image_nazi_zombie_factory"
+            group                       "map_image_group"
+            rect                        0 -155 275 164 2 2
+            style                       3
+            decoration
+            visible                     when(dvarint("mis_01") < (15) && (1) && dvarint("mis_01_unlock") > (15) && dvarstring("language") != "german");
+            textscale                   0.55
+            exp material                ("mission_screen_nazi_zombie_factory_lock");
+        }
+        // Custom maps are enumerated by the CodXe feeder at runtime.
+        itemDef
+        {
+            rect                        0 134 245.25 19 1 1
+            style                       3
+            decoration
+            visible                     when(dvarstring("language") != "german");
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 134 245.25 19 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "acts");
+            forecolor                   0.9 0.95 1 0.25
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 135 250 19 1 1
+            decoration
+            visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "acts");
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 134 250 19 1 1
+            type                        1
+            visible                     when(dvarstring("language") != "german");
+            textalign                   8
+            textalignx                  23
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.25 0.85 0.9 1
+            onFocus
+            {
+                play mouse_submenu_over;
+                setLocalVarInt ui_highlight 6;
+                setLocalVarString ui_choicegroup acts;
+                hide map_image_group;
+                hide map_name_group;
+                hide map_desc_group;
+                hide map_difficulty;
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_codxe_usermap_mode solo;
+                open codxe_usermaps;
+            }
+            text                        "Custom Maps"
+        }
+        itemDef
+        {
+            rect                        0 -50 275 30 2 3
+            decoration
+            type                        8
+            borderSize                  1
+            visible                     1
+            ownerdraw                   298
+            textscale                   0.33
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.953 0.722 0.212 1
+        }
+        itemDef
+        {
+            rect                        187 -90 60 60 2 3
+            decoration
+            type                        8
+            borderSize                  1
+            visible                     1
+            ownerdraw                   299
+            textscale                   0.55
+        }
+    }
+}

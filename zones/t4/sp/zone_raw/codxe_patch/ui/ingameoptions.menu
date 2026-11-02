@@ -1,0 +1,2142 @@
+{
+    menuDef
+    {
+        name                        "ingameoptions"
+        rect                        0 0 640 480 0 0
+        borderSize                  1
+        focuscolor                  0.95294 0.72156 0.21176 1
+        blurWorld                   4.8
+        onOpen
+        {
+            setdvar ui_version_show 0;
+            setdvar cg_drawhud 0;
+            execNow Updatedvarsfromprofile;
+            setdvar valid_buttons 0;
+            setdvar valid_sticks 0;
+            execNowOnDvarStringValue gpad_buttonsConfig buttons_default "set valid_buttons 1";
+            execNowOnDvarStringValue gpad_buttonsConfig buttons_experimental "set valid_buttons 1";
+            execNowOnDvarStringValue gpad_buttonsConfig buttons_lefty "set valid_buttons 1";
+            execNowOnDvarStringValue gpad_buttonsConfig buttons_nomad "set valid_buttons 1";
+            execNowOnDvarStringValue gpad_sticksConfig thumbstick_default "set valid_sticks 1";
+            execNowOnDvarStringValue gpad_sticksConfig thumbstick_southpaw "set valid_sticks 1";
+            execNowOnDvarStringValue gpad_sticksConfig thumbstick_legacy "set valid_sticks 1";
+            execNowOnDvarStringValue gpad_sticksConfig thumbstick_legacysouthpaw "set valid_sticks 1";
+            execNowOnDvarIntValue valid_buttons 0 "set gpad_buttonsConfig buttons_default";
+            execNowOnDvarIntValue valid_sticks 0 "set gpad_sticksConfig thumbstick_default";
+            profileshow selectSaveDevice;
+            setdvar ui_cheats_hint "";
+            execOnDvarIntValue splitscreen 1 fullscreenview;
+        }
+        onClose
+        {
+            setdvar cg_drawhud 1;
+        }
+        onESC
+        {
+            execOnDvarIntValue splitscreen 1 splitscreenview;
+            open pausedmenu;
+            close self;
+            setdvar cg_drawhud 1;
+            exec updategamerprofile;
+            exec "updatedvarsfromprofileforclient 0";
+        }
+        execKeyInt 14
+        {
+            execOnDvarIntValue splitscreen 1 splitscreenview;
+            exec updategamerprofile;
+            exec "updatedvarsfromprofileforclient 0";
+            close self;
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 0 0.75
+        }
+        itemDef
+        {
+            rect                        0 0 854 75 4 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "gradient_top"
+        }
+        itemDef
+        {
+            rect                        0 480 854 75 4 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "gradient_bottom"
+        }
+        itemDef
+        {
+            name                        "change_filter"
+            text                        "@PLATFORM_CHANGE_FILTER"
+            rect                        90 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+            execKeyInt 6
+            {
+                execNow "toggle lb_gamemode 0 1 2 3 4 5 6 7 8 9 10 12 15";
+                uiScript RefreshLeaderboards;
+            }
+            execKeyInt 5
+            {
+                execNow "toggle lb_gamemode 15 12 10 9 8 7 6 5 4 3 2 1 0";
+                uiScript RefreshLeaderboards;
+            }
+            execKeyInt 4
+            {
+                play mouse_click;
+                execNow "toggle lb_filter 0 1 2";
+            }
+        }
+        itemDef
+        {
+            name                        "goto_top"
+            text                        "@PLATFORM_GOTOTOP"
+            rect                        -40 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "accept_button"
+            text                        "@PLATFORM_SELECT"
+            rect                        44 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "refresh"
+            text                        "@PLATFORM_REFRESH"
+            rect                        -20 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   2
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgup"
+            text                        "@PLATFORM_PGUP"
+            rect                        -180 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgdown"
+            text                        "@PLATFORM_PGDOWN"
+            rect                        -90 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -5 40 640 25 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2137 0.2346 0.2398 0.75
+            background                  "menu_lobby_title_back"
+        }
+        itemDef
+        {
+            rect                        -107 65 854 1 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.216 0.22 1
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        22 5 100 100 1 1
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   4
+            textscale                   0.5476
+            textstyle                   6
+            textfont                    1
+            exp text                    ("@MENU_OPTIONS_UPPER_CASE");
+        }
+        itemDef
+        {
+            rect                        44 45 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 45 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 46 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 45 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 1;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                exec "toggle input_invertpitch";
+            }
+            exp text                    ("@MENU_LOOK_INVERSION");
+        }
+        itemDef
+        {
+            rect                        290 45 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("input_invertpitch") == "0");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_DISABLED");
+        }
+        itemDef
+        {
+            rect                        290 45 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("input_invertpitch") == "1");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_ENABLED");
+        }
+        itemDef
+        {
+            rect                        44 69 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 69 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 70 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 69 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                exec "toggle gpad_rumble";
+            }
+            exp text                    ("@MENU_CONTROLLER_VIBRATION");
+        }
+        itemDef
+        {
+            rect                        290 69 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_rumble") == "0");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_DISABLED");
+        }
+        itemDef
+        {
+            rect                        290 69 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_rumble") == "1");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_ENABLED");
+        }
+        itemDef
+        {
+            rect                        44 93 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 93 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 94 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 93 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                exec "toggle input_autoaim";
+            }
+            exp text                    ("@MENU_AIM_ASSIST");
+        }
+        itemDef
+        {
+            rect                        290 93 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("input_autoaim") == "0");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_DISABLED");
+        }
+        itemDef
+        {
+            rect                        290 93 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("input_autoaim") == "1");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_ENABLED");
+        }
+        itemDef
+        {
+            rect                        44 117 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 117 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 118 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 117 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 4;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_thumbstick;
+            }
+            exp text                    ("@MENU_THUMBSTICK_LAYOUT");
+        }
+        itemDef
+        {
+            rect                        290 117 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_sticksConfig") == "thumbstick_default");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_DEFAULT");
+        }
+        itemDef
+        {
+            rect                        290 117 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_sticksConfig") == "thumbstick_southpaw");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_SOUTHPAW");
+        }
+        itemDef
+        {
+            rect                        290 117 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_sticksConfig") == "thumbstick_legacy");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_LEGACY");
+        }
+        itemDef
+        {
+            rect                        290 117 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_sticksConfig") == "thumbstick_legacysouthpaw");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_LEGACY_SOUTHPAW");
+        }
+        itemDef
+        {
+            rect                        44 141 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 141 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 142 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 141 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 5;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_buttons;
+            }
+            exp text                    ("@MENU_BUTTON_LAYOUT");
+        }
+        itemDef
+        {
+            rect                        290 141 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_buttonsConfig") == "buttons_default");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_DEFAULT");
+        }
+        itemDef
+        {
+            rect                        290 141 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_buttonsConfig") == "buttons_experimental");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_TACTICAL");
+        }
+        itemDef
+        {
+            rect                        290 141 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_buttonsConfig") == "buttons_lefty");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_LEFTY");
+        }
+        itemDef
+        {
+            rect                        290 141 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("gpad_buttonsConfig") == "buttons_nomad");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PATCH_NOMAD");
+        }
+        itemDef
+        {
+            rect                        44 165 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 165 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 166 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 165 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 6;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_sensitivity;
+            }
+            exp text                    ("@MENU_LOOK_SENSITIVITY");
+        }
+        itemDef
+        {
+            rect                        290 165 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarfloat("input_viewSensitivity") == 0.6);
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_LOW");
+        }
+        itemDef
+        {
+            rect                        290 165 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarfloat("input_viewSensitivity") == 1);
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_MEDIUM");
+        }
+        itemDef
+        {
+            rect                        290 165 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarfloat("input_viewSensitivity") == 1.8);
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_HIGH");
+        }
+        itemDef
+        {
+            rect                        290 165 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarfloat("input_viewSensitivity") != 0.6 && dvarfloat("input_viewSensitivity") != 1 && dvarfloat("input_viewSensitivity") != 1.8);
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_CUSTOM");
+        }
+        itemDef
+        {
+            rect                        44 189 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 189 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 7 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 190 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 7 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 189 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 7;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_codxe;
+            }
+            exp text                    ("Extra Settings");
+        }
+
+        itemDef
+        {
+            rect                        44 213 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 213 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 8 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 214 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 8 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 213 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 8;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_team_indicator;
+            }
+            exp text                    ("@MENU_TEAM_INDICATOR");
+        }
+        itemDef
+        {
+            rect                        290 213 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("team_indicator") == "0");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_FULL_TEAM_INDICATOR");
+        }
+        itemDef
+        {
+            rect                        290 213 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("team_indicator") == "1");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_ABBREVIATED_TEAM_INDICATOR");
+        }
+        itemDef
+        {
+            rect                        290 213 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("team_indicator") == "2");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_ICON_TEAM_INDICATOR");
+        }
+        itemDef
+        {
+            rect                        290 213 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("team_indicator") == "3");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@PATCH_TEAM_ALTERNATE_COLOR");
+        }
+        itemDef
+        {
+            rect                        44 237 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 237 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "" && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 238 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "" && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 237 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 9;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                exec "toggle cg_subtitles";
+            }
+            exp text                    ("@MENU_SUBTITLES");
+        }
+        itemDef
+        {
+            rect                        290 237 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")) && dvarstring("cg_subtitles") == "0");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_DISABLED");
+        }
+        itemDef
+        {
+            rect                        290 237 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")) && dvarstring("cg_subtitles") == "1");
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MENU_ENABLED");
+        }
+        itemDef
+        {
+            rect                        44 261 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 261 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 262 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 261 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 10;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_volume;
+            }
+            exp text                    ("@MENU_VOLUME");
+        }
+        itemDef
+        {
+            rect                        44 261 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 261 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@MENU_VOLUME");
+        }
+        itemDef
+        {
+            rect                        44 285 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 285 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 286 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 285 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 11;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_brightness;
+            }
+            exp text                    ("@MENU_BRIGHTNESS");
+        }
+        itemDef
+        {
+            rect                        44 285 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 285 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@MENU_BRIGHTNESS");
+        }
+        itemDef
+        {
+            name                        "selectsavedevice_noprofile"
+            rect                        44 309 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")) && 1);
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@PLATFORM_SELECT_SAVE_DEVICE");
+        }
+        itemDef
+        {
+            rect                        44 309 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")) && (!dvarbool("splitscreen") && !dvarbool("onlinegame") && !dvarbool("systemlink")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 309 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 12 && localvarstring("ui_choicegroup") == "" && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 310 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 12 && localvarstring("ui_choicegroup") == "" && (((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")));
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "selectsavedevice"
+            rect                        44 309 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") == 0 || dvarint("loc_language") == 5 || dvarint("loc_language") > 6)) && !dvarbool("splitscreen")) && (!dvarbool("splitscreen") && !dvarbool("onlinegame") && !dvarbool("systemlink")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 12;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                open popup_selectsavedevice_warning;
+            }
+            exp text                    ("@PLATFORM_SELECT_SAVE_DEVICE");
+        }
+        itemDef
+        {
+            rect                        44 237 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 237 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 238 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 237 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 9;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_volume;
+            }
+            exp text                    ("@MENU_VOLUME");
+        }
+        itemDef
+        {
+            rect                        44 237 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 237 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@MENU_VOLUME");
+        }
+        itemDef
+        {
+            rect                        44 261 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 261 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 262 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "" && (!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 261 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when((!dvarbool("splitscreen") || issplitscreenhost() == 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 10;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                close self;
+                open ingameoptions_brightness;
+            }
+            exp text                    ("@MENU_BRIGHTNESS");
+        }
+        itemDef
+        {
+            rect                        44 261 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 261 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when((dvarbool("splitscreen") && issplitscreenhost() != 1) && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@MENU_BRIGHTNESS");
+        }
+        itemDef
+        {
+            name                        "selectsavedevice_noprofile"
+            rect                        44 285 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")) && (!dvarbool("splitscreen") && !dvarbool("onlinegame") && !dvarbool("systemlink")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@PLATFORM_SELECT_SAVE_DEVICE");
+        }
+        itemDef
+        {
+            rect                        44 285 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")) && (!dvarbool("splitscreen") && !dvarbool("onlinegame") && !dvarbool("systemlink")));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 285 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "" && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 286 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "" && (((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")));
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "selectsavedevice"
+            rect                        44 285 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when((((dvarint("loc_language") != 0 && dvarint("loc_language") != 5 && dvarint("loc_language") <= 6)) || dvarbool("splitscreen")) && (!dvarbool("splitscreen") && !dvarbool("onlinegame") && !dvarbool("systemlink")));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 11;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                open popup_selectsavedevice_warning;
+            }
+            exp text                    ("@PLATFORM_SELECT_SAVE_DEVICE");
+        }
+        itemDef
+        {
+            name                        "desc_arrow"
+            rect                        2 270 10 10 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarstring("ui_cheats_hint") != "");
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            background                  "ui_arrow_right"
+        }
+        itemDef
+        {
+            rect                        14 268 240 40 1 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textaligny                  16
+            textscale                   0.3095
+            forecolor                   1 1 1 0.5
+            exp text                    (dvarstring("ui_cheats_hint"));
+        }
+    }
+
+    menuDef
+    {
+        name                        "ingameoptions_codxe"
+        rect                        0 0 640 480 0 0
+        borderSize                  1
+        focuscolor                  0.95294 0.72156 0.21176 1
+        blurWorld                   0
+        legacySplitScreenScale
+        onOpen
+        {
+            setdvar cg_drawhud 0;
+            setDvar ui_allow_controlschange 0;
+        }
+        onClose
+        {
+            setdvar cg_drawhud 1;
+            setDvar ui_allow_controlschange 1;
+            execNow updategamerprofile;
+        }
+        onESC
+        {
+            close ingameoptions_codxe;
+            open ingameoptions;
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 0 0.2
+        }
+        itemDef
+        {
+            rect                        0 0 854 75 4 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "gradient_top"
+        }
+        itemDef
+        {
+            rect                        0 410 854 75 4 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "gradient_bottom"
+        }
+        itemDef
+        {
+            rect                        -5 40 640 25 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2137 0.2346 0.2398 0.75
+            background                  "menu_lobby_title_back"
+        }
+        itemDef
+        {
+            rect                        -107 65 854 1 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.216 0.22 1
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        22 5 100 100 1 1
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   4
+            textscale                   0.5476
+            textstyle                   6
+            textfont                    1
+            exp text                    ("EXTRA SETTINGS");
+        }
+        itemDef
+        {
+            name                        "change_filter"
+            text                        "@PLATFORM_CHANGE_FILTER"
+            rect                        90 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+            execKeyInt 4
+            {
+                play mouse_click;
+                execNow "toggle lb_filter 0 1";
+            }
+        }
+        itemDef
+        {
+            name                        "goto_top"
+            text                        "@PLATFORM_GOTOTOP"
+            rect                        -40 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    6
+        }
+        itemDef
+        {
+            name                        "accept_button"
+            text                        "@PLATFORM_SELECT"
+            rect                        44 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    6
+        }
+        itemDef
+        {
+            name                        "refresh"
+            text                        "@PLATFORM_REFRESH"
+            rect                        -20 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   2
+            textscale                   0.3095
+            textfont                    6
+        }
+        itemDef
+        {
+            name                        "pgup"
+            text                        "@PLATFORM_PGUP"
+            rect                        -180 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    6
+        }
+        itemDef
+        {
+            name                        "pgdown"
+            text                        "@PLATFORM_PGDOWN"
+            rect                        -90 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    6
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_SAVECUSTOMMODE"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 45 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 45 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        100044 46 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 45 224 22 1 1
+            decoration
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("Field of View");
+        }
+        itemDef
+        {
+            rect                        44 45 344 22 1 1
+            style                       1
+            type                        10
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  244
+            textscale                   0.381
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 1;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+            }
+            dvarFloat                   "cg_fov_user" 1 65 120
+        }
+        itemDef
+        {
+            rect                        400 45 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    (dvarstring("cg_fov_user"));
+        }
+        itemDef
+        {
+            rect                        44 69 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 69 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            rect                        44 69 224 22 1 1
+            decoration
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("FOV Scale");
+        }
+        itemDef
+        {
+            rect                        44 69 344 22 1 1
+            style                       1
+            type                        10
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  244
+            textscale                   0.381
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+            }
+            dvarFloat                   "cg_fovscale_user" 0.05 0.2 2
+        }
+        itemDef
+        {
+            rect                        400 69 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    (dvarstring("cg_fovscale_user"));
+        }
+        // Layout is shared by both players and only applies during splitscreen.
+        itemDef
+        {
+            rect                        44 93 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("splitscreen") == 1);
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        44 93 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(dvarint("splitscreen") == 1 && localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        44 94 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("splitscreen") == 1 && localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "");
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        44 93 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("splitscreen") == 1);
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click_t;
+                exec "toggle cg_splitScreenHorizontal";
+            }
+            exp text                    ("Split-screen Layout");
+        }
+        itemDef
+        {
+            rect                        290 93 180 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("splitscreen") == 1 && !dvarbool("cg_splitScreenHorizontal"));
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("Side by Side");
+        }
+        itemDef
+        {
+            rect                        290 93 180 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("splitscreen") == 1 && dvarbool("cg_splitScreenHorizontal"));
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("Top / Bottom");
+        }
+    }
+}

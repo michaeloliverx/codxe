@@ -83,6 +83,7 @@ jobs:
 
           # Build using build.py which will use the same commit count
           python build.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
           echo "ZIP_FILE=codxe-r${commitCount}.zip" >> $env:GITHUB_OUTPUT
         shell: pwsh
@@ -99,6 +100,5 @@ jobs:
           generate_release_notes: true
           files: |
             build/${{ steps.build.outputs.ZIP_FILE }}
-            build/Release/bin/codxe.xex
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

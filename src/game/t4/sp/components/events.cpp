@@ -2,6 +2,7 @@
 #include "events.h"
 
 #include "splitscreen.h"
+#include "fov.h"
 
 namespace t4
 {
@@ -13,6 +14,7 @@ typedef void (*EventHandler)();
 
 const EventHandler dvarInitHandlers[] = {
     SplitScreen::OnDvarInit,
+    Fov::OnDvarInit,
 };
 } // namespace
 

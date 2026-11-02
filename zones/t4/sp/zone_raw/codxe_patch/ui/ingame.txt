@@ -1,0 +1,58 @@
+// Extend the in-game menu registry from common.ff. The UI code reads this
+// menulist when entering gameplay; ui/options_ingame.menu is not used there.
+// The custom ingameoptions.menu source contains both the options and Extra Settings menus.
+{
+    loadMenu { "ui/pausedmenu.menu" }
+    loadMenu { "ui/pausedbkgnd.menu" }
+    loadMenu { "ui/objectiveinfo.menu" }
+    loadMenu { "ui/overheadmap.menu" }
+    loadMenu { "ui/ingameoptions.menu" }
+    loadMenu { "ui/ingameoptions_thumbstick.menu" }
+    loadMenu { "ui/ingameoptions_buttons.menu" }
+    loadMenu { "ui/ingameoptions_sensitivity.menu" }
+    loadMenu { "ui/ingameoptions_sensitivity_custom.menu" }
+    loadMenu { "ui/ingameoptions_team_indicator.menu" }
+    loadMenu { "ui/ingameoptions_volume.menu" }
+    loadMenu { "ui/ingameoptions_brightness.menu" }
+    loadMenu { "ui/mature_content_disable_warning.menu" }
+    loadMenu { "ui/pregame.menu" }
+    loadMenu { "ui/savegameloading.menu" }
+    loadMenu { "ui/savegamesaving.menu" }
+    loadMenu { "ui/savegameinfo.menu" }
+    loadMenu { "ui/menu_special_features.menu" }
+    loadMenu { "ui/invert_axis.menu" }
+    loadMenu { "ui/diff_con_easy.menu" }
+    loadMenu { "ui/diff_con_regular.menu" }
+    loadMenu { "ui/diff_con_hardened.menu" }
+    loadMenu { "ui/diff_con_veteran.menu" }
+    loadMenu { "ui/select_difficulty.menu" }
+    loadMenu { "ui/scoreboard.menu" }
+    loadMenu { "ui/readingsavedevice.menu" }
+    loadMenu { "ui/popmenu_difficulty.menu" }
+    loadMenu { "ui/popmenu_arcade_difficulty.menu" }
+    loadMenu { "ui/popmenu_newgame.menu" }
+    loadMenu { "ui/popmenu_coop_difficulty.menu" }
+    loadMenu { "ui/ingame_difficulty.menu" }
+    loadMenu { "ui/popup_leavegame.menu" }
+    loadMenu { "ui/popup_leavegameandparty.menu" }
+    loadMenu { "ui/popup_endgame.menu" }
+    loadMenu { "ui/popup_systemlink_leavegame.menu" }
+    loadMenu { "ui/popup_systemlink_endgame.menu" }
+    loadMenu { "ui/popup_leavegame_ranked.menu" }
+    loadMenu { "ui/popup_endgame_ranked.menu" }
+    loadMenu { "ui/popup_leavegameandparty_ranked.menu" }
+    loadMenu { "ui/popup_leavegame_coop.menu" }
+    loadMenu { "ui/popup_leavegameandparty_coop.menu" }
+    loadMenu { "ui/popup_coop_client_quit.menu" }
+    loadMenu { "ui/popup_coop_host_quit.menu" }
+    loadMenu { "ui/popup_coop_host_quit_clone.menu" }
+    loadMenu { "ui/popup_noprofile_quit.menu" }
+    loadMenu { "ui/popup_storage_quit.menu" }
+    loadMenu { "ui/popup_nosave_quit.menu" }
+    loadMenu { "ui/popup_general_quit.menu" }
+    loadMenu { "ui/popup_savegame_warning.menu" }
+    loadMenu { "ui/popup_restart_warning.menu" }
+    loadMenu { "ui/popup_checkpoint_restart_warning.menu" }
+    loadMenu { "ui/popup_savegame_error.menu" }
+    loadMenu { "ui/popup_selectsavedevice_warning.menu" }
+}

@@ -1,0 +1,21 @@
+// Extend the stock TU7 patch while keeping its original assets intact.
+>game,T4
+>platform,xbox360
+>name,patch
+
+material,,menu_button_backing
+material,,ingameoptions_thumbstick
+material,,xenon_stick_move
+material,,xenon_stick_turn
+material,,xenon_stick_move_turn
+material,,xenon_stick_move_look
+material,,menu_popup_back
+material,,menu_white_line
+material,,white_line_faded_center
+
+// The game registers its in-game menus from ui/ingame.txt in common.ff.
+// Extend that list so the Extra Settings submenu exists in the active UI context.
+menulist,ui/ingame.txt
+
+// Include every asset from the original TU7 patch zone.
+include,patch

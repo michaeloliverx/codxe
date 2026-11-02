@@ -202,6 +202,7 @@
       <ClCompile Include="src\game\t4\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\t4\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\t4\sp\components\splitscreen.cpp" />
+      <ClCompile Include="src\game\t4\sp\components\fov.cpp" />
       <ClCompile Include="src\game\t4\sp\components\ui.cpp" />
       <ClCompile Include="src\game\t4\sp\main.cpp" />
 
