@@ -87,8 +87,8 @@ class Tokens
             return false;
         }
         token += first;
-        while (offset < text.size() && !std::isspace(static_cast<unsigned char>(text[offset])) &&
-               text[offset] != '{' && text[offset] != '}')
+        while (offset < text.size() && !std::isspace(static_cast<unsigned char>(text[offset])) && text[offset] != '{' &&
+               text[offset] != '}')
             token += text[offset++];
         return true;
     }
@@ -127,9 +127,12 @@ inline bool Parse(const std::string &text, const std::string &folder, std::strin
             const std::string key = Lower(token);
             if (!tokens.Next(token) || (!tokens.quoted && (token == "{" || token == "}")))
                 return false;
-            if (key == "map") map = token;
-            else if (key == "longname") longname = token;
-            else if (key == "description") detail = token;
+            if (key == "map")
+                map = token;
+            else if (key == "longname")
+                longname = token;
+            else if (key == "description")
+                detail = token;
         }
         if (!closed)
             return false;

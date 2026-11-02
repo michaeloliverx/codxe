@@ -22,8 +22,9 @@ float ApplyUserFov(float stock)
 float ApplyUserScale(float stock)
 {
     const auto *scale = *reinterpret_cast<dvar_s **>(0x8459BA20);
-    return userScale && scale ? fov::ApplyScale(stock, userScale->current.value, scale->domain.value.min,
-                                               scale->domain.value.max) : stock;
+    return userScale && scale
+               ? fov::ApplyScale(stock, userScale->current.value, scale->domain.value.min, scale->domain.value.max)
+               : stock;
 }
 
 // Mid-function hooks must preserve volatile state across the C++ helper call.
@@ -319,17 +320,15 @@ struct ReadHook
 };
 
 const ReadHook readHooks[] = {
-    {0x82107C18, BaseFovHook},
-    {0x82107D00, RecoveryFovHook},
-    {0x82107DF0, ScaleFovHook},
-    {0x82107F00, RatioFovHook},
-    {0x820E109C, ProjectionFovHook},
+    {0x82107C18, BaseFovHook},  {0x82107D00, RecoveryFovHook},   {0x82107DF0, ScaleFovHook},
+    {0x82107F00, RatioFovHook}, {0x820E109C, ProjectionFovHook},
 };
 } // namespace
 
 void Fov::OnDvarInit()
 {
-    const auto registerFloat = reinterpret_cast<dvar_s *(*)(const char *, float, float, float, DvarFlags, const char *)>(0x8228C630);
+    const auto registerFloat =
+        reinterpret_cast<dvar_s *(*)(const char *, float, float, float, DvarFlags, const char *)>(0x8228C630);
     const auto archive = static_cast<DvarFlags>(1);
     userFov = registerFloat("cg_fov_user", 65.0f, 1.0f, 160.0f, archive, "Preferred base field of view");
     userScale = registerFloat("cg_fovscale_user", 1.0f, 0.2f, 2.0f, archive, "Preferred field of view scale");

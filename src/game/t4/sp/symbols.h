@@ -44,8 +44,7 @@ static auto backEndData = reinterpret_cast<GfxBackEndData **>(0x84F1F0A0);
 static auto gfxDevice = reinterpret_cast<D3DDevice **>(0x84B58588);
 static auto R_SyncRenderThread = reinterpret_cast<void (*)()>(0x824339B8);
 static auto D3DDevice_BlockUntilIdle_Native = reinterpret_cast<void (*)(D3DDevice *)>(0x82371BA0);
-static auto D3D_InvalidateCaches =
-    reinterpret_cast<void (*)(D3DDevice *, void *, unsigned int)>(0x8236FAB8);
+static auto D3D_InvalidateCaches = reinterpret_cast<void (*)(D3DDevice *, void *, unsigned int)>(0x8236FAB8);
 
 // Functions
 static auto BG_AddPredictableEventToPlayerstate =
