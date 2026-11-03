@@ -2,8 +2,6 @@
 #include "fov.h"
 #include "fov_math.h"
 
-extern "C" VOID NTAPI KeFlushCacheRange(PVOID address, DWORD size);
-
 namespace t4
 {
 namespace sp

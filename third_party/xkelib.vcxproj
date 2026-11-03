@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Xbox 360">
+      <Configuration>Debug</Configuration>
+      <Platform>Xbox 360</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Xbox 360">
+      <Configuration>Release</Configuration>
+      <Platform>Xbox 360</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{83FEF217-22EE-4768-80BF-9F48D5B4564C}</ProjectGuid>
+    <Keyword>Xbox360Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <PlatformToolset>2010-01</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <XkeLibSdkVersion Condition="'$(XkeLibSdkVersion)'==''">21256.0</XkeLibSdkVersion>
+    <OutDir>$(MSBuildThisFileDirectory)..\build\$(Configuration)\lib\xkelib\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\build\$(Configuration)\obj\xkelib\</IntDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <CustomBuild Include="xkelib\kernel\kernelext$(XkeLibSdkVersion).def">
+      <Command>"$(XEDK)\bin\win32\lib.exe" /nologo /def:"%(FullPath)" /machine:PPCBE /out:"$(OutDir)kernelext.lib"</Command>
+      <Message>Creating kernelext.lib for Xbox 360 SDK $(XkeLibSdkVersion)</Message>
+      <Outputs>$(OutDir)kernelext.lib;$(OutDir)kernelext.exp</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="xkelib\xam\xamext$(XkeLibSdkVersion).def">
+      <Command>"$(XEDK)\bin\win32\lib.exe" /nologo /def:"%(FullPath)" /machine:PPCBE /out:"$(OutDir)xamext.lib"</Command>
+      <Message>Creating xamext.lib for Xbox 360 SDK $(XkeLibSdkVersion)</Message>
+      <Outputs>$(OutDir)xamext.lib;$(OutDir)xamext.exp</Outputs>
+    </CustomBuild>
+    <ClInclude Include="xkelib\xkelib.h" />
+    <None Include="xkelib\LICENSE" />
+    <None Include="xkelib\README.md" />
+    <None Include="xkelib\readme.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CheckXkeLib" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(MSBuildThisFileDirectory)xkelib\xkelib.h')" Text="xkelib is missing. Run git submodule update --init --recursive from the repository root." />
+  </Target>
+</Project>

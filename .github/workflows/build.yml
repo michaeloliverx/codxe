@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all history for proper commit counting
+          submodules: recursive
 
       - name: Set up Python
         uses: actions/setup-python@v4

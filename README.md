@@ -86,9 +86,15 @@ Game-specific Xenia plugin configs and patches live under [`resources/xenia`](re
 
 ### Build
 
-Open `codxe.sln` in Visual Studio 2010 Ultimate Edition and build the `Release|Xbox 360` configuration.
+Initialize submodules:
 
-If you have `make` available, you can build the same configuration from the repository root:
+```powershell
+git submodule update --init --recursive
+```
+
+Open `codxe.sln` and build `Release|Xbox 360` or `Debug|Xbox 360`.
+
+Or run:
 
 ```powershell
 make build
@@ -102,3 +108,4 @@ In some way or another, this project would not have been possible without the fo
 - [IW4x](https://github.com/iw4x)
 - [kej](https://github.com/kejjjjj)
 - [ClementDreptin](https://github.com/ClementDreptin/ModdingResources)
+- [cOz and xkelib contributors](https://github.com/cOzInABox/xkelib)

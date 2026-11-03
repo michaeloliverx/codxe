@@ -4,7 +4,8 @@
       "name": "Release",
       "includePath": [
         "${env:XEDK}/include/xbox",
-        "${workspaceFolder}/src"
+        "${workspaceFolder}/src",
+        "${workspaceFolder}/third_party/xkelib"
       ],
       "defines": ["NDEBUG", "_XBOX", "_MBCS"],
       "intelliSenseMode": "windows-msvc-x86"

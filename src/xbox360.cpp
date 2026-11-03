@@ -14,18 +14,6 @@ void *ResolveFunction(const char *moduleName, unsigned int ordinal)
     return GetProcAddress(moduleHandle, reinterpret_cast<const char *>(ordinal));
 }
 
-enum XNotifyQueueUIType
-{
-    XNOTIFYUI_TYPE_GENERIC = 3,
-    XNOTIFYUI_TYPE_EXCLAIM = 34,
-};
-
-typedef void (*XNotifyQueueUI_t)(XNotifyQueueUIType type, DWORD user_index, uint64_t areas, const WCHAR *display_text,
-                                 void *context_data);
-static XNotifyQueueUI_t XNotifyQueueUI = reinterpret_cast<XNotifyQueueUI_t>(ResolveFunction("xam.xex", 656));
-
-const DWORD XNOTIFY_USER_INDEX_ANY = 0x000000FF;
-const uint64_t XNOTIFY_AREA_SYSTEM = 0x0000000000000001;
 const DWORD XNOTIFY_DELAY_MS = 1000;
 
 struct Notification
@@ -88,8 +76,7 @@ DWORD WINAPI NotifyThread(void *argument)
     Notification *notification = static_cast<Notification *>(argument);
 
     Sleep(XNOTIFY_DELAY_MS);
-    XNotifyQueueUI(XNOTIFYUI_TYPE_EXCLAIM, XNOTIFY_USER_INDEX_ANY, XNOTIFY_AREA_SYSTEM, notification->displayText,
-                   nullptr);
+    XNotifyQueueUI(XNOTIFYUI_TYPE_EXCLAIM, XUSER_INDEX_ANY, XNOTIFY_SYSTEM, notification->displayText, nullptr);
     InterlockedExchange(&notification->inUse, 0);
     return 0;
 }

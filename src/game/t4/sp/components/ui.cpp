@@ -9,8 +9,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-extern "C" VOID NTAPI KeFlushCacheRange(PVOID address, DWORD size);
-
 namespace t4
 {
 namespace sp

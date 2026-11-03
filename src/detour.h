@@ -12,6 +12,7 @@
 #define DETOUR_H
 
 #include <xtl.h>
+#include <xkelib.h>
 #include <stdint.h>
 
 #define MASK_N_BITS(N) ((1 << (N)) - 1)
@@ -88,11 +89,6 @@
 #define POWERPC_BRANCH_TYPE_MASK (POWERPC_BRANCH_LINKED | POWERPC_BRANCH_ABSOLUTE)
 
 #define POWERPC_BRANCH_OPTIONS_ALWAYS (20)
-
-extern "C"
-{
-    NTSYSAPI BOOL NTAPI MmIsAddressValid(IN PVOID Address);
-}
 
 class Detour
 {
