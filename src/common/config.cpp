@@ -54,7 +54,7 @@ bool MountConfigDevice(const char *device_path)
 {
     const DWORD process_type = KeGetCurrentProcessType();
     const std::string link_path =
-        std::string(process_type == PROC_TYPE_SYSTEM ? "\\System??\\" : "\\??\\") + CONFIG_DEVICE_LINK_NAME;
+        std::string(process_type == PROC_SYSTEM ? "\\System??\\" : "\\??\\") + CONFIG_DEVICE_LINK_NAME;
 
     STRING link = {};
     STRING device = {};

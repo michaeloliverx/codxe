@@ -3,6 +3,8 @@
 
 namespace
 {
+typedef void (*XexpFinishExecutableLoad_t)(PLDR_DATA_TABLE_ENTRY module, const char *commandLine);
+
 const DWORD XEXP_FINISH_EXECUTABLE_LOAD_RETAIL = 0x8007AF68;
 const DWORD XEXP_FINISH_EXECUTABLE_LOAD_DEVKIT = 0x800A17C8;
 

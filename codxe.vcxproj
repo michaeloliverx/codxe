@@ -40,7 +40,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)$(ProjectName)\%(RelativeDir)</ObjectFileName>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)third_party\xkelib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)\pch.pch</PrecompiledHeaderOutputFile>
@@ -59,6 +59,9 @@
       <PreprocessorDefinitions Condition="'$(Configuration)'=='Release'">NDEBUG;_XBOX</PreprocessorDefinitions>
     </ClCompile>
     <Link>
+      <!-- Prefer SDK implementations for APIs also exported directly by XAM. -->
+      <AdditionalDependencies>xapilib.lib;xboxkrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)build\$(Configuration)\lib\xkelib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -76,6 +79,13 @@
       <ConfigurationFile>$(SolutionDir)xex.xml</ConfigurationFile>
     </ImageXex>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="third_party\xkelib.vcxproj">
+      <Project>{83FEF217-22EE-4768-80BF-9F48D5B4564C}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
       <!-- Precompiled header -->
       <ClCompile Include="src\pch.cpp">

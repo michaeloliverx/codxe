@@ -27,6 +27,7 @@
 #include <io.h>
 #include <xjson.h>
 #include <rtcapi.h>
+#include <xkelib.h>
 
 #pragma comment(lib, "xjson.lib")
 
@@ -34,7 +35,6 @@
 #include "detour.h"
 #include "filesystem.h"
 #include "version.h"
-#include "xkelib.h"
 #include "xbox360.h"
 #include "plugin.h"
 #include "compat.h"

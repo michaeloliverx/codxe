@@ -1,11 +1,6 @@
 #include "pch.h"
 #include "ppc.h"
 
-extern "C"
-{
-    NTSYSAPI VOID NTAPI KeFlushCacheRange(PVOID address, DWORD size);
-}
-
 namespace
 {
 void WriteInstruction(uintptr_t address, uint32_t instruction)
