@@ -1,0 +1,8 @@
+// Stock code_post_gfx rebuild that preserves the original asset list.
+>game,T4
+>platform,xbox360
+>name,code_post_gfx
+
+// The native image transformer only changes terminal packed mip tails when
+// --xenon-omit-mip-tail is supplied to the linker.
+include,code_post_gfx

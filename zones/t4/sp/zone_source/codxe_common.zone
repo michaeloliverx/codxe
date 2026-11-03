@@ -1,0 +1,15 @@
+// Stock common rebuild that preserves the original asset list.
+>game,T4
+>platform,xbox360
+>name,common
+
+// Keep the splitscreen backdrop materials, but replace their large source
+// images with opaque 1x1 black overrides under zone_raw/codxe_common/images.
+image,splitscreen_sidebars
+material,splitscreen_sidebars
+image,splitscreen_sidebars_wide
+material,splitscreen_sidebars_wide
+
+// The native image transformer only changes terminal packed mip tails when
+// --xenon-omit-mip-tail is supplied to the linker.
+include,common

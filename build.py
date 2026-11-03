@@ -27,6 +27,13 @@ def read_git_version():
         exit(1)
 
 
+# Shared T4 SP zones are versioned release resources; rebuilding is manual for now.
+T4_ZONE_NAMES = ("code_post_gfx", "common", "patch", "patch_ui")
+for zone_name in T4_ZONE_NAMES:
+    zone_path = os.path.join(RESOURCES_PATH, "t4", "_codxe", "zone", zone_name + ".ff")
+    if not os.path.isfile(zone_path) or os.path.getsize(zone_path) == 0:
+        raise FileNotFoundError(f"Required T4 SP zone missing or empty: {zone_path}")
+
 # Ensure MSBuild exists
 if not os.path.exists(MSBUILD_PATH):
     print(f"ERROR: MSBuild not found at {MSBUILD_PATH}")
@@ -55,6 +62,9 @@ if os.path.exists(RESOURCES_PATH):
 else:
     print(f"Resources directory not found at {RESOURCES_PATH}")
     exit(1)
+
+# Hardware users can take the plugin directly from the ZIP root.
+shutil.copy2(BINARY_PATH, os.path.join(STAGING_DIR, "codxe.xex"))
 
 print("Copying binary to all title ID directories...")
 plugins_dir = os.path.join(STAGING_DIR, "xenia", "plugins")

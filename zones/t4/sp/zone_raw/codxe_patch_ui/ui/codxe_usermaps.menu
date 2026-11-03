@@ -1,0 +1,187 @@
+{
+    menuDef
+    {
+        name                        "codxe_usermaps"
+        rect                        0 0 640 470 4 4
+        style                       1
+        borderSize                  1
+        focuscolor                  0.95294 0.72156 0.21176 1
+        fadeClamp                   1
+        fadeCycle                   1
+        fadeAmount                  0.1
+        onOpen
+        {
+            setfocus codxe_usermap_list;
+        }
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            text                        ""
+            rect                        0 0 0 0 0 0
+            decoration
+            visible                     1
+            execKeyInt 2
+            {
+                close codxe_usermaps;
+            }
+        }
+        itemDef
+        {
+            rect                        -600 -800 2000 2000 0 0
+            style                       3
+            decoration
+            visible                     1
+            forecolor                   0 0 0 0.75
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        0 64 640 1 4 4
+            style                       3
+            decoration
+            visible                     1
+            forecolor                   0.5 0.5 0.5 0.65
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        0 65 640 355 4 4
+            style                       3
+            decoration
+            visible                     1
+            background                  "menu_background_coop_blurred"
+        }
+        itemDef
+        {
+            rect                        22 32 100 100 1 1
+            decoration
+            visible                     1
+            textalign                   4
+            textscale                   0.5476
+            textstyle                   6
+            textfont                    1
+            text                        "Custom Maps"
+        }
+        itemDef
+        {
+            name                        "codxe_usermap_list"
+            rect                        34 78 258 310 1 1
+            type                        6
+            borderSize                  1
+            visible                     1
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            outlinecolor                0.9 0.95 1 0.5
+            noscrollbars
+            elementwidth                256
+            elementheight               23
+            feeder                      65
+            columns                     1
+                                        -4 250 64 0
+            doubleclick
+            {
+                play mouse_click;
+                setdvar ui_codxe_usermap_activate 1;
+                close codxe_usermaps;
+            }
+            onListboxSelectionChange
+            {
+                play mouse_over;
+            }
+            selectBorder                0.8 0.95 1 0
+            disableColor                0.34118 0.36863 0.37647 1
+            focusColor                  1 1 1 1
+            selectIcon                  "ui_button_xenon_3d_a_32x32"
+            highlightTexture            "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            rect                        320 90 285 142.5 1 1
+            style                       3
+            decoration
+            visible                     1
+            background                  "$codxe_usermap_preview"
+        }
+        itemDef
+        {
+            rect                        335 135 255 70 1 1
+            decoration
+            autowrapped
+            type                        1
+            visible                     when(dvarint("ui_codxe_usermap_has_preview") == 0);
+            textalign                   13
+            textscale                   0.3095
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.85 0.85 0.85 1
+            exp text                    (dvarstring("ui_codxe_usermap_preview_hint"));
+        }
+        itemDef
+        {
+            rect                        320 250 285 24 1 1
+            decoration
+            visible                     1
+            textscale                   0.4
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.953 0.722 0.212 1
+            exp text                    (dvarstring("ui_codxe_usermap_name"));
+        }
+        itemDef
+        {
+            rect                        320 280 285 80 1 1
+            decoration
+            autowrapped
+            type                        1
+            visible                     1
+            textscale                   0.3095
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    (dvarstring("ui_codxe_usermap_description"));
+        }
+        itemDef
+        {
+            rect                        320 375 285 20 1 1
+            decoration
+            visible                     1
+            textalign                   2
+            textscale                   0.3095
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    (dvarstring("ui_codxe_usermap_count"));
+        }
+        itemDef
+        {
+            rect                        0 443 640 0.5 4 4
+            style                       3
+            decoration
+            visible                     1
+            forecolor                   0.5 0.5 0.5 0.65
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration
+            visible                     1
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration
+            visible                     1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+    }
+}
