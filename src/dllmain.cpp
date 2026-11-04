@@ -1,13 +1,11 @@
 #include "pch.h"
 #include "plugin_manager.h"
 #include "notifications.h"
+#include "kernel.h"
 
 namespace
 {
 typedef void (*XexpFinishExecutableLoad_t)(PLDR_DATA_TABLE_ENTRY module, const char *commandLine);
-
-const DWORD XEXP_FINISH_EXECUTABLE_LOAD_RETAIL = 0x8007AF68;
-const DWORD XEXP_FINISH_EXECUTABLE_LOAD_DEVKIT = 0x800A17C8;
 
 // TODO: make this nicer
 const DWORD IW4_MP_TU6_TIMESTAMP = 0x4BE22338;
@@ -126,10 +124,36 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
         const xbox::Environment environment = xbox::GetEnvironment();
         DbgPrint("[codxe] Environment: %s\n", xbox::GetEnvironmentName(environment));
 
+        const xbox::KernelProfile *kernel_profile = nullptr;
+        if (environment != xbox::ENVIRONMENT_XENIA)
+        {
+            const XBOX_KRNL_VERSION &version = *XboxKrnlVersion;
+            DbgPrint("[codxe] Kernel: %u.%u.%u.%u (hardware flags=0x%08X).\n", version.Major, version.Minor,
+                     version.Build, version.Qfe, XboxHardwareInfo->Flags);
+            kernel_profile = xbox::FindKernelProfile(version.Build, environment);
+            if (kernel_profile == nullptr)
+            {
+                char message[128];
+                _snprintf_s(message, sizeof(message), _TRUNCATE, "Unsupported kernel %u.%u.%u.%u - inactive",
+                            version.Major, version.Minor, version.Build, version.Qfe);
+                DbgPrint("[codxe] Kernel rejected: no hook mapping for build %u (%s); inactive.\n", version.Build,
+                         xbox::GetEnvironmentName(environment));
+                xbox::notifications::Initialize(message);
+                return TRUE;
+            }
+            if (!xbox::IsKernelHookValid(*kernel_profile))
+            {
+                DbgPrint("[codxe] Kernel rejected: hook validation failed; inactive.\n");
+                xbox::notifications::Initialize("Kernel hook mismatch - inactive");
+                return TRUE;
+            }
+        }
+
         g_plugin_manager = new PluginManager();
 
         if (environment == xbox::ENVIRONMENT_XENIA)
         {
+            DbgPrint("[codxe] Xenia: kernel hook checks skipped.\n");
             g_plugin_manager->OnExecutableLoaded(ResolveCurrentTitleId(), ResolveCurrentTimeDateStamp());
             xbox::notifications::Initialize();
             return TRUE;
@@ -138,9 +162,7 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
         ExRegisterTitleTerminateNotification(&g_title_terminate_registration, TRUE);
         g_title_terminate_registered = true;
 
-        const auto hook_address = reinterpret_cast<XexpFinishExecutableLoad_t>(
-            environment == xbox::ENVIRONMENT_XBOX_DEVKIT ? XEXP_FINISH_EXECUTABLE_LOAD_DEVKIT
-                                                         : XEXP_FINISH_EXECUTABLE_LOAD_RETAIL);
+        const auto hook_address = reinterpret_cast<XexpFinishExecutableLoad_t>(kernel_profile->finish_load_address);
 
         DbgPrint("[codxe] Installing XexpFinishExecutableLoad hook at %p.\n", hook_address);
         g_xexp_finish_executable_load_detour =
@@ -151,6 +173,7 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
             // Preserve the persistent loader hook's trampoline. Game plugins may reset/reuse only trampoline space
             // allocated after this point when unloading on title changes.
             g_plugin_manager->SetTrampolinePoolBaseline(Detour::GetTrampolinePoolSize());
+            DbgPrint("[codxe] XexpFinishExecutableLoad hook installed.\n");
         }
         else
         {

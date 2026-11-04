@@ -39,7 +39,8 @@ bool DetectXenia()
 
 bool DetectDevkit()
 {
-    return (*(DWORD *)0x8E038610 & 0x8000) ? false : true;
+    const DWORD HARDWARE_FLAG_NOT_RETAIL = 0x10;
+    return (XboxHardwareInfo->Flags & HARDWARE_FLAG_NOT_RETAIL) != 0;
 }
 
 Environment DetectEnvironment()

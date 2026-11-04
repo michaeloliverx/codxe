@@ -238,6 +238,7 @@
       <ClCompile Include="src\plugin_manager.cpp" />
       <ClCompile Include="src\xbox360.cpp" />
       <ClCompile Include="src\notifications.cpp" />
+      <ClCompile Include="src\kernel.cpp" />
   </ItemGroup>
   <ItemGroup>
       <!-- Precompiled header -->
@@ -398,6 +399,7 @@
       <ClInclude Include="src\plugin.h" />
       <ClInclude Include="src\xbox360.h" />
       <ClInclude Include="src\notifications.h" />
+      <ClInclude Include="src\kernel.h" />
   </ItemGroup>
   <Target Name="GenerateGitVersionHeader" BeforeTargets="ClCompile">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\generate-version.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(GitVersionHeader)&quot;" />
