@@ -132,7 +132,7 @@ void DisablePlayerClipOnIntersectingBrushes(iw4::mp_tu6::scr_entref_t entref)
     iw4::mp_tu6::CG_GameMessage(0, iw4::mp_tu6::va("^2Disabled collision for brushes: %s", new_value.c_str()));
 }
 
-void clipmap::OnCGDrawActive()
+void clipmap::OnCGDrawActive(int)
 {
     if (iw4::mp_tu6::R_CheckDvarModified(noclip_brushes))
     {

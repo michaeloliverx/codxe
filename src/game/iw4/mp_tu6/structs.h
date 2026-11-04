@@ -1726,12 +1726,138 @@ static_assert(offsetof(Console, visibleLineCount) == 0x10248, "");
 static_assert(offsetof(Console, messageBuffer) == 0x10260, "");
 static_assert(offsetof(Console, color) == 0x223C0, "");
 
+struct trDebugLine_t
+{
+    float start[3];
+    float end[3];
+    float color[4];
+    int depthTest;
+};
+static_assert(sizeof(trDebugLine_t) == 44, "");
+
+struct trDebugString_t
+{
+    float xyz[3];
+    float color[4];
+    float scale;
+    char text[96];
+};
+static_assert(sizeof(trDebugString_t) == 128, "");
+
+struct clientDebugLineInfo_t
+{
+    int max;
+    int num;
+    trDebugLine_t *lines;
+    int *durations;
+};
+static_assert(sizeof(clientDebugLineInfo_t) == 16, "");
+
+struct clientDebugStringInfo_t
+{
+    int max;
+    int num;
+    trDebugString_t *strings;
+    int *durations;
+};
+static_assert(sizeof(clientDebugStringInfo_t) == 16, "");
+
+struct clientDebug_t
+{
+    int prevFromServer;
+    int fromServer;
+    clientDebugStringInfo_t clStrings;
+    clientDebugStringInfo_t svStringsBuffer;
+    clientDebugStringInfo_t svStrings;
+    clientDebugLineInfo_t clLines;
+    clientDebugLineInfo_t svLinesBuffer;
+    clientDebugLineInfo_t svLines;
+};
+static_assert(sizeof(clientDebug_t) == 0x68, "");
+static_assert(offsetof(clientDebug_t, svStringsBuffer) == 0x18, "");
+static_assert(offsetof(clientDebug_t, svLinesBuffer) == 0x48, "");
+
+enum GfxRenderCommand : __int32
+{
+    RC_PROJECTION_SET = 0x17,
+};
+
+enum GfxProjectionTypes : __int32
+{
+    GFX_PROJECTION_2D = 0x0,
+    GFX_PROJECTION_3D = 0x1,
+};
+
+struct GfxCmdHeader
+{
+    unsigned short id;
+    unsigned short byteCount;
+};
+static_assert(sizeof(GfxCmdHeader) == 4, "");
+
+struct GfxCmdProjectionSet
+{
+    GfxCmdHeader header;
+    GfxProjectionTypes projection;
+};
+static_assert(sizeof(GfxCmdProjectionSet) == 8, "");
+
+struct GfxPointVertex
+{
+    float xyz[3];
+    unsigned char color[4];
+};
+static_assert(sizeof(GfxPointVertex) == 16, "");
+
+struct GfxCmdDrawLines
+{
+    GfxCmdHeader header;
+    short lineCount;
+    unsigned char width;
+    unsigned char dimensions;
+    GfxPointVertex verts[2];
+};
+static_assert(sizeof(GfxCmdDrawLines) == 40, "");
+static_assert(offsetof(GfxCmdDrawLines, verts) == 8, "");
+
+struct GfxRenderCommandExecState
+{
+    const void *cmd;
+};
+static_assert(sizeof(GfxRenderCommandExecState) == 4, "");
+
+struct RefdefView
+{
+    float tanHalfFovX;
+    float tanHalfFovY;
+    float org[3];
+    float axis[3][3];
+    float zNear;
+};
+static_assert(sizeof(RefdefView) == 60, "");
+static_assert(offsetof(RefdefView, axis) == 20, "");
+
+// Only the refdef prefix is exposed; the remaining fields stay in cg_s padding.
+struct refdef_t
+{
+    unsigned int x;
+    unsigned int y;
+    unsigned int width;
+    unsigned int height;
+    RefdefView view;
+};
+static_assert(offsetof(refdef_t, view) == 16, "");
+
 struct __declspec(align(128)) cg_s
 {
     playerState_s predictedPlayerState;
-    char padding[1027200];
+    char padding[437288 - sizeof(playerState_s)];
+    refdef_t refdef;
+    char padding2[1039872 - 437288 - sizeof(refdef_t)];
 };
 static_assert(sizeof(cg_s) == 1039872, "");
+static_assert(offsetof(cg_s, refdef) == 437288, "");
+static_assert(offsetof(cg_s, refdef) + offsetof(refdef_t, view) + offsetof(RefdefView, axis) == 437324, "");
 
 typedef void (*BuiltinFunction)();
 typedef void (*BuiltinMethod)(scr_entref_t);
