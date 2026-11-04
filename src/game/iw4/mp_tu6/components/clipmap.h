@@ -8,7 +8,7 @@ class clipmap : public Module
     clipmap();
     ~clipmap();
 
-    static void OnCGDrawActive();
+    static void OnCGDrawActive(int localClientNum);
 };
 
 void DisablePlayerClipOnIntersectingBrushes(iw4::mp_tu6::scr_entref_t entref);

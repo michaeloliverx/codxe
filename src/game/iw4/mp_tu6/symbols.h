@@ -164,6 +164,18 @@ static Material_RegisterHandle_t Material_RegisterHandle = reinterpret_cast<Mate
 
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_t *dvar)>(0x823DDD78);
 
+static auto R_GetCommandBuffer = reinterpret_cast<GfxCmdHeader *(*)(GfxRenderCommand renderCmd, int bytes)>(0x823C68D0);
+static auto R_AddCmdDrawLines = reinterpret_cast<void (*)(
+    short lineCount, unsigned char width, unsigned char dimensions, const GfxPointVertex *verts)>(0x823C90D0);
+static auto R_AddCmdDrawTextInSpace =
+    reinterpret_cast<void (*)(const char *text, Font_s *font, const float *org, const float *xPixelStep,
+                              const float *yPixelStep, const float *color)>(0x823C7C98);
+static auto R_ConvertColorToBytes =
+    reinterpret_cast<void (*)(const float *colorFloat, unsigned char *colorBytes)>(0x823C56A8);
+static auto RB_DrawLines3D =
+    reinterpret_cast<void (*)(int count, unsigned int width, const GfxPointVertex *verts, bool depthTest)>(0x823E4070);
+static auto RB_DrawLinesCmd = reinterpret_cast<void (*)(GfxRenderCommandExecState *execState)>(0x823E4528);
+
 typedef void (*R_AddCmdDrawStretchPic_t)(float x, float y, float w, float h, float s0, float t0, float s1, float t1,
                                          const float *color, Material *material);
 static R_AddCmdDrawStretchPic_t R_AddCmdDrawStretchPic = reinterpret_cast<R_AddCmdDrawStretchPic_t>(0x823C6DB0);
@@ -303,6 +315,7 @@ static auto g_assetEntryPool = reinterpret_cast<const XAssetEntryPoolEntry *>(0x
 static auto gameWorldMp = reinterpret_cast<GameWorldMp *>(0x82DFD010);
 
 static auto cgArray = reinterpret_cast<cg_s **>(0x824C5B64);
+static auto clsDebug = reinterpret_cast<const clientDebug_t *>(0x82509890); // cls.debug
 static auto clients = reinterpret_cast<clientActive_t **>(0x825A8B6C);
 static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x825A5918);
 static auto con = reinterpret_cast<Console *>(0x824DF4A8);

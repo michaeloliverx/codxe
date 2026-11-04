@@ -239,7 +239,7 @@ void MovementRecorder::OnCmdInit()
     Cmd_AddCommandInternal("stopplayback", Cmd_Stopplayback_f, &Cmd_Stopplayback_VAR);
 }
 
-void MovementRecorder::OnCGDrawActive()
+void MovementRecorder::OnCGDrawActive(int)
 {
     if (is_playing)
     {

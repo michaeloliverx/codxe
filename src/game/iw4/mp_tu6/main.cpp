@@ -3,6 +3,7 @@
 #include "components/clipmap.h"
 #include "components/cmds.h"
 #include "components/console.h"
+#include "components/debug_draw.h"
 #include "components/events.h"
 #include "components/fastfiles.h"
 #include "components/gsc_fields.h"
@@ -26,6 +27,7 @@ IW4_MP_TU6_Plugin::IW4_MP_TU6_Plugin()
     RegisterModule(new Events()); // Must be registered first to ensure hooks are in place
     RegisterModule(new fastfiles());
     RegisterModule(new cg());
+    RegisterModule(new DebugDraw());
     RegisterModule(new clipmap());
     RegisterModule(new cmds());
     RegisterModule(new console());

@@ -3,6 +3,7 @@
 
 #include "clipmap.h"
 #include "console.h"
+#include "debug_draw.h"
 #include "gsc.h"
 #include "mr.h"
 #include "pm.h"
@@ -12,12 +13,14 @@
 namespace
 {
 typedef void (*EventHandler)();
+typedef void (*CGDrawActiveHandler)(int localClientNum);
 
 const EventHandler dvarInitHandlers[] = {
     iw4::mp_tu6::pm::OnDvarInit,
 };
 
-const EventHandler cgDrawActiveHandlers[] = {
+const CGDrawActiveHandler cgDrawActiveHandlers[] = {
+    iw4::mp_tu6::DebugDraw::OnCGDrawActive,
     clipmap::OnCGDrawActive,
     iw4::mp_tu6::MovementRecorder::OnCGDrawActive,
 };
@@ -53,7 +56,7 @@ void Events::CG_DrawActive_Hook(int localClientNum)
 
     for (size_t i = 0; i < ARRAYSIZE(cgDrawActiveHandlers); ++i)
     {
-        cgDrawActiveHandlers[i]();
+        cgDrawActiveHandlers[i](localClientNum);
     }
 }
 
