@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "plugin_manager.h"
+#include "notifications.h"
 
 namespace
 {
@@ -19,6 +20,7 @@ bool g_title_terminate_registered = false;
 
 void TitleTerminateNotification()
 {
+    xbox::notifications::OnTitleTerminate();
     if (g_plugin_manager != nullptr)
     {
         g_plugin_manager->OnTitleTerminate();
@@ -129,6 +131,7 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
         if (environment == xbox::ENVIRONMENT_XENIA)
         {
             g_plugin_manager->OnExecutableLoaded(ResolveCurrentTitleId(), ResolveCurrentTimeDateStamp());
+            xbox::notifications::Initialize();
             return TRUE;
         }
 
@@ -153,10 +156,13 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
         {
             DbgPrint("[codxe] Failed to install XexpFinishExecutableLoad hook.\n");
         }
+
+        xbox::notifications::Initialize();
     }
     else if (reason == DLL_PROCESS_DETACH)
     {
         DbgPrint("[codxe] DLL_PROCESS_DETACH.\n");
+        xbox::notifications::Shutdown();
 
         if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
         {
