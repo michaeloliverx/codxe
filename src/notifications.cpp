@@ -58,7 +58,8 @@ StartupDelay g_startup_delay;
 volatile LONG g_stopping;
 volatile LONG g_title_generation;
 bool g_in_xenia;
-WCHAR g_loaded_text[] = L"CoD Xe: Loaded";
+char g_console_message[128];
+WCHAR g_startup_text[160];
 WCHAR g_unloaded_text[] = L"CoD Xe: Unloaded";
 
 bool IsTitleRunning()
@@ -121,10 +122,10 @@ DWORD WINAPI StartupThread(void *)
         const LONG generation = InterlockedCompareExchange(&g_title_generation, 0, 0);
         if (delay.Observe(title_id, generation, title_id && IsTitleRunning()))
         {
-            Notification notification = {title_id, generation, g_loaded_text, false, 0};
+            Notification notification = {title_id, generation, g_startup_text, false, 0};
             if (DispatchNotification(notification))
             {
-                DbgPrint("[codxe] Loaded.\n");
+                DbgPrint("[codxe] %s.\n", g_console_message);
                 return 0;
             }
             // A title transition may terminate the dispatcher before it submits the notification.
@@ -139,8 +140,21 @@ DWORD WINAPI StartupThread(void *)
 }
 } // namespace
 
-void xbox::notifications::Initialize()
+void xbox::notifications::Initialize(const char *message)
 {
+    // Own the message: the startup worker outlives this call.
+    _snprintf_s(g_console_message, sizeof(g_console_message), _TRUNCATE, "%s", message);
+    char text[ARRAYSIZE(g_startup_text)];
+    _snprintf_s(text, sizeof(text), _TRUNCATE, "CoD Xe: %s", g_console_message);
+    for (size_t i = 0; i < ARRAYSIZE(text); ++i)
+    {
+        g_startup_text[i] = static_cast<unsigned char>(text[i]);
+        if (text[i] == '\0')
+        {
+            break;
+        }
+    }
+
     HANDLE xam = nullptr;
     if (!NT_SUCCESS(XexGetModuleHandle("xam.xex", &xam)) ||
         !NT_SUCCESS(XexGetProcedureAddress(xam, 656, &g_queue_notification)) || !g_queue_notification)
@@ -152,8 +166,8 @@ void xbox::notifications::Initialize()
     if (g_in_xenia)
     {
         // Xenia implements the popup itself and loads plugins directly into the game.
-        g_queue_notification(XNOTIFYUI_TYPE_EXCLAIM, XUSER_INDEX_ANY, XNOTIFY_SYSTEM, g_loaded_text, nullptr);
-        DbgPrint("[codxe] Loaded.\n");
+        g_queue_notification(XNOTIFYUI_TYPE_EXCLAIM, XUSER_INDEX_ANY, XNOTIFY_SYSTEM, g_startup_text, nullptr);
+        DbgPrint("[codxe] %s.\n", g_console_message);
         return;
     }
 
