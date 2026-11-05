@@ -49,10 +49,10 @@ static gentity_s *GetPlayerEntity(scr_entref_t entref)
 
 static int ClampMove(int value)
 {
-    if (value < -127)
-        return -127;
-    if (value > 127)
-        return 127;
+    if (value < -SCHAR_MAX)
+        return -SCHAR_MAX;
+    if (value > SCHAR_MAX)
+        return SCHAR_MAX;
     return value;
 }
 
@@ -60,8 +60,8 @@ static unsigned char ClampByte(int value)
 {
     if (value < 0)
         return 0;
-    if (value > 255)
-        return 255;
+    if (value > UCHAR_MAX)
+        return UCHAR_MAX;
     return static_cast<unsigned char>(value);
 }
 

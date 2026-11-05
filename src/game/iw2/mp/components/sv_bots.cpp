@@ -55,12 +55,12 @@ BotMovementInfo *GetBot(scr_entref_t entref)
 
 char ClampMove(int value)
 {
-    return static_cast<char>(value < -127 ? -127 : (value > 127 ? 127 : value));
+    return static_cast<char>(value < -SCHAR_MAX ? -SCHAR_MAX : (value > SCHAR_MAX ? SCHAR_MAX : value));
 }
 
 int AngleToShort(float angle)
 {
-    return static_cast<int>(angle * (65536.0f / 360.0f)) & 65535;
+    return static_cast<int>(angle * (65536.0f / 360.0f)) & USHRT_MAX;
 }
 
 const char *ConnectClient(int clientNum, unsigned int scriptId)
@@ -163,7 +163,7 @@ void BotUserMove(client_t *client)
     for (int i = 0; i < 3; ++i)
     {
         const float angle = bot.hasAngles ? bot.angles[i] : gameClient->ps.viewangles[i];
-        cmd.angles[i] = (AngleToShort(angle) - gameClient->ps.delta_angles[i]) & 65535;
+        cmd.angles[i] = (AngleToShort(angle) - gameClient->ps.delta_angles[i]) & USHRT_MAX;
     }
     client->deltaMessage = client->outgoingSequence - 1;
     SV_ClientThink(client, &cmd);
