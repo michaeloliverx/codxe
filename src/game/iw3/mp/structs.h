@@ -1987,6 +1987,7 @@ struct __declspec(align(4)) client_t
     unsigned __int8 statPacketsReceived;
 };
 static_assert(sizeof(client_t) == 666760, "");
+static_assert(__alignof(client_t) == 4, "");
 static_assert(offsetof(client_t, gentity) == 0x21280, "");
 
 struct clientState_s;
@@ -3466,6 +3467,13 @@ struct XFile
     unsigned int blockSize[MAX_XFILE_COUNT];
 };
 
+enum
+{
+    PHYS_ALLOC_LOW = 0x0,
+    PHYS_ALLOC_HIGH = 0x1,
+    PHYS_ALLOC_COUNT = 0x2,
+};
+
 enum DBZoneFlags : __int32
 {
     DB_ZONE_NONE = 0x0,
@@ -3559,6 +3567,7 @@ struct __declspec(align(32)) serverStatic_t
     float mapCenter[3];
 };
 static_assert(sizeof(serverStatic_t) == 0x1AAE000, "");
+static_assert(offsetof(serverStatic_t, clients) == 0xA100C, "");
 
 struct SpawnVar
 {

@@ -7,6 +7,26 @@ namespace mp
 {
 namespace
 {
+Detour SV_AllocateClientMemory_Detour;
+Detour SV_SpawnServer_Detour;
+
+void SV_AllocateClientMemory_Hook()
+{
+    // Splitscreen normally allocates only four server slots, independently of sv_maxclients.
+    const unsigned int size = sizeof(client_t) * MAX_CLIENTS;
+    svs->clients = reinterpret_cast<client_t *>(PMem_Alloc(size, __alignof(client_t), PAGE_READWRITE, PHYS_ALLOC_HIGH));
+    memset(svs->clients, 0, size);
+}
+
+void SV_SpawnServer_Hook(const char *server)
+{
+    // Apply this after default_splitscreen.cfg and before SV_Startup sizes the snapshot ring.
+    if (Dvar_GetBool("splitscreen"))
+        Dvar_SetIntByName("sv_maxclients", MAX_CLIENTS);
+
+    SV_SpawnServer_Detour.GetOriginal<decltype(SV_SpawnServer)>()(server);
+}
+
 void ExpandPMem()
 {
     // Xenia has its own TOML patch that has a higher limit
@@ -25,6 +45,18 @@ void ExpandPMem()
 Patches::Patches()
 {
     ExpandPMem();
+
+    SV_AllocateClientMemory_Detour = Detour(SV_AllocateClientMemory, SV_AllocateClientMemory_Hook);
+    SV_AllocateClientMemory_Detour.Install();
+
+    SV_SpawnServer_Detour = Detour(SV_SpawnServer, SV_SpawnServer_Hook);
+    SV_SpawnServer_Detour.Install();
+}
+
+Patches::~Patches()
+{
+    SV_SpawnServer_Detour.Remove();
+    SV_AllocateClientMemory_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw3
