@@ -28,7 +28,7 @@ namespace mp
 #define KEY_MASK_USE 8
 #define KEY_MASK_USERELOAD 32
 #define BUTTON_ATTACK KEY_MASK_FIRE
-#define MAX_CLIENTS 18
+#define MAX_CLIENTS 24
 
 #define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & USHRT_MAX)
 #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
@@ -140,6 +140,7 @@ static auto Dvar_RegisterString =
         0x821D1040);
 typedef void (*Dvar_SetStringFromSource_t)(dvar_s *dvar, const char *value, DvarSetSource source);
 static Dvar_SetStringFromSource_t Dvar_SetStringFromSource = reinterpret_cast<Dvar_SetStringFromSource_t>(0x821D4148);
+static auto Dvar_SetIntByName = reinterpret_cast<void (*)(const char *dvarName, int value)>(0x821D47E8);
 
 typedef gentity_s *(*GetEntity_t)(scr_entref_t entref);
 static GetEntity_t GetEntity = reinterpret_cast<GetEntity_t>(0x82257F30);
@@ -213,6 +214,11 @@ static SV_ClientThink_t SV_ClientThink = reinterpret_cast<SV_ClientThink_t>(0x82
 
 typedef void (*SV_BotUserMove_t)(client_t *cl);
 static SV_BotUserMove_t SV_BotUserMove = reinterpret_cast<SV_BotUserMove_t>(0x822009A8);
+
+static auto SV_AllocateClientMemory = reinterpret_cast<void (*)()>(0x82202348);
+static auto SV_SpawnServer = reinterpret_cast<void (*)(const char *server)>(0x82202B50);
+static auto PMem_Alloc = reinterpret_cast<unsigned char *(*)(unsigned int size, unsigned int alignment,
+                                                             unsigned int type, unsigned int allocType)>(0x821CFFD8);
 
 typedef playerState_s *(*SV_GameClientNum_t)(int num);
 static SV_GameClientNum_t SV_GameClientNum = reinterpret_cast<SV_GameClientNum_t>(0x82204250);

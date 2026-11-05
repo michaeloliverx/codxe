@@ -18,6 +18,15 @@ struct BotMovementInfo_t
 
 BotMovementInfo_t g_botai[MAX_CLIENTS];
 
+static BotMovementInfo_t &GetBotState(scr_entref_t entref)
+{
+    GetPlayerEntity(entref);
+    if (entref.entnum >= MAX_CLIENTS)
+        Scr_ObjectError("client index is out of range");
+
+    return g_botai[entref.entnum];
+}
+
 static void CleanBotArray()
 {
     ZeroMemory(&g_botai, sizeof(g_botai));
@@ -40,10 +49,12 @@ void G_SelectWeaponIndex_Hook(int clientNum, int iWeaponIndex)
 Detour SV_BotUserMove_Detour;
 void SV_BotUserMove_Stub(client_t *cl)
 {
-    if (!cl->gentity)
+    if (!cl || !cl->gentity)
         return;
 
     const int clientNum = cl - svsHeader->clients;
+    if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+        return;
 
     usercmd_s cmd;
     memset(&cmd, 0, sizeof(cmd));
@@ -104,7 +115,7 @@ void SV_BotUserMove_Stub(client_t *cl)
         if (g_botai[clientNum].is_mirroring_client)
         {
             const int mirror_num = g_botai[clientNum].mirror_client_num;
-            if (mirror_num < MAX_CLIENTS)
+            if (mirror_num >= 0 && mirror_num < MAX_CLIENTS)
             {
                 const usercmd_s &lastUsercmd = svsHeader->clients[mirror_num].lastUsercmd;
                 cmd.buttons = lastUsercmd.buttons;
@@ -137,21 +148,21 @@ const BotAction_t BotActions[] = {{"gostand", KEY_MASK_JUMP},          {"gocrouc
 
 void Scr_BotMoveTo(scr_entref_t entref)
 {
-    GetPlayerEntity(entref);
+    BotMovementInfo_t &bot = GetBotState(entref);
 
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: <bot> botMoveTo(<vec3 position>);");
 
     float moveTo[3];
     Scr_GetVector(0, moveTo);
-    g_botai[entref.entnum].moveTo[0] = moveTo[0];
-    g_botai[entref.entnum].moveTo[1] = moveTo[1];
-    g_botai[entref.entnum].doMove = 1;
+    bot.moveTo[0] = moveTo[0];
+    bot.moveTo[1] = moveTo[1];
+    bot.doMove = 1;
 }
 
 void Scr_BotAction(scr_entref_t entref)
 {
-    GetPlayerEntity(entref);
+    BotMovementInfo_t &bot = GetBotState(entref);
 
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: <bot> botAction(<action>);");
@@ -166,9 +177,9 @@ void Scr_BotAction(scr_entref_t entref)
         if (!stricmp(&action[1], BotActions[i].action))
         {
             if (action[0] == '+')
-                g_botai[entref.entnum].buttons |= BotActions[i].key;
+                bot.buttons |= BotActions[i].key;
             else
-                g_botai[entref.entnum].buttons &= ~(BotActions[i].key);
+                bot.buttons &= ~(BotActions[i].key);
 
             return;
         }
@@ -186,20 +197,19 @@ void Scr_BotAction(scr_entref_t entref)
 
 void Scr_BotStop(scr_entref_t entref)
 {
-    GetPlayerEntity(entref);
+    BotMovementInfo_t &bot = GetBotState(entref);
 
     if (Scr_GetNumParam() != 0)
         Scr_Error("Usage: <bot> botStop();");
 
-    g_botai[entref.entnum].buttons = 0;
-    g_botai[entref.entnum].is_mirroring_client = false;
-    g_botai[entref.entnum].doMove = 0;
+    bot.buttons = 0;
+    bot.is_mirroring_client = false;
+    bot.doMove = 0;
 }
 
 void Scr_BotMirror(scr_entref_t entref)
 {
-    // Validate self is a player entity
-    GetPlayerEntity(entref);
+    BotMovementInfo_t &bot = GetBotState(entref);
 
     if (Scr_GetNumParam() != 1)
         Scr_Error("Usage: <bot> BotMirror(<client>);");
@@ -209,13 +219,16 @@ void Scr_BotMirror(scr_entref_t entref)
         Scr_Error("not a player");
 
     const int clientNum = targetEntity->client - g_clients;
+    if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+        Scr_ParamError(0, "client index is out of range");
+
     if (entref.entnum == clientNum)
     {
         Scr_Error("BotMirror: a bot cannot mirror itself.");
     }
 
-    g_botai[entref.entnum].is_mirroring_client = true;
-    g_botai[entref.entnum].mirror_client_num = clientNum;
+    bot.is_mirroring_client = true;
+    bot.mirror_client_num = clientNum;
 }
 
 static char s_pendingBotName[32];
@@ -274,7 +287,7 @@ void SV_CalcPings_Stub()
 {
     static const dvar_s *sv_maxclients = Dvar_FindMalleableVar("sv_maxclients");
 
-    for (int i = 0; i < sv_maxclients->current.integer; i++)
+    for (int i = 0; i < sv_maxclients->current.integer && i < MAX_CLIENTS; i++)
     {
         client_t *cl = &svs->clients[i];
 
