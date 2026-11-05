@@ -358,7 +358,7 @@ void UpdateSelectedUsermap()
     SetMenuDvar("ui_codxe_usermap_name", entry.displayName);
     SetMenuDvar("ui_codxe_usermap_description", entry.description);
     SetMenuDvar("ui_codxe_usermap_count", count);
-    SetMenuDvar("ui_codxe_usermap_preview_hint", std::string("Add preview.dds to _codxe/usermaps/") + entry.name);
+    SetMenuDvar("ui_codxe_usermap_preview_hint", std::string("Add preview.dds to usermaps/") + entry.name);
 
     const bool replaced = !entry.previewPath.empty() && ReplacePreview(entry.previewPath);
     SetMenuDvar("ui_codxe_usermap_has_preview", replaced ? "1" : "0");
@@ -376,19 +376,13 @@ void ScanUsermaps()
     selectedUsermap = 0;
     usermapsScanned = true;
 
-    const std::string root = Config::ResolveDataDirectory(CODXE_USERMAPS_DIRECTORY);
-    if (root.empty())
-    {
-        UpdateSelectedUsermap();
-        DbgPrint("[codxe][T4 SP][UI] Usermap directory is unavailable\n");
-        return;
-    }
-
+    const std::string root = filesystem::JoinPath(Config::GetDataRoot(), CODXE_USERMAPS_DIRECTORY);
     WIN32_FIND_DATAA findData;
     const std::string pattern = filesystem::JoinPath(root.c_str(), "*");
     HANDLE findHandle = FindFirstFileA(pattern.c_str(), &findData);
     if (findHandle == INVALID_HANDLE_VALUE)
     {
+        DbgPrint("[codxe][T4 SP][UI] Usermap directory is unavailable: %s\n", root.c_str());
         UpdateSelectedUsermap();
         return;
     }

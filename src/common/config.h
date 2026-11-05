@@ -2,11 +2,8 @@
 
 #include "pch.h"
 
-extern const char *CONFIG_PATH;
-extern const char *MOD_DIR;
-extern const char *DUMP_DIR;
-
-bool ReadFileToString(const char *path, std::string &outString);
+extern const char *const MOD_DIR;
+extern const char *const DUMP_DIR;
 
 class Config : public Module
 {
@@ -17,16 +14,15 @@ class Config : public Module
     static bool dump_rawfile;
     static bool dump_map_ents;
 
+    static bool Initialize(HANDLE module);
+    static bool MountGameDirectory(const char *game);
+    static const char *GetDataRoot();
     static const char *GetActiveMod();
     static std::string ResolveModPath(const char *relativePath);
     static std::string ResolveDataPath(const char *relativePath);
-    static std::string ResolveDataDirectory(const char *relativePath);
-    static std::string ResolveDataPathForGameFile(const char *relativePath);
 
   private:
     static char active_mod[MAX_PATH];
-    static char mod_base_path[MAX_PATH];
 
     bool LoadFromJson(const char *jsonBuffer, DWORD bufferSize);
-    bool LoadFromFile(const char *path);
 };

@@ -94,7 +94,8 @@ void Load_MapEntsPtr_Hook()
 
         // Load map ents from file
         // Path to check for existing entity file
-        const std::string rawFilePath = map_ents::BuildPath("game:\\raw", mapEnts->name);
+        const std::string rawFilePath =
+            map_ents::BuildPath(filesystem::JoinPath(Config::GetDataRoot(), "raw").c_str(), mapEnts->name);
         if (rawFilePath.empty())
         {
             return;

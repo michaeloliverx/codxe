@@ -2,17 +2,18 @@
 
 namespace filesystem
 {
+namespace
+{
 void NormalizePathSeparators(char *path)
 {
-    if (!path)
-        return;
-
     for (; *path; ++path)
     {
         if (*path == '/')
             *path = '\\';
     }
 }
+
+} // namespace
 
 std::string JoinPath(const char *basePath, const char *relativePath)
 {
@@ -43,12 +44,9 @@ void CreateDirectories(const char *path)
     NormalizePathSeparators(&directory[0]);
 
     char *p = &directory[0];
-    const bool hasDrivePrefix = directory.size() >= 3 && p[1] == ':' && p[2] == '\\';
-    const bool hasGamePrefix = directory.size() >= 6 && strncmp(p, "game:\\", 6) == 0;
-
-    // Skip leading drive letter (e.g., "C:\") or "game:\" prefix
-    if (hasDrivePrefix || hasGamePrefix)
-        p += (hasDrivePrefix ? 3 : 6); // Move past "C:\" or "game:\"
+    const size_t drive = directory.find(":\\");
+    if (drive != std::string::npos)
+        p += drive + 2; // Skip any mounted device name, including codxe: and game:.
 
     for (; *p; p++)
     {
@@ -75,13 +73,8 @@ void CreateParentDirectories(const char *path)
     if (lastSeparator == std::string::npos)
         return;
 
-    const bool isDriveRoot = lastSeparator == 2 && directory.size() > 1 && directory[1] == ':';
-    const bool isGameRoot =
-        lastSeparator == 5 && directory.size() >= 6 && strncmp(directory.c_str(), "game:\\", 6) == 0;
-    if (isDriveRoot || isGameRoot)
-    {
+    if (lastSeparator && directory[lastSeparator - 1] == ':')
         return;
-    }
 
     directory.erase(lastSeparator);
     CreateDirectories(directory.c_str());

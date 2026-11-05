@@ -8,16 +8,10 @@ namespace mp_tu6
 namespace
 {
 const char *const CODXE_PATCH_ZONE = "codxe_patch_mp";
-const char *const CODXE_PATCH_FILENAME = "codxe_patch_mp.ff";
-const char *const CODXE_PATCH_RELATIVE_PATH = "_codxe\\zone\\codxe_patch_mp.ff";
-const char *const CODXE_PATCH_PATH = "game:\\_codxe\\zone\\codxe_patch_mp.ff";
+const char *const CODXE_PATCH_PATH = "codxe:\\zone\\codxe_patch_mp.ff";
 const char *const CODXE_UI_ZONE = "codxe_ui_mp";
-const char *const CODXE_UI_FILENAME = "codxe_ui_mp.ff";
-const char *const CODXE_UI_RELATIVE_PATH = "_codxe\\zone\\codxe_ui_mp.ff";
-const char *const CODXE_UI_PATH = "game:\\_codxe\\zone\\codxe_ui_mp.ff";
-const char *const CODXE_ZONE_RELATIVE_DIRECTORY = "_codxe\\zone\\";
+const char *const CODXE_UI_PATH = "codxe:\\zone\\codxe_ui_mp.ff";
 const char *const CODXE_IMAGEFILE_FILENAME = "imagefile5.pak";
-const char *const GAME_DEVICE_PREFIX = "game:\\";
 const char *const FASTFILE_EXTENSION = ".ff";
 const unsigned int MAX_ZONE_COUNT = 32;
 
@@ -132,33 +126,20 @@ void DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)
 SysFile Sys_CreateFile_Hook(const char *dir, const char *filename)
 {
     auto original = Sys_CreateFile_Detour.GetOriginal<Sys_CreateFile_t>();
+    if (!filename || (!IsSafeFastfileName(filename) && std::strcmp(filename, CODXE_IMAGEFILE_FILENAME) != 0))
+        return original(dir, filename);
 
-    if (filename && std::strcmp(filename, CODXE_PATCH_FILENAME) == 0)
-        return original(dir, CODXE_PATCH_RELATIVE_PATH);
+    const std::string path = Config::ResolveDataPath((std::string("zone/") + filename).c_str());
+    if (path.empty())
+        return original(dir, filename);
 
-    if (filename && std::strcmp(filename, CODXE_UI_FILENAME) == 0)
-        return original(dir, CODXE_UI_RELATIVE_PATH);
-
-    if (filename && std::strcmp(filename, CODXE_IMAGEFILE_FILENAME) == 0)
-    {
-        const std::string relativePath = std::string(CODXE_ZONE_RELATIVE_DIRECTORY) + filename;
-        const std::string devicePath = std::string(GAME_DEVICE_PREFIX) + relativePath;
-
-        if (filesystem::FileExists(devicePath.c_str()))
-            return original(dir, relativePath.c_str());
-    }
-
-    if (IsSafeFastfileName(filename))
-    {
-        const std::string relativePath = std::string(CODXE_ZONE_RELATIVE_DIRECTORY) + filename;
-        const std::string devicePath = std::string(GAME_DEVICE_PREFIX) + relativePath;
-
-        if (filesystem::FileExists(devicePath.c_str()))
-            return original(dir, relativePath.c_str());
-    }
-
-    return original(dir, filename);
+    // Shared-root overrides use native streamed-file flags and start at offset zero.
+    HANDLE file = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                              FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, NULL);
+    SysFile result = {file, 0};
+    return result;
 }
+
 } // namespace
 
 fastfiles::fastfiles()

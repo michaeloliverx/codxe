@@ -1,101 +1,34 @@
 #include "pch.h"
 #include "config.h"
 
-#ifndef INVALID_FILE_ATTRIBUTES
-#define INVALID_FILE_ATTRIBUTES ((DWORD) - 1)
-#endif
-
-#ifndef INVALID_FILE_SIZE
-#define INVALID_FILE_SIZE ((DWORD) - 1)
-#endif
-
-const char *CONFIG_PATH = "game:\\_codxe\\codxe.json";
-const char *MOD_DIR = "game:\\_codxe\\mods";
-const char *DUMP_DIR = "game:\\_codxe\\dump";
+const char *const MOD_DIR = "codxe:\\mods";
+const char *const DUMP_DIR = "codxe:\\dump";
 
 // Default values
 char Config::active_mod[MAX_PATH] = {};
 bool Config::dump_rawfile = false;
 bool Config::dump_map_ents = false;
-char Config::mod_base_path[MAX_PATH] = {};
 
 namespace
 {
-const char *CONFIG_DEVICE_LINK_NAME = "codxe:";
-const char *CONFIG_DEVICE_LINK_PATH = "codxe:\\";
+const char *const CONFIG_PATH = "codxe:\\codxe.json";
+char installRoot[MAX_PATH];
 
-bool StartsWith(const std::string &value, const char *prefix)
+bool MountDevice(const char *name, const char *path)
 {
-    return strncmp(value.c_str(), prefix, strlen(prefix)) == 0;
+    STRING link, device;
+    RtlInitAnsiString(&link, name);
+    RtlInitAnsiString(&device, path);
+    ObDeleteSymbolicLink(&link);
+    const NTSTATUS status = ObCreateSymbolicLink(&link, &device);
+    if (!NT_SUCCESS(status))
+        DbgPrint("[codxe][Config] Could not mount %s at %s: %08X\n", path, name, status);
+    return NT_SUCCESS(status);
 }
-
-bool TryGetDeviceRoot(const std::string &path, std::string &device_root)
-{
-    const char *device_prefix = "\\Device\\";
-    if (!StartsWith(path, device_prefix))
-        return false;
-
-    size_t root_end = path.find('\\', strlen(device_prefix));
-    if (root_end == std::string::npos)
-        return false;
-
-    if (path.find("\\Device\\Harddisk") == 0)
-    {
-        root_end = path.find('\\', root_end + 1);
-        if (root_end == std::string::npos)
-            return false;
-    }
-
-    device_root = path.substr(0, root_end + 1);
-    return true;
-}
-
-bool MountConfigDevice(const char *device_path)
-{
-    const DWORD process_type = KeGetCurrentProcessType();
-    const std::string link_path =
-        std::string(process_type == PROC_SYSTEM ? "\\System??\\" : "\\??\\") + CONFIG_DEVICE_LINK_NAME;
-
-    STRING link = {};
-    STRING device = {};
-    RtlInitAnsiString(&link, link_path.c_str());
-    RtlInitAnsiString(&device, device_path);
-
-    const NTSTATUS delete_status = ObDeleteSymbolicLink(&link);
-    const NTSTATUS create_status = ObCreateSymbolicLink(&link, &device);
-    UNREFERENCED_PARAMETER(delete_status);
-
-    return NT_SUCCESS(create_status);
-}
-
-bool BuildMountedConfigPath(const std::string &device_config_path, std::string &mounted_config_path)
-{
-    std::string device_path;
-    if (!TryGetDeviceRoot(device_config_path, device_path))
-        return false;
-
-    if (!MountConfigDevice(device_path.c_str()))
-        return false;
-
-    mounted_config_path = std::string(CONFIG_DEVICE_LINK_PATH) + device_config_path.substr(device_path.size());
-    return true;
-}
-} // namespace
 
 bool ReadFileToString(const char *path, std::string &outString)
 {
     outString.clear();
-
-    const DWORD attrs = GetFileAttributesA(path);
-    if (attrs == INVALID_FILE_ATTRIBUTES)
-    {
-        DbgPrint("[codxe][Config] GetFileAttributes failed for: %s error=0x%08X\n", path, GetLastError());
-    }
-    else if ((attrs & FILE_ATTRIBUTE_DIRECTORY) != 0)
-    {
-        DbgPrint("[codxe][Config] Config path is a directory: %s\n", path);
-        return false;
-    }
 
     HANDLE file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
                               FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -143,44 +76,68 @@ bool ReadFileToString(const char *path, std::string &outString)
     return true;
 }
 
+} // namespace
+
+bool Config::Initialize(HANDLE module)
+{
+    if (xbox::GetEnvironment() == xbox::ENVIRONMENT_XENIA)
+    {
+        // Canary mounts the current title's plugin folder and omits FullDllName.
+        strcpy_s(installRoot, "\\Device\\Plugins\\_codxe");
+    }
+    else
+    {
+        const auto self = static_cast<PLDR_DATA_TABLE_ENTRY>(module);
+        const unsigned length = self->FullDllName.Length / sizeof(WCHAR);
+        if (length >= ARRAYSIZE(installRoot))
+            return false;
+        unsigned lastSlash = 0;
+        for (unsigned i = 0; i < length; ++i)
+        {
+            const WCHAR c = self->FullDllName.Buffer[i];
+            if (c > 127)
+                return false;
+            installRoot[i] = static_cast<char>(c);
+            if (c == '\\')
+                lastSlash = i;
+        }
+        if (!lastSlash)
+            return false;
+        installRoot[lastSlash] = 0;
+    }
+    DbgPrint("[codxe][Config] Install root: %s\n", installRoot);
+    return true;
+}
+
+bool Config::MountGameDirectory(const char *game)
+{
+    char path[MAX_PATH];
+    if (_snprintf_s(path, ARRAYSIZE(path), _TRUNCATE, "%s\\games\\%s", installRoot, game) < 0)
+    {
+        DbgPrint("[codxe][Config] Data path is too long for %s\n", game);
+        return false;
+    }
+    if (!MountDevice("\\??\\codxe:", path))
+        return false;
+    // The current loader constructs components in system context; game I/O uses title context.
+    if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA && !MountDevice("\\System??\\codxe:", path))
+        return false;
+    DbgPrint("[codxe][Config] Game data: %s\n", path);
+    return true;
+}
+
+const char *Config::GetDataRoot()
+{
+    return "codxe:\\";
+}
+
 Config::Config()
 {
-    std::string config_path = CONFIG_PATH;
+    DbgPrint("[codxe][Config] Loading configuration from: %s\n", CONFIG_PATH);
 
-    if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA)
-    {
-        const auto module = reinterpret_cast<PLDR_DATA_TABLE_ENTRY>(GetModuleHandle(nullptr));
-        if (module != nullptr && module->FullDllName.Buffer != nullptr && module->FullDllName.Length != 0)
-        {
-            std::string full_path;
-            const size_t character_count = module->FullDllName.Length / sizeof(WCHAR);
-            full_path.reserve(character_count);
-            for (size_t i = 0; i < character_count; ++i)
-            {
-                full_path.push_back(static_cast<char>(module->FullDllName.Buffer[i]));
-            }
-
-            const size_t slash = full_path.find_last_of("\\/");
-            if (slash != std::string::npos)
-            {
-                // On hardware Config is constructed before game: is retargeted to the new title.
-                // Only the config file load needs this early executable-relative path.
-                config_path = full_path.substr(0, slash) + "\\_codxe\\codxe.json";
-
-                std::string mounted_config_path;
-                if (BuildMountedConfigPath(config_path, mounted_config_path))
-                {
-                    // XDK file APIs do not accept raw \Device\Mass0 paths here. A private symbolic
-                    // link keeps the early config load executable-relative without relying on game:.
-                    config_path = mounted_config_path;
-                }
-            }
-        }
-    }
-
-    DbgPrint("[codxe][Config] Loading configuration from: %s\n", config_path.c_str());
-
-    if (!LoadFromFile(config_path.c_str()))
+    std::string contents;
+    if (!ReadFileToString(CONFIG_PATH, contents) ||
+        !LoadFromJson(contents.c_str(), static_cast<DWORD>(contents.size())))
     {
         DbgPrint("[codxe][Config] Failed to load config file, using defaults\n");
     }
@@ -190,7 +147,6 @@ Config::~Config()
 {
     // Reset to defaults on cleanup
     active_mod[0] = '\0';
-    mod_base_path[0] = '\0';
     dump_rawfile = false;
     dump_map_ents = false;
     DbgPrint("[codxe][Config] Configuration unloaded\n");
@@ -251,28 +207,6 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
     DbgPrint("  Dump Raw Scripts: %s\n", dump_rawfile ? "true" : "false");
     DbgPrint("  Dump Map Entities: %s\n", dump_map_ents ? "true" : "false");
 
-    if (active_mod[0] != '\0')
-    {
-        // Config loads before game: is guaranteed to point at the new executable root on hardware.
-        // Keep the intended path and let later game-lifecycle file accesses validate it naturally.
-        _snprintf_s(mod_base_path, ARRAYSIZE(mod_base_path), _TRUNCATE, "%s\\%s", MOD_DIR, active_mod);
-    }
-
-    return true;
-}
-
-bool Config::LoadFromFile(const char *path)
-{
-    std::string jsonContent;
-    if (!ReadFileToString(path, jsonContent))
-        return false;
-
-    if (!LoadFromJson(jsonContent.c_str(), static_cast<DWORD>(jsonContent.size())))
-    {
-        DbgPrint("[codxe][Config] Failed to parse config JSON from: %s\n", path);
-        return false;
-    }
-
     return true;
 }
 
@@ -283,10 +217,11 @@ const char *Config::GetActiveMod()
 
 std::string Config::ResolveModPath(const char *relativePath)
 {
-    if (!relativePath || !*relativePath || !mod_base_path[0])
+    if (!relativePath || !*relativePath || !active_mod[0])
         return std::string();
 
-    return filesystem::JoinPath(mod_base_path, relativePath);
+    const std::string directory = filesystem::JoinPath(MOD_DIR, active_mod);
+    return filesystem::JoinPath(directory.c_str(), relativePath);
 }
 
 std::string Config::ResolveDataPath(const char *relativePath)
@@ -294,23 +229,6 @@ std::string Config::ResolveDataPath(const char *relativePath)
     if (!relativePath || !*relativePath)
         return std::string();
 
-    const std::string path = filesystem::JoinPath("game:\\_codxe", relativePath);
+    const std::string path = filesystem::JoinPath(GetDataRoot(), relativePath);
     return filesystem::FileExists(path.c_str()) ? path : std::string();
-}
-
-std::string Config::ResolveDataDirectory(const char *relativePath)
-{
-    if (!relativePath || !*relativePath)
-        return std::string();
-
-    const std::string path = filesystem::JoinPath("game:\\_codxe", relativePath);
-    return filesystem::DirectoryExists(path.c_str()) ? path : std::string();
-}
-
-std::string Config::ResolveDataPathForGameFile(const char *relativePath)
-{
-    std::string path = ResolveDataPath(relativePath);
-    if (path.compare(0, 5, "game:") == 0)
-        path.replace(0, 5, "D:");
-    return path;
 }
