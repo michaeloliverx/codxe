@@ -1,30 +1,13 @@
 #include "pch.h"
 #include "gsc.h"
+#include "gsc_files.h"
+#include "sv_bots.h"
 #include "common/gsc_registry.h"
 
 namespace iw2
 {
 namespace mp
 {
-// Inlined in the executable, reimplemented here
-namespace
-{
-
-static unsigned int Scr_GetNumParam()
-{
-    return *scrVmPub_outparamcount;
-}
-
-static unsigned int GScr_AllocString(const char *s)
-{
-    const char *end = s;
-    while (*end++)
-        ;
-
-    return SL_GetStringOfLen(s, 1, static_cast<unsigned int>(end - s), 6);
-}
-} // namespace
-
 void GScr_CbufAddText()
 {
     if (Scr_GetNumParam() != 1)
@@ -120,8 +103,7 @@ void PlayerCmd_GetStance(scr_entref_t entref)
     else if ((pm_flags & PMF_DUCKED) != 0)
     {
         // 'crouch' isn't part of scr_const.
-        static const auto scr_const_crouch = GScr_AllocString("crouch");
-        Scr_AddConstString(scr_const_crouch);
+        Scr_AddString("crouch");
     }
     else
     {
@@ -178,8 +160,34 @@ void PlayerCmd_SetVelocity(scr_entref_t entref)
 
 namespace
 {
+void GScr_PrintConsole()
+{
+    if (Scr_GetNumParam() != 1)
+        Scr_Error("Usage: printconsole(<text>);");
+    DbgPrint("%s\n", Scr_GetString(0));
+}
+
+void PlayerCmd_IsMantling(scr_entref_t entref)
+{
+    const gentity_s *ent = GetPlayerEntity(entref);
+    Scr_AddBool((ent->client->ps.pm_flags & PMF_MANTLE) != 0);
+}
+
+void PlayerCmd_IsOnLadder(scr_entref_t entref)
+{
+    const gentity_s *ent = GetPlayerEntity(entref);
+    Scr_AddBool((ent->client->ps.pm_flags & PMF_LADDER) != 0);
+}
+
 static const gsc::Entry<BuiltinFunction> functions[] = {
     {"exec", GScr_CbufAddText, BUILTIN_ANY},
+    {"printconsole", GScr_PrintConsole, BUILTIN_ANY},
+    {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
+    {"openfile", GScr_OpenFile, BUILTIN_ANY},
+    {"closefile", GScr_CloseFile, BUILTIN_ANY},
+    {"freadln", GScr_FReadLn, BUILTIN_ANY},
+    {"fgetarg", GScr_FGetArg, BUILTIN_ANY},
+    {"fprintln", GScr_FPrintLn, BUILTIN_ANY},
 };
 
 static const gsc::Entry<BuiltinMethod> methods[] = {
@@ -196,7 +204,24 @@ static const gsc::Entry<BuiltinMethod> methods[] = {
     {"setstance", PlayerCmd_SetStance, BUILTIN_ANY},
     {"getvelocity", PlayerCmd_GetVelocity, BUILTIN_ANY},
     {"setvelocity", PlayerCmd_SetVelocity, BUILTIN_ANY},
+    {"botaction", PlayerCmd_BotAction, BUILTIN_ANY},
+    {"botstop", PlayerCmd_BotStop, BUILTIN_ANY},
+    {"botmovement", PlayerCmd_BotMovement, BUILTIN_ANY},
+    {"botangles", PlayerCmd_BotAngles, BUILTIN_ANY},
+    {"isbot", PlayerCmd_IsBot, BUILTIN_ANY},
+    {"ishost", PlayerCmd_IsHost, BUILTIN_ANY},
+    {"ismantling", PlayerCmd_IsMantling, BUILTIN_ANY},
+    {"isonladder", PlayerCmd_IsOnLadder, BUILTIN_ANY},
 };
+
+Detour shutdownSystemDetour;
+
+void ShutdownSystem(int complete, int freeScripts)
+{
+    SVBots::OnVMShutdown();
+    CloseScriptFiles();
+    shutdownSystemDetour.GetOriginal<Scr_ShutdownSystem_t>()(complete, freeScripts);
+}
 } // namespace
 
 Detour Scr_GetFunction_Detour;
@@ -235,6 +260,8 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
 
 GSC::GSC()
 {
+    shutdownSystemDetour = Detour(Scr_ShutdownSystem, ShutdownSystem);
+    shutdownSystemDetour.Install();
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
 
@@ -244,6 +271,8 @@ GSC::GSC()
 
 GSC::~GSC()
 {
+    shutdownSystemDetour.Remove();
+    CloseScriptFiles();
     Scr_GetFunction_Detour.Remove();
 
     Scr_GetMethod_Detour.Remove();

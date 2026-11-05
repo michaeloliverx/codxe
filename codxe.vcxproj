@@ -110,6 +110,8 @@
       <ClCompile Include="src\game\iw2\sp\main.cpp" />
 
       <ClCompile Include="src\game\iw2\mp\components\gsc.cpp" />
+      <ClCompile Include="src\game\iw2\mp\components\gsc_files.cpp" />
+      <ClCompile Include="src\game\iw2\mp\components\sv_bots.cpp" />
       <ClCompile Include="src\game\iw2\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw2\mp\main.cpp" />
