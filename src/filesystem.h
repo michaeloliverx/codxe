@@ -4,7 +4,6 @@
 
 namespace filesystem
 {
-void NormalizePathSeparators(char *path);
 std::string JoinPath(const char *basePath, const char *relativePath);
 void CreateDirectories(const char *path);
 void CreateParentDirectories(const char *path);

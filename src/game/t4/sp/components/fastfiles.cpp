@@ -213,14 +213,14 @@ std::string ResolveFastfilePath(const char *filename)
     const std::string usermapPath = GetUsermapFastfilePath(zoneName.c_str(), USERMAPS_DIRECTORY);
     if (!usermapPath.empty())
     {
-        const std::string resolved = Config::ResolveDataPathForGameFile(usermapPath.c_str());
+        const std::string resolved = Config::ResolveDataPath(usermapPath.c_str());
         if (!resolved.empty())
             return resolved;
     }
 
     const std::string codxeZonePath = GetZoneFastfilePath(zoneName.c_str(), CODXE_ZONE_DIRECTORY);
     if (!codxeZonePath.empty())
-        return Config::ResolveDataPathForGameFile(codxeZonePath.c_str());
+        return Config::ResolveDataPath(codxeZonePath.c_str());
 
     return std::string();
 }
@@ -302,7 +302,7 @@ std::string ResolveLooseSoundPath(const char *filename)
     const std::string usermapDirectory = filesystem::JoinPath(USERMAPS_DIRECTORY, activeUsermap);
     const std::string soundDirectory = filesystem::JoinPath(usermapDirectory.c_str(), "sounds");
     const std::string soundPath = filesystem::JoinPath(soundDirectory.c_str(), relativeSoundPath);
-    return Config::ResolveDataPathForGameFile(soundPath.c_str());
+    return Config::ResolveDataPath(soundPath.c_str());
 }
 
 std::string ResolveSoundPackPath(const char *filename)
@@ -320,7 +320,7 @@ std::string ResolveSoundPackPath(const char *filename)
 
     const std::string usermapDirectory = filesystem::JoinPath(USERMAPS_DIRECTORY, activeUsermap);
     const std::string packPath = filesystem::JoinPath(usermapDirectory.c_str(), packName);
-    return Config::ResolveDataPathForGameFile(packPath.c_str());
+    return Config::ResolveDataPath(packPath.c_str());
 }
 
 // High mips are raw tiled GPU data, looked up by image name by the streamer.
@@ -340,11 +340,11 @@ std::string ResolveHighMipPath(const char *filename)
         return std::string();
     const std::string directory = filesystem::JoinPath(USERMAPS_DIRECTORY, activeUsermap);
     const std::string highmip = filesystem::JoinPath(directory.c_str(), "highmip");
-    std::string resolved = Config::ResolveDataPathForGameFile(filesystem::JoinPath(highmip.c_str(), relative).c_str());
+    std::string resolved = Config::ResolveDataPath(filesystem::JoinPath(highmip.c_str(), relative).c_str());
     // Retail discs may use h0/h1 partitions; usermaps also support a flat highmip directory.
     if (resolved.empty() && (_strnicmp(relative, "h0\\", 3) == 0 || _strnicmp(relative, "h1\\", 3) == 0 ||
                              _strnicmp(relative, "h0/", 3) == 0 || _strnicmp(relative, "h1/", 3) == 0))
-        resolved = Config::ResolveDataPathForGameFile(filesystem::JoinPath(highmip.c_str(), relative + 3).c_str());
+        resolved = Config::ResolveDataPath(filesystem::JoinPath(highmip.c_str(), relative + 3).c_str());
     return resolved;
 }
 
@@ -362,8 +362,7 @@ void *BinkOpen_Hook(const char *name, unsigned int flags)
         if (_stricmp(basename, expected.c_str()) == 0)
         {
             const std::string directory = filesystem::JoinPath(USERMAPS_DIRECTORY, activeUsermap);
-            resolved =
-                Config::ResolveDataPathForGameFile(filesystem::JoinPath(directory.c_str(), expected.c_str()).c_str());
+            resolved = Config::ResolveDataPath(filesystem::JoinPath(directory.c_str(), expected.c_str()).c_str());
         }
     }
     return BinkOpen_Detour.GetOriginal<BinkOpen_t>()(resolved.empty() ? name : resolved.c_str(), flags);

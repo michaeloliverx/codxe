@@ -31,6 +31,8 @@ struct GameInfo
      * NOTE: This is not checked and is only for display/dev purposes.
      */
     const char *friendlyVersion;
+    // Shared storage directory under the plugin root (SP and MP use the same folder).
+    const char *dataDirectory;
     std::unique_ptr<Plugin> (*createPlugin)();
 };
 
@@ -41,6 +43,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "",
         "007: Quantum of Solace MP Title Update #2",
+        "qos",
         &CreatePlugin<qos::mp::QOS_MP_Plugin>,
     },
     {
@@ -49,6 +52,7 @@ const GameInfo GAME_INFO[] = {
         "default.xex",
         "",
         "007: Quantum of Solace SP Title Update #2",
+        "qos",
         &CreatePlugin<qos::sp::QOS_SP_Plugin>,
     },
     {
@@ -57,6 +61,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "",
         "Call of Duty 2 MP Title Update #3",
+        "iw2",
         &CreatePlugin<iw2::mp::IW2_MP_Plugin>,
     },
     {
@@ -65,6 +70,7 @@ const GameInfo GAME_INFO[] = {
         "default.xex",
         "",
         "Call of Duty 2 SP Title Update #3",
+        "iw2",
         &CreatePlugin<iw2::sp::IW2_SP_Plugin>,
     },
     {
@@ -73,6 +79,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "CoD4 MP 1.4 build 79 nightly Tue Aug 04 2009 01:51:14PM xenon",
         "Call of Duty 4: Modern Warfare MP Title Update #4",
+        "iw3",
         &CreatePlugin<iw3::mp::IW3_MP_Plugin>,
     },
     {
@@ -81,6 +88,7 @@ const GameInfo GAME_INFO[] = {
         "default.xex",
         "CoD4 1.0 build 472 nightly Fri Sep 07 2007 04:59:49PM xenon",
         "Call of Duty 4: Modern Warfare SP Title Update #4",
+        "iw3",
         &CreatePlugin<iw3::sp::IW3_SP_Plugin>,
     },
     {
@@ -89,6 +97,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "Call of Duty Multiplayer COD_WaW MP build 5.5.51 CL(0) ZQABUILD1 Thu Oct 15 17:39:03 2009 xenon",
         "Call of Duty: World at War MP Title Update #7",
+        "t4",
         &CreatePlugin<t4::mp::T4_MP_Plugin>,
     },
     {
@@ -97,6 +106,7 @@ const GameInfo GAME_INFO[] = {
         "default.xex",
         "",
         "Call of Duty: World at War SP Title Update #7",
+        "t4",
         &CreatePlugin<t4::sp::T4_SP_Plugin>,
     },
     {
@@ -105,6 +115,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "IW4 MP 1.4 build 669 latest Wed May 05 2010 06:55:32PM xenon",
         "Call of Duty: Modern Warfare 2 MP Title Update #6",
+        "iw4",
         &CreatePlugin<iw4::mp_tu6::IW4_MP_TU6_Plugin>,
     },
     {
@@ -113,6 +124,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "IW4 MP 1.4 build 163842 Tue Feb 08 16:52:00 2011 xenon",
         "Call of Duty: Modern Warfare 2 MP Title Update #9",
+        "iw4",
         &CreatePlugin<iw4::mp::IW4_MP_Plugin>,
     },
     {
@@ -121,6 +133,7 @@ const GameInfo GAME_INFO[] = {
         "default.xex",
         "IW4 1.0 build 125545 Fri Sep 25 22:12:21 2009 xenon",
         "Call of Duty: Modern Warfare 2 SP Title Update #9",
+        "iw4",
         &CreatePlugin<iw4::sp::IW4_SP_Plugin>,
     },
     {
@@ -129,6 +142,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "",
         "Call of Duty: Black Ops MP Title Update #11",
+        "t5",
         &CreatePlugin<t5::mp::T5_MP_Plugin>,
     },
     {
@@ -137,6 +151,7 @@ const GameInfo GAME_INFO[] = {
         "default.xex",
         "",
         "Call of Duty: Black Ops SP Title Update #11",
+        "t5",
         &CreatePlugin<t5::sp::T5_SP_Plugin>,
     },
     {
@@ -145,6 +160,7 @@ const GameInfo GAME_INFO[] = {
         "default_mp.xex",
         "IW5 MP 1.8 build 388110 Fri Sep 14 00:04:28 2012 xenon",
         "Call of Duty: Modern Warfare 3 MP Title Update #24",
+        "iw5",
         &CreatePlugin<iw5::mp::IW5_MP_Plugin>,
     },
     {
@@ -153,6 +169,7 @@ const GameInfo GAME_INFO[] = {
         "codmp_xenonf.xex",
         "NGL MP TU3",
         "Call of Duty: 3 Title Update #3",
+        "ngl",
         &CreatePlugin<ngl::mp::NGL_MP_Plugin>,
     },
 };
@@ -204,6 +221,9 @@ bool PluginManager::LoadPlugin(const GameInfo *info)
     {
         return false;
     }
+
+    if (!Config::MountGameDirectory(info->dataDirectory))
+        return false;
 
     assert(info->createPlugin != nullptr);
     DbgPrint("[codxe][PluginManager] Loading plugin.\n");

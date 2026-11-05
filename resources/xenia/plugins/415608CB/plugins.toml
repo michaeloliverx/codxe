@@ -4,11 +4,11 @@ title_id = "415608CB"
 
 # TU24
 [[plugin]]
-file = "codxe.xex"
+file = "_codxe/codxe.xex"
 hash = "55003ED04B59301A" # default.xex
 is_enabled = true
 
 [[plugin]]
-file = "codxe.xex"
+file = "_codxe/codxe.xex"
 hash = "3AC94A2E70D1FECB" # default_mp.xex
 is_enabled = true

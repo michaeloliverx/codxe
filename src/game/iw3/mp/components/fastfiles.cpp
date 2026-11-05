@@ -14,8 +14,8 @@ const char *const MOD_ZONE = "mod";
 const char *const MOD_FASTFILE = "mod.ff";
 const char *const CODXE_COMMON_ZONE = "codxe_common_mp";
 const char *const CODXE_UI_ZONE = "codxe_ui_mp";
-const char *const CODXE_ZONE_DIRECTORY = "game:\\_codxe\\zone";
-const char *const USERMAPS_DIRECTORY = "game:\\_codxe\\usermaps";
+const char *const CODXE_ZONE_DIRECTORY = "codxe:\\zone";
+const char *const USERMAPS_DIRECTORY = "codxe:\\usermaps";
 const char *const FASTFILE_EXTENSION = ".ff";
 
 bool IsSafeZoneName(const char *name)

@@ -5,11 +5,11 @@ title_id = "415607FF"         # AV-2047
 # TU2
 
 [[plugin]]
-file = "codxe.xex"
+file = "_codxe/codxe.xex"
 hash = "A29428CB1432DD9E" # default.xex
 is_enabled = true
 
 [[plugin]]
-file = "codxe.xex"
+file = "_codxe/codxe.xex"
 hash = "590402F61DEF8050" # default_mp.xex
 is_enabled = true

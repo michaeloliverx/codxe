@@ -109,7 +109,6 @@ void XexpFinishExecutableLoad_Hook(PLDR_DATA_TABLE_ENTRY module, const char *com
 
 bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
 {
-    UNREFERENCED_PARAMETER(hModule);
     UNREFERENCED_PARAMETER(lpvReserved);
 
     if (reason == DLL_PROCESS_ATTACH)
@@ -147,6 +146,12 @@ bool DllMain(HANDLE hModule, DWORD reason, LPVOID lpvReserved)
                 xbox::notifications::Initialize("Kernel hook mismatch - inactive");
                 return TRUE;
             }
+        }
+
+        if (!Config::Initialize(hModule))
+        {
+            DbgPrint("[codxe][Config] Could not determine the plugin directory\n");
+            return FALSE;
         }
 
         g_plugin_manager = new PluginManager();

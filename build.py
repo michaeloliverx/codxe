@@ -1,99 +1,84 @@
-import os
-import subprocess
+"""Build the plugin and package its shared storage tree for Xbox 360 and Canary."""
 import shutil
+import subprocess
+from pathlib import Path
 
-# Configuration
-SOLUTION_FILE = "codxe.sln"
-MSBUILD_PATH = r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
-MSBUILD_ARGS = ["/m", "/p:BuildInParallel=true"]
-BINARY_PATH = r"build\Release\bin\codxe.xex"
-STAGING_DIR = r"build\staging"
-RESOURCES_PATH = r"resources"
-VERSION_HEADER_PATH = r"build\Release\obj\git_version.h"
+ROOT = Path(__file__).resolve().parent
+MSBUILD_PATH = Path(r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe")
+BINARY_PATH = ROOT / "build/Release/bin/codxe.xex"
+STAGING_DIR = ROOT / "build/staging"
+RESOURCES_PATH = ROOT / "resources"
+VERSION_HEADER_PATH = ROOT / "build/Release/obj/git_version.h"
+GAME_DIRECTORIES = {
+    "415607D1": "iw2",
+    "415607E1": "ngl",
+    "415607E6": "iw3",
+    "415607FF": "qos",
+    "4156081C": "t4",
+    "41560817": "iw4",
+    "41560855": "t5",
+    "415608CB": "iw5",
+}
+T4_ZONE_NAMES = ("code_post_gfx", "common", "patch", "patch_ui")
 
 
 def read_git_version():
-    try:
-        with open(VERSION_HEADER_PATH, "r") as version_file:
-            for line in version_file:
-                if line.startswith("#define GIT_VERSION "):
-                    git_version = line.split('"')[1]
-                    print(f"Git version: {git_version}")
-                    return git_version
-
-        raise RuntimeError(f"GIT_VERSION was not found in {VERSION_HEADER_PATH}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        exit(1)
+    for line in VERSION_HEADER_PATH.read_text().splitlines():
+        if line.startswith("#define GIT_VERSION "):
+            return line.split('"')[1]
+    raise RuntimeError(f"GIT_VERSION was not found in {VERSION_HEADER_PATH}")
 
 
-# Shared T4 SP zones are versioned release resources; rebuilding is manual for now.
-T4_ZONE_NAMES = ("code_post_gfx", "common", "patch", "patch_ui")
-for zone_name in T4_ZONE_NAMES:
-    zone_path = os.path.join(RESOURCES_PATH, "t4", "_codxe", "zone", zone_name + ".ff")
-    if not os.path.isfile(zone_path) or os.path.getsize(zone_path) == 0:
-        raise FileNotFoundError(f"Required T4 SP zone missing or empty: {zone_path}")
-
-# Ensure MSBuild exists
-if not os.path.exists(MSBUILD_PATH):
-    print(f"ERROR: MSBuild not found at {MSBUILD_PATH}")
-    exit(1)
-
-print("Building solution with parallel MSBuild jobs...")
-result = subprocess.run([MSBUILD_PATH, SOLUTION_FILE, *MSBUILD_ARGS])
-if result.returncode != 0:
-    print("ERROR: Build failed.")
-    exit(result.returncode)
-else:
-    print("Build succeeded.")
-
-GIT_VERSION = read_git_version()
-
-print("Creating clean staging directory...")
-if os.path.exists(STAGING_DIR):
-    shutil.rmtree(STAGING_DIR)
-os.makedirs(STAGING_DIR, exist_ok=True)
+def copy_game_data(game, destination):
+    shutil.copytree(RESOURCES_PATH / game / "_codxe", destination,
+                    ignore=shutil.ignore_patterns("codxe.json"))
+    (destination / "mods").mkdir(exist_ok=True)
+    (destination / "usermaps").mkdir(exist_ok=True)
 
 
-if os.path.exists(RESOURCES_PATH):
-    # Copy the contents of resources directory directly to the staging directory
-    shutil.copytree(RESOURCES_PATH, STAGING_DIR, dirs_exist_ok=True)
-    print("Resources directory copied successfully")
-else:
-    print(f"Resources directory not found at {RESOURCES_PATH}")
-    exit(1)
+def package():
+    # Shared zones are versioned release resources; rebuilding remains manual.
+    for name in T4_ZONE_NAMES:
+        zone = RESOURCES_PATH / "t4/_codxe/zone" / (name + ".ff")
+        if not zone.is_file() or not zone.stat().st_size:
+            raise FileNotFoundError(f"Required T4 SP zone missing or empty: {zone}")
 
-# Hardware users can take the plugin directly from the ZIP root.
-shutil.copy2(BINARY_PATH, os.path.join(STAGING_DIR, "codxe.xex"))
+    if STAGING_DIR.exists():
+        if STAGING_DIR.resolve().parent != (ROOT / "build").resolve():
+            raise RuntimeError("Refusing to clear a staging directory outside build/staging")
+        shutil.rmtree(STAGING_DIR)
+    shared = STAGING_DIR / "_codxe"
+    shared.mkdir(parents=True)
+    shutil.copy2(BINARY_PATH, shared / "codxe.xex")
+    shutil.copytree(RESOURCES_PATH / "xenia", STAGING_DIR / "xenia")
 
-print("Copying binary to all title ID directories...")
-plugins_dir = os.path.join(STAGING_DIR, "xenia", "plugins")
-if os.path.exists(plugins_dir):
-    # Get all subdirectories in the plugins folder (these are the title IDs)
-    title_ids = [
-        d
-        for d in os.listdir(plugins_dir)
-        if os.path.isdir(os.path.join(plugins_dir, d))
-    ]
+    for title, game in GAME_DIRECTORIES.items():
+        copy_game_data(game, shared / "games" / game)
+        plugin = STAGING_DIR / "xenia/plugins" / title / "_codxe"
+        plugin.mkdir()
+        shutil.copy2(BINARY_PATH, plugin / "codxe.xex")
+        copy_game_data(game, plugin / "games" / game)
+        updates = RESOURCES_PATH / game / "Title Updates"
+        if updates.is_dir():
+            shutil.copytree(updates, STAGING_DIR / "title-updates" / game)
 
-    for title_id in title_ids:
-        plugin_dir = os.path.join(plugins_dir, title_id)
-        shutil.copy2(
-            BINARY_PATH,
-            os.path.join(plugin_dir, "codxe.xex"),
-        )
-        print(f"Binary copied to {title_id}")
-else:
-    print(f"ERROR: Plugins directory not found at {plugins_dir}")
-    exit(1)
+    shutil.copy2(ROOT / "LICENSE", STAGING_DIR / "LICENSE")
+    licenses = STAGING_DIR / "LICENSES"
+    licenses.mkdir()
+    shutil.copy2(ROOT / "third_party/xkelib/LICENSE", licenses / "xkelib.txt")
+    archive = ROOT / "build" / ("codxe-" + read_git_version())
+    shutil.make_archive(str(archive), "zip", root_dir=STAGING_DIR)
+    print(f"Test folder: {STAGING_DIR}")
+    print(f"ZIP: {archive}.zip")
 
 
-PROJECT_NAME = "codxe"
-ZIP_FILE_NAME = f"{PROJECT_NAME}-{GIT_VERSION}.zip"
-STAGING_ZIP_PATH = os.path.join("build", ZIP_FILE_NAME)
+def main():
+    subprocess.run([
+        str(MSBUILD_PATH), str(ROOT / "codxe.sln"), "/m", "/p:BuildInParallel=true",
+        "/p:Configuration=Release", "/p:Platform=Xbox 360",
+    ], cwd=ROOT, check=True)
+    package()
 
-print("Zipping the staging folder...")
-shutil.make_archive(
-    base_name=STAGING_ZIP_PATH.replace(".zip", ""), format="zip", root_dir=STAGING_DIR
-)
-print(f"Staging folder zipped successfully to {STAGING_ZIP_PATH}")
+
+if __name__ == "__main__":
+    main()
