@@ -1,5 +1,7 @@
 #pragma once
 
+#include <climits>
+
 #include "structs.h"
 
 namespace t4
@@ -8,7 +10,7 @@ namespace mp
 {
 #define T4_MAX_CLIENTS 24
 
-#define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+#define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & USHRT_MAX)
 
 enum
 {

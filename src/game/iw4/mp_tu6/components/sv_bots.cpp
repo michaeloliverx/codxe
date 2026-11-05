@@ -39,10 +39,10 @@ void SVBots::OnVMShutdown()
 
 static char ClampMove(int value)
 {
-    if (value < -127)
-        return -127;
-    if (value > 127)
-        return 127;
+    if (value < -SCHAR_MAX)
+        return -SCHAR_MAX;
+    if (value > SCHAR_MAX)
+        return SCHAR_MAX;
     return static_cast<char>(value);
 }
 
@@ -50,8 +50,8 @@ static unsigned char ClampByte(int value)
 {
     if (value < 0)
         return 0;
-    if (value > 255)
-        return 255;
+    if (value > UCHAR_MAX)
+        return UCHAR_MAX;
     return static_cast<unsigned char>(value);
 }
 

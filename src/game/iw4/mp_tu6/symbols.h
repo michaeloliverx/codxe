@@ -1,5 +1,7 @@
 #pragma once
 
+#include <climits>
+
 #include "structs.h"
 
 namespace iw4
@@ -7,7 +9,7 @@ namespace iw4
 namespace mp_tu6
 {
 #define IW4_MAX_CLIENTS 18
-#define IW4_ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+#define IW4_ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & USHRT_MAX)
 
 enum
 {

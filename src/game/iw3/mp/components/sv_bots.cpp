@@ -82,16 +82,16 @@ void SV_BotUserMove_Stub(client_t *cl)
             const float maxabs = absX > absY ? absX : absY;
             if (maxabs > 0.0f)
             {
-                move_pos[0] = move_pos[0] * (127.0f / maxabs);
-                move_pos[1] = move_pos[1] * (127.0f / maxabs);
+                move_pos[0] = move_pos[0] * (SCHAR_MAX / maxabs);
+                move_pos[1] = move_pos[1] * (SCHAR_MAX / maxabs);
             }
 
             // Floor and invert Y to fit movement requirements
             move_pos[0] = floorf(move_pos[0]);
             move_pos[1] = -floorf(move_pos[1]);
 
-            cmd.forwardmove = ((int)move_pos[0]) & 0xFF;
-            cmd.rightmove = ((int)move_pos[1]) & 0xFF;
+            cmd.forwardmove = ((int)move_pos[0]) & UCHAR_MAX;
+            cmd.rightmove = ((int)move_pos[1]) & UCHAR_MAX;
 
             if (!g_botai[clientNum].doMove)
             {

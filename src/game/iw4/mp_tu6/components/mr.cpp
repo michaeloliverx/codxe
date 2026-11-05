@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "mr.h"
 
-#define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & 65535)
+#define ANGLE2SHORT(x) ((int)((x) * 65536 / 360) & USHRT_MAX)
 #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
 
 namespace iw4

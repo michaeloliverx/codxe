@@ -10,7 +10,7 @@ namespace
 const int IW5_MAX_CLIENTS = 18;
 const unsigned short ENTITYNUM_NONE = 2047;
 
-#define IW5_ANGLE2SHORT(x) ((int)((x) * 65536.0f / 360.0f) & 65535)
+#define IW5_ANGLE2SHORT(x) ((int)((x) * 65536.0f / 360.0f) & USHRT_MAX)
 
 enum CmdButton
 {
@@ -95,10 +95,10 @@ const BotAction BOT_ACTIONS[] = {
 
 char ClampMove(int value)
 {
-    if (value < -127)
-        return -127;
-    if (value > 127)
-        return 127;
+    if (value < -SCHAR_MAX)
+        return -SCHAR_MAX;
+    if (value > SCHAR_MAX)
+        return SCHAR_MAX;
     return static_cast<char>(value);
 }
 
@@ -106,8 +106,8 @@ unsigned char ClampByte(int value)
 {
     if (value < 0)
         return 0;
-    if (value > 255)
-        return 255;
+    if (value > UCHAR_MAX)
+        return UCHAR_MAX;
     return static_cast<unsigned char>(value);
 }
 

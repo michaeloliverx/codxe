@@ -6,7 +6,7 @@
 
 // Standard library includes
 #include <array>
-#include <limits>
+#include <climits>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
