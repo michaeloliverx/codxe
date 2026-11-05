@@ -962,6 +962,32 @@ struct __declspec(align(2)) usercmd_s
 
 static_assert(sizeof(usercmd_s) == 32, "");
 
+struct AimInput
+{
+    float deltaTime;
+    float pitch;
+    float pitchAxis;
+    float pitchMax;
+    float yaw;
+    float yawAxis;
+    float yawMax;
+    float forwardAxis;
+    float rightAxis;
+    int buttons;
+    int localClientNum;
+    const playerState_s *ps;
+};
+static_assert(sizeof(AimInput) == 0x30, "");
+
+struct AimOutput
+{
+    float pitch;
+    float yaw;
+    float meleeChargeYaw;
+    unsigned __int8 meleeChargeDist;
+};
+static_assert(sizeof(AimOutput) == 0x10, "");
+
 /* 9100 */
 struct clientSession_t
 {
@@ -2227,7 +2253,24 @@ static_assert(sizeof(pmove_t) == 272, "");
 
 struct viewState_t;
 
-struct weaponState_t;
+struct weaponState_t
+{
+    const playerState_s *ps;
+    float xyspeed;
+    float frametime;
+    float vLastMoveAng[3];
+    float fLastIdleFactor;
+    int time;
+    int damageTime;
+    float v_dmg_pitch;
+    float v_dmg_roll;
+    float vGunOffset[3];
+    float vGunSpeed[3];
+    float swayAngles[3];
+    int *weapIdleTime;
+};
+static_assert(sizeof(weaponState_t) == 0x54, "");
+static_assert(offsetof(weaponState_t, swayAngles) == 0x44, "");
 
 enum connstate_t
 {
@@ -2636,6 +2679,246 @@ struct GfxViewport
     int width;
     int height;
 };
+
+// Renderer command buffers shared by the TU4 camera and shadow passes.
+
+struct GfxBackEndData;
+struct MaterialTechnique;
+struct MaterialPass;
+struct MaterialShaderArgument;
+struct MaterialPixelShader;
+struct MaterialVertexShader;
+struct GfxVertex;
+
+struct GfxMatrix
+{
+    float m[4][4];
+};
+
+struct GfxViewParms
+{
+    GfxMatrix viewMatrix;
+    GfxMatrix projectionMatrix;
+    GfxMatrix viewProjectionMatrix;
+    GfxMatrix inverseViewProjectionMatrix;
+    float origin[4];
+    float axis[3][3];
+    float depthHackNearClip;
+    float zNear;
+    int pad;
+};
+
+struct GfxSceneDef
+{
+    int time;
+    float floatTime;
+    float viewOffset[3];
+};
+
+struct GfxPlacement
+{
+    float quat[4];
+    float origin[3];
+};
+
+struct GfxScaledPlacement
+{
+    GfxPlacement base;
+    float scale;
+};
+
+struct GfxCodeMatrices
+{
+    GfxMatrix matrix[32];
+};
+
+struct __declspec(align(8)) GfxCmdBufInput
+{
+    float consts[58][4];
+    const GfxImage *codeImages[27];
+    unsigned __int8 codeImageSamplerStates[27];
+    const GfxBackEndData *data;
+};
+
+enum GfxViewMode : __int32
+{
+    VIEW_MODE_NONE = 0x0,
+    VIEW_MODE_3D = 0x1,
+    VIEW_MODE_2D = 0x2,
+    VIEW_MODE_IDENTITY = 0x3,
+};
+
+enum GfxViewportBehavior : __int32
+{
+    GFX_USE_VIEWPORT_FOR_VIEW = 0x0,
+    GFX_USE_VIEWPORT_FULL = 0x1,
+};
+
+struct __declspec(align(16)) GfxCmdBufSourceState
+{
+    GfxCodeMatrices matrices;
+    GfxCmdBufInput input;
+    GfxViewParms viewParms;
+    GfxMatrix shadowLookupMatrix;
+    unsigned __int16 constVersions[90];
+    unsigned __int16 matrixVersions[8];
+    float eyeOffset[4];
+    unsigned int shadowableLightForShadowLookupMatrix;
+    const GfxScaledPlacement *objectPlacement;
+    const GfxViewParms *viewParms3D;
+    unsigned int depthHackFlags;
+    GfxScaledPlacement skinnedPlacement;
+    int cameraView;
+    GfxViewMode viewMode;
+    GfxSceneDef sceneDef;
+    GfxViewport sceneViewport;
+    float materialTime;
+    GfxViewportBehavior viewportBehavior;
+    int renderTargetWidth;
+    int renderTargetHeight;
+    bool viewportIsDirty;
+    unsigned int shadowableLightIndex;
+};
+
+enum MaterialVertexDeclType : __int32
+{
+    VERTDECL_GENERIC = 0x0,
+    VERTDECL_PACKED = 0x1,
+    VERTDECL_WORLD = 0x2,
+    VERTDECL_WORLD_T1N0 = 0x3,
+    VERTDECL_WORLD_T1N1 = 0x4,
+    VERTDECL_WORLD_T2N0 = 0x5,
+    VERTDECL_WORLD_T2N1 = 0x6,
+    VERTDECL_WORLD_T2N2 = 0x7,
+    VERTDECL_WORLD_T3N0 = 0x8,
+    VERTDECL_WORLD_T3N1 = 0x9,
+    VERTDECL_WORLD_T3N2 = 0xA,
+    VERTDECL_WORLD_T4N0 = 0xB,
+    VERTDECL_WORLD_T4N1 = 0xC,
+    VERTDECL_WORLD_T4N2 = 0xD,
+    VERTDECL_POS_TEX = 0xE,
+    VERTDECL_COUNT = 0xF,
+};
+
+enum MaterialTechniqueType : __int32
+{
+    TECHNIQUE_DEPTH_PREPASS = 0x0,
+    TECHNIQUE_BUILD_FLOAT_Z = 0x1,
+    TECHNIQUE_BUILD_SHADOWMAP_DEPTH = 0x2,
+    TECHNIQUE_BUILD_SHADOWMAP_COLOR = 0x3,
+    TECHNIQUE_UNLIT = 0x4,
+    TECHNIQUE_EMISSIVE = 0x5,
+    TECHNIQUE_EMISSIVE_SHADOW = 0x6,
+    TECHNIQUE_LIT_BEGIN = 0x7,
+    TECHNIQUE_LIT = 0x7,
+    TECHNIQUE_LIT_SUN = 0x8,
+    TECHNIQUE_LIT_SUN_SHADOW = 0x9,
+    TECHNIQUE_LIT_SPOT = 0xA,
+    TECHNIQUE_LIT_SPOT_SHADOW = 0xB,
+    TECHNIQUE_LIT_OMNI = 0xC,
+    TECHNIQUE_LIT_OMNI_SHADOW = 0xD,
+    TECHNIQUE_LIT_END = 0xE,
+    TECHNIQUE_LIGHT_SPOT = 0xE,
+    TECHNIQUE_LIGHT_OMNI = 0xF,
+    TECHNIQUE_LIGHT_SPOT_SHADOW = 0x10,
+    TECHNIQUE_FAKELIGHT_NORMAL = 0x11,
+    TECHNIQUE_FAKELIGHT_VIEW = 0x12,
+    TECHNIQUE_SUNLIGHT_PREVIEW = 0x13,
+    TECHNIQUE_CASE_TEXTURE = 0x14,
+    TECHNIQUE_WIREFRAME_SOLID = 0x15,
+    TECHNIQUE_WIREFRAME_SHADED = 0x16,
+    TECHNIQUE_SHADOWCOOKIE_CASTER = 0x17,
+    TECHNIQUE_SHADOWCOOKIE_RECEIVER = 0x18,
+    TECHNIQUE_DEBUG_BUMPMAP = 0x19,
+    TECHNIQUE_COUNT = 0x1A,
+    TECHNIQUE_TOTAL_COUNT = 0x1B,
+    TECHNIQUE_NONE = 0x1C,
+};
+
+enum GfxDepthRangeType : __int32
+{
+    GFX_DEPTH_RANGE_SCENE = 0x0,
+    GFX_DEPTH_RANGE_VIEWMODEL = 0x2,
+    GFX_DEPTH_RANGE_FULL = -1,
+};
+
+enum GfxRenderTargetId : __int32
+{
+    R_RENDERTARGET_SAVED_SCREEN = 0x0,
+    R_RENDERTARGET_FRAME_BUFFER = 0x1,
+    R_RENDERTARGET_SCENE = 0x2,
+    R_RENDERTARGET_RESOLVED_POST_SUN = 0x3,
+    R_RENDERTARGET_RESOLVED_SCENE = 0x4,
+    R_RENDERTARGET_FLOAT_Z = 0x5,
+    R_RENDERTARGET_DYNAMICSHADOWS = 0x6,
+    R_RENDERTARGET_SHADOWCOOKIE = 0x7,
+    R_RENDERTARGET_POST_EFFECT_0 = 0x8,
+    R_RENDERTARGET_POST_EFFECT_1 = 0x9,
+    R_RENDERTARGET_SHADOWMAP_SUN = 0xA,
+    R_RENDERTARGET_SHADOWMAP_SPOT = 0xB,
+    R_RENDERTARGET_HALF_RESAMPLED_SCENE = 0xC,
+    R_RENDERTARGET_COUNT = 0xD,
+    R_RENDERTARGET_NONE = 0xE,
+};
+
+struct GfxCmdBufPrimState
+{
+    D3DDevice *device;
+    D3DIndexBuffer *indexBuffer;
+    MaterialVertexDeclType vertDeclType;
+    struct
+    {
+        unsigned int stride;
+        D3DVertexBuffer *vb;
+        unsigned int offset;
+    } streams[2];
+    D3DVertexDeclaration *vertexDecl;
+};
+
+struct GfxCmdBufState
+{
+    unsigned __int8 refSamplerState[26];
+    unsigned __int8 padding[6];
+    unsigned int samplerState[26];
+    const GfxTexture *samplerTexture[26];
+    GfxCmdBufPrimState prim;
+    const Material *material;
+    MaterialTechniqueType techType;
+    const MaterialTechnique *technique;
+    const MaterialPass *pass;
+    unsigned int passIndex;
+    GfxDepthRangeType depthRangeType;
+    float depthRangeNear;
+    float depthRangeFar;
+    unsigned __int64 vertexShaderConstState[32];
+    unsigned __int64 pixelShaderConstState[256];
+    unsigned __int8 alphaRef;
+    unsigned __int16 *indices;
+    GfxVertex *verts;
+    unsigned int refStateBits[2];
+    unsigned int activeStateBits[2];
+    const MaterialPixelShader *pixelShader;
+    const MaterialVertexShader *vertexShader;
+    GfxViewport viewport;
+    GfxRenderTargetId renderTargetId;
+};
+
+struct GfxCmdBufContext
+{
+    GfxCmdBufSourceState *source;
+    GfxCmdBufState *state;
+};
+
+static_assert(sizeof(GfxViewParms) == 0x140, "");
+static_assert(offsetof(GfxCmdBufSourceState, viewParms) == 0xC30, "");
+static_assert(offsetof(GfxCmdBufSourceState, matrixVersions) == 0xE64, "");
+static_assert(offsetof(GfxCmdBufSourceState, depthHackFlags) == 0xE90, "");
+static_assert(offsetof(GfxCmdBufSourceState, cameraView) == 0xEB4, "");
+static_assert(sizeof(GfxCmdBufSourceState) == 0xF00, "");
+static_assert(offsetof(GfxCmdBufState, refStateBits) == 0xA44, "");
+static_assert(offsetof(GfxCmdBufState, activeStateBits) == 0xA4C, "");
+static_assert(sizeof(GfxCmdBufState) == 0xA70, "");
+static_assert(sizeof(GfxCmdBufContext) == 8, "");
 
 struct refdef_s
 {

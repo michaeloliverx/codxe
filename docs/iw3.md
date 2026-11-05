@@ -20,6 +20,7 @@ The following is an incomplete list of features currently exposed by the IW3 cli
 - `noclip_brushes` - Disables player collision for clipmap brush indices, for example `"50 123 647"`.
 - `r_drawDynEnts` - Draws dynamic entities.
 - `bg_bobIdle` - Controls idle gun sway.
+- `cg_mirrorWorld` - Experimental horizontal world mirror. Defaults to `false`; set to `1` to enable or `0` to disable live. Keeps the first-person weapon and HUD normal and reverses horizontal look, strafe, and lean controls.
 - `cg_scoreboardLabel_Score` - Overrides the label for the `Score` column on the scoreboard.
 - `cg_scoreboardLabel_Kills` - Overrides the label for the `Kills` column on the scoreboard.
 - `cg_scoreboardLabel_Assists` - Overrides the label for the `Assists` column on the scoreboard.

@@ -174,6 +174,19 @@ static auto R_AddCmdDrawText =
     reinterpret_cast<void (*)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale,
                               double yScale, double rotation, const float *color, int style)>(0x8216C0B8);
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_s *dvar)>(0x8234AF50);
+static auto R_ChangeState_0 = reinterpret_cast<void (*)(GfxCmdBufState *state, unsigned int bits)>(0x82142A58);
+static auto R_DeriveNearPlaneConstantsForView = reinterpret_cast<void (*)(GfxCmdBufSourceState *source)>(0x821371E0);
+// GfxCmdBufContext is passed by value in one 64-bit register (source in the high word, state in the low word).
+static auto R_SetupPass = reinterpret_cast<void (*)(GfxCmdBufContext context, unsigned int passIndex)>(0x82134970);
+static auto R_SetPassVertexShaderStableArguments =
+    reinterpret_cast<void (*)(GfxCmdBufContext context, unsigned int argCount, const MaterialShaderArgument *args)>(
+        0x821340E8);
+static auto R_SetPassShaderObjectArguments =
+    reinterpret_cast<void (*)(GfxCmdBufContext context, unsigned int argCount, const MaterialShaderArgument *args)>(
+        0x82134538);
+static auto R_SetPassShaderPrimArguments =
+    reinterpret_cast<void (*)(GfxCmdBufContext context, unsigned int argCount, const MaterialShaderArgument *args)>(
+        0x821341B8);
 static auto R_DrawAllDynEnt = reinterpret_cast<void (*)(const GfxViewInfo *viewInfo)>(0x8215FF98);
 static auto R_GetImageList = reinterpret_cast<void (*)(ImageList *imageList)>(0x82152A58);
 static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name)>(0x8216EC00);
@@ -266,6 +279,10 @@ static auto Jump_Check = reinterpret_cast<int (*)(pmove_t *pm, pml_t *pml)>(0x82
 static auto BG_CalculateWeaponPosition_IdleAngles =
     reinterpret_cast<void (*)(weaponState_t *ws, float *angles)>(0x8232CA78);
 static auto BG_CalculateView_IdleAngles = reinterpret_cast<void (*)(viewState_t *vs, float *angles)>(0x8232C840);
+static auto BG_CalculateWeaponAngles = reinterpret_cast<void (*)(weaponState_t *ws, float *angles)>(0x823315D8);
+static auto CG_AddViewWeapon = reinterpret_cast<void (*)(int localClientNum)>(0x822EEF28);
+static auto CalculateWeaponPosition_SaveOffsetMovement =
+    reinterpret_cast<void (*)(cg_s *cgameGlob, float *origin)>(0x822E8D30);
 
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x82366780);
 static auto Scr_AddClassField =
@@ -280,7 +297,11 @@ static auto Scr_GetGenericField = reinterpret_cast<void (*)(unsigned __int8 *b, 
 static auto BG_FindWeaponIndexForName = reinterpret_cast<unsigned int (*)(const char *name)>(0x8232DC38);
 
 static auto CL_CreateNewCommands = reinterpret_cast<void (*)(int localClientNum)>(0x822DCAE8);
+// Explicit return buffer for the 32-byte usercmd_s returned by CL_CreateCmd.
+static auto CL_CreateCmd = reinterpret_cast<usercmd_s *(*)(usercmd_s * cmd, int localClientNum)>(0x822DC920);
 static auto CL_FinishMove = reinterpret_cast<void (*)(int localClientNum, usercmd_s *cmd)>(0x822DA220);
+static auto AimAssist_UpdateGamePadInput =
+    reinterpret_cast<void (*)(const AimInput *input, AimOutput *output)>(0x82349FC8);
 static auto CL_GetPredictedOriginForServerTime =
     reinterpret_cast<int (*)(clientActive_t *cl, int serverTime, float *predictedOrigin, float *predictedVelocity,
                              int *bobCycle, int *movementDir)>(0x822CAA38);
