@@ -6,6 +6,7 @@
 #include "components/cmds.h"
 #include "components/console.h"
 #include "components/debug.h"
+#include "components/demo.h"
 #include "components/events.h"
 #include "components/fastfiles.h"
 #include "components/gsc.h"
@@ -50,6 +51,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new clipmap());
     RegisterModule(new cmds());
     RegisterModule(new console());
+    RegisterModule(new Demo());
     RegisterModule(new ModList());
     RegisterModule(new FastFiles());
     RegisterModule(new GSC());

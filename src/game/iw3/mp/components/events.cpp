@@ -7,6 +7,7 @@
 #include "clipmap.h"
 #include "command.h"
 #include "console.h"
+#include "demo.h"
 #include "gsc.h"
 #include "gsc_functions.h"
 #include "image_loader.h"
@@ -57,8 +58,8 @@ const EventHandler vmShutdownHandlers[] = {
 };
 
 const EventHandler dvarInitHandlers[] = {
-    cg::OnDvarInit,      cj_tas::OnDvarInit, clipmap::OnDvarInit,  MirrorWorld::OnDvarInit,
-    ModList::OnDvarInit, pm::OnDvarInit,     UIFeeder::OnDvarInit,
+    Demo::OnDvarInit,        cg::OnDvarInit,      cj_tas::OnDvarInit, clipmap::OnDvarInit,
+    MirrorWorld::OnDvarInit, ModList::OnDvarInit, pm::OnDvarInit,     UIFeeder::OnDvarInit,
 };
 
 const EventHandler cmdInitHandlers[] = {

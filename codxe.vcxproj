@@ -125,6 +125,7 @@
       <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\console.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\debug.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\demo.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\events.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\gsc_fields.cpp" />

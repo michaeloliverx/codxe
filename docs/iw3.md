@@ -6,6 +6,8 @@ The following is an incomplete list of features currently exposed by the IW3 cli
 
 ### Client Commands
 
+Experimental snapshot demos are available in MP TU4; see [recording and movie playback](iw3-demos.md).
+
 - `god`
 - `noclip`
 - `ufo`

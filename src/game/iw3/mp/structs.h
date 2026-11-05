@@ -2151,6 +2151,7 @@ enum DvarFlags : unsigned __int16
 {
     DVAR_FLAG_NONE = 0x0,
     DVAR_ARCHIVE = 0x1,
+    DVAR_CHEAT = 0x80,
     DVAR_CODINFO = 0x100, // On change, this is sent to all clients (if you are host)
 };
 
@@ -2512,6 +2513,10 @@ struct snapshot_s
     clientState_s clients[24];
     int serverCommandSequence;
 };
+static_assert(sizeof(snapshot_s) == 140160, "");
+static_assert(offsetof(snapshot_s, entities) == 12156, "");
+static_assert(sizeof(entityState_s) == 244, "");
+static_assert(sizeof(clientState_s) == 128, "");
 
 struct clientControllers_t
 {
@@ -3319,6 +3324,8 @@ struct clientConnection_t
     int statPacketSendTime[7];
 };
 static_assert(sizeof(clientConnection_t) == 398692, "");
+static_assert(offsetof(clientConnection_t, serverMessageSequence) == 131380, "");
+static_assert(offsetof(clientConnection_t, serverCommands) == 131392, "");
 
 struct ClientArchiveData
 {
@@ -3359,6 +3366,17 @@ struct gameState_t
     char stringData[131072];
     int dataCount;
 };
+static_assert(sizeof(gameState_t) == 140476, "");
+
+struct CmdArgs
+{
+    int nesting;
+    int localClientNum[8];
+    int controllerIndex[8];
+    int argc[8];
+    const char **argv[8];
+};
+static_assert(sizeof(CmdArgs) == 132, "");
 
 enum StanceState : __int32
 {

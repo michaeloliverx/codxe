@@ -52,6 +52,22 @@ static auto CL_CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x822E6
 static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name, unsigned int *checksum)>(0x82243940);
 static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration,
                                                         int pixelWidth, int flags)>(0x822E4D18);
+// TU4 client/cgame boundaries used by the experimental snapshot demo player.
+static auto CL_Frame = reinterpret_cast<void (*)(int localClientNum, int msec)>(0x822D20A8);
+static auto CL_ClearState = reinterpret_cast<void (*)(int localClientNum)>(0x822CF200);
+static auto CL_GetSnapshot =
+    reinterpret_cast<int (*)(int localClientNum, int snapshotNumber, snapshot_s *snapshot)>(0x822E6110);
+static auto CL_CGameNeedsServerCommand =
+    reinterpret_cast<int (*)(int localClientNum, int serverCommandNumber)>(0x822E6578);
+static auto CL_ParseServerMessage = reinterpret_cast<void (*)(int localClientNum, void *msg)>(0x822CBF18);
+static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x822DA6C8);
+static auto CG_Shutdown = reinterpret_cast<void (*)(int localClientNum)>(0x82309A90);
+static auto CG_DrawActiveFrame =
+    reinterpret_cast<int (*)(int localClientNum, int serverTime, DemoType demoType, CubemapShot cubemapShot,
+                             int cubemapSize, int renderScreen)>(0x822F4DA0);
+static auto CG_PredictPlayerState = reinterpret_cast<void (*)(int localClientNum)>(0x82301A28);
+static auto CG_DrawDisconnect = reinterpret_cast<void (*)(int localClientNum)>(0x8231AC70);
+static auto SV_Frame = reinterpret_cast<int (*)(int msec)>(0x82201A70);
 typedef void (*CL_CharEvent_t)(int localClientNum, int key);
 static CL_CharEvent_t CL_CharEvent = reinterpret_cast<CL_CharEvent_t>(0x822D77F8);
 
@@ -135,6 +151,9 @@ static auto Dvar_RegisterEnum =
 static auto Dvar_RegisterInt =
     reinterpret_cast<dvar_s *(*)(const char *dvarName, int value, int min, int max, unsigned __int16 flags,
                                  const char *description)>(0x821D5138);
+static auto Dvar_RegisterFloat =
+    reinterpret_cast<dvar_s *(*)(const char *dvarName, float value, float min, float max, unsigned __int16 flags,
+                                 const char *description)>(0x821D50F0);
 static auto Dvar_RegisterString =
     reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
         0x821D1040);
@@ -530,9 +549,12 @@ typedef playerStatNetworkData *controllerStatData_t;
 static controllerStatData_t controllerStatData = reinterpret_cast<controllerStatData_t>(0x84C5E238);
 
 static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
-static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
+static auto cg_entitiesArray = reinterpret_cast<centity_s **>(0x823F5054);
+static auto cgsArray = reinterpret_cast<cgs_t **>(0x823F2890);
 static auto clients = reinterpret_cast<clientActive_t **>(0x82435AB8);
-static auto clientConnections = reinterpret_cast<clientConnection_t *>(0x824302E0);
+static auto clientConnections = reinterpret_cast<clientConnection_t **>(0x824302E0);
+static auto cmd_args = reinterpret_cast<CmdArgs *>(0x82A2A560);
+static auto cl_realtime = reinterpret_cast<int *>(0x824304F4);
 static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
 static auto con = reinterpret_cast<Console *>(0x82407590);
 static auto g_consoleField = reinterpret_cast<field_t *>(0x8242AA18);
