@@ -47,17 +47,6 @@ void DisableDvarWriteChecks()
 
 Detour Jump_Start_Detour;
 
-#ifndef NDEBUG
-Detour CL_ConsolePrint_Detour;
-
-void CL_ConsolePrint_Hook(LocalClientNum_t localClientNum, int channel, const char *txt, unsigned int duration,
-                          unsigned int pixelWidth, int flags)
-{
-    DbgPrint("[codxe][IW5][CL_ConsolePrint] %s\n", txt);
-    CL_ConsolePrint_Detour.GetOriginal<CL_ConsolePrint_t>()(localClientNum, channel, txt, duration, pixelWidth, flags);
-}
-#endif
-
 void Jump_Start_Hook(pmove_t *pm, pml_t *pml, double height)
 {
     static const dvar_t *jump_height = Dvar_FindMalleableVar("jump_height");
@@ -73,17 +62,11 @@ patches::patches()
     Jump_Start_Detour = Detour(Jump_Start, Jump_Start_Hook);
     // Jump_Start_Detour.Install();
 
-#ifndef NDEBUG
-    CL_ConsolePrint_Detour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
-    CL_ConsolePrint_Detour.Install();
-#endif
+    // CL_ConsolePrint is detoured by the Console module (it also DbgPrints in debug builds)
 }
 
 patches::~patches()
 {
-#ifndef NDEBUG
-    CL_ConsolePrint_Detour.Remove();
-#endif
     // Jump_Start_Detour.Remove();
 }
 } // namespace mp
