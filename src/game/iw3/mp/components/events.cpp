@@ -11,6 +11,7 @@
 #include "gsc_functions.h"
 #include "image_loader.h"
 #include "mpsp.h"
+#include "mirror_world.h"
 #include "mods.h"
 #include "pm.h"
 #include "sv_bots.h"
@@ -56,7 +57,8 @@ const EventHandler vmShutdownHandlers[] = {
 };
 
 const EventHandler dvarInitHandlers[] = {
-    cg::OnDvarInit, cj_tas::OnDvarInit, clipmap::OnDvarInit, ModList::OnDvarInit, pm::OnDvarInit, UIFeeder::OnDvarInit,
+    cg::OnDvarInit,      cj_tas::OnDvarInit, clipmap::OnDvarInit,  MirrorWorld::OnDvarInit,
+    ModList::OnDvarInit, pm::OnDvarInit,     UIFeeder::OnDvarInit,
 };
 
 const EventHandler cmdInitHandlers[] = {

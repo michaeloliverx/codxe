@@ -118,6 +118,7 @@
 
       <ClCompile Include="src\game\iw3\mp\components\assets.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\mirror_world.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\command.cpp" />
@@ -277,6 +278,7 @@
 
       <ClInclude Include="src\game\iw3\mp\components\assets.h" />
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
+      <ClInclude Include="src\game\iw3\mp\components\mirror_world.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
       <ClInclude Include="src\game\iw3\mp\components\command.h" />
       <ClInclude Include="src\game\iw3\mp\components\cmds.h" />

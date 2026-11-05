@@ -13,6 +13,7 @@
 #include "components/gsc_functions.h"
 #include "components/image_loader.h"
 #include "components/mpsp.h"
+#include "components/mirror_world.h"
 #include "components/mods.h"
 #include "components/patches.h"
 #include "components/pm.h"
@@ -44,6 +45,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new UIFeeder());
 
     RegisterModule(new cg());
+    RegisterModule(new MirrorWorld());
     RegisterModule(new cj_tas());
     RegisterModule(new clipmap());
     RegisterModule(new cmds());
