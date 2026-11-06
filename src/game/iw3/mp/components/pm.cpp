@@ -104,7 +104,7 @@ void pm::OnDvarInit()
     pm_fixed_fps = Dvar_RegisterInt("pm_fixed_fps", 250, 0, 1000, 0, "Fixed FPS value");
 }
 
-void pm::OnCGDrawActive()
+void pm::OnCGDrawActive(int)
 {
     if (pm_fixed_fps_enable->current.enabled)
     {

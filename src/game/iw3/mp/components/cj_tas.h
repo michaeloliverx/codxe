@@ -13,7 +13,7 @@ class cj_tas : public Module
     ~cj_tas();
 
     static void OnDvarInit();
-    static void OnCGDrawActive();
+    static void OnCGDrawActive(int);
     static void OnCGInit();
     static bool TAS_Enabled();
 };

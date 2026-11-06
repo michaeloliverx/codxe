@@ -14,7 +14,7 @@ class clipmap : public Module
 
     static void OnDvarInit();
     static void OnCGInit();
-    static void OnCGDrawActive();
+    static void OnCGDrawActive(int);
 
   private:
     static void HandleBrushCollisionChange();

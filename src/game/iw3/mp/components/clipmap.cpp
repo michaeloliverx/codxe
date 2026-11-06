@@ -97,7 +97,7 @@ void clipmap::HandleBrushCollisionChange()
     }
 }
 
-void clipmap::OnCGDrawActive()
+void clipmap::OnCGDrawActive(int)
 {
     HandleBrushCollisionChange();
 }

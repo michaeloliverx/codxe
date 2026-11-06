@@ -13,7 +13,7 @@ class cg : public Module
     ~cg();
 
     static void OnDvarInit();
-    static void OnCGDrawActive();
+    static void OnCGDrawActive(int localClientNum);
 };
 } // namespace mp
 } // namespace iw3

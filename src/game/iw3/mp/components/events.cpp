@@ -5,6 +5,7 @@
 #include "cg.h"
 #include "cj_tas.h"
 #include "clipmap.h"
+#include "debug_draw.h"
 #include "command.h"
 #include "console.h"
 #include "gsc.h"
@@ -24,6 +25,8 @@ namespace mp
 namespace
 {
 typedef void (*EventHandler)();
+typedef void (*CGDrawHandler)(int localClientNum);
+
 typedef void (*AssetLinkHandler)(XAsset *asset);
 
 const char *const CODXE_UI_ZONE = "codxe_ui_mp";
@@ -34,11 +37,8 @@ const AssetLinkHandler assetLinkHandlers[] = {
     image_loader::OnAssetLink,
 };
 
-const EventHandler cgDrawActiveHandlers[] = {
-    cg::OnCGDrawActive,
-    cj_tas::OnCGDrawActive,
-    clipmap::OnCGDrawActive,
-    pm::OnCGDrawActive,
+const CGDrawHandler cgDrawActiveHandlers[] = {
+    cg::OnCGDrawActive, cj_tas::OnCGDrawActive, clipmap::OnCGDrawActive, pm::OnCGDrawActive, DebugDraw::OnCGDrawActive,
 };
 
 const EventHandler cgInitHandlers[] = {
@@ -77,7 +77,7 @@ void Events::CG_DrawActive_Hook(int localClientNum)
 
     for (size_t i = 0; i < ARRAYSIZE(cgDrawActiveHandlers); ++i)
     {
-        cgDrawActiveHandlers[i]();
+        cgDrawActiveHandlers[i](localClientNum);
     }
 }
 
