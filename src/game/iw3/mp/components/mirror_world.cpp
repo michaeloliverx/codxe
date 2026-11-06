@@ -81,15 +81,12 @@ void CalculateWeaponPosition_SaveOffsetMovement_Hook(cg_s *cgameGlob, float *ori
 {
     if (currentViewWeapon == cgameGlob)
     {
-        // Reflect the procedural displacement in the weapon's local sideways direction.
-        // CG_AddViewWeapon adds the fixed cg_gun_y placement afterward, so the gun stays on the same side.
+        // Stock subtracts horizontal look sway before converting the position to world space.
+        // Reverse that contribution while preserving movement/stance offsets and the weapon's normal pose.
         const float *side = cgameGlob->viewModelAxis[1];
-        const float *base = cgameGlob->viewModelAxis[3];
-        float lateral = 0.0f;
+        const float correction = 2.0f * cgameGlob->swayOffset[1];
         for (int i = 0; i < 3; ++i)
-            lateral += (origin[i] - base[i]) * side[i];
-        for (int i = 0; i < 3; ++i)
-            origin[i] -= 2.0f * lateral * side[i];
+            origin[i] += correction * side[i];
     }
 
     // Save ADS offsets from the corrected position, while the sway/bob interpolation state stays untouched.
@@ -103,15 +100,9 @@ void BG_CalculateWeaponAngles_Hook(weaponState_t *ws, float *angles)
     const cg_s *viewWeapon = currentViewWeapon;
     if (viewWeapon && ws->ps == &viewWeapon->predictedPlayerState)
     {
-        // These are procedural angles relative to the player, not the weapon model's authored pose.
-        // BG is also used by server aiming; only reflect the local first-person draw's output.
-        const float *playerAngles = viewWeapon->predictedPlayerState.viewangles;
-        const float *viewAngles = viewWeapon->refdefViewAngles;
-        // Include the camera's own bob so the gun's motion relative to the view is reflected too.
-        const float cameraYaw = AngleDelta(playerAngles[YAW], viewAngles[YAW]);
-        const float cameraRoll = AngleDelta(playerAngles[ROLL], viewAngles[ROLL]);
-        angles[YAW] = MirrorAngle(cameraYaw, angles[YAW]);
-        angles[ROLL] = MirrorAngle(cameraRoll, angles[ROLL]);
+        // Stock subtracts swayAngles[YAW]. Reverse just that term; bob, recoil and roll keep their normal pose.
+        // BG is also used by server aiming, so only adjust the active local first-person draw.
+        angles[YAW] = AngleDelta(0.0f, angles[YAW] + 2.0f * ws->swayAngles[YAW]);
     }
 }
 
