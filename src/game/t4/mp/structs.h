@@ -289,12 +289,15 @@ static_assert(offsetof(clipMap_t, mapEnts) == 180, "");
 
 struct playerState_s
 {
-    char pad0[12];         //
+    char pad0[4];          //
+    int pm_type;           // OFS: 4 SIZE: 0x4
+    char pad_0008[4];      //
     int pm_flags;          // OFS: 12 SIZE: 0x4
     char pad[16];          //
     float origin[3];       // OFS: 32 SIZE: 12
     float velocity[3];     // OFS: 44 SIZE: 12
-    char pad_0056[68];     //
+    float oldVelocity[2];  // OFS: 56 SIZE: 0x8
+    char pad_0064[60];     //
     float delta_angles[3]; // OFS: 124 SIZE: 0xC
     char pad_0088[68];     //
     int eFlags;            // OFS: 204 SIZE: 0x4
@@ -305,9 +308,11 @@ struct playerState_s
     char pad_end3[14828];  //
 };
 static_assert(sizeof(playerState_s) == 15132, "");
+static_assert(offsetof(playerState_s, pm_type) == 4, "");
 static_assert(offsetof(playerState_s, pm_flags) == 12, "");
 static_assert(offsetof(playerState_s, origin) == 32, "");
 static_assert(offsetof(playerState_s, velocity) == 44, "");
+static_assert(offsetof(playerState_s, oldVelocity) == 56, "");
 static_assert(offsetof(playerState_s, delta_angles) == 124, "");
 static_assert(offsetof(playerState_s, eFlags) == 204, "");
 static_assert(offsetof(playerState_s, clientNum) == 248, "");
@@ -1115,7 +1120,13 @@ struct serverStaticHeader_t
 static_assert(offsetof(serverStaticHeader_t, clients) == 0x0, "");
 static_assert(offsetof(serverStaticHeader_t, time) == 0x4, "");
 
-struct pmove_t;
+struct pmove_t
+{
+    playerState_s *ps; // OFS: 0 SIZE: 0x4
+    char pad[316];
+};
+static_assert(sizeof(pmove_t) == 0x140, "");
+static_assert(offsetof(pmove_t, ps) == 0, "");
 
 struct scrVarPub_t
 {

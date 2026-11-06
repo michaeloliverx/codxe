@@ -12,6 +12,7 @@
 #include "components/gsc_loader.h"
 #include "components/map.h"
 #include "components/patches.h"
+#include "components/pm.h"
 #include "components/stats.h"
 #include "components/sv_bots.h"
 #include "components/ui.h"
@@ -40,6 +41,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new GSCLoader());
     RegisterModule(new Map());
     RegisterModule(new Patches());
+    RegisterModule(new pm());
     RegisterModule(new stats());
     RegisterModule(new ui());
 }
