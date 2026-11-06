@@ -1,0 +1,609 @@
+{
+    menuDef
+    {
+        name                        "menu_gamesetup_systemlink"
+        fullscreen                  1
+        rect                        0 0 640 480 0 0
+        style                       1
+        borderSize                  1
+        focuscolor                  1 1 1 1
+        soundLoop                   "music_mainmenu_mp"
+        fadeClamp                   1
+        fadeCycle                   1
+        fadeAmount                  0.1
+        onOpen
+        {
+            focusFirst;
+            uiScript LoadOfflineStats;
+            exec "exec dvar_defaults.cfg";
+        }
+        onESC
+        {
+            exec splitscreencontrols;
+            setdvar systemlink 0;
+            close menu_gamesetup_systemlink;
+        }
+        itemDef
+        {
+            rect                        -107 0 854 480 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "animbg_blur_back"
+        }
+        itemDef
+        {
+            rect                        -107 0 1708 480 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "animbg_blur_fogscroll"
+            exp rect X                  ((- 107) - ((float(milliseconds() % 60000) / 60000) * (854)));
+        }
+        itemDef
+        {
+            rect                        -107 0 854 480 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "animbg_blur_front"
+        }
+        itemDef
+        {
+            rect                        48 40 0 0 0 0
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   4
+            textscale                   0.5833
+            textstyle                   6
+            textfont                    1
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@PLATFORM_SYSTEM_LINK_SETUP");
+        }
+        itemDef
+        {
+            rect                        -120 0 420 68 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        300 0 16 -68 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        -120 414 1200 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        -120 416 420 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && (0 == 0));
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        300 416 16 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && (0 == 0));
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        316 432 440 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && (0 == 0));
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when((!menuisopen("menu_cac_assault") && !menuisopen("menu_cac_heavygunner") && !menuisopen("menu_cac_sniper") && !menuisopen("menu_cac_specops") && !menuisopen("menu_cac_demolitions")));
+            textalign                   12
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_SAVECUSTOMMODE"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when((menuisopen("menu_cac_assault") || menuisopen("menu_cac_heavygunner") || menuisopen("menu_cac_sniper") || menuisopen("menu_cac_specops") || menuisopen("menu_cac_demolitions")));
+            textalign                   12
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        24 230 205 146 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0 0 0 0.3
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        24 230 205 146 1 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            exp material                (tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 4));
+        }
+        itemDef
+        {
+            rect                        24 226 200 20 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        224 226 5 20 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 1
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        224 226 5 20 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.4
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        24 356 205 20 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        24 226 200 20 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.4
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        24 356 205 20 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        24 246 205 16 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0 0 0 0.75
+            exp material                ("gradient_top");
+        }
+        itemDef
+        {
+            rect                        24 340 205 16 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0 0 0 0.75
+            exp material                ("gradient_bottom");
+        }
+        itemDef
+        {
+            rect                        24 226 80 20 1 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            exp material                ("ui_perforation");
+        }
+        itemDef
+        {
+            rect                        40 244 180 16 1 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(1);
+            textalign                   2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    (dvarstring("ui_mapname_text"));
+        }
+        itemDef
+        {
+            rect                        20 374 200 16 1 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(1);
+            textalign                   2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/gametypesTable.csv", 0, dvarstring("ui_gametype"), 1));
+        }
+        itemDef
+        {
+            rect                        20 354 200 16 1 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(inlobby());
+            textalign                   2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.4 0.4 1
+            exp text                    ((dvarstring("party_vetoStatus")));
+        }
+        itemDef
+        {
+            rect                        0 34 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 34 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 34 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "systemlink");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 34 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "systemlink");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 35 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "systemlink" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 34 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 1;
+                setLocalVarString ui_choicegroup systemlink;
+                execNow "set ui_hint_text @MPUI_DESC_START_MATCH";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+                execNow "set ui_hint_text @NULL_EMPTY";
+            }
+            action
+            {
+                play mouse_click;
+                exec "selectStringTableEntryInDvar mp/didyouknow.csv 0 didyouknow";
+                uiScript StartServer;
+            }
+            exp text                    ("@MPUI_START_MATCH");
+        }
+        itemDef
+        {
+            rect                        0 58 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 58 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 58 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "systemlink");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 58 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "systemlink");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 59 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "systemlink" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 58 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup systemlink;
+                execNow "set ui_hint_text @MPUI_DESC_GAME_SETUP";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+                execNow "set ui_hint_text @NULL_EMPTY";
+            }
+            action
+            {
+                play mouse_click;
+                open popup_gamesetup_systemlink;
+            }
+            exp text                    ("@MPUI_GAME_SETUP");
+        }
+        itemDef
+        {
+            rect                        0 82 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 82 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 82 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "systemlink");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 82 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "systemlink");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 83 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "systemlink" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 82 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup systemlink;
+                execNow "set ui_hint_text @MPUI_DESC_CREATE_A_CLASS";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+                execNow "set ui_hint_text @NULL_EMPTY";
+            }
+            action
+            {
+                play mouse_click;
+                exec "set ui_cac_ingame 0";
+                open live_cac_popup;
+            }
+            exp text                    ("@MPUI_CREATE_A_CLASS");
+        }
+        itemDef
+        {
+            name                        "desc_arrow"
+            rect                        15 183 10 10 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.25
+            background                  "ui_arrow_right"
+        }
+        itemDef
+        {
+            name                        "description_choice"
+            rect                        27 180 240 32 1 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textaligny                  16
+            textscale                   0.375
+            forecolor                   1 1 1 0.7
+            exp text                    (dvarstring("ui_hint_text"));
+        }
+    }
+}

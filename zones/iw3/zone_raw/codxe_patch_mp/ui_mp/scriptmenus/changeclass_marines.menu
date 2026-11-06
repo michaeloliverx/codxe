@@ -1,0 +1,12 @@
+{
+    menuDef
+    {
+        name                        "changeclass_marines"
+        rect                        0 0 0 0 0 0
+        borderSize                  1
+        onOpen
+        {
+            setLocalVarString ui_team marines open changeclass close self;
+        }
+    }
+}

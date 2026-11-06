@@ -367,8 +367,11 @@ static DB_LinkXAssetEntry_t DB_LinkXAssetEntry = reinterpret_cast<DB_LinkXAssetE
 typedef void (*DB_LoadXFileData_t)(unsigned __int8 *pos, unsigned int size);
 static DB_LoadXFileData_t DB_LoadXFileData = reinterpret_cast<DB_LoadXFileData_t>(0x822B1FC8);
 
-typedef int (*DB_BuildOSPath_t)(const char *zoneName, unsigned int size, char *filename);
-static DB_BuildOSPath_t DB_BuildOSPath = reinterpret_cast<DB_BuildOSPath_t>(0x822A1178);
+// Title-linked XAPI entry, separate from the plugin's own CreateFileA.
+typedef HANDLE (*GameCreateFileA_t)(const char *filename, DWORD desiredAccess, DWORD shareMode,
+                                    LPSECURITY_ATTRIBUTES securityAttributes, DWORD creationDisposition,
+                                    DWORD flagsAndAttributes, HANDLE templateFile);
+static GameCreateFileA_t GameCreateFileA = reinterpret_cast<GameCreateFileA_t>(0x82101FE0);
 
 typedef void (*DB_LoadXAssets_t)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
 static DB_LoadXAssets_t DB_LoadXAssets = reinterpret_cast<DB_LoadXAssets_t>(0x822A1318);

@@ -1,0 +1,2107 @@
+{
+    menuDef
+    {
+        name                        "changeclass_splitscreen"
+        rect                        0 0 640 480 0 0
+        borderSize                  1
+        focuscolor                  1 1 1 1
+        blurWorld                   7
+        legacySplitScreenScale
+        onOpen
+        {
+            execNow "statGetInDvar 2301 ui_stat_rankxp";
+        }
+        onESC
+        {
+            scriptMenuResponse back;
+        }
+        execKeyInt 14
+        {
+            close self;
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 0 0.75
+        }
+        itemDef
+        {
+            rect                        0 0 854 75 4 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "gradient_top"
+        }
+        itemDef
+        {
+            rect                        0 405 854 75 4 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "gradient_bottom"
+        }
+        itemDef
+        {
+            rect                        48 40 0 0 0 0
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   4
+            textscale                   0.5833
+            textstyle                   6
+            textfont                    1
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@MPUI_CHOOSE_CLASS_CAP");
+        }
+        itemDef
+        {
+            rect                        -120 0 420 68 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        300 0 16 -68 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        -120 414 1200 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        -120 416 420 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && (0 == 0));
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        300 416 16 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && (0 == 0));
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        316 432 440 64 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1 && (0 == 0));
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.175
+            background                  "white"
+        }
+        itemDef
+        {
+            name                        "change_filter"
+            text                        "@PLATFORM_CHANGE_FILTER"
+            rect                        90 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.375
+            textfont                    1
+            execKeyInt 4
+            {
+                play mouse_click;
+                execNow "toggle lb_filter 0 1";
+            }
+        }
+        itemDef
+        {
+            name                        "goto_top"
+            text                        "@PLATFORM_GOTOTOP"
+            rect                        -40 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "accept_button"
+            text                        "@PLATFORM_SELECT"
+            rect                        44 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "refresh"
+            text                        "@PLATFORM_REFRESH"
+            rect                        -20 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   2
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgup"
+            text                        "@PLATFORM_PGUP"
+            rect                        -180 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgdown"
+            text                        "@PLATFORM_PGDOWN"
+            rect                        -90 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when((!menuisopen("menu_cac_assault") && !menuisopen("menu_cac_heavygunner") && !menuisopen("menu_cac_sniper") && !menuisopen("menu_cac_specops") && !menuisopen("menu_cac_demolitions")));
+            textalign                   12
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_SAVECUSTOMMODE"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when((menuisopen("menu_cac_assault") || menuisopen("menu_cac_heavygunner") || menuisopen("menu_cac_sniper") || menuisopen("menu_cac_specops") || menuisopen("menu_cac_demolitions")));
+            textalign                   12
+            textscale                   0.375
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        10 58 128 128 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarstring("ui_team") == "marines");
+            textscale                   0.55
+            forecolor                   1 1 1 0.275
+            exp material                (dvarstring("g_TeamIcon_Allies"));
+        }
+        itemDef
+        {
+            rect                        10 58 128 128 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarstring("ui_team") == "opfor");
+            textscale                   0.55
+            forecolor                   1 1 1 0.275
+            exp material                (dvarstring("g_TeamIcon_Axis"));
+        }
+        itemDef
+        {
+            rect                        10 58 128 128 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(team("name") == "TEAM_FREE" && localvarstring("ui_team") == "marines");
+            textscale                   0.55
+            forecolor                   1 1 1 0.275
+            exp material                (dvarstring("g_TeamIcon_Allies"));
+        }
+        itemDef
+        {
+            rect                        10 58 128 128 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(team("name") == "TEAM_FREE" && localvarstring("ui_team") == "opfor");
+            textscale                   0.55
+            forecolor                   1 1 1 0.275
+            exp material                (dvarstring("g_TeamIcon_Axis"));
+        }
+        itemDef
+        {
+            rect                        10 196 128 128 1 1
+            decoration
+            borderSize                  1
+            visible                     when(team("name") == "TEAM_ALLIES");
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    6
+            forecolor                   1 1 1 0.2
+            exp text                    ("@" + dvarstring("g_TeamName_Allies"));
+        }
+        itemDef
+        {
+            rect                        10 196 128 128 1 1
+            decoration
+            borderSize                  1
+            visible                     when(team("name") == "TEAM_FREE" && localvarstring("ui_team") == "marines");
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    6
+            forecolor                   1 1 1 0.2
+            exp text                    ("@" + dvarstring("g_TeamName_Allies"));
+        }
+        itemDef
+        {
+            rect                        10 196 128 128 1 1
+            decoration
+            borderSize                  1
+            visible                     when(team("name") == "TEAM_AXIS");
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    6
+            forecolor                   1 1 1 0.2
+            exp text                    ("@" + dvarstring("g_TeamName_Axis"));
+        }
+        itemDef
+        {
+            rect                        10 196 128 128 1 1
+            decoration
+            borderSize                  1
+            visible                     when(team("name") == "TEAM_FREE" && localvarstring("ui_team") == "opfor");
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    6
+            forecolor                   1 1 1 0.2
+            exp text                    ("@" + dvarstring("g_TeamName_Axis"));
+        }
+        itemDef
+        {
+            rect                        0 41 240 0.5 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.85
+            background                  "line_horizontal"
+        }
+        itemDef
+        {
+            rect                        20 42 200 10 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.4 0.6 1 0.8
+            background                  "line_horizontal"
+        }
+        itemDef
+        {
+            rect                        0 53 240 0.5 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.85
+            background                  "line_horizontal"
+        }
+        itemDef
+        {
+            rect                        0 33 240 24 1 1
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   9
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   1 1 1 0.8
+            exp text                    ("@MPUI_DEFAULT_CLASSES");
+        }
+        itemDef
+        {
+            rect                        0 58 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 58 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 58 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 58 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 59 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 58 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup "";
+                execnow "set ui_class_offset 200; set ui_multi_s 1000; set ui_multi_dt 0";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "assault_mp,0";
+                close self;
+            }
+            exp text                    ("@CLASS_CLASS1");
+        }
+        itemDef
+        {
+            rect                        0 82 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 82 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 82 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 82 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 83 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 82 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup "";
+                execnow "set ui_class_offset 210; set ui_multi_s 1000; set ui_multi_dt 0";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "specops_mp,0";
+                close self;
+            }
+            exp text                    ("@CLASS_CLASS2");
+        }
+        itemDef
+        {
+            rect                        0 106 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 106 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 106 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 106 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 107 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 106 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 4;
+                setLocalVarString ui_choicegroup "";
+                execnow "set ui_class_offset 220; set ui_multi_s 1000; set ui_multi_dt 0";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "heavygunner_mp,0";
+                close self;
+            }
+            exp text                    ("@CLASS_CLASS3");
+        }
+        itemDef
+        {
+            rect                        0 130 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(257) >= 1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 130 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(257) >= 1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 130 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 130 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 131 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "" && stat(257) >= 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 130 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(stat(257) >= 1);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 5;
+                setLocalVarString ui_choicegroup "";
+                execnow "set ui_class_offset 230; set ui_multi_s 1000; set ui_multi_dt 0";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "demolitions_mp,0";
+                close self;
+            }
+            exp text                    ("@CLASS_CLASS4");
+        }
+        itemDef
+        {
+            rect                        0 130 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(257) < 1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 130 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(257) < 1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 130 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(stat(257) < 1);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@CLASS_CLASS4");
+        }
+        itemDef
+        {
+            rect                        226 132 44 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(257) > 1);
+            textscale                   0.55
+            exp material                ("specialty_new");
+        }
+        itemDef
+        {
+            rect                        0 154 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(258) >= 1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 154 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(258) >= 1);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 154 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 154 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 155 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "" && stat(258) >= 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 154 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(stat(258) >= 1);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 6;
+                setLocalVarString ui_choicegroup "";
+                execnow "set ui_class_offset 240; set ui_multi_s 1000; set ui_multi_dt 0";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "sniper_mp,0";
+                close self;
+            }
+            exp text                    ("@CLASS_CLASS5");
+        }
+        itemDef
+        {
+            rect                        0 154 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((stat(258) < 1));
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 154 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when((stat(258) < 1));
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 154 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when((stat(258) < 1));
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.5 0.5 0.5 0.5
+            exp text                    ("@CLASS_CLASS5");
+        }
+        itemDef
+        {
+            rect                        226 156 44 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(258) > 1);
+            textscale                   0.55
+            exp material                ("specialty_new");
+        }
+        itemDef
+        {
+            rect                        0 209 240 0.5 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(260) > 0);
+            textscale                   0.55
+            forecolor                   1 1 1 0.85
+            background                  "line_horizontal"
+        }
+        itemDef
+        {
+            rect                        20 210 200 10 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(260) > 0);
+            textscale                   0.55
+            forecolor                   0.4 0.6 1 0.8
+            background                  "line_horizontal"
+        }
+        itemDef
+        {
+            rect                        0 221 240 0.5 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(260) > 0);
+            textscale                   0.55
+            forecolor                   1 1 1 0.85
+            background                  "line_horizontal"
+        }
+        itemDef
+        {
+            rect                        0 201 240 24 1 1
+            decoration
+            borderSize                  1
+            visible                     when(stat(260) > 0);
+            textalign                   9
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   1 1 1 0.8
+            exp text                    ("@MPUI_CUSTOM_CLASSES");
+        }
+        itemDef
+        {
+            rect                        0 226 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(260) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 226 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(260) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 226 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 226 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 227 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 226 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(stat(260) > 0);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 9;
+                setLocalVarString ui_choicegroup "";
+                setdvar ui_custom_class_highlighted 0;
+                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "custom1,0";
+                close self;
+            }
+            exp text                    (dvarstring("customclass1"));
+        }
+        itemDef
+        {
+            rect                        0 250 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(210) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 250 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(210) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 250 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 250 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 251 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 250 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(stat(210) > 0);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 10;
+                setLocalVarString ui_choicegroup "";
+                setdvar ui_custom_class_highlighted 10;
+                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "custom2,0";
+                close self;
+            }
+            exp text                    (dvarstring("customclass2"));
+        }
+        itemDef
+        {
+            rect                        0 274 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(220) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 274 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(220) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 274 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 274 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 275 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 274 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(stat(220) > 0);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 11;
+                setLocalVarString ui_choicegroup "";
+                setdvar ui_custom_class_highlighted 20;
+                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "custom3,0";
+                close self;
+            }
+            exp text                    (dvarstring("customclass3"));
+        }
+        itemDef
+        {
+            rect                        0 298 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(230) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 298 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(230) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 298 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 12 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 298 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 12 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 299 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 12 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 298 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(stat(230) > 0);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 12;
+                setLocalVarString ui_choicegroup "";
+                setdvar ui_custom_class_highlighted 30;
+                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "custom4,0";
+                close self;
+            }
+            exp text                    (dvarstring("customclass4"));
+        }
+        itemDef
+        {
+            rect                        0 322 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(240) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            exp material                ("gradient_fadein");
+        }
+        itemDef
+        {
+            rect                        218.5 322 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(stat(240) > 0);
+            textscale                   0.55
+            forecolor                   0.9 0.9 1 0.07
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            rect                        0 322 218.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 13 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "gradient_fadein"
+        }
+        itemDef
+        {
+            rect                        218.5 322 5.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 13 && localvarstring("ui_choicegroup") == "");
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.35
+            background                  "button_highlight_end"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        -4 323 224 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 13 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   10
+            textaligny                  -1
+            textscale                   0.33
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 322 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(stat(240) > 0);
+            textalign                   10
+            textalignx                  -26
+            textscale                   0.4583
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 13;
+                setLocalVarString ui_choicegroup "";
+                setdvar ui_custom_class_highlighted 40;
+                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                scriptMenuResponse "custom5,0";
+                close self;
+            }
+            exp text                    (dvarstring("customclass5"));
+        }
+        itemDef
+        {
+            rect                        -100 -100 100 600 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 -100 100 600 3 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 -100 900 100 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 0 900 100 1 3
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        -274 50 278 326 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.3 0.3 0.325 0.6
+            exp material                ("gradient_center");
+        }
+        itemDef
+        {
+            rect                        -294 34 -20 342 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.65
+            exp material                ("gradient");
+        }
+        itemDef
+        {
+            rect                        4 34 20 358 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.65
+            exp material                ("gradient");
+        }
+        itemDef
+        {
+            rect                        -274 54 69.5 80 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -204.5 54 69.5 80 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -135 54 69.5 80 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -65.5 54 69.5 80 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -274 34 278 20 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.2 0.225 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -274 34 278 20 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.5
+            exp material                ("line_horizontal");
+        }
+        itemDef
+        {
+            rect                        -274 54 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_top");
+        }
+        itemDef
+        {
+            rect                        -274 18 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(0);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_bottom");
+        }
+        itemDef
+        {
+            rect                        -274 376 278 16 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.2 0.225 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -274 376 278 16 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.5
+            exp material                ("line_horizontal");
+        }
+        itemDef
+        {
+            rect                        -274 392 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(0);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_top");
+        }
+        itemDef
+        {
+            rect                        -274 360 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_bottom");
+        }
+        itemDef
+        {
+            rect                        -274 134 278 8 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.2 0.225 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -274 134 278 8 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.5
+            exp material                ("line_horizontal");
+        }
+        itemDef
+        {
+            rect                        -274 142 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_top");
+        }
+        itemDef
+        {
+            rect                        -274 118 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_bottom");
+        }
+        itemDef
+        {
+            rect                        -274 222 278 16 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.2 0.225 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -274 222 278 16 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.5
+            exp material                ("line_horizontal");
+        }
+        itemDef
+        {
+            rect                        -274 238 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_top");
+        }
+        itemDef
+        {
+            rect                        -274 206 278 16 3 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            exp material                ("gradient_bottom");
+        }
+        itemDef
+        {
+            rect                        -274 219 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   9
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@MPUI_PERKS_AND_INVENTORY");
+        }
+        itemDef
+        {
+            rect                        -274 34 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   9
+            textscale                   0.4583
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    (dvarstring("CAC_CUSTOM_NAME"));
+        }
+        itemDef
+        {
+            rect                        -270 58 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textscale                   0.4583
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 201) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 1), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -270 112 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 202) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 2), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -196 48 180 90 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 201) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 1), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -268 80 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 202) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 2), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -270 146 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textscale                   0.4583
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 203) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 3), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -270 200 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 204) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 4), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -196 136 180 90 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when("specialty_twoprimaries" == tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 4));
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 203) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 3), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -110 136 90 90 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when("specialty_twoprimaries" != tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 4));
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 203) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 3), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -268 168 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 204) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 4), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -234 244 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade");
+            textalign                   8
+            textaligny                  -2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -234 244 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_specialgrenade");
+            textalign                   8
+            textaligny                  -2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@PERKS_3X_" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 208) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 8), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -270 244 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.65
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -274 278 278 1 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.1
+            bordercolor                 1 1 1 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -238 260 14 14 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            bordercolor                 1 1 1 1
+            exp material                ("ui_arrow_right");
+        }
+        itemDef
+        {
+            rect                        -222 259 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textaligny                  -2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 7));
+        }
+        itemDef
+        {
+            rect                        -234 280 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textaligny                  -2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -270 280 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.65
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -274 314 278 1 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.1
+            bordercolor                 1 1 1 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -238 296 14 14 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            bordercolor                 1 1 1 1
+            exp material                ("ui_arrow_right");
+        }
+        itemDef
+        {
+            rect                        -222 295 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textaligny                  -2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 7));
+        }
+        itemDef
+        {
+            rect                        -234 316 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textaligny                  -2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 207) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 7), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -270 316 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.65
+            bordercolor                 1 1 1 1
+            exp material                (tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 207) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 7), 5)) + dvarint("ui_multi_dt"))), 6));
+        }
+        itemDef
+        {
+            rect                        -274 350 278 1 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.1
+            bordercolor                 1 1 1 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -238 332 14 14 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.4
+            bordercolor                 1 1 1 1
+            exp material                ("ui_arrow_right");
+        }
+        itemDef
+        {
+            rect                        -222 331 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textaligny                  -2
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 207) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 7), 5)) + dvarint("ui_multi_dt"))), 7));
+        }
+        itemDef
+        {
+            rect                        -234 352 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_fraggrenade");
+            textalign                   8
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@PERKS_FRAG_1_" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 208) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 8), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -234 352 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_specialgrenade");
+            textalign                   8
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@PERKS_FRAG_X_1");
+        }
+        itemDef
+        {
+            rect                        -234 352 278 20 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_fraggrenade");
+            textalign                   8
+            textscale                   0.375
+            textstyle                   3
+            forecolor                   1 0.8 0.4 1
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 208) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 8), 5)) + dvarint("ui_multi_dt"))), 3));
+        }
+        itemDef
+        {
+            rect                        -270 347 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_specialgrenade");
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                ("weapon_fraggrenade");
+        }
+        itemDef
+        {
+            rect                        -270 347 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_fraggrenade");
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                ("weapon_smokegrenade");
+        }
+        itemDef
+        {
+            rect                        -276 347 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_fraggrenade");
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                ("weapon_fraggrenade");
+        }
+        itemDef
+        {
+            rect                        -262 347 32 32 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_fraggrenade");
+            textscale                   0.55
+            bordercolor                 1 1 1 1
+            exp material                ("weapon_smokegrenade");
+        }
+    }
+}

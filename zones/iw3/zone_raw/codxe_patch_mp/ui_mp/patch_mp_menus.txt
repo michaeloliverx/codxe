@@ -1,0 +1,14 @@
+{
+    loadMenu { "ui_mp/settings_map_dlc.menu" }
+    loadMenu { "ui_mp/menu_xboxlive.menu" }
+    menuDef { name ",live_cac_popup" }
+    loadMenu { "ui_mp/popup_findgame.menu" }
+    loadMenu { "ui_mp/popup_mappacks.menu" }
+    loadMenu { "ui_mp/player_popup.menu" }
+    menuDef { name ",kickwarning" }
+
+    loadMenu { "ui_mp/settings_usermaps.menu" }
+    loadMenu { "ui_mp/mods_menu.menu" }
+    loadMenu { "ui_mp/menu_gamesetup_systemlink.menu" }
+    loadMenu { "ui_mp/menu_gamesetup_splitscreen.menu" }
+}
