@@ -2,6 +2,7 @@
 #include "components/cg.h"
 #include "components/cj_tas.h"
 #include "components/clipmap.h"
+#include "components/debug_draw.h"
 #include "components/command.h"
 #include "components/cmds.h"
 #include "components/console.h"
@@ -45,6 +46,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new UIFeeder());
 
     RegisterModule(new cg());
+    RegisterModule(new DebugDraw());
     RegisterModule(new MirrorWorld());
     RegisterModule(new cj_tas());
     RegisterModule(new clipmap());

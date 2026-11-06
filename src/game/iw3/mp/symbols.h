@@ -173,6 +173,13 @@ static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233A938);
 static auto R_AddCmdDrawText =
     reinterpret_cast<void (*)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale,
                               double yScale, double rotation, const float *color, int style)>(0x8216C0B8);
+static auto R_GetCommandBuffer = reinterpret_cast<GfxCmdHeader *(*)(GfxRenderCommand renderCmd, int bytes)>(0x8216A640);
+
+static auto RB_DrawLinesCmd = reinterpret_cast<void (*)(GfxRenderCommandExecState *execState)>(0x821584D0);
+static auto RB_SetTessTechnique =
+    reinterpret_cast<void (*)(const Material *material, MaterialTechniqueType techType)>(0x821511F8);
+static auto rgpLineMaterial = reinterpret_cast<Material **>(0x84CD79B4);
+
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_s *dvar)>(0x8234AF50);
 static auto R_ChangeState_0 = reinterpret_cast<void (*)(GfxCmdBufState *state, unsigned int bits)>(0x82142A58);
 static auto R_DeriveNearPlaneConstantsForView = reinterpret_cast<void (*)(GfxCmdBufSourceState *source)>(0x821371E0);
@@ -540,6 +547,7 @@ static auto g_console_field_width = reinterpret_cast<int *>(0x823A52F4);
 static auto g_console_char_height = reinterpret_cast<float *>(0x823A52F8);
 static auto historyEditLines = reinterpret_cast<field_t *>(0x8242DFD8);
 static auto cg_pmove = reinterpret_cast<pmove_t *>(0x823F6040);
+static auto clsDebug = reinterpret_cast<const clientDebug_t *>(0x82431270); // cls.debug
 static auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);
 static auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
 static auto client_fields = reinterpret_cast<client_fields_s *>(0x82047A18);

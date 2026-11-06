@@ -1730,6 +1730,166 @@ struct Font_s
 };
 static_assert(sizeof(Font_s) == 0x18, "");
 
+union GfxDrawSurf
+{
+    unsigned __int64 packed;
+};
+static_assert(sizeof(GfxDrawSurf) == 8, "");
+
+struct __declspec(align(8)) MaterialInfo
+{
+    const char *name;
+    unsigned __int8 gameFlags;
+    unsigned __int8 sortKey;
+    unsigned __int8 textureAtlasRowCount;
+    unsigned __int8 textureAtlasColumnCount;
+    GfxDrawSurf drawSurf;
+    unsigned int surfaceTypeBits;
+};
+static_assert(sizeof(MaterialInfo) == 24, "");
+
+struct GfxStateBits
+{
+    unsigned int loadBits[2];
+};
+struct MaterialTechniqueSet;
+struct MaterialTextureDef;
+struct MaterialConstantDef;
+
+struct Material
+{
+    MaterialInfo info;
+    unsigned __int8 stateBitsEntry[26];
+    unsigned __int8 textureCount;
+    unsigned __int8 constantCount;
+    unsigned __int8 stateBitsCount;
+    unsigned __int8 stateFlags;
+    unsigned __int8 cameraRegion;
+    MaterialTechniqueSet *techniqueSet;
+    MaterialTextureDef *textureTable;
+    MaterialConstantDef *constantTable;
+    GfxStateBits *stateBitsTable;
+};
+static_assert(sizeof(Material) == 72, "");
+static_assert(offsetof(Material, stateBitsEntry) == 24, "");
+static_assert(offsetof(Material, techniqueSet) == 56, "");
+static_assert(offsetof(Material, stateBitsTable) == 68, "");
+
+struct trDebugLine_t
+{
+    float start[3];
+    float end[3];
+    float color[4];
+    int depthTest;
+};
+static_assert(sizeof(trDebugLine_t) == 44, "");
+
+struct trDebugString_t
+{
+    float xyz[3];
+    float color[4];
+    float scale;
+    char text[96];
+};
+static_assert(sizeof(trDebugString_t) == 128, "");
+
+struct clientDebugLineInfo_t
+{
+    int max;
+    int num;
+    trDebugLine_t *lines;
+    int *durations;
+};
+static_assert(sizeof(clientDebugLineInfo_t) == 16, "");
+
+struct clientDebugStringInfo_t
+{
+    int max;
+    int num;
+    trDebugString_t *strings;
+    int *durations;
+};
+static_assert(sizeof(clientDebugStringInfo_t) == 16, "");
+
+struct clientDebug_t
+{
+    int prevFromServer;
+    int fromServer;
+    clientDebugStringInfo_t clStrings;
+    clientDebugStringInfo_t svStringsBuffer;
+    clientDebugStringInfo_t svStrings;
+    clientDebugLineInfo_t clLines;
+    clientDebugLineInfo_t svLinesBuffer;
+    clientDebugLineInfo_t svLines;
+};
+static_assert(sizeof(clientDebug_t) == 0x68, "");
+static_assert(offsetof(clientDebug_t, svStringsBuffer) == 0x18, "");
+static_assert(offsetof(clientDebug_t, svLinesBuffer) == 0x48, "");
+
+enum GfxRenderCommand : __int32
+{
+    RC_DRAW_TEXT_3D = 0xE,
+    RC_DRAW_LINES = 0x12,
+    RC_PROJECTION_SET = 0x14,
+};
+
+enum GfxProjectionTypes : __int32
+{
+    GFX_PROJECTION_2D = 0x0,
+    GFX_PROJECTION_3D = 0x1,
+};
+
+struct GfxCmdHeader
+{
+    unsigned short id;
+    unsigned short byteCount;
+};
+static_assert(sizeof(GfxCmdHeader) == 4, "");
+
+struct GfxCmdProjectionSet
+{
+    GfxCmdHeader header;
+    GfxProjectionTypes projection;
+};
+static_assert(sizeof(GfxCmdProjectionSet) == 8, "");
+
+struct GfxPointVertex
+{
+    float xyz[3];
+    unsigned char color[4];
+};
+static_assert(sizeof(GfxPointVertex) == 16, "");
+
+struct GfxCmdDrawLines
+{
+    GfxCmdHeader header;
+    short lineCount;
+    unsigned char width;
+    unsigned char dimensions;
+    GfxPointVertex verts[2];
+};
+static_assert(sizeof(GfxCmdDrawLines) == 40, "");
+static_assert(offsetof(GfxCmdDrawLines, verts) == 8, "");
+
+struct GfxCmdDrawText3D
+{
+    GfxCmdHeader header;
+    float org[3];
+    Font_s *font;
+    float xPixelStep[3];
+    float yPixelStep[3];
+    unsigned char color[4];
+    char text[4];
+};
+static_assert(sizeof(GfxCmdDrawText3D) == 52, "");
+static_assert(offsetof(GfxCmdDrawText3D, text) == 48, "");
+
+struct GfxRenderCommandExecState
+{
+    const void *cmd;
+};
+static_assert(sizeof(GfxRenderCommandExecState) == 4, "");
+
 struct XModel
 {
     const char *name;

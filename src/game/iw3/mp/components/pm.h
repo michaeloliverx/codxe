@@ -13,7 +13,7 @@ class pm : public Module
     ~pm();
 
     static void OnDvarInit();
-    static void OnCGDrawActive();
+    static void OnCGDrawActive(int);
 };
 } // namespace mp
 } // namespace iw3

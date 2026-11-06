@@ -386,7 +386,7 @@ void cj_tas::OnDvarInit()
         Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle");
 }
 
-void cj_tas::OnCGDrawActive()
+void cj_tas::OnCGDrawActive(int)
 {
     if (TAS_Enabled())
     {

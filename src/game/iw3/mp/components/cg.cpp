@@ -177,7 +177,7 @@ void cg::OnDvarInit()
         Dvar_RegisterBool("cg_draw_player_info", false, 0, "Draw player info (origin, viewangles, speed) on screen");
 }
 
-void cg::OnCGDrawActive()
+void cg::OnCGDrawActive(int)
 {
     if (cg_draw_player_info->current.enabled)
     {
