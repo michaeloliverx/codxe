@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "pm.h"
 
+#define PM_NOCLIP 2
+#define PM_UFO 3
+
 namespace iw3
 {
 namespace mp
@@ -45,6 +48,21 @@ void PM_FoliageSounds_Hook(pmove_t *pm)
 }
 
 Detour Pmove_Detour;
+Detour PmoveSingle_Detour;
+
+void PmoveSingle_Hook(pmove_t *pm)
+{
+    if (pm->ps->pm_type == PM_UFO)
+    {
+        // Fix UFO prediction desync: this mode skips the walking history update, so client and server can retain
+        // different old velocities. Clear them before stock movement to prevent different inertia calculations.
+        pm->ps->oldVelocity[0] = 0.0f;
+        pm->ps->oldVelocity[1] = 0.0f;
+    }
+
+    PmoveSingle_Detour.GetOriginal<decltype(PmoveSingle)>()(pm);
+}
+
 // https://github.com/kejjjjj/iw3sptool/blob/17b669233a1ad086deed867469dc9530b84c20e6/iw3sptool/bg/bg_pmove.cpp#L11
 void Pmove_Hook(pmove_t *pm)
 {
@@ -122,6 +140,9 @@ pm::pm()
     Sys_SnapVector_Detour = Detour(Sys_SnapVector, Sys_SnapVector_Hook);
     Sys_SnapVector_Detour.Install();
 
+    PmoveSingle_Detour = Detour(PmoveSingle, PmoveSingle_Hook);
+    PmoveSingle_Detour.Install();
+
     Pmove_Detour = Detour(Pmove, Pmove_Hook);
     Pmove_Detour.Install();
 }
@@ -133,6 +154,8 @@ pm::~pm()
     Sys_SnapVector_Detour.Remove();
 
     Pmove_Detour.Remove();
+
+    PmoveSingle_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw3
