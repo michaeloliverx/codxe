@@ -12,8 +12,6 @@ namespace
 {
 const char *const MOD_ZONE = "mod";
 const char *const MOD_FASTFILE = "mod.ff";
-const char *const CODXE_COMMON_ZONE = "codxe_common_mp";
-const char *const CODXE_UI_ZONE = "codxe_ui_mp";
 const char *const CODXE_ZONE_DIRECTORY = "codxe:\\zone";
 const char *const USERMAPS_DIRECTORY = "codxe:\\usermaps";
 const char *const FASTFILE_EXTENSION = ".ff";
@@ -42,6 +40,26 @@ std::string GetCodxeZoneFastfilePath(const char *zoneName)
     return filesystem::JoinPath(CODXE_ZONE_DIRECTORY, filename.c_str());
 }
 
+std::string GetZoneNameFromFastfileRequest(const char *filename)
+{
+    if (!filename || !*filename)
+        return std::string();
+
+    const char *basename = filename;
+    for (const char *cursor = filename; *cursor; ++cursor)
+    {
+        if (*cursor == '\\' || *cursor == '/')
+            basename = cursor + 1;
+    }
+
+    const size_t length = std::strlen(basename);
+    if (length <= 3 || I_stricmp(basename + length - 3, FASTFILE_EXTENSION) != 0)
+        return std::string();
+
+    const std::string zoneName(basename, length - 3);
+    return IsSafeZoneName(zoneName.c_str()) ? zoneName : std::string();
+}
+
 bool ContainsZone(const XZoneInfo *zoneInfo, unsigned int zoneCount, const char *name)
 {
     for (unsigned int i = 0; i < zoneCount; ++i)
@@ -51,17 +69,6 @@ bool ContainsZone(const XZoneInfo *zoneInfo, unsigned int zoneCount, const char 
     }
 
     return false;
-}
-
-const XZoneInfo *FindZone(const XZoneInfo *zoneInfo, unsigned int zoneCount, const char *name)
-{
-    for (unsigned int i = 0; i < zoneCount; ++i)
-    {
-        if (zoneInfo[i].name && I_stricmp(zoneInfo[i].name, name) == 0)
-            return &zoneInfo[i];
-    }
-
-    return nullptr;
 }
 
 bool IsInitialZoneBatch(const XZoneInfo *zoneInfo, unsigned int zoneCount)
@@ -95,7 +102,7 @@ void DB_ReallocXAssetPool(XAssetType type, unsigned int newSize)
 
 } // namespace
 
-Detour FastFiles::DB_BuildOSPath_Detour;
+Detour FastFiles::CreateFileA_Detour;
 Detour FastFiles::DB_LoadXAssets_Detour;
 
 bool FastFiles::HasModFastfile()
@@ -131,82 +138,66 @@ std::string FastFiles::GetUsermapFastfilePath(const char *zoneName)
     return filesystem::JoinPath(usermapDirectory.c_str(), (filename + ".ff").c_str());
 }
 
-int FastFiles::DB_BuildOSPath_Hook(const char *zoneName, unsigned int size, char *filename)
+std::string FastFiles::ResolveFastfilePath(const char *filename)
 {
-    if (zoneName && I_stricmp(zoneName, MOD_ZONE) == 0)
+    const std::string zoneName = GetZoneNameFromFastfileRequest(filename);
+    if (zoneName.empty())
+        return std::string();
+
+    if (I_stricmp(zoneName.c_str(), MOD_ZONE) == 0)
     {
         const std::string path = GetModFastfilePath();
         if (!path.empty())
-            return _snprintf_s(filename, size, _TRUNCATE, "%s", path.c_str());
+            return path;
     }
 
-    const std::string usermapPath = GetUsermapFastfilePath(zoneName);
+    const std::string usermapPath = GetUsermapFastfilePath(zoneName.c_str());
     if (!usermapPath.empty() && filesystem::FileExists(usermapPath.c_str()))
-    {
-        DbgPrint("[codxe][IW3][FastFiles] Redirecting usermap zone %s to %s\n", zoneName, usermapPath.c_str());
-        return _snprintf_s(filename, size, _TRUNCATE, "%s", usermapPath.c_str());
-    }
+        return usermapPath;
 
-    const std::string codxeZonePath = GetCodxeZoneFastfilePath(zoneName);
+    const std::string codxeZonePath = GetCodxeZoneFastfilePath(zoneName.c_str());
     if (!codxeZonePath.empty() && filesystem::FileExists(codxeZonePath.c_str()))
+        return codxeZonePath;
+
+    return std::string();
+}
+
+HANDLE FastFiles::CreateFileA_Hook(const char *filename, DWORD desiredAccess, DWORD shareMode,
+                                   LPSECURITY_ATTRIBUTES securityAttributes, DWORD creationDisposition,
+                                   DWORD flagsAndAttributes, HANDLE templateFile)
+{
+    std::string replacement;
+    if (creationDisposition == OPEN_EXISTING && (desiredAccess & GENERIC_READ) && !(desiredAccess & GENERIC_WRITE))
+        replacement = ResolveFastfilePath(filename);
+
+    if (!replacement.empty())
     {
-        DbgPrint("[codxe][IW3][FastFiles] Redirecting zone %s to %s\n", zoneName, codxeZonePath.c_str());
-        return _snprintf_s(filename, size, _TRUNCATE, "%s", codxeZonePath.c_str());
+        // TU4 opens D:\patch_mp.ff directly, bypassing DB_BuildOSPath.
+        // Redirect the open so stock zone names, flags and lifetimes remain intact.
+        DbgPrint("[codxe][IW3][FastFiles] Redirecting fastfile %s to %s\n", filename, replacement.c_str());
+        filename = replacement.c_str();
     }
 
-    return DB_BuildOSPath_Detour.GetOriginal<DB_BuildOSPath_t>()(zoneName, size, filename);
+    return CreateFileA_Detour.GetOriginal<GameCreateFileA_t>()(filename, desiredAccess, shareMode, securityAttributes,
+                                                               creationDisposition, flagsAndAttributes, templateFile);
 }
 
 void FastFiles::DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)
 {
     auto original = DB_LoadXAssets_Detour.GetOriginal<DB_LoadXAssets_t>();
-    const std::string codxeCommonFastfile = GetCodxeZoneFastfilePath(CODXE_COMMON_ZONE);
-    const std::string codxeUiFastfile = GetCodxeZoneFastfilePath(CODXE_UI_ZONE);
-    const XZoneInfo *stockCommonZone = FindZone(zoneInfo, zoneCount, "common_mp");
-    const XZoneInfo *stockUiZone = FindZone(zoneInfo, zoneCount, "ui_mp");
-    const bool injectCommon = filesystem::FileExists(codxeCommonFastfile.c_str()) && stockCommonZone &&
-                              !ContainsZone(zoneInfo, zoneCount, CODXE_COMMON_ZONE);
-    const bool injectUi = filesystem::FileExists(codxeUiFastfile.c_str()) && stockUiZone &&
-                          !ContainsZone(zoneInfo, zoneCount, CODXE_UI_ZONE);
     const bool injectMod =
         HasModFastfile() && IsInitialZoneBatch(zoneInfo, zoneCount) && !ContainsZone(zoneInfo, zoneCount, MOD_ZONE);
-    if (!injectCommon && !injectUi && !injectMod)
+    if (!injectMod)
     {
         original(zoneInfo, zoneCount, sync);
         return;
     }
 
-    std::vector<XZoneInfo> zones;
-    zones.reserve(zoneCount + 3);
+    std::vector<XZoneInfo> zones(zoneInfo, zoneInfo + zoneCount);
+    XZoneInfo modZone = {MOD_ZONE, DB_ZONE_MOD, 0};
+    zones.push_back(modZone);
 
-    for (unsigned int i = 0; i < zoneCount; ++i)
-    {
-        zones.push_back(zoneInfo[i]);
-
-        if (injectCommon && zoneInfo[i].name && I_stricmp(zoneInfo[i].name, "common_mp") == 0)
-        {
-            XZoneInfo commonZone = {CODXE_COMMON_ZONE, stockCommonZone->allocFlags, stockCommonZone->freeFlags};
-            zones.push_back(commonZone);
-
-            DbgPrint("[codxe][IW3][FastFiles] Loading common fastfile: %s\n", codxeCommonFastfile.c_str());
-        }
-
-        if (injectUi && zoneInfo[i].name && I_stricmp(zoneInfo[i].name, "ui_mp") == 0)
-        {
-            XZoneInfo uiZone = {CODXE_UI_ZONE, stockUiZone->allocFlags, stockUiZone->freeFlags};
-            zones.push_back(uiZone);
-
-            DbgPrint("[codxe][IW3][FastFiles] Loading UI fastfile: %s\n", codxeUiFastfile.c_str());
-        }
-    }
-
-    if (injectMod)
-    {
-        XZoneInfo modZone = {MOD_ZONE, DB_ZONE_MOD, 0};
-        zones.push_back(modZone);
-
-        DbgPrint("[codxe][IW3][FastFiles] Loading startup mod fastfile: %s\n", GetModFastfilePath().c_str());
-    }
+    DbgPrint("[codxe][IW3][FastFiles] Loading startup mod fastfile: %s\n", GetModFastfilePath().c_str());
 
     original(zones.data(), static_cast<unsigned int>(zones.size()), sync);
 }
@@ -248,8 +239,8 @@ FastFiles::FastFiles()
     DB_ReallocXAssetPool(ASSET_TYPE_LOCALIZE_ENTRY, 14000); // Stock: 6144
     DB_ReallocXAssetPool(ASSET_TYPE_FX, 600);               // Stock: 400
 
-    DB_BuildOSPath_Detour = Detour(DB_BuildOSPath, DB_BuildOSPath_Hook);
-    DB_BuildOSPath_Detour.Install();
+    CreateFileA_Detour = Detour(GameCreateFileA, CreateFileA_Hook);
+    CreateFileA_Detour.Install();
 
     DB_LoadXAssets_Detour = Detour(DB_LoadXAssets, DB_LoadXAssets_Hook);
     DB_LoadXAssets_Detour.Install();
@@ -258,7 +249,7 @@ FastFiles::FastFiles()
 FastFiles::~FastFiles()
 {
     DB_LoadXAssets_Detour.Remove();
-    DB_BuildOSPath_Detour.Remove();
+    CreateFileA_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw3

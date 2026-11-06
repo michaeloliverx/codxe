@@ -1,0 +1,13 @@
+REFERENCE           CODXE_CUSTOM_MAPS
+LANG_ENGLISH        "Custom Maps"
+
+REFERENCE           CODXE_CUSTOM_MAPS_DESC
+LANG_ENGLISH        "Downloaded maps that are placed in the /usermaps subfolder."
+
+REFERENCE           CODXE_SELECT_MAP
+LANG_ENGLISH        "Select map"
+
+REFERENCE           MENU_LAUNCH_WITHOUT_MODS
+LANG_ENGLISH        "Launch without mods."
+
+ENDMARKER

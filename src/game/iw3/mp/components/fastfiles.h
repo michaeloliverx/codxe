@@ -19,9 +19,12 @@ class FastFiles : public Module
   private:
     static bool HasModFastfile();
     static std::string GetModFastfilePath();
+    static std::string ResolveFastfilePath(const char *filename);
 
-    static Detour DB_BuildOSPath_Detour;
-    static int DB_BuildOSPath_Hook(const char *zoneName, unsigned int size, char *filename);
+    static Detour CreateFileA_Detour;
+    static HANDLE CreateFileA_Hook(const char *filename, DWORD desiredAccess, DWORD shareMode,
+                                   LPSECURITY_ATTRIBUTES securityAttributes, DWORD creationDisposition,
+                                   DWORD flagsAndAttributes, HANDLE templateFile);
 
     static Detour DB_LoadXAssets_Detour;
     static void DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);

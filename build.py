@@ -19,7 +19,10 @@ GAME_DIRECTORIES = {
     "41560855": "t5",
     "415608CB": "iw5",
 }
-T4_ZONE_NAMES = ("code_post_gfx", "common", "patch", "patch_ui")
+REQUIRED_ZONES = {
+    "iw3": ("patch_mp",),
+    "t4": ("code_post_gfx", "common", "patch", "patch_ui"),
+}
 
 
 def read_git_version():
@@ -38,10 +41,11 @@ def copy_game_data(game, destination):
 
 def package():
     # Shared zones are versioned release resources; rebuilding remains manual.
-    for name in T4_ZONE_NAMES:
-        zone = RESOURCES_PATH / "t4/_codxe/zone" / (name + ".ff")
-        if not zone.is_file() or not zone.stat().st_size:
-            raise FileNotFoundError(f"Required T4 SP zone missing or empty: {zone}")
+    for game, names in REQUIRED_ZONES.items():
+        for name in names:
+            zone = RESOURCES_PATH / game / "_codxe/zone" / (name + ".ff")
+            if not zone.is_file() or not zone.stat().st_size:
+                raise FileNotFoundError(f"Required {game.upper()} zone missing or empty: {zone}")
 
     if STAGING_DIR.exists():
         if STAGING_DIR.resolve().parent != (ROOT / "build").resolve():

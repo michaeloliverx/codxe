@@ -29,8 +29,6 @@ typedef void (*CGDrawHandler)(int localClientNum);
 
 typedef void (*AssetLinkHandler)(XAsset *asset);
 
-const char *const CODXE_UI_ZONE = "codxe_ui_mp";
-
 const AssetLinkHandler assetLinkHandlers[] = {
     assets::OnAssetLink,
     mpsp::OnAssetLink,
@@ -166,28 +164,12 @@ XAssetEntryPoolEntry *Events::DB_LinkXAssetEntry_Hook(XAssetEntryPoolEntry *newE
 {
     XAsset *asset = &newEntry->entry.asset;
 
-    // Deferred entries already contain their source zone. New entries use the zone currently being loaded.
-    const unsigned int zoneIndex = allowOverride ? newEntry->entry.zoneIndex : *g_zoneIndex;
-    XZoneName *zone = &g_zoneNames[zoneIndex];
-
-    // DbgPrint("[codxe][IW3][DB_LinkXAsset] zone=%s type=%s name=%s\n", zone->name, g_assetNames[asset->type],
-    //          DB_GetXAssetName(asset));
-
     for (size_t i = 0; i < ARRAYSIZE(assetLinkHandlers); ++i)
     {
         assetLinkHandlers[i](asset);
     }
 
-    // patch_mp normally takes priority over ui_mp. Raise our UI zone's priority while linking so its assets win.
-    // Restore the original flags afterward so the zone still unloads with ui_mp.
-    const int originalZoneFlags = zone->flags;
-    if (I_stricmp(zone->name, CODXE_UI_ZONE) == 0)
-        zone->flags = DB_ZONE_DEV;
-
-    XAssetEntryPoolEntry *entry =
-        DB_LinkXAssetEntry_Detour.GetOriginal<DB_LinkXAssetEntry_t>()(newEntry, allowOverride);
-    zone->flags = originalZoneFlags;
-    return entry;
+    return DB_LinkXAssetEntry_Detour.GetOriginal<DB_LinkXAssetEntry_t>()(newEntry, allowOverride);
 }
 
 Detour Events::DB_LinkXAssetEntry_Detour;
