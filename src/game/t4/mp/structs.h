@@ -1084,6 +1084,13 @@ static_assert(offsetof(clientHeader_t, predictedOrigin) == 0x630, "");
 static_assert(offsetof(clientHeader_t, predictedOriginServerTime) == 0x63C, "");
 static_assert(offsetof(clientHeader_t, netchan.remoteAddress.type) == 0x20, "");
 
+enum
+{
+    PHYS_ALLOC_LOW = 0x0,
+    PHYS_ALLOC_HIGH = 0x1,
+    PHYS_ALLOC_COUNT = 0x2,
+};
+
 struct client_t
 {
     clientHeader_t header; // OFS: 0x0
@@ -1103,6 +1110,7 @@ struct client_t
 };
 
 static_assert(sizeof(client_t) == 751148, "");
+static_assert(__alignof(client_t) == 4, "");
 static_assert(offsetof(client_t, header) == 0x0, "");
 static_assert(offsetof(client_t, userinfo) == 0x6DC, "");
 static_assert(offsetof(client_t, lastUsercmd) == 0x20EF4, "");

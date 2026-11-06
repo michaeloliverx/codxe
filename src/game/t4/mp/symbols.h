@@ -115,7 +115,7 @@ typedef void (*R_ShowDirtyDiscError_t)();
 static R_ShowDirtyDiscError_t R_ShowDirtyDiscError = reinterpret_cast<R_ShowDirtyDiscError_t>(0x824166F0);
 
 static auto Dvar_FindMalleableVar = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x822BDFE8);
-static auto Dvar_GetBool = reinterpret_cast<dvar_s *(*)(const char *dvarName)>(0x822BE0E8);
+static auto Dvar_GetBool = reinterpret_cast<bool (*)(const char *dvarName)>(0x822BE0E8);
 static auto Dvar_GetString = reinterpret_cast<const char *(*)(const char *dvarName)>(0x822BE230);
 static auto Dvar_RegisterBool =
     reinterpret_cast<dvar_s *(*)(const char *dvarName, bool value, DvarFlags flags, const char *description)>(
@@ -124,6 +124,7 @@ static auto Dvar_RegisterString =
     reinterpret_cast<dvar_s *(*)(const char *dvarName, const char *value, DvarFlags flags, const char *description)>(
         0x822BF370);
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822BFB20);
+static auto Dvar_SetIntByName = reinterpret_cast<void (*)(const char *dvarName, int value)>(0x822BFBC8);
 
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8220A270);
 static auto GScr_AllocString = reinterpret_cast<int (*)(const char *s)>(0x8222D368);
@@ -200,6 +201,11 @@ typedef bool (*StringTable_GetAsset_t)(const char *filename, StringTable **table
 static StringTable_GetAsset_t StringTable_GetAsset = reinterpret_cast<StringTable_GetAsset_t>(0x822BB280);
 
 static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82284D50);
+static auto SV_AllocateClientMemory = reinterpret_cast<void (*)()>(0x82287888);
+static auto SV_SpawnServer = reinterpret_cast<int (*)(const char *server)>(0x822889A8);
+static auto PMem_Alloc = reinterpret_cast<unsigned char *(*)(unsigned int size, unsigned int alignment,
+                                                             unsigned int type, unsigned int allocType)>(0x822C0F00);
+
 typedef gentity_s *(*SV_AddTestClient_t)();
 static SV_AddTestClient_t SV_AddTestClient = reinterpret_cast<SV_AddTestClient_t>(0x82285D20);
 typedef void (*SV_BotUserMove_t)(client_t *cl);
