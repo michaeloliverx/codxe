@@ -14,6 +14,7 @@ enum TitleID : DWORD
     TITLE_ID_QOS = 0x415607FF,
     TITLE_ID_T4 = 0x4156081C,
     TITLE_ID_T5 = 0x41560855,
+    TITLE_ID_T6 = 0x415608C3,
 };
 
 class PluginManager
