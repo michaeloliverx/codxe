@@ -2,6 +2,7 @@
 #include "cj_tas.h"
 #include "cg.h"
 #include "mods.h"
+#include "stats.h"
 
 namespace iw3
 {
@@ -112,6 +113,11 @@ Detour Menus_OpenByName_Detour;
 
 void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 {
+    // Unfetched stat reads open "Downloading game settings" on local client 0.
+    // Prepare each player before team/class menu activation evaluates stat expressions.
+    if (dc && (strncmp(menuName, "changeclass", 11) == 0 || strcmp(menuName, "team_marinesopfor_splitscreen") == 0))
+        Stats::EnsureOfflineStats(dc->localClientNum);
+
     if (strcmp(menuName, "settings_map_splitscreen") == 0)
         // Splitscreen map list only contains a subset of maps
         // Opening the full map settings menu allows selecting any map
