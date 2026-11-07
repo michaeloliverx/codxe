@@ -2538,17 +2538,156 @@ struct cStaticModel_s
     float absmax[3];
 };
 
-struct dmaterial_t;
+enum TraceHitType : __int32
+{
+    TRACE_HITTYPE_NONE = 0,
+    TRACE_HITTYPE_ENTITY = 1,
+    TRACE_HITTYPE_DYNENT_MODEL = 2,
+    TRACE_HITTYPE_DYNENT_BRUSH = 3,
+};
+
+struct trace_t
+{
+    float fraction;
+    float normal[3];
+    int surfaceFlags;
+    int contents;
+    const char *material;
+    TraceHitType hitType;
+    unsigned __int16 hitId;
+    unsigned __int16 modelIndex;
+    unsigned __int16 partName;
+    unsigned __int16 partGroup;
+    bool allsolid;
+    bool startsolid;
+    bool walkable;
+};
+static_assert(sizeof(trace_t) == 44, "");
+static_assert(offsetof(trace_t, normal) == 4, "");
+static_assert(offsetof(trace_t, walkable) == 42, "");
+
+struct cLeafBrushNodeLeaf_t
+{
+    unsigned __int16 *brushes;
+};
+struct cLeafBrushNodeChildren_t
+{
+    float dist;
+    float range;
+    unsigned __int16 childOffset[2];
+};
+union cLeafBrushNodeData_t
+{
+    cLeafBrushNodeLeaf_t leaf;
+    cLeafBrushNodeChildren_t children;
+};
+struct cLeafBrushNode_s
+{
+    unsigned __int8 axis;
+    __int16 leafBrushCount;
+    int contents;
+    cLeafBrushNodeData_t data;
+};
+struct dmaterial_t
+{
+    char material[64];
+    int surfaceFlags;
+    int contentFlags;
+};
+struct CollisionBorder;
+
+struct CollisionPartition
+{
+    unsigned __int8 triCount;
+    unsigned __int8 borderCount;
+    int firstTri;
+    CollisionBorder *borders;
+};
+union CollisionAabbTreeIndex
+{
+    int firstChildIndex;
+    int partitionIndex;
+};
+struct CollisionAabbTree
+{
+    float origin[3];
+    float halfSize[3];
+    unsigned __int16 materialIndex;
+    unsigned __int16 childCount;
+    CollisionAabbTreeIndex u;
+};
+static_assert(sizeof(cLeafBrushNode_s) == 20, "");
+static_assert(sizeof(dmaterial_t) == 72, "");
+static_assert(sizeof(CollisionPartition) == 12, "");
+static_assert(sizeof(CollisionAabbTree) == 32, "");
+
 struct cNode_t;
 struct cLeaf_t;
-struct cLeafBrushNode_s;
 struct CollisionBorder;
-struct CollisionPartition;
-struct CollisionAabbTree;
-struct DynEntityDef;
-struct DynEntityPose;
+struct GfxPlacement
+{
+    float quat[4];
+    float origin[3];
+};
+enum DynEntityType : __int32
+{
+    DYNENT_TYPE_INVALID = 0,
+    DYNENT_TYPE_CLUTTER = 1,
+    DYNENT_TYPE_DESTRUCT = 2,
+    DYNENT_TYPE_COUNT = 3,
+};
+struct FxEffectDef;
+struct XModelPieces;
+struct PhysPreset;
+struct PhysMass
+{
+    float centerOfMass[3];
+    float momentsOfInertia[3];
+    float productsOfInertia[3];
+};
+struct DynEntityDef
+{
+    DynEntityType type;
+    GfxPlacement pose;
+    XModel *xModel;
+    unsigned __int16 brushModel;
+    unsigned __int16 physicsBrushModel;
+    const FxEffectDef *destroyFx;
+    XModelPieces *destroyPieces;
+    PhysPreset *physPreset;
+    int health;
+    PhysMass mass;
+    int contents;
+};
+struct DynEntityPose
+{
+    GfxPlacement pose;
+    float radius;
+};
+struct DynEntityProps
+{
+    const char *name;
+    bool clientOnly;
+    bool clipMove;
+    bool usePhysics;
+    bool destroyable;
+};
 struct DynEntityClient;
-struct DynEntityColl;
+struct DynEntityColl
+{
+    unsigned __int16 sector;
+    unsigned __int16 nextEntInSector;
+    float linkMins[2];
+    float linkMaxs[2];
+};
+static_assert(sizeof(GfxPlacement) == 28, "");
+static_assert(sizeof(DynEntityDef) == 96, "");
+static_assert(offsetof(DynEntityDef, brushModel) == 36, "");
+static_assert(offsetof(DynEntityDef, contents) == 92, "");
+static_assert(sizeof(DynEntityPose) == 32, "");
+static_assert(sizeof(DynEntityProps) == 8, "");
+static_assert(offsetof(DynEntityProps, clipMove) == 5, "");
+static_assert(sizeof(DynEntityColl) == 20, "");
 
 /* 9079 */
 struct clipMap_t
@@ -2604,11 +2743,18 @@ struct clipMap_t
     DynEntityColl *dynEntCollList[2];
     unsigned int checksum;
 };
+static_assert(offsetof(clipMap_t, verts) == 92, "");
+static_assert(offsetof(clipMap_t, partitions) == 120, "");
+static_assert(offsetof(clipMap_t, aabbTrees) == 128, "");
 static_assert(offsetof(clipMap_t, isInUse) == 4, "");
 static_assert(offsetof(clipMap_t, numSubModels) == 132, "");
 static_assert(offsetof(clipMap_t, cmodels) == 136, "");
 static_assert(offsetof(clipMap_t, numBrushes) == 140, "");
 static_assert(offsetof(clipMap_t, brushes) == 144, "");
+static_assert(offsetof(clipMap_t, dynEntCount) == 244, "");
+static_assert(offsetof(clipMap_t, dynEntDefList) == 248, "");
+static_assert(offsetof(clipMap_t, dynEntPoseList) == 256, "");
+static_assert(offsetof(clipMap_t, dynEntCollList) == 272, "");
 
 struct scr_entref_t
 {
@@ -2771,6 +2917,10 @@ struct centity_s
     float lightingOrigin[3];
     XAnimTree_s *tree;
 };
+static_assert(sizeof(centity_s) == 464, "");
+static_assert(offsetof(centity_s, pose.origin) == 28, "");
+static_assert(offsetof(centity_s, nextState) == 192, "");
+static_assert(offsetof(centity_s, nextValid) == 436, "");
 
 struct playerEntity_t
 {
@@ -2873,12 +3023,6 @@ struct GfxSceneDef
     int time;
     float floatTime;
     float viewOffset[3];
-};
-
-struct GfxPlacement
-{
-    float quat[4];
-    float origin[3];
 };
 
 struct GfxScaledPlacement

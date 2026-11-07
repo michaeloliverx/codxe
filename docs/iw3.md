@@ -18,6 +18,12 @@ The following is an incomplete list of features currently exposed by the IW3 cli
 - `pm_pc_mp_velocity_snap` - Enables PC Multiplayer style velocity snapping by rounding to nearest.
 - `pm_multi_bounce` - Enables multi-bounces.
 - `noclip_brushes` - Disables player collision for clipmap brush indices, for example `"50 123 647"`.
+- `cm_showCollision` - World and solid brush-entity collision outlines: `0` off (default), `1` invisible player clip barriers, `2` all player collision. Outlines are cyan and draw through world geometry without writing depth.
+- `cm_showBounces` - Show bounce candidates: slope highlights on world brushes, terrain, and active solid brush-model entities, plus magenta terrain edge/corner markers. Entity collision follows its current position and rotation; slope angles are tested in world space. Defaults to `0`; set to `1` to enable independently of `cm_showCollision`. Slope colors run from green to red over the same normal-Z range (`0.3` to `0.7`) used by iw3mptool. This face-angle filter covers roughly 45.6 to 72.5 degrees above horizontal. Actual bounces still depend on movement and approach.
+- `cm_showBounceEdges` - Optional edge-marker filter within `cm_showBounces`; defaults to `1`. Set to `0` for slope highlights only. Magenta ticks mark terrain edges/corners where a native player-capsule sweep finds a non-walkable edge contact with an upward velocity-clipping response. This samples representative approaches, not a full jump simulation or a guarantee that every edge bounce is found.
+- `cm_showBounceEdgeDist` - Edge probe distance in game units. Defaults to `256`; range `64` to `1000`, also limited by `cm_showCollisionDist`. Results fill in over several frames, with at most 32 native sweeps per view per frame. Uses the current prediction bounds when available, otherwise a standing capsule.
+- `cm_showCollisionDist` - Maximum outline distance from the current camera in game units. Defaults to `1000`; range `64` to `10000`.
+- `cm_showCollisionMaxLines` - Per-view outline budget. Defaults to `1024`; range `64` to `4096`. Nearest collision draws first. Newly encountered brushes fill in over several frames to limit clipping work.
 - `r_drawDynEnts` - Draws dynamic entities.
 - `bg_bobIdle` - Controls idle gun sway.
 - `cg_mirrorWorld` - Experimental horizontal world mirror. Defaults to `false`; set to `1` to enable or `0` to disable live. Keeps the first-person weapon and HUD normal and reverses horizontal look, strafe, and lean controls.
@@ -30,6 +36,15 @@ Special `noclip_brushes` values:
 
 - `""` - Restores the original collision flag for all brushes.
 - `"*"` - Disables collision for all brushes.
+
+To show barriers and bounce candidates together:
+
+```text
+cm_showCollision 1
+cm_showBounces 1
+```
+
+Set both to `0` to turn the overlay off. Outlines include BSP world geometry and active solid brush-model entities, such as objective props and moving platforms. Engine-managed dynamic brushes are included when linked and enabled for player collision by the engine. Triggers, render-only model meshes, and character collision boxes are not drawn. Magenta edge probes currently cover world terrain only. The separate debug drawing module also restores native client and GSC debug line/text submission in TU4.
 
 ### GSC Entity Fields
 

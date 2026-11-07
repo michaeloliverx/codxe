@@ -5,6 +5,7 @@
 #include "cg.h"
 #include "cj_tas.h"
 #include "clipmap.h"
+#include "collision.h"
 #include "debug_draw.h"
 #include "command.h"
 #include "console.h"
@@ -36,12 +37,14 @@ const AssetLinkHandler assetLinkHandlers[] = {
 };
 
 const CGDrawHandler cgDrawActiveHandlers[] = {
-    cg::OnCGDrawActive, cj_tas::OnCGDrawActive, clipmap::OnCGDrawActive, pm::OnCGDrawActive, DebugDraw::OnCGDrawActive,
+    cg::OnCGDrawActive, cj_tas::OnCGDrawActive,    clipmap::OnCGDrawActive,
+    pm::OnCGDrawActive, DebugDraw::OnCGDrawActive, Collision::OnCGDrawActive,
 };
 
 const EventHandler cgInitHandlers[] = {
     cj_tas::OnCGInit,
     clipmap::OnCGInit,
+    Collision::OnCGInit,
 };
 
 const EventHandler delayStreamLoadHandlers[] = {
@@ -55,8 +58,8 @@ const EventHandler vmShutdownHandlers[] = {
 };
 
 const EventHandler dvarInitHandlers[] = {
-    cg::OnDvarInit,      cj_tas::OnDvarInit, clipmap::OnDvarInit,  MirrorWorld::OnDvarInit,
-    ModList::OnDvarInit, pm::OnDvarInit,     UIFeeder::OnDvarInit,
+    cg::OnDvarInit,        cj_tas::OnDvarInit,  clipmap::OnDvarInit, MirrorWorld::OnDvarInit,
+    Collision::OnDvarInit, ModList::OnDvarInit, pm::OnDvarInit,      UIFeeder::OnDvarInit,
 };
 
 const EventHandler cmdInitHandlers[] = {
