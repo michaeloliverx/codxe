@@ -523,6 +523,21 @@ void LiveStorage_UploadStats_Hook(unsigned int controllerIndex)
 }
 } // namespace
 
+void Stats::EnsureOfflineStats(int localClientNum)
+{
+    if (localClientNum < 0 || localClientNum >= 4 || !Dvar_GetBool("splitscreen") || Dvar_GetBool("onlinegame"))
+        return;
+
+    const int controllerIndex = CL_ControllerIndexFromClientNum(localClientNum);
+    if (!IsValidControllerIndex(controllerIndex) || IsSignedInToLive(controllerIndex) ||
+        controllerStatData[controllerIndex].statsFetched)
+        return;
+
+    LoadOrInitializeStats(controllerIndex);
+    DbgPrint("[codxe][IW3][Stats] Prepared split-screen class stats: local client %i, controller %i, ready %i\n",
+             localClientNum, controllerIndex, controllerStatData[controllerIndex].statsFetched);
+}
+
 void Stats::LoadStatsScript(int localClientNum, const char ** /*args*/)
 {
     const int controllerIndex = CL_ControllerIndexFromClientNum(localClientNum);

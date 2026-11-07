@@ -12,6 +12,8 @@ class Stats : public Module
     Stats();
     ~Stats();
 
+    static void EnsureOfflineStats(int localClientNum);
+
   private:
     friend class UIScript;
 
