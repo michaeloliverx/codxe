@@ -540,6 +540,8 @@ typedef playerStatNetworkData *controllerStatData_t;
 static controllerStatData_t controllerStatData = reinterpret_cast<controllerStatData_t>(0x84C5E238);
 
 static auto cgArray = reinterpret_cast<cg_s **>(0x823F28A0);
+static auto cg_entitiesArray = reinterpret_cast<centity_s **>(0x823F5054);
+static auto dynEntProps = reinterpret_cast<const DynEntityProps *>(0x82048404);
 static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
 static auto clients = reinterpret_cast<clientActive_t **>(0x82435AB8);
 static auto clientConnections = reinterpret_cast<clientConnection_t *>(0x824302E0);
@@ -551,6 +553,11 @@ static auto g_console_char_height = reinterpret_cast<float *>(0x823A52F8);
 static auto historyEditLines = reinterpret_cast<field_t *>(0x8242DFD8);
 static auto cg_pmove = reinterpret_cast<pmove_t *>(0x823F6040);
 static auto clsDebug = reinterpret_cast<const clientDebug_t *>(0x82431270); // cls.debug
+
+static auto CM_BoxTrace =
+    reinterpret_cast<void (*)(trace_t *results, const float *start, const float *end, const float *mins,
+                              const float *maxs, unsigned int model, int brushmask)>(0x82240BE8);
+
 static auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);
 static auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
 static auto client_fields = reinterpret_cast<client_fields_s *>(0x82047A18);
