@@ -169,10 +169,16 @@ static Party_SetDisplayMapName_t Party_SetDisplayMapName = reinterpret_cast<Part
 static auto PM_FoliageSounds = reinterpret_cast<void (*)(pmove_t *pm)>(0x82335E90);
 static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233B470);
 static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8233A938);
+static auto PM_Accelerate =
+    reinterpret_cast<void (*)(playerState_s *ps, const pml_t *pml, const float *wishdir, float wishspeed, float accel)>(
+        0x82339640);
 
 static auto R_AddCmdDrawText =
     reinterpret_cast<void (*)(const char *text, int maxChars, Font_s *font, double x, double y, double xScale,
                               double yScale, double rotation, const float *color, int style)>(0x8216C0B8);
+static auto R_AddCmdDrawStretchPic =
+    reinterpret_cast<void (*)(float x, float y, float w, float h, float s0, float t0, float s1, float t1,
+                              const float *color, Material *material)>(0x8216BAE8);
 static auto R_GetCommandBuffer = reinterpret_cast<GfxCmdHeader *(*)(GfxRenderCommand renderCmd, int bytes)>(0x8216A640);
 
 static auto RB_DrawLinesCmd = reinterpret_cast<void (*)(GfxRenderCommandExecState *execState)>(0x821584D0);
@@ -560,6 +566,7 @@ static auto CM_BoxTrace =
 
 static auto cm = reinterpret_cast<clipMap_t *>(0x82A23240);
 static auto cmd_functions = reinterpret_cast<cmd_function_s *>(0x82A2335C);
+static auto cmd_args = reinterpret_cast<CmdArgs *>(0x82A2A560);
 static auto client_fields = reinterpret_cast<client_fields_s *>(0x82047A18);
 static auto dx = reinterpret_cast<DxGlobals *>(0x84CD7A80);
 static auto entity_fields = reinterpret_cast<ent_field_t *>(0x82046E00);

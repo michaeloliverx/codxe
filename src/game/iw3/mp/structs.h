@@ -2374,6 +2374,18 @@ struct dvar_s
     dvar_s *hashNext;
 };
 
+struct CmdArgs
+{
+    int nesting;
+    int localClientNum[8];
+    int controllerIndex[8];
+    int argc[8];
+    const char **argv[8];
+};
+static_assert(sizeof(CmdArgs) == 132, "");
+static_assert(offsetof(CmdArgs, localClientNum) == 4, "");
+static_assert(offsetof(CmdArgs, argv) == 100, "");
+
 struct ScreenPlacement
 {
     float scaleVirtualToReal[2];
