@@ -218,6 +218,203 @@ void Cmd_UnlockStats_f()
     Com_Printf(0, "unlockstats: queued stats and %i challenge groups\n", challengeCount);
 }
 
+// TU7 keeps the 8 KiB profile payload at the start of each controller's
+// 0x10B60-byte storage record. Only the audited profile fields are accessed.
+struct OfflineStatData
+{
+    unsigned char playerStats[8192];
+    unsigned char storage[0x4218 - 8192];
+    bool firstTimeRunning;
+    bool statsFetched;
+    bool statWriteNeeded;
+    unsigned char remaining[0x10B60 - 0x421B];
+};
+static_assert(sizeof(OfflineStatData) == 0x10B60, "");
+static_assert(offsetof(OfflineStatData, statsFetched) == 0x4219, "");
+static_assert(offsetof(OfflineStatData, statWriteNeeded) == 0x421A, "");
+
+struct OfflineStatsFile
+{
+    unsigned int version;
+    unsigned char playerStats[8192];
+};
+static_assert(sizeof(OfflineStatsFile) == 0x2004, "");
+
+OfflineStatData *const controllerStats = reinterpret_cast<OfflineStatData *>(0x85348C18);
+const unsigned int OFFLINE_STATS_VERSION = 1;
+bool offlineStatsLoaded[4] = {};
+XUID offlineStatsUsers[4] = {};
+Detour LiveStorage_ReadStats_Detour;
+Detour LiveStorage_UploadStats_Detour;
+
+XUID GetStatsUser(unsigned int controllerIndex)
+{
+    XUID xuid = 0;
+    if (XUserGetXUID(controllerIndex, &xuid) != ERROR_SUCCESS)
+        return 0;
+    return xuid;
+}
+
+bool IsSignedInToLive(unsigned int controllerIndex)
+{
+    return XUserGetSigninState(controllerIndex) == eXUserSigninState_SignedInToLive;
+}
+
+bool IsOfflineGame()
+{
+    if (Dvar_GetBool("onlinegame"))
+        return false;
+
+    if (Dvar_GetBool("systemlink") || Dvar_GetBool("splitscreen"))
+        return true;
+
+    // The frontend temporarily clears splitscreen to expose the full map list.
+    for (int client = 0; client < 4; ++client)
+    {
+        if (Menu_IsMenuOpenAndVisible(client, "menu_gamesetup_systemlink") ||
+            Menu_IsMenuOpenAndVisible(client, "menu_gamesetup_splitscreen"))
+            return true;
+    }
+
+    return false;
+}
+
+std::string GetStatsPath(unsigned int controllerIndex)
+{
+    char filename[64] = {};
+    const XUID xuid = GetStatsUser(controllerIndex);
+    if (xuid)
+        _snprintf_s(filename, ARRAYSIZE(filename), _TRUNCATE, "%016I64X.stat", xuid);
+    else
+        _snprintf_s(filename, ARRAYSIZE(filename), _TRUNCATE, "controller_%u.stat", controllerIndex);
+
+    return filesystem::JoinPath("codxe:\\players", filename);
+}
+
+unsigned int StatsChecksum(const unsigned char *playerStats)
+{
+    return LiveStorage_StatsChecksum(playerStats + 4, 8188, 0);
+}
+
+bool SaveStats(unsigned int controllerIndex)
+{
+    if (controllerIndex >= 4 || !controllerStats[controllerIndex].statsFetched)
+        return false;
+
+    OfflineStatData &data = controllerStats[controllerIndex];
+    const unsigned int checksum = StatsChecksum(data.playerStats);
+    std::memcpy(data.playerStats, &checksum, sizeof(checksum));
+    OfflineStatsFile file = {};
+    file.version = OFFLINE_STATS_VERSION;
+    std::memcpy(file.playerStats, data.playerStats, sizeof(file.playerStats));
+    const std::string path = GetStatsPath(controllerIndex);
+    if (!filesystem::WriteFileToDisk(path.c_str(), reinterpret_cast<const char *>(&file), sizeof(file)))
+    {
+        Com_Printf(0, "[codxe][T4][Stats] Failed to save controller %u to %s\n", controllerIndex, path.c_str());
+        return false;
+    }
+
+    data.statWriteNeeded = false;
+    data.firstTimeRunning = false;
+    Com_Printf(0, "[codxe][T4][Stats] Saved controller %u to %s\n", controllerIndex, path.c_str());
+    return true;
+}
+
+bool LoadStats(unsigned int controllerIndex)
+{
+    const std::string path = GetStatsPath(controllerIndex);
+    const std::string contents = filesystem::ReadFileToString(path);
+    if (contents.size() != sizeof(OfflineStatsFile))
+        return false;
+
+    OfflineStatsFile file = {};
+    std::memcpy(&file, contents.data(), sizeof(file));
+    unsigned int checksum = 0;
+    std::memcpy(&checksum, file.playerStats, sizeof(checksum));
+    if (file.version != OFFLINE_STATS_VERSION || checksum != StatsChecksum(file.playerStats))
+    {
+        Com_Printf(0, "[codxe][T4][Stats] Invalid offline stats in %s\n", path.c_str());
+        return false;
+    }
+
+    OfflineStatData &data = controllerStats[controllerIndex];
+    std::memcpy(data.playerStats, file.playerStats, sizeof(data.playerStats));
+    data.statsFetched = true;
+    data.statWriteNeeded = false;
+    data.firstTimeRunning = false;
+    Com_Printf(0, "[codxe][T4][Stats] Loaded controller %u from %s\n", controllerIndex, path.c_str());
+    return true;
+}
+
+void LoadOrInitializeStats(unsigned int controllerIndex)
+{
+    if (controllerIndex >= 4 || !IsOfflineGame() || IsSignedInToLive(controllerIndex))
+        return;
+
+    if (!LoadStats(controllerIndex))
+    {
+        OfflineStatData &data = controllerStats[controllerIndex];
+        data.statsFetched = true;
+        data.firstTimeRunning = true;
+        LiveStorage_ResetStats(controllerIndex, false);
+        const int localClientNum = CL_LocalClientNumFromControllerIndex(controllerIndex);
+        Cbuf_ExecuteBuffer(localClientNum, controllerIndex, "exec mp/unlock_init.cfg");
+        SaveStats(controllerIndex);
+    }
+    offlineStatsLoaded[controllerIndex] = true;
+    offlineStatsUsers[controllerIndex] = GetStatsUser(controllerIndex);
+}
+
+void RestoreNativeStats(unsigned int controllerIndex)
+{
+    if (controllerIndex >= 4 || !offlineStatsLoaded[controllerIndex])
+        return;
+
+    if (offlineStatsUsers[controllerIndex] == GetStatsUser(controllerIndex) &&
+        controllerStats[controllerIndex].statWriteNeeded)
+        SaveStats(controllerIndex);
+
+    offlineStatsLoaded[controllerIndex] = false;
+    // The native read clears statsFetched before fetching the real Live profile.
+    LiveStorage_ReadStats_Detour.GetOriginal<LiveStorage_ReadStats_t>()(controllerIndex);
+}
+
+void LiveStorage_ReadStats_Hook(unsigned int controllerIndex)
+{
+    if (controllerIndex < 4 && IsOfflineGame() && !IsSignedInToLive(controllerIndex))
+    {
+        LoadOrInitializeStats(controllerIndex);
+        return;
+    }
+
+    if (controllerIndex < 4 && offlineStatsLoaded[controllerIndex])
+    {
+        RestoreNativeStats(controllerIndex);
+        return;
+    }
+
+    LiveStorage_ReadStats_Detour.GetOriginal<LiveStorage_ReadStats_t>()(controllerIndex);
+}
+
+DWORD LiveStorage_UploadStats_Hook(unsigned int controllerIndex)
+{
+    if (controllerIndex < 4 && offlineStatsLoaded[controllerIndex] &&
+        (!IsOfflineGame() || IsSignedInToLive(controllerIndex)))
+    {
+        RestoreNativeStats(controllerIndex);
+        return ERROR_SUCCESS;
+    }
+
+    if (controllerIndex < 4 && IsOfflineGame() && !IsSignedInToLive(controllerIndex))
+    {
+        if (offlineStatsLoaded[controllerIndex] && controllerStats[controllerIndex].statWriteNeeded)
+            SaveStats(controllerIndex);
+        return ERROR_SUCCESS;
+    }
+
+    return LiveStorage_UploadStats_Detour.GetOriginal<LiveStorage_UploadStats_t>()(controllerIndex);
+}
+
 void RegisterCommands()
 {
     Cmd_AddCommandInternal("unlockstats", Cmd_UnlockStats_f, &Cmd_UnlockStats_VAR);
@@ -229,12 +426,38 @@ void stats::OnCmdInit()
     RegisterCommands();
 }
 
+void stats::LoadOfflineStats(int localClientNum)
+{
+    if (localClientNum < 0 || localClientNum >= 4 || !IsOfflineGame())
+        return;
+
+    const int controllerIndex = CL_ControllerIndexFromClientNum(localClientNum);
+    if (controllerIndex < 0 || controllerIndex >= 4 || IsSignedInToLive(controllerIndex))
+        return;
+
+    if (!offlineStatsLoaded[controllerIndex] || !controllerStats[controllerIndex].statsFetched ||
+        offlineStatsUsers[controllerIndex] != GetStatsUser(controllerIndex))
+        LoadOrInitializeStats(controllerIndex);
+}
+
+void stats::RestoreLiveStats()
+{
+    for (unsigned int controller = 0; controller < 4; ++controller)
+        RestoreNativeStats(controller);
+}
+
 stats::stats()
 {
+    LiveStorage_ReadStats_Detour = Detour(LiveStorage_ReadStats, LiveStorage_ReadStats_Hook);
+    LiveStorage_ReadStats_Detour.Install();
+    LiveStorage_UploadStats_Detour = Detour(LiveStorage_UploadStats, LiveStorage_UploadStats_Hook);
+    LiveStorage_UploadStats_Detour.Install();
 }
 
 stats::~stats()
 {
+    LiveStorage_UploadStats_Detour.Remove();
+    LiveStorage_ReadStats_Detour.Remove();
 }
 
 } // namespace mp

@@ -21,4 +21,4 @@ Update sources and built fastfiles together.
 Install the release's `t4/_codxe` folder in the game directory as `_codxe/`.
 The client reads configuration, mods, zones and maps from `game:/_codxe/`.
 
-See the [usermap format](../../../docs/t4-usermaps.md) for map-owned files.
+See the [usermap format](../../docs/t4-usermaps.md) for map-owned files.

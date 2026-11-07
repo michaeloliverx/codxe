@@ -1,0 +1,15 @@
+>game,T4
+>platform,xbox360
+>name,patch_ui_mp
+
+// Add offline Create-a-Class alongside Start Match and Settings.
+menulist,ui_mp/menu_gamesetup_systemlink.menu
+menulist,ui_mp/patch_mp_menus.txt
+
+// Dependencies already resident in code_post_gfx_mp, common_mp or ui_mp.
+material,,menu_lobby_title_strip
+material,,gradient
+material,,line_horizontal
+
+// Preserve the TU7 frontend patch and its normal unload/reload lifetime.
+assetlist,patch_ui_mp
