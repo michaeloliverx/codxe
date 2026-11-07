@@ -1,0 +1,33 @@
+{
+    loadMenu { "ui_mp/options.menu" }
+    loadMenu { "ui_mp/thumbstick.menu" }
+    loadMenu { "ui_mp/buttons.menu" }
+    loadMenu { "ui_mp/sensitivity.menu" }
+    loadMenu { "ui_mp/sensitivity_custom.menu" }
+    loadMenu { "ui_mp/team_indicator.menu" }
+    loadMenu { "ui_mp/volume.menu" }
+    loadMenu { "ui_mp/brightness.menu" }
+    loadMenu { "ui_mp/mature_content_disable_warning.menu" }
+    loadMenu { "ui_mp/cac_main.menu" }
+    loadMenu { "ui_mp/main.menu" }
+    loadMenu { "ui_mp/systemlink_popup.menu" }
+    loadMenu { "ui_mp/error_netconnect_popmenu.menu" }
+    loadMenu { "ui_mp/popup_cannot_connect_to_lsp.menu" }
+    loadMenu { "ui_mp/popup_cannot_connect_to_dw.menu" }
+    loadMenu { "ui_mp/popup_summary.menu" }
+    loadMenu { "ui_mp/popup_summary_body.menu" }
+    loadMenu { "ui_mp/popup_unlock.menu" }
+    loadMenu { "ui_mp/popup_unlock_page1.menu" }
+    loadMenu { "ui_mp/popup_unlock_page2.menu" }
+    loadMenu { "ui_mp/menu_gamesetup_systemlink.menu" }
+    loadMenu { "ui_mp/menu_gamesetup_splitscreen.menu" }
+    loadMenu { "ui_mp/popup_gamesetup_splitscreen.menu" }
+    loadMenu { "ui_mp/settings.menu" }
+    loadMenu { "ui_mp/popup_party_privacy.menu" }
+    loadMenu { "ui_mp/popup_geographicalmatchmaking.menu" }
+    loadMenu { "ui_mp/menu_xboxlive.menu" }
+    loadMenu { "ui_mp/player_popup.menu" }
+    loadMenu { "ui_mp/kickwarning.menu" }
+    loadMenu { "ui_mp/live_cac_popup.menu" }
+    loadMenu { "ui_mp/popup_mappacks.menu" }
+}

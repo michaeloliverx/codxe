@@ -65,6 +65,8 @@ static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0
 
 static auto Cbuf_ExecuteBuffer =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x822711A8);
+static auto CL_ControllerIndexFromClientNum = reinterpret_cast<int (*)(int localClientNum)>(0x821B47E8);
+static auto CL_LocalClientNumFromControllerIndex = reinterpret_cast<int (*)(int controllerIndex)>(0x821B47D0);
 typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 static Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x8226FF08);
 
@@ -89,6 +91,20 @@ static auto DB_GetAllXAssetOfType_FastFile =
 
 typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
 static DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x821D7958);
+
+typedef HANDLE (*GameCreateFileA_t)(const char *filename, DWORD desiredAccess, DWORD shareMode,
+                                    LPSECURITY_ATTRIBUTES securityAttributes, DWORD creationDisposition,
+                                    DWORD flagsAndAttributes, HANDLE templateFile);
+static GameCreateFileA_t GameCreateFileA = reinterpret_cast<GameCreateFileA_t>(0x82390928);
+
+typedef void (*LiveStorage_ReadStats_t)(unsigned int controllerIndex);
+static LiveStorage_ReadStats_t LiveStorage_ReadStats = reinterpret_cast<LiveStorage_ReadStats_t>(0x822EB460);
+typedef DWORD (*LiveStorage_UploadStats_t)(unsigned int controllerIndex);
+static LiveStorage_UploadStats_t LiveStorage_UploadStats = reinterpret_cast<LiveStorage_UploadStats_t>(0x822ED588);
+static auto LiveStorage_ResetStats =
+    reinterpret_cast<int (*)(unsigned int controllerIndex, bool writeNeeded)>(0x822EE1C0);
+static auto LiveStorage_StatsChecksum =
+    reinterpret_cast<unsigned int (*)(const unsigned char *data, unsigned int length, unsigned int seed)>(0x82318600);
 
 typedef int (*DB_AuthLoad_InflateInit_t)(z_stream_s *stream, bool isSecure, const char *filename);
 static DB_AuthLoad_InflateInit_t DB_AuthLoad_InflateInit = reinterpret_cast<DB_AuthLoad_InflateInit_t>(0x821D8180);

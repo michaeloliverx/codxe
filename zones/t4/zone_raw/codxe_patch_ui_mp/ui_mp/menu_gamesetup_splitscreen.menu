@@ -1,0 +1,1011 @@
+{
+    menuDef
+    {
+        name                        "menu_gamesetup_splitscreen"
+        fullscreen                  1
+        rect                        0 0 640 480 0 0
+        style                       1
+        borderSize                  1
+        focuscolor                  0.95294 0.72156 0.21176 1
+        soundLoop                   "music_mainmenu"
+        fadeClamp                   1
+        fadeCycle                   1
+        fadeAmount                  0.1
+        onOpen
+        {
+            focusFirst;
+            uiScript LoadOfflineStats;
+            exec "exec dvar_defaults.cfg";
+            setdvar ui_start_ss_map 0;
+            setDvarStringUsingTable ( ui_is_splitscreen_map , tableLookup ( "mp/mapsTable.csv" , 0 , dvarString ( ui_mapname ) , 10 ) );
+            execNowOnDvarStringValue ui_is_splitscreen_map NO "set ui_mapname mp_asylum" setDvarStringUsingTable ( ui_is_splitscreen_gametype , tableLookup ( "mp/gametypesTable.csv" , 0 , dvarString ( ui_gametype ) , 5 ) );
+            execNowOnDvarStringValue ui_is_splitscreen_gametype NO "set ui_gametype tdm";
+        }
+        onESC
+        {
+            execOnDvarIntValue ui_start_ss_map 0 splitscreencontrols;
+            uiScript closeMenuOnDvar ui_start_ss_map 0 menu_gamesetup_splitscreen;
+            uiScript openMenuOnDvar ui_start_ss_map 0 menu_splitscreensignin;
+            setdvar ui_start_ss_map 0;
+        }
+        itemDef
+        {
+            rect                        -107 0 854 480 0 0
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "menu_background_mp_tank"
+        }
+        itemDef
+        {
+            rect                        -107 0 1708 480 0 0
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "animbg_fogscrollthin"
+            exp rect X                  ((- 961) + ((float(milliseconds() % 50000) / 50000) * (854)));
+        }
+        itemDef
+        {
+            rect                        -107 0 854 66 0 0
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "menu_black_line"
+        }
+        itemDef
+        {
+            rect                        -107 420 854 70 0 0
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "menu_black_line"
+        }
+        itemDef
+        {
+            rect                        -5 40 640 25 4 4
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2137 0.2346 0.2398 0.75
+            background                  "menu_lobby_title_back"
+        }
+        itemDef
+        {
+            rect                        -107 65 854 1 4 4
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.216 0.22 1
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        22 5 100 100 1 1
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textalign                   4
+            textscale                   0.5476
+            textstyle                   6
+            textfont                    1
+            exp text                    ("@MENU_SPLIT_SCREEN_SETUP");
+        }
+        itemDef
+        {
+            name                        "change_filter"
+            text                        "@PLATFORM_CHANGE_FILTER"
+            rect                        90 -4 0 0 1 3
+            decoration                  
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+            execKeyInt 6
+            {
+                execNow "toggle lb_gamemode 0 1 2 3 4 5 6 7 8 9 10 12 15";
+                uiScript RefreshLeaderboards;
+            }
+            execKeyInt 5
+            {
+                execNow "toggle lb_gamemode 15 12 10 9 8 7 6 5 4 3 2 1 0";
+                uiScript RefreshLeaderboards;
+            }
+            execKeyInt 4
+            {
+                play mouse_click;
+                execNow "toggle lb_filter 0 1 2";
+            }
+        }
+        itemDef
+        {
+            name                        "goto_top"
+            text                        "@PLATFORM_GOTOTOP"
+            rect                        -40 -4 0 0 2 3
+            decoration                  
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "accept_button"
+            text                        "@PLATFORM_SELECT"
+            rect                        44 -4 0 0 2 3
+            decoration                  
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "refresh"
+            text                        "@PLATFORM_REFRESH"
+            rect                        -20 -4 0 0 2 3
+            decoration                  
+            borderSize                  1
+            visible                     when(0);
+            textalign                   2
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgup"
+            text                        "@PLATFORM_PGUP"
+            rect                        -180 -4 0 0 3 3
+            decoration                  
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgdown"
+            text                        "@PLATFORM_PGDOWN"
+            rect                        -90 -4 0 0 3 3
+            decoration                  
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        14 246 213 120 1 1
+            style                       3
+            decoration                  
+            visible                     when(1);
+            textscale                   0.55
+            exp material                (tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 4));
+        }
+        itemDef
+        {
+            rect                        14 381 200 16 1 1
+            decoration                  
+            type                        8
+            borderSize                  1
+            visible                     1
+            ownerdraw                   283
+            textscale                   0.3095
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+        }
+        itemDef
+        {
+            rect                        0 45 218.5 22 1 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 45 218.5 22 1 1
+            style                       3
+            decoration                  
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "splitscreen" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 46 224 22 1 1
+            decoration                  
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "splitscreen" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 45 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 1;
+                setLocalVarString ui_choicegroup splitscreen;
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                exec "selectStringTableEntryInDvar mp/didyouknow.csv 0 didyouknow";
+                setdvar ui_start_ss_map 1;
+                uiScript StartServer;
+            }
+            exp text                    ("@MPUI_START_MATCH");
+        }
+        itemDef
+        {
+            rect                        0 69 218.5 22 1 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 69 218.5 22 1 1
+            style                       3
+            decoration                  
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "splitscreen" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 70 224 22 1 1
+            decoration                  
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "splitscreen" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 69 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup splitscreen;
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                open settings;
+            }
+            exp text                    ("@MENU_SETTINGS");
+        }
+        itemDef
+        {
+            rect                        0 93 218.5 22 1 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 93 218.5 22 1 1
+            style                       3
+            decoration                  
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "splitscreen" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 94 224 22 1 1
+            decoration                  
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "splitscreen" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 93 224 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     1
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup splitscreen;
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                uiScript LoadOfflineStats;
+                setdvar ui_cac_ingame 0;
+                open cac_main;
+            }
+            exp text                    ("@MPUI_CREATE_A_CLASS");
+        }
+        itemDef
+        {
+            rect                        -272 214 271 168 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.6 0.65 7 0.1
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -266 222 259 74 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     when(dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2);
+            textscale                   0.55
+            forecolor                   0.175 0.2 0.25 0.25
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -266 300 259 74 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     when(dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2);
+            textscale                   0.55
+            forecolor                   0.175 0.2 0.25 0.25
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -266 222 126 74 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     when(dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") > 2);
+            textscale                   0.55
+            forecolor                   0.175 0.2 0.25 0.25
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -133 222 126 74 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     when(dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") > 2);
+            textscale                   0.55
+            forecolor                   0.175 0.2 0.25 0.25
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -266 300 259 74 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     when(dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 3);
+            textscale                   0.55
+            forecolor                   0.175 0.2 0.25 0.25
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -266 300 126 74 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     when(dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 4);
+            textscale                   0.55
+            forecolor                   0.175 0.2 0.25 0.25
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -133 300 126 74 3 1
+            style                       3
+            decoration                  
+            border                      1
+            borderSize                  1
+            visible                     when(dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 4);
+            textscale                   0.55
+            forecolor                   0.175 0.2 0.25 0.25
+            bordercolor                 1 1 1 0.2
+            exp material                ("white");
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER1"
+            rect                        -203 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when(dvarbool("leavegame0_vis"));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when(dvarbool("leavegame0_vis"));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER2"
+            rect                        -203 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 1 && dvarbool("leavegame1_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 1 && dvarbool("leavegame1_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER2"
+            rect                        -203 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") > 1 && !dvarbool("leavegame0_vis") && dvarbool("leavegame1_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") > 1 && !dvarbool("leavegame0_vis") && dvarbool("leavegame1_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER2"
+            rect                        -68 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") > 2 && dvarbool("leavegame0_vis") && dvarbool("leavegame1_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -100 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") > 2 && dvarbool("leavegame0_vis") && dvarbool("leavegame1_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER2"
+            rect                        -203 325 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((!dvarbool("leavegame2_vis") && !dvarbool("leavegame3_vis") && dvarbool("leavegame0_vis") && dvarbool("leavegame1_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 311 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((!dvarbool("leavegame2_vis") && !dvarbool("leavegame3_vis") && dvarbool("leavegame0_vis") && dvarbool("leavegame1_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER3"
+            rect                        -203 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 1 && dvarbool("leavegame2_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 1 && dvarbool("leavegame2_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER3"
+            rect                        -203 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2 && dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2 && dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER3"
+            rect                        -68 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 3 && dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -100 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 3 && dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER3"
+            rect                        -203 325 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2 && !dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 311 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2 && !dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER3"
+            rect                        -203 325 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 3 && !dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 311 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 3 && !dvarbool("leavegame3_vis") && dvarbool("leavegame2_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER3"
+            rect                        -203 325 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 4));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 311 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 4));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER4"
+            rect                        -203 247 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((!dvarbool("leavegame0_vis") && !dvarbool("leavegame1_vis") && !dvarbool("leavegame2_vis") && dvarbool("leavegame3_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 233 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((!dvarbool("leavegame0_vis") && !dvarbool("leavegame1_vis") && !dvarbool("leavegame2_vis") && dvarbool("leavegame3_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER4"
+            rect                        -203 325 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2 && dvarbool("leavegame3_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 311 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 2 && dvarbool("leavegame3_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER4"
+            rect                        -203 325 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 3 && dvarbool("leavegame3_vis")));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -235 311 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 3 && dvarbool("leavegame3_vis")));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            text                        "@MENU_PLAYER4"
+            rect                        -68 325 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 4));
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -100 311 64 64 3 1
+            style                       3
+            decoration                  
+            borderSize                  1
+            visible                     when((dvarint("leavegame0_vis") + dvarint("leavegame1_vis") + dvarint("leavegame2_vis") + dvarint("leavegame3_vis") == 4));
+            textscale                   0.55
+            background                  "xenon_controller_top"
+        }
+        itemDef
+        {
+            rect                        -272 32 272 16 3 1
+            style                       3
+            decoration                  
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.8 0.8 0.8 0.4
+            exp material                ("menu_lobby_title_strip");
+        }
+        itemDef
+        {
+            rect                        -292 30 -20 356 3 1
+            style                       3
+            decoration                  
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.65
+            exp material                ("gradient");
+        }
+        itemDef
+        {
+            rect                        0 30 20 356 3 1
+            style                       3
+            decoration                  
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.65
+            exp material                ("gradient");
+        }
+        itemDef
+        {
+            rect                        -272 199 272 16 3 1
+            style                       3
+            decoration                  
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.2 0.225 1
+            exp material                ("white");
+        }
+        itemDef
+        {
+            rect                        -272 199 272 16 3 1
+            style                       3
+            decoration                  
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.9 0.9 0.95 0.5
+            exp material                ("line_horizontal");
+        }
+        itemDef
+        {
+            text                        "@MPUI_NAME"
+            rect                        -238 36 0 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textalignx                  -20
+            textaligny                  12
+            textscale                   0.3095
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.6 0.6 0.6 1
+        }
+        itemDef
+        {
+            text                        "@MPUI_SCORE"
+            rect                        -45 36 30 0 3 1
+            decoration                  
+            borderSize                  1
+            visible                     when(((!dvarbool("party_timerVisible") || !dvarbool("party_teambased") || !dvarbool("party_autoteams")) && !dvarint("splitscreen")));
+            align                       2
+            textalignx                  -26
+            textaligny                  12
+            textscale                   0.3095
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.6 0.6 0.6 1
+        }
+        itemDef
+        {
+            name                        "splitscreen_playerlist"
+            rect                        -300 52 292 324 3 1
+            decoration                  
+            type                        6
+            borderSize                  1
+            visible                     when(1);
+            textalignx                  36
+            textaligny                  -1
+            textscale                   0.26
+            textfont                    3
+            backcolor                   0.5 0.5 0.5 0
+            forecolor                   0.69 0.69 0.69 1
+            outlinecolor                1 0.97 0.72 0.5
+            onFocus
+            {
+                play mouse_over;
+                hide selection_left;
+                show selection_right;
+            }
+            dvarTest                    "ui_selectlobby"
+            enableDvar                  { "1" }
+            noscrollbars                
+            elementwidth                256
+            elementheight               18
+            feeder                      22
+            columns                     1
+                                        6 14 40 0
+            selectBorder                0.8 0.95 1 0
+            disableColor                0.69 0.69 0.69 1
+            focusColor                  1 1 1 1
+            backgroundItemListbox       "menu_lobby_strip_whole"
+            highlightTexture            "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            rect                        -100 -100 100 600 1 1
+            style                       1
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 -100 100 600 3 1
+            style                       1
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 -100 900 100 1 1
+            style                       1
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 0 900 100 1 3
+            style                       1
+            decoration                  
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+    }
+}

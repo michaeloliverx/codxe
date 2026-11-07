@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ui.h"
+#include "stats.h"
 
 namespace t4
 {
@@ -10,6 +11,9 @@ Detour Menus_OpenByName_Detour;
 
 void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 {
+    if (strcmp(menuName, "main") == 0 || strncmp(menuName, "menu_xboxlive", 13) == 0)
+        stats::RestoreLiveStats();
+
     // Splitscreen map list only contains a subset of maps
     // The menu UI determines the map list based on the splitscreen setting
     if (strcmp(menuName, "menu_gamesetup_splitscreen") == 0)
@@ -38,8 +42,25 @@ void UI_RunMenuScript_Hook(int localClientNum, const char **args, const char *ac
     if (!String_Parse(&argCopy, parsedCommand, sizeof(parsedCommand)))
         return;
 
+    if (strcmp(parsedCommand, "LoadOfflineStats") == 0)
+    {
+        stats::LoadOfflineStats(localClientNum);
+        return;
+    }
+
     if (strcmp(parsedCommand, "StartServer") == 0)
     {
+        if (!Dvar_GetBool("onlinegame"))
+        {
+            for (int client = 0; client < 4; ++client)
+            {
+                const int controller = CL_ControllerIndexFromClientNum(client);
+                if (controller >= 0 && controller < 4 &&
+                    (client == localClientNum || XUserGetSigninState(controller) != eXUserSigninState_NotSignedIn))
+                    stats::LoadOfflineStats(client);
+            }
+        }
+
         // Splitscreen game will not load if splitscreen is not set to 1
         if (Menu_IsMenuOpenAndVisible(localClientNum, "menu_gamesetup_splitscreen"))
             Cbuf_ExecuteBuffer(0, 0, "set splitscreen 1");

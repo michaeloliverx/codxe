@@ -13,6 +13,8 @@ class stats : public Module
     ~stats();
 
     static void OnCmdInit();
+    static void LoadOfflineStats(int localClientNum);
+    static void RestoreLiveStats();
 };
 } // namespace mp
 } // namespace t4
