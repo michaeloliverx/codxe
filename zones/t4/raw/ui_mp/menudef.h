@@ -1,7 +1,7 @@
 #ifndef CODXE_T4_MENUDEF_H
 #define CODXE_T4_MENUDEF_H
 
-// Stock menu constants used by the mod browser.
+// Stock menu constants used by the custom browsers.
 #define ITEM_TYPE_LISTBOX          6
 #define WINDOW_STYLE_SHADER        3
 #define ITEM_TEXTSTYLE_SHADOWED     3
@@ -10,6 +10,8 @@
 
 // Match MODS_FEEDER_ID in t4/mp/components/mods.cpp.
 #define FEEDER_MODS                0x09
+// Match Usermaps::FEEDER_ID in t4/mp/components/usermaps.h.
+#define FEEDER_USERMAPS            0x3C
 
 // Xbox 360 controller keys.
 #define BUTTON_A                   1

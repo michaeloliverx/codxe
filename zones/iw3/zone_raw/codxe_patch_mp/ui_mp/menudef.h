@@ -9,7 +9,7 @@
 #define ITEM_TEXTSTYLE_SHADOWEDMORE    6
 #define UI_FONT_NORMAL                1
 
-// Match MODS_FEEDER_ID in mods.cpp and USERMAPS_FEEDER_ID in ui_feeder.cpp.
+// Match MODS_FEEDER_ID in mods.cpp and USERMAPS_FEEDER_ID in usermaps.cpp.
 #define FEEDER_MODS                   0x09
 #define FEEDER_CODXE_USERMAPS          0x3C
 

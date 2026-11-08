@@ -16,6 +16,10 @@
             uiScript "LoadUsermaps";
             focusFirst;
         }
+        onClose
+        {
+            uiScript "CloseUsermaps";
+        }
         onESC
         {
             close self;
@@ -126,6 +130,48 @@
                 close settings_map;
                 close self;
             }
+        }
+        itemDef
+        {
+            name "usermap_preview"
+            rect 324 96 275 174 0 0
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible when(dvarint("ui_codxe_usermap_has_preview"));
+            background "$codxe_usermap_preview"
+        }
+        itemDef
+        {
+            name "usermap_title"
+            rect 328 80 267 20 0 0
+            decoration
+            autowrapped
+            visible 1
+            textscale 0.375
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 1 0.8 0.4 1
+            exp text (dvarstring("ui_codxe_usermap_name"));
+        }
+        itemDef
+        {
+            name "usermap_description"
+            rect 328 296 267 112 0 0
+            decoration
+            autowrapped
+            visible 1
+            textscale 0.375
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.69 0.69 0.69 1
+            exp text (dvarstring("ui_codxe_usermap_description"));
+        }
+        itemDef
+        {
+            rect 72 100 220 48 0 0
+            decoration
+            autowrapped
+            visible when(dvarint("ui_codxe_usermap_count") == 0);
+            textscale 0.375
+            text "@CODXE_NO_MAPS"
         }
         itemDef
         {

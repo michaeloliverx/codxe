@@ -24,6 +24,7 @@
 #include "components/sv_bots.h"
 #include "components/ui_feeder.h"
 #include "components/ui_script.h"
+#include "components/usermaps.h"
 #include "main.h"
 
 namespace iw3
@@ -45,6 +46,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new command());
     RegisterModule(new UIScript());
     RegisterModule(new UIFeeder());
+    RegisterModule(new Usermaps());
 
     RegisterModule(new cg());
     RegisterModule(new DebugDraw());

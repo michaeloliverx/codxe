@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "fastfiles.h"
 #include "mods.h"
+#include "common/usermaps.h"
 
 namespace t4
 {
@@ -45,6 +46,10 @@ std::string ResolveFastfilePath(const char *filename)
         const std::string modPath = ModList::ResolvePath("mod.ff");
         return !modPath.empty() && filesystem::FileExists(modPath.c_str()) ? modPath : std::string();
     }
+
+    const std::string usermap = usermaps::FastfilePath(basename);
+    if (!usermap.empty() && filesystem::FileExists(usermap.c_str()))
+        return usermap;
 
     const std::string path = filesystem::JoinPath("codxe:\\zone", basename);
     return filesystem::FileExists(path.c_str()) ? path : std::string();

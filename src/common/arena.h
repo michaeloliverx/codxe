@@ -3,10 +3,6 @@
 #include <string>
 #include <cctype>
 
-namespace t4
-{
-namespace sp
-{
 namespace arena
 {
 class Tokens
@@ -104,7 +100,7 @@ inline std::string Lower(std::string value)
 // Metadata never changes the folder/fastfile used to launch a map.
 inline bool Parse(const std::string &text, const std::string &folder, std::string &name, std::string &description)
 {
-    if (text.size() > 65536)
+    if (text.size() > 65536 || text.find('\0') != std::string::npos)
         return false;
     Tokens tokens(text);
     std::string token, selectedName, selectedDescription;
@@ -150,5 +146,3 @@ inline bool Parse(const std::string &text, const std::string &folder, std::strin
     return true;
 }
 } // namespace arena
-} // namespace sp
-} // namespace t4

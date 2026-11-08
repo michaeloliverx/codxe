@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "ui.h"
-#include "usermap_arena.h"
+#include "common/usermaps.h"
 #include "console.h"
 
 #include "common/endian.h"
@@ -403,8 +403,7 @@ void ScanUsermaps()
 
         UsermapEntry entry;
         entry.name = name;
-        const std::string arenaPath = filesystem::JoinPath(directory.c_str(), "map.arena");
-        if (!arena::Parse(filesystem::ReadFileToString(arenaPath), name, entry.displayName, entry.description))
+        if (!usermaps::ReadMetadata(directory, name, entry.displayName, entry.description))
             ReadJsonMetadata(filesystem::JoinPath(directory.c_str(), "map.json"), entry.displayName, entry.description);
         if (entry.displayName.empty())
             entry.displayName = name;

@@ -280,11 +280,15 @@ typedef const char *(*UI_FeederItemText_t)(int localClientNum, itemDef_s *item, 
 static UI_FeederItemText_t UI_FeederItemText = reinterpret_cast<UI_FeederItemText_t>(0x821EDFB0);
 typedef void (*UI_FeederSelection_t)(int localClientNum, float feederID, itemDef_s *item, int index);
 static UI_FeederSelection_t UI_FeederSelection = reinterpret_cast<UI_FeederSelection_t>(0x821EBE50);
+// TU4 StringTable_Lookup; also used by the native tablelookup menu expression.
+static auto StringTable_Lookup =
+    reinterpret_cast<const char *(*)(const StringTable *, int, const char *, int)>(0x821D55D8);
 static auto UI_OpenMenu = reinterpret_cast<void (*)(int localClientNum, const char *menuName)>(0x821EA1E0);
 static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x821F2F28);
 typedef void (*UI_RunMenuScript_t)(int localClientNum, const char **args, const char *actualScript);
 static UI_RunMenuScript_t UI_RunMenuScript = reinterpret_cast<UI_RunMenuScript_t>(0x821F0418);
 static auto UI_SafeTranslateString = reinterpret_cast<const char *(*)(char *reference)>(0x821ECA78);
+static auto UI_GetMapDisplayName = reinterpret_cast<const char *(*)(const char *mapName)>(0x821ED5A8);
 
 static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x821CD858);
 
@@ -612,6 +616,12 @@ static int *g_totalSize = reinterpret_cast<int *>(0x824754F8);
 static int *g_loadedSize = reinterpret_cast<int *>(0x82475500);
 static int *g_totalExternalBytes = reinterpret_cast<int *>(0x82475504);
 static int *g_loadedExternalBytes = reinterpret_cast<int *>(0x8246F4AC);
+
+// Native SDK entry points: each title uses its own D3DDevice layout.
+static D3DDevice **gfxDevice = reinterpret_cast<D3DDevice **>(0x84CD7A88);
+static auto R_SyncRenderThread = reinterpret_cast<void (*)()>(0x8216B298);
+static auto D3D_BlockUntilIdle = reinterpret_cast<void (*)(D3DDevice *)>(0x820AA720);
+static auto D3D_Reserve = reinterpret_cast<unsigned int (*)(D3DDevice *)>(0x820AA350);
 
 void Con_ToggleConsole();
 void Con_ToggleConsoleOutput();

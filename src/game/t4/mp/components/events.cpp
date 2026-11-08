@@ -5,6 +5,7 @@
 #include "console.h"
 #include "gsc_functions.h"
 #include "mods.h"
+#include "usermaps.h"
 #include "stats.h"
 #include "sv_bots.h"
 
@@ -19,6 +20,7 @@ typedef void (*EventHandler)();
 const EventHandler dvarInitHandlers[] = {
     BrushCollision::OnDvarInit,
     ModList::OnDvarInit,
+    Usermaps::OnDvarInit,
 };
 
 const EventHandler cmdInitHandlers[] = {

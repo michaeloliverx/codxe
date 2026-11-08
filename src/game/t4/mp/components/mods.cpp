@@ -2,6 +2,7 @@
 #include "mods.h"
 
 #include "fastfiles.h"
+#include "usermaps.h"
 
 namespace t4
 {
@@ -122,6 +123,8 @@ void ClearMods()
 
 int UI_FeederCount_Hook(int localClientNum, float feederID)
 {
+    if (feederID == Usermaps::FEEDER_ID)
+        return Usermaps::Count();
     if (feederID == MODS_FEEDER_ID)
         return static_cast<int>(mods.size());
 
@@ -131,6 +134,12 @@ int UI_FeederCount_Hook(int localClientNum, float feederID)
 const char *UI_FeederItemText_Hook(int localClientNum, itemDef_s *item, float feederID, int index, unsigned int column,
                                    Material **handle)
 {
+    if (feederID == Usermaps::FEEDER_ID)
+    {
+        if (handle)
+            *handle = nullptr;
+        return Usermaps::Text(index);
+    }
     if (feederID == MODS_FEEDER_ID)
     {
         if (handle)
@@ -144,6 +153,11 @@ const char *UI_FeederItemText_Hook(int localClientNum, itemDef_s *item, float fe
 
 void UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
 {
+    if (feederID == Usermaps::FEEDER_ID)
+    {
+        Usermaps::Select(index);
+        return;
+    }
     if (feederID == MODS_FEEDER_ID)
     {
         if (index >= 0 && index < static_cast<int>(mods.size()))
