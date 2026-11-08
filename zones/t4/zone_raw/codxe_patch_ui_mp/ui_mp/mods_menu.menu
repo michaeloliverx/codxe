@@ -1,0 +1,136 @@
+#include "ui_mp/menudef.h"
+
+{
+    menuDef
+    {
+        name                        "mods_menu"
+        fullscreen                  1
+        rect                        0 0 640 480 0 0
+        focuscolor                  0.95294 0.72156 0.21176 1
+        soundLoop                   "music_mainmenu"
+        onOpen
+        {
+            uiScript LoadMods;
+            setfocus mod_list;
+        }
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            rect                        -107 0 854 480 0 0
+            style                       WINDOW_STYLE_SHADER
+            decoration
+            visible                     1
+            background                  "menu_background_mp_tank"
+        }
+        itemDef
+        {
+            rect                        -107 0 854 66 0 0
+            style                       WINDOW_STYLE_SHADER
+            decoration
+            visible                     1
+            background                  "menu_black_line"
+        }
+        itemDef
+        {
+            rect                        -107 420 854 60 0 0
+            style                       WINDOW_STYLE_SHADER
+            decoration
+            visible                     1
+            background                  "menu_black_line"
+        }
+        itemDef
+        {
+            rect                        22 34 100 100 1 1
+            decoration
+            visible                     1
+            textalign                   4
+            textscale                   0.5476
+            textstyle                   ITEM_TEXTSTYLE_SHADOWEDMORE
+            textfont                    UI_FONT_NORMAL
+            text                        "@CODXE_MODS"
+        }
+        itemDef
+        {
+            name                        "mod_list"
+            rect                        34 82 560 286 1 1
+            type                        ITEM_TYPE_LISTBOX
+            visible                     1
+            textscale                   0.381
+            textstyle                   ITEM_TEXTSTYLE_SHADOWED
+            textfont                    UI_FONT_NORMAL
+            forecolor                   0.69 0.69 0.69 1
+            outlinecolor                0.9 0.95 1 0.5
+            noscrollbars
+            elementwidth                558
+            elementheight               23
+            feeder                      FEEDER_MODS
+            columns                     1
+                                        0 550 64 0
+            doubleclick
+            {
+                play mouse_click;
+                uiScript RunMod;
+                close self;
+            }
+            onListboxSelectionChange
+            {
+                play mouse_over;
+            }
+            selectBorder                0.8 0.95 1 0
+            focusColor                  1 1 1 1
+            selectIcon                  "ui_button_xenon_3d_a_32x32"
+            highlightTexture            "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            rect                        34 110 550 30 1 1
+            decoration
+            visible                     when(dvarint("ui_modCount") == 0);
+            textscale                   0.381
+            textfont                    UI_FONT_NORMAL
+            text                        "@CODXE_NO_MODS"
+        }
+        itemDef
+        {
+            rect                        34 392 550 22 1 1
+            decoration
+            visible                     when(dvarstring("fs_game") != "");
+            textscale                   0.3095
+            textfont                    UI_FONT_NORMAL
+            exp text                    (locString("@CODXE_ACTIVE_MOD") + dvarstring("fs_game"));
+        }
+        itemDef
+        {
+            rect                        34 444 550 22 1 1
+            decoration
+            visible                     1
+            textscale                   0.3095
+            textfont                    UI_FONT_NORMAL
+            exp text                    ("@CODXE_MOD_BUTTONS");
+            execKeyInt BUTTON_A
+            {
+                play mouse_click;
+                uiScript RunMod;
+                close self;
+            }
+            execKeyInt 13
+            {
+                uiScript RunMod;
+                close self;
+            }
+            execKeyInt BUTTON_Y
+            {
+                play mouse_click;
+                uiScript ClearMods;
+                close self;
+            }
+            execKeyInt BUTTON_B
+            {
+                close self;
+            }
+        }
+    }
+}

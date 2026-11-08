@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gsc_functions.h"
+#include "mods.h"
 #include "common/gsc_registry.h"
 #include "common/script_files.h"
 #include "sv_bots.h"
@@ -26,7 +27,7 @@ static void GScr_FS_TestFile()
         Scr_Error("Usage: fs_testfile(<filename>)", SCRIPTINSTANCE_SERVER);
 
     const char *filename = Scr_GetString(0, SCRIPTINSTANCE_SERVER);
-    const std::string fullpath = Config::ResolveModPath(filename);
+    const std::string fullpath = ModList::ResolvePath(filename);
     FILE *f = fopen(fullpath.c_str(), "r");
     if (f)
     {
@@ -60,7 +61,7 @@ static void GScr_FS_FOpen()
         return;
     }
 
-    const std::string fullpath = Config::ResolveModPath(filename);
+    const std::string fullpath = ModList::ResolvePath(filename);
 
     if (fmode[0] == 'w' || fmode[0] == 'a')
         filesystem::CreateParentDirectories(fullpath.c_str());

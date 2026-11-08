@@ -205,6 +205,7 @@
       <ClCompile Include="src\game\t4\mp\components\gsc_functions.cpp" />
       <ClCompile Include="src\game\t4\mp\components\gsc_loader.cpp" />
       <ClCompile Include="src\game\t4\mp\components\map.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\mods.cpp" />
       <ClCompile Include="src\game\t4\mp\components\patches.cpp" />
       <ClCompile Include="src\game\t4\mp\components\pm.cpp" />
       <ClCompile Include="src\game\t4\mp\components\stats.cpp" />
@@ -367,6 +368,7 @@
       <ClInclude Include="src\game\t4\mp\components\gsc_functions.h" />
       <ClInclude Include="src\game\t4\mp\components\gsc_loader.h" />
       <ClInclude Include="src\game\t4\mp\components\map.h" />
+      <ClInclude Include="src\game\t4\mp\components\mods.h" />
       <ClInclude Include="src\game\t4\mp\components\patches.h" />
       <ClInclude Include="src\game\t4\mp\components\pm.h" />
       <ClInclude Include="src\game\t4\mp\components\stats.h" />

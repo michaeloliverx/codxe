@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "branding.h"
+#include "mods.h"
 
 namespace t4
 {
@@ -14,12 +15,13 @@ void Branding::UI_DrawBuildNumber_Hook(const int localClientNum)
 
 void Branding::DrawBranding()
 {
-    const char *brandingWithBuild = branding::GetBrandingString();
+    const std::string activeMod = ModList::GetActiveName();
+    const char *brandingWithBuild = branding::GetBrandingString(activeMod.c_str());
 
     static Font_s *font = (Font_s *)DB_FindXAssetHeader(ASSET_TYPE_FONT, "fonts/consoleFont", 1, -1);
 
     static float color[4] = {1.0, 1.0, 1.0, 0.6};
-    R_AddCmdDrawText(brandingWithBuild, 256, font, 10, 20, 1, 1, 1, color, 0);
+    R_AddCmdDrawText(brandingWithBuild, 256, font, 10, 20, 1.0f, 1.0f, 0.0f, color, 0);
 }
 
 Branding::Branding()

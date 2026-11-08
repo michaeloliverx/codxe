@@ -12,6 +12,7 @@ enum XAssetType : __int32
 {
     ASSET_TYPE_IMAGE = 0x9,
     ASSET_TYPE_FONT = 0x15,
+    ASSET_TYPE_MENULIST = 0x16,
     ASSET_TYPE_RAWFILE = 0x21,
     ASSET_TYPE_STRINGTABLE = 0x22,
 };
@@ -820,6 +821,7 @@ static_assert(offsetof(BuiltinMethodDef, type) == 0x8, "");
 enum DvarFlags : unsigned __int16
 {
     DVAR_FLAG_NONE = 0x0,
+    DVAR_ARCHIVE = 0x1,
     DVAR_CODINFO = 0x100, // On change, this is sent to all clients (if you are host)
 };
 
@@ -1169,7 +1171,25 @@ static_assert(sizeof(SpawnFuncEntry) == 0x8, "");
 static_assert(offsetof(SpawnFuncEntry, classname) == 0x0, "");
 static_assert(offsetof(SpawnFuncEntry, callback) == 0x4, "");
 
+struct XZoneInfo
+{
+    const char *name;
+    int allocFlags;
+    int freeFlags;
+};
+static_assert(sizeof(XZoneInfo) == 0xC, "");
+
 struct UiContext;
+struct menuDef_t;
+struct itemDef_s;
+
+struct MenuList
+{
+    const char *name;
+    int menuCount;
+    menuDef_t **menus;
+};
+static_assert(sizeof(MenuList) == 0xC, "");
 
 struct ScreenPlacement
 {

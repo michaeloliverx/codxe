@@ -11,6 +11,7 @@
 #include "components/gsc_functions.h"
 #include "components/gsc_loader.h"
 #include "components/map.h"
+#include "components/mods.h"
 #include "components/patches.h"
 #include "components/pm.h"
 #include "components/stats.h"
@@ -28,7 +29,6 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Debug());
 #endif
 
-    RegisterModule(new Config());
     RegisterModule(new Events()); // Must be registered before modules that subscribe to engine events.
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());
@@ -40,6 +40,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new SVBots());
     RegisterModule(new GSCLoader());
     RegisterModule(new Map());
+    RegisterModule(new ModList());
     RegisterModule(new Patches());
     RegisterModule(new pm());
     RegisterModule(new stats());

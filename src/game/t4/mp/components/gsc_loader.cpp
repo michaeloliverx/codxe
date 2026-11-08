@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "common/gsc_loader.h"
 #include "gsc_loader.h"
+#include "mods.h"
 
 namespace t4
 {
@@ -17,14 +18,9 @@ char *GSCLoader::Scr_AddSourceBuffer_Hook(scriptInstance_t inst, const char *fil
                                                                                        codePos, archive);
     };
 
-    if (Config::dump_rawfile)
-    {
-        char *contents = callOriginal();
-        gsc_loader::DumpSource(extFilename, contents);
-        return contents;
-    }
-
-    char *contents = gsc_loader::TryLoadOverride(extFilename, Hunk_AllocateTempMemoryHighInternal);
+    const std::string overridePath = ModList::ResolvePath(extFilename);
+    char *contents =
+        gsc_loader::TryLoadOverride(extFilename, overridePath.c_str(), Hunk_AllocateTempMemoryHighInternal);
     return contents ? contents : callOriginal();
 }
 
