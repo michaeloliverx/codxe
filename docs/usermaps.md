@@ -8,7 +8,7 @@ arena metadata and preview format. Each game keeps its own fastfiles under
 _codxe/games/iw3/usermaps/mp_example/
     mp_example.ff
     mp_example_load.ff
-    mp_example_patch.ff    (optional)
+    mp_example_patch.ff    (optional - T4-only)
     map.arena              (optional)
     preview.dds            (optional)
 ```
@@ -57,16 +57,3 @@ remain available. They never reuse the previous map's visible preview.
 
 MP uses normal `<map>_load.ff` loading screens; no BIK playback is added.
 T4 SP's existing loading-video support remains separate from this metadata.
-
-## Shipped IW3 map metadata
-
-`resources/iw3/_codxe/usermaps` contains metadata and 512-square previews for
-the 35 maps in `codxe-iw3-fastfiles-v0.1.0.zip`. Map fastfiles remain in the
-downloadable map package. Previews preserve the loading artwork embedded in
-the supplied maps; Ultimate has no embedded loading artwork and currently
-uses the generic blank preview. Replace its `preview.dds` when a map shot is
-available.
-
-The updated map ZIP extracts directly into `_codxe/games/iw3/usermaps` and
-omits the old shared `codxe_common_mp.ff` and `codxe_ui_mp.ff` overrides.
-The frontend menus now ship in the plugin's normal patch zones.
