@@ -203,6 +203,8 @@
       <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
       <ClCompile Include="src\game\t4\mp\components\console.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\collision.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\bounce_edges.cpp" />
       <ClCompile Include="src\game\t4\mp\components\debug_draw.cpp" />
       <ClCompile Include="src\game\t4\mp\components\debug.cpp" />
       <ClCompile Include="src\game\t4\mp\components\events.cpp" />
@@ -373,6 +375,9 @@
       <ClInclude Include="src\game\t4\mp\components\branding.h" />
       <ClInclude Include="src\game\t4\mp\components\brush_collision.h" />
       <ClInclude Include="src\game\t4\mp\components\console.h" />
+      <ClInclude Include="src\game\t4\mp\components\collision.h" />
+      <ClInclude Include="src\game\t4\mp\components\collision_geometry.h" />
+      <ClInclude Include="src\game\t4\mp\components\bounce_edges.h" />
       <ClInclude Include="src\game\t4\mp\components\debug_draw.h" />
       <ClInclude Include="src\game\t4\mp\components\debug.h" />
       <ClInclude Include="src\game\t4\mp\components\events.h" />

@@ -268,18 +268,204 @@ struct __declspec(align(16)) cbrush_t
 };
 #pragma warning(default : 4324)
 
+struct cStaticModel_s;
+struct cNode_t;
+struct CollisionBorder;
+struct XModel;
+struct DynEntityClient;
+struct DynEntityServer;
+struct PhysConstraint;
+
+struct cLeafBrushNodeLeaf_t
+{
+    unsigned __int16 *brushes;
+};
+
+struct cLeafBrushNodeChildren_t
+{
+    float dist;
+    float range;
+    unsigned __int16 childOffset[2];
+};
+
+union cLeafBrushNodeData_t
+{
+    cLeafBrushNodeLeaf_t leaf;
+    cLeafBrushNodeChildren_t children;
+};
+
+struct cLeafBrushNode_s
+{
+    unsigned __int8 axis;
+    __int16 leafBrushCount;
+    int contents;
+    cLeafBrushNodeData_t data;
+};
+
+struct dmaterial_t
+{
+    char material[64];
+    int surfaceFlags;
+    int contentFlags;
+};
+
+union CollisionAabbTreeIndex
+{
+    int firstChildIndex;
+    int partitionIndex;
+};
+
+struct CollisionAabbTree
+{
+    float origin[3];
+    unsigned __int16 materialIndex;
+    unsigned __int16 childCount;
+    float halfSize[3];
+    CollisionAabbTreeIndex u;
+};
+
+enum DynEntityType
+{
+    DYNENT_TYPE_INVALID = 0x0,
+    DYNENT_TYPE_CLUTTER = 0x1,
+    DYNENT_TYPE_DESTRUCT = 0x2,
+    DYNENT_TYPE_COUNT = 0x3,
+};
+
+struct GfxPlacement
+{
+    float quat[4];
+    float origin[3];
+};
+
+struct DynEntityPose
+{
+    GfxPlacement pose;
+    float radius;
+};
+
+struct DynEntityColl
+{
+    unsigned __int16 sector;
+    unsigned __int16 nextEntInSector;
+    float linkMins[3];
+    float linkMaxs[3];
+    int contents;
+};
+
+struct CollisionPartition
+{
+    unsigned char triCount;
+    unsigned char borderCount;
+    int firstTri;
+    int nuinds;
+    int fuind;
+    CollisionBorder *borders;
+};
+// TU7's runtime definition differs from the early builds and the asset tooling layout.
+struct DynEntityDef
+{
+    DynEntityType type;
+    GfxPlacement pose;
+    XModel *xModel;
+    unsigned short brushModel;
+    unsigned short physicsBrushModel;
+    char unknown[36];
+    int contents;
+    unsigned short targetname;
+};
+struct DynEntityProps
+{
+    const char *name;
+    bool clientOnly;
+    bool clipMove;
+    bool usePhysics;
+    bool destroyable;
+};
+static_assert(sizeof(cLeafBrushNode_s) == 20, "");
+static_assert(sizeof(dmaterial_t) == 72, "");
+static_assert(sizeof(CollisionPartition) == 20, "");
+static_assert(sizeof(CollisionAabbTree) == 32, "");
+static_assert(offsetof(CollisionAabbTree, materialIndex) == 12, "");
+static_assert(offsetof(CollisionAabbTree, halfSize) == 16, "");
+static_assert(sizeof(DynEntityDef) == 84, "");
+static_assert(offsetof(DynEntityDef, brushModel) == 36, "");
+static_assert(offsetof(DynEntityDef, contents) == 76, "");
+static_assert(sizeof(DynEntityPose) == 32, "");
+static_assert(sizeof(DynEntityColl) == 32, "");
+static_assert(sizeof(DynEntityProps) == 8, "");
+static_assert(offsetof(DynEntityProps, clipMove) == 5, "");
+
 struct clipMap_t
 {
-    const char *name;            // OFS: 0 SIZE: 0x4
-    int isInUse;                 // OFS: 4 SIZE: 0x4
-    char _pad[140];              //
-    unsigned int numSubModels;   // OFS: 148 SIZE: 0x4
-    cmodel_t *cmodels;           // OFS: 152 SIZE: 0x4
-    unsigned __int16 numBrushes; // OFS: 156 SIZE: 0x2
-    cbrush_t *brushes;           // OFS: 160 SIZE: 0x4
-    char _pad2[16];              //
-    MapEnts *mapEnts;            // OFS: 180 SIZE: 0xC
+    const char *name;
+    int isInUse;
+    int planeCount;
+    cplane_s *planes;
+    unsigned int numStaticModels;
+    cStaticModel_s *staticModelList;
+    unsigned int numMaterials;
+    dmaterial_t *materials;
+    unsigned int numBrushSides;
+    cbrushside_t *brushsides;
+    unsigned int numBrushEdges;
+    unsigned __int8 *brushEdges;
+    unsigned int numNodes;
+    cNode_t *nodes;
+    unsigned int numLeafs;
+    cLeaf_t *leafs;
+    unsigned int leafbrushNodesCount;
+    cLeafBrushNode_s *leafbrushNodes;
+    unsigned int numLeafBrushes;
+    unsigned __int16 *leafbrushes;
+    unsigned int numLeafSurfaces;
+    unsigned int *leafsurfaces;
+    unsigned int vertCount;
+    float (*verts)[3];
+    unsigned int numBrushVerts;
+    float (*brushVerts)[3];
+    unsigned int nuinds;
+    unsigned __int16 *uinds;
+    int triCount;
+    unsigned __int16 *triIndices;
+    unsigned __int8 *triEdgeIsWalkable;
+    int borderCount;
+    CollisionBorder *borders;
+    int partitionCount;
+    CollisionPartition *partitions;
+    int aabbTreeCount;
+    CollisionAabbTree *aabbTrees;
+    unsigned int numSubModels;
+    cmodel_t *cmodels;
+    unsigned __int16 numBrushes;
+    cbrush_t *brushes;
+    int numClusters;
+    int clusterBytes;
+    unsigned __int8 *visibility;
+    int vised;
+    MapEnts *mapEnts;
+    cbrush_t *box_brush;
+    cmodel_t box_model;
+    unsigned __int16 originalDynEntCount;
+    unsigned __int16 dynEntCount[4];
+    DynEntityDef *dynEntDefList[2];
+    DynEntityPose *dynEntPoseList[2];
+    DynEntityClient *dynEntClientList[2];
+    DynEntityServer *dynEntServerList[2];
+    DynEntityColl *dynEntCollList[4];
+    int num_constraints;
+    PhysConstraint *constraints;
+    unsigned int checksum;
 };
+static_assert(sizeof(clipMap_t) == 332, "");
+static_assert(offsetof(clipMap_t, verts) == 92, "");
+static_assert(offsetof(clipMap_t, triIndices) == 116, "");
+static_assert(offsetof(clipMap_t, partitions) == 136, "");
+static_assert(offsetof(clipMap_t, aabbTrees) == 144, "");
+static_assert(offsetof(clipMap_t, dynEntCount) == 262, "");
+static_assert(offsetof(clipMap_t, dynEntDefList) == 272, "");
+static_assert(offsetof(clipMap_t, dynEntPoseList) == 280, "");
+static_assert(offsetof(clipMap_t, dynEntCollList) == 304, "");
 static_assert(offsetof(clipMap_t, name) == 0, "");
 static_assert(offsetof(clipMap_t, isInUse) == 4, "");
 static_assert(offsetof(clipMap_t, numSubModels) == 148, "");
@@ -1132,9 +1318,17 @@ static_assert(offsetof(serverStaticHeader_t, time) == 0x4, "");
 
 struct pmove_t
 {
-    playerState_s *ps; // OFS: 0 SIZE: 0x4
-    char pad[316];
+    playerState_s *ps;
+    char pad0[88];
+    int tracemask;
+    char pad1[132];
+    float mins[3];
+    float maxs[3];
+    char pad2[68];
 };
+static_assert(offsetof(pmove_t, tracemask) == 92, "");
+static_assert(offsetof(pmove_t, mins) == 228, "");
+static_assert(offsetof(pmove_t, maxs) == 240, "");
 static_assert(sizeof(pmove_t) == 0x140, "");
 static_assert(offsetof(pmove_t, ps) == 0, "");
 
@@ -1675,6 +1869,37 @@ struct GfxRenderCommandExecState
 };
 static_assert(offsetof(GfxCmdDrawText3D, text) == 48, "");
 
+enum TraceHitType : __int32
+{
+    TRACE_HITTYPE_NONE,
+    TRACE_HITTYPE_ENTITY,
+    TRACE_HITTYPE_DYNENT_MODEL,
+    TRACE_HITTYPE_DYNENT_BRUSH
+};
+struct __declspec(align(16)) trace_t
+{
+    float normal[4];
+    float fraction;
+    int surfaceFlags;
+    int contents;
+    const char *material;
+    TraceHitType hitType;
+    unsigned short hitId;
+    unsigned short modelIndex;
+    unsigned short partName;
+    unsigned short boneIndex;
+    unsigned short partGroup;
+    bool allsolid;
+    bool startsolid;
+    bool walkable;
+    char padding[15];
+};
+static_assert(sizeof(trace_t) == 64, "");
+static_assert(offsetof(trace_t, fraction) == 16, "");
+static_assert(offsetof(trace_t, allsolid) == 46, "");
+static_assert(offsetof(trace_t, startsolid) == 47, "");
+static_assert(offsetof(trace_t, walkable) == 48, "");
+
 struct refdef_s
 {
     int x, y, width, height;
@@ -1691,12 +1916,36 @@ static_assert(offsetof(refdef_s, viewaxis) == 60, "");
 
 struct cg_s
 {
-    char unknown0[343296];
+    char unknown0[327764];
+    playerState_s predictedPlayerState;
+    char unknown1[400];
     refdef_s refdef;
-    char unknown1[628384];
+    char unknown2[628384];
 };
 static_assert(sizeof(cg_s) == 971776, "");
+static_assert(offsetof(cg_s, predictedPlayerState) == 327764, "");
 static_assert(offsetof(cg_s, refdef) == 343296, "");
+
+struct cpose_t
+{
+    char unknown[40];
+    float origin[3];
+    float angles[3];
+};
+struct centity_s
+{
+    cpose_t pose;
+    char unknown0[284];
+    entityState_s nextState;
+    char unknown1[52];
+    unsigned int flags;
+};
+static_assert(sizeof(centity_s) == 688, "");
+static_assert(offsetof(centity_s, pose.origin) == 40, "");
+static_assert(offsetof(centity_s, pose.angles) == 52, "");
+static_assert(offsetof(centity_s, nextState) == 348, "");
+static_assert(offsetof(centity_s, nextState.solid) == 536, "");
+static_assert(offsetof(centity_s, flags) == 684, "");
 
 } // namespace mp
 } // namespace t4

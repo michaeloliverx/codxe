@@ -15,6 +15,8 @@ class Events : public Module
   private:
     static Detour CG_DrawActive_Detour;
     static void CG_DrawActive_Hook(int localClientNum);
+    static Detour CG_Init_Detour;
+    static void CG_Init_Hook(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum);
 
     static Detour Com_InitDvars_Detour;
     static void Com_InitDvars_Hook();
