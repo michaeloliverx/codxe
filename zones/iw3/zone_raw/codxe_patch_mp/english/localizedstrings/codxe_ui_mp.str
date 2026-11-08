@@ -10,4 +10,7 @@ LANG_ENGLISH        "Select map"
 REFERENCE           MENU_LAUNCH_WITHOUT_MODS
 LANG_ENGLISH        "Launch without mods."
 
+REFERENCE CODXE_NO_MAPS
+LANG_ENGLISH "No custom multiplayer maps found"
+
 ENDMARKER

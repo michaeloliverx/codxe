@@ -2,6 +2,7 @@
 #include "ui.h"
 #include "stats.h"
 #include "mods.h"
+#include "usermaps.h"
 
 namespace t4
 {
@@ -20,16 +21,14 @@ void Menus_AddMenuList_Hook(UiContext *dc, MenuList *menuList)
 
     // Append before UI_Init initializes the registered menus and their item parents.
     // Rebuilding the stock list with reference assets can retain default menu stubs.
-    auto mods =
-        reinterpret_cast<MenuList *>(DB_FindXAssetHeader(ASSET_TYPE_MENULIST, "ui_mp/mods_menu.menu", false, 0));
-    if (mods && mods->name && strcmp(mods->name, "ui_mp/mods_menu.menu") == 0)
+    const char *browsers[] = {"ui_mp/mods_menu.menu"};
+    for (size_t i = 0; i < ARRAYSIZE(browsers); ++i)
     {
-        original(dc, mods);
-        DbgPrint("[codxe][T4][UI] Registered mod browser alongside stock frontend menus\n");
-    }
-    else
-    {
-        DbgPrint("[codxe][T4][UI] Mod browser menulist is unavailable\n");
+        auto browser = reinterpret_cast<MenuList *>(DB_FindXAssetHeader(ASSET_TYPE_MENULIST, browsers[i], false, 0));
+        if (browser && browser->name && strcmp(browser->name, browsers[i]) == 0)
+            original(dc, browser);
+        else
+            DbgPrint("[codxe][T4][UI] Browser menulist is unavailable: %s\n", browsers[i]);
     }
 }
 
@@ -68,7 +67,7 @@ void UI_RunMenuScript_Hook(int localClientNum, const char **args, const char *ac
     if (!String_Parse(&argCopy, parsedCommand, sizeof(parsedCommand)))
         return;
 
-    if (ModList::RunMenuScript(localClientNum, parsedCommand))
+    if (ModList::RunMenuScript(localClientNum, parsedCommand) || Usermaps::RunMenuScript(localClientNum, parsedCommand))
     {
         // Item_RunScript resumes at this cursor after our custom command returns.
         *args = argCopy;

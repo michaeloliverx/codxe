@@ -17,6 +17,7 @@
 #include "components/stats.h"
 #include "components/sv_bots.h"
 #include "components/ui.h"
+#include "components/usermaps.h"
 
 namespace t4
 {
@@ -41,6 +42,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new GSCLoader());
     RegisterModule(new Map());
     RegisterModule(new ModList());
+    RegisterModule(new Usermaps());
     RegisterModule(new Patches());
     RegisterModule(new pm());
     RegisterModule(new stats());

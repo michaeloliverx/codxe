@@ -213,9 +213,18 @@
             rect                        14 246 213 120 1 1
             style                       3
             decoration                  
-            visible                     when(1);
+            visible when(!(dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname")));
             textscale                   0.55
             exp material                (tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 4));
+        }
+        itemDef
+        {
+            rect                        14 246 213 120 1 1
+            style                       3
+            decoration
+            visible when(dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname") && dvarint("ui_codxe_usermap_has_preview"));
+            textscale                   0.55
+            background "$codxe_usermap_preview"
         }
         itemDef
         {
@@ -426,6 +435,10 @@
             }
             exp text                    ("@MPUI_CREATE_A_CLASS");
         }
+
+
+
+
         itemDef
         {
             rect                        -272 214 271 168 3 1

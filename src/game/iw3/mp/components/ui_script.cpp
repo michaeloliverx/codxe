@@ -3,16 +3,17 @@
 
 #include "mods.h"
 #include "stats.h"
-#include "ui_feeder.h"
+#include "usermaps.h"
 
 namespace iw3
 {
 namespace mp
 {
 const UIScriptEntry UIScript::Scripts[] = {
-    {"LoadMods", ModList::LoadModsScript},          {"RunMod", ModList::RunModScript},
-    {"ClearMods", ModList::ClearModsScript},        {"LoadOfflineStats", Stats::LoadStatsScript},
-    {"LoadUsermaps", UIFeeder::LoadUsermapsScript}, {"ApplyMap", UIFeeder::ApplyMapScript},
+    {"LoadMods", ModList::LoadModsScript},    {"RunMod", ModList::RunModScript},
+    {"ClearMods", ModList::ClearModsScript},  {"LoadOfflineStats", Stats::LoadStatsScript},
+    {"CloseUsermaps", Usermaps::CloseScript}, {"LoadUsermaps", Usermaps::LoadScript},
+    {"ApplyMap", Usermaps::ApplyScript},
 };
 
 Detour UIScript::UI_RunMenuScript_Detour;
@@ -43,6 +44,8 @@ bool UIScript::Run(int localClientNum, const char **args)
         if (I_stricmp(name, Scripts[i].name) == 0)
         {
             Scripts[i].callback(localClientNum, &customArgs);
+            // Item_RunScript must resume after the custom command, including its arguments.
+            *args = customArgs;
             return true;
         }
     }

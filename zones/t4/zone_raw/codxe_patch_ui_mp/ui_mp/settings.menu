@@ -1,0 +1,1093 @@
+#include "ui_mp/menudef.h"
+
+{
+    menuDef
+    {
+        name                        "settings"
+        rect                        0 0 640 470 4 4
+        style                       1
+        borderSize                  1
+        focuscolor                  0.95294 0.72156 0.21176 1
+        soundLoop                   "music_mainmenu"
+        fadeClamp                   1
+        fadeCycle                   1
+        fadeAmount                  0.1
+        onOpen
+        {
+            setdvar invite_visible 0;
+            setdvar settings_map_selected 0;
+            setdvar settings_usermaps_selected 0;
+            setdvar settings_gametype_selected 0;
+        }
+        onClose
+        {
+            uiScript CloseUsermaps;
+            setdvar settings_usermaps_selected 0;
+            setdvar invite_visible 1;
+            setDvar ui_preview dvarString ( ui_mapname );
+        }
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            rect                        -600 -800 2000 2000 0 0
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 0.65
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        0 64 640 1 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.5 0.5 0.5 0.65
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        0 65 640 355 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "menu_background_mp_tank_blurred"
+        }
+        itemDef
+        {
+            rect                        0 443 640 0.5 4 4
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0.5 0.5 0.5 0.65
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            name                        "change_filter"
+            text                        "@PLATFORM_CHANGE_FILTER"
+            rect                        90 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+            execKeyInt 6
+            {
+                execNow "toggle lb_gamemode 0 1 2 3 4 5 6 7 8 9 10 12 15";
+                uiScript RefreshLeaderboards;
+            }
+            execKeyInt 5
+            {
+                execNow "toggle lb_gamemode 15 12 10 9 8 7 6 5 4 3 2 1 0";
+                uiScript RefreshLeaderboards;
+            }
+            execKeyInt 4
+            {
+                play mouse_click;
+                execNow "toggle lb_filter 0 1 2";
+            }
+        }
+        itemDef
+        {
+            name                        "goto_top"
+            text                        "@PLATFORM_GOTOTOP"
+            rect                        -40 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "accept_button"
+            text                        "@PLATFORM_SELECT"
+            rect                        44 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   1
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "refresh"
+            text                        "@PLATFORM_REFRESH"
+            rect                        -20 -4 0 0 2 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textalign                   2
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgup"
+            text                        "@PLATFORM_PGUP"
+            rect                        -180 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "pgdown"
+            text                        "@PLATFORM_PGDOWN"
+            rect                        -90 -4 0 0 3 3
+            decoration
+            borderSize                  1
+            visible                     when(0);
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 -20 16 16 1 3
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK"
+            rect                        18 -4 0 0 1 3
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        -100 -100 100 600 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 -100 100 600 3 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 -100 900 100 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 0 900 100 1 3
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            backcolor                   0 0 1 1
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        22 32 100 100 1 1
+            decoration
+            borderSize                  1
+            visible                     1
+            textalign                   4
+            textscale                   0.5476
+            textstyle                   6
+            textfont                    1
+            exp text                    ("@MENU_SETTINGS");
+        }
+        itemDef
+        {
+            rect                        -225 29 16 355 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.5 0.5 0.5 0.3
+            background                  "gradient_left"
+        }
+        itemDef
+        {
+            rect                        -209 29 1 355 3 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.5 0.5 0.5 0.2
+            background                  "menu_white_line"
+        }
+        itemDef
+        {
+            rect                        -204 10 195 125 3 2
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0 0 0 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        -204 9 195 1 3 2
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.3 0.3 0.3 0.7
+            background                  "menu_button_backing"
+        }
+        itemDef
+        {
+            rect                        -204 135 195 1 3 2
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     1
+            textscale                   0.55
+            forecolor                   0.2 0.2 0.2 0.7
+            background                  "menu_button_backing"
+        }
+        itemDef
+        {
+            rect                        -200 65 200 100 3 1
+            style                       3
+            decoration
+            visible                     when(!(dvarint("settings_usermaps_selected") || (dvarstring("ui_mapname") != "" && dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname"))));
+            textscale                   0.55
+            exp material                (tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 4));
+        }
+        itemDef
+        {
+            rect                        -50 120 45 45 3 1
+            style                       3
+            decoration
+            visible                     when(!(dvarint("settings_usermaps_selected")));
+            textscale                   0.55
+            exp material                (tablelookup("mp/gametypesTable.csv", 0, dvarstring("ui_gametype"), 3));
+        }
+        itemDef
+        {
+            rect                        -200 185 200 100 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(!(dvarint("settings_usermaps_selected")));
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.95294 0.72156 0.21176 1
+            exp text                    ("@" + tablelookup("mp/gametypesTable.csv", 0, dvarstring("ui_gametype"), 1));
+        }
+        itemDef
+        {
+            rect                        -200 200 200 100 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(!(dvarint("settings_usermaps_selected") || (dvarstring("ui_mapname") != "" && dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname"))));
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.95294 0.72156 0.21176 1
+            exp text                    ("@" + tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 3));
+        }
+        itemDef
+        {
+            rect                        -200 235 200 100 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(!(dvarint("settings_usermaps_selected")));
+            textscale                   0.3095
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.62745 0.66667 0.67451 1
+            exp text                    ("@" + tablelookup("mp/gametypesTable.csv", 0, dvarstring("ui_gametype"), 2));
+        }
+        itemDef
+        {
+            rect                        -200 360 200 100 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(!(dvarint("settings_usermaps_selected") || (dvarstring("ui_mapname") != "" && dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname"))));
+            textscale                   0.3095
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.95294 0.72156 0.21176 1
+            exp text                    ("@MPUI_MAPSIZE_" + tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 8));
+        }
+        itemDef
+        {
+            rect                        -200 380 200 100 3 1
+            decoration
+            autowrapped
+            borderSize                  1
+            visible                     when(!(dvarint("settings_usermaps_selected") || (dvarstring("ui_mapname") != "" && dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname"))));
+            textscale                   0.3095
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.95294 0.72156 0.21176 1
+            exp text                    ("@MPUI_VEHICLEMAP_" + tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 9));
+        }
+        itemDef
+        {
+            rect                        0 65 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") == 0 && dvarint("settings_usermaps_selected") == 0);
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 65 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 66 189 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 1 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "change_map"
+            rect                        0 65 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") == 0 && dvarint("settings_usermaps_selected") == 0);
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 1;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar settings_map_selected 1;
+                setfocus map_selection;
+                setdvar ui_preview dvarString ( ui_mapname );
+            }
+            exp text                    ("@MPUI_CHANGE_MAP");
+        }
+        itemDef
+        {
+            rect                        201 65 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when((!dvarbool("settings_map_selected") && !dvarbool("settings_gametype_selected") && !dvarbool("settings_usermaps_selected") && !(dvarstring("ui_mapname") != "" && dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname"))));
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/mapsTable.csv", 0, dvarstring("ui_mapname"), 3));
+        }
+        itemDef
+        {
+            rect                        0 65 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") || dvarint("settings_usermaps_selected"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 65 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") || dvarint("settings_usermaps_selected"));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.3 0.3 0.3 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 1;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+            }
+            exp text                    ("@MPUI_CHANGE_MAP");
+        }
+        itemDef
+        {
+            rect                        174 65 165 323 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarbool("settings_map_selected") || dvarbool("settings_gametype_selected") || dvarbool("settings_usermaps_selected"));
+            textscale                   0.55
+            forecolor                   0 0 0 0.4
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        174 64 165 1 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarbool("settings_map_selected") || dvarbool("settings_gametype_selected") || dvarbool("settings_usermaps_selected"));
+            textscale                   0.55
+            forecolor                   0.5 0.5 0.5 0.7
+            background                  "menu_button_backing"
+        }
+        itemDef
+        {
+            name                        "map_selection"
+            rect                        174 62 175 323 1 1
+            type                        6
+            borderSize                  1
+            visible                     when(dvarbool("settings_map_selected"));
+            textalignx                  -5
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            outlinecolor                0.9 0.95 1 0.5
+            onFocus
+            {
+                play mouse_over;
+            }
+            execKeyInt 15
+            {
+                setdvar settings_map_selected 0;
+                setdvar ui_mapname dvarString ( ui_preview );
+                setfocus change_map;
+            }
+            execKeyInt 2
+            {
+                setdvar settings_map_selected 0;
+                setdvar ui_mapname dvarString ( ui_preview );
+                setfocus change_map;
+            }
+            noscrollbars
+            elementwidth                20
+            elementheight               22
+            feeder                      1
+            columns                     1
+                                        25 190 64 0
+            doubleclick
+            {
+                play mouse_click;
+                setdvar settings_map_selected 0;
+                setfocus change_map;
+                execNow xupdatepartystate;
+            }
+            onListboxSelectionChange
+            {
+                play mouse_over;
+            }
+            selectBorder                0.8 0.95 1 0
+            disableColor                0.34118 0.36863 0.37647 1
+            focusColor                  1 1 1 1
+            selectIcon                  "ui_button_xenon_3d_a_32x32"
+            highlightTexture            "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            rect                        0 89 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") == 0 && dvarint("settings_map_selected") == 0);
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 89 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 90 189 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "change_usermaps"
+            rect                        0 89 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") == 0 && dvarint("settings_map_selected") == 0);
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                uiScript LoadUsermaps;
+                setdvar settings_usermaps_selected 1;
+                setfocus usermap_selection;
+            }
+            exp text                    ("@CODXE_CUSTOM_MAPS");
+        }
+        itemDef
+        {
+            rect                        0 89 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") || dvarint("settings_map_selected"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 89 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_gametype_selected") || dvarint("settings_map_selected"));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.3 0.3 0.3 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 2;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+            }
+            exp text                    ("@CODXE_CUSTOM_MAPS");
+        }
+        itemDef
+        {
+            name                        "usermap_selection"
+            rect                        174 62 175 323 1 1
+            type                        6
+            borderSize                  1
+            visible                     when(dvarbool("settings_usermaps_selected"));
+            textalignx                  -5
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            outlinecolor                0.9 0.95 1 0.5
+            onFocus
+            {
+                play mouse_over;
+            }
+            execKeyInt 15
+            {
+                setdvar settings_usermaps_selected 0;
+                uiScript CloseUsermaps;
+                setfocus change_usermaps;
+            }
+            execKeyInt 2
+            {
+                setdvar settings_usermaps_selected 0;
+                uiScript CloseUsermaps;
+                setfocus change_usermaps;
+            }
+            noscrollbars
+            elementwidth                20
+            elementheight               22
+            feeder                      FEEDER_USERMAPS
+            columns                     1
+                                        25 190 64 0
+            doubleclick
+            {
+                play mouse_click;
+                setdvar settings_usermaps_selected 0;
+                setfocus change_usermaps;
+                uiScript ApplyUsermap;
+            }
+            onListboxSelectionChange
+            {
+                play mouse_over;
+            }
+            selectBorder                0.8 0.95 1 0
+            disableColor                0.34118 0.36863 0.37647 1
+            focusColor                  1 1 1 1
+            selectIcon                  "ui_button_xenon_3d_a_32x32"
+            highlightTexture            "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            rect                        0 113 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") == 0 && dvarint("settings_usermaps_selected") == 0);
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 113 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 114 189 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            name                        "change_gametype"
+            rect                        0 113 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") == 0 && dvarint("settings_usermaps_selected") == 0);
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar settings_gametype_selected 1;
+                setfocus gametype_selection;
+                setdvar ui_preview dvarString ( ui_gametype );
+            }
+            exp text                    ("@MPUI_CHANGE_GAME_MODE");
+        }
+        itemDef
+        {
+            rect                        201 113 64 22 1 1
+            style                       1
+            decoration
+            borderSize                  1
+            visible                     when((!dvarbool("settings_map_selected") && !dvarbool("settings_gametype_selected") && !dvarbool("settings_usermaps_selected")));
+            textalign                   8
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            exp text                    ("@" + tablelookup("mp/gametypesTable.csv", 0, dvarstring("ui_gametype"), 1));
+        }
+        itemDef
+        {
+            rect                        0 113 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") || dvarint("settings_usermaps_selected"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 113 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") || dvarint("settings_usermaps_selected"));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.3 0.3 0.3 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 3;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+            }
+            exp text                    ("@MPUI_CHANGE_GAME_MODE");
+        }
+        itemDef
+        {
+            name                        "gametype_selection"
+            rect                        174 62 185 308 1 1
+            type                        6
+            borderSize                  1
+            visible                     when(dvarbool("settings_gametype_selected"));
+            textalignx                  -5
+            textscale                   0.381
+            textstyle                   3
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            outlinecolor                0.9 0.95 1 0.5
+            onFocus
+            {
+                play mouse_over;
+            }
+            execKeyInt 15
+            {
+                setdvar settings_gametype_selected 0;
+                setdvar ui_gametype dvarString ( ui_preview );
+                setfocus change_gametype;
+            }
+            execKeyInt 2
+            {
+                setdvar settings_gametype_selected 0;
+                setdvar ui_gametype dvarString ( ui_preview );
+                setfocus change_gametype;
+            }
+            noscrollbars
+            elementwidth                20
+            elementheight               22
+            feeder                      53
+            columns                     1
+                                        25 190 64 0
+            doubleclick
+            {
+                play mouse_click;
+                setdvar settings_gametype_selected 0;
+                setfocus change_gametype;
+                execNow xupdatepartystate;
+                exec "exec default_xboxlive.cfg";
+            }
+            onListboxSelectionChange
+            {
+                play mouse_over;
+            }
+            selectBorder                0.8 0.95 1 0
+            disableColor                0.34118 0.36863 0.37647 1
+            focusColor                  1 1 1 1
+            selectIcon                  "ui_button_xenon_3d_a_32x32"
+            highlightTexture            "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            rect                        0 137 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") == 0 && dvarint("settings_gametype_selected") == 0 && dvarint("settings_usermaps_selected") == 0);
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 137 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  2
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "" && 1);
+            textscale                   0.55
+            forecolor                   0.9 0.95 1 0.5
+            bordercolor                 0.8 0.95 1 0.4
+            background                  "menu_button_backing_highlight"
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 138 189 22 1 1
+            decoration
+            borderSize                  1
+            visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "" && 1);
+            textalign                   8
+            textaligny                  -1
+            textscale                   0.4
+            textfont                    1
+        }
+        itemDef
+        {
+            rect                        0 137 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") == 0 && dvarint("settings_gametype_selected") == 0 && dvarint("settings_usermaps_selected") == 0);
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.69 0.69 0.69 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 4;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+                uiScript openMenuOnDvar ui_gametype tdm settings_quick_tdm;
+                uiScript openMenuOnDvar ui_gametype sd settings_quick_sd;
+                uiScript openMenuOnDvar ui_gametype sab settings_quick_sab;
+                uiScript openMenuOnDvar ui_gametype dm settings_quick_dm;
+                uiScript openMenuOnDvar ui_gametype dom settings_quick_dom;
+                uiScript openMenuOnDvar ui_gametype ctf settings_quick_ctf;
+                uiScript openMenuOnDvar ui_gametype koth settings_quick_koth;
+                uiScript openMenuOnDvar ui_gametype twar settings_quick_twar;
+                uiScript openMenuOnDvar ui_gametype ctf settings_quick_ctf;
+                uiScript openMenuOnDvar ui_gametype sur settings_quick_sur;
+            }
+            exp text                    ("@MPUI_GAME_RULES");
+        }
+        itemDef
+        {
+            rect                        0 137 183.5 22 1 1
+            style                       3
+            decoration
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") || dvarint("settings_gametype_selected") || dvarint("settings_usermaps_selected"));
+            textscale                   0.55
+            forecolor                   0.1 0.1 0.1 0.5
+            exp material                ("menu_button_backing");
+        }
+        itemDef
+        {
+            rect                        0 137 189 22 1 1
+            type                        1
+            borderSize                  1
+            visible                     when(dvarint("settings_map_selected") || dvarint("settings_gametype_selected") || dvarint("settings_usermaps_selected"));
+            textalign                   8
+            textalignx                  22
+            textscale                   0.381
+            textstyle                   6
+            textfont                    1
+            forecolor                   0.3 0.3 0.3 1
+            onFocus
+            {
+                play mouse_over;
+                setLocalVarInt ui_highlight 4;
+                setLocalVarString ui_choicegroup "";
+            }
+            leaveFocus
+            {
+                setLocalVarInt ui_highlight 0;
+            }
+            action
+            {
+                play mouse_click;
+            }
+            exp text                    ("@MPUI_GAME_RULES");
+        }
+        itemDef
+        {
+            rect                        244 52 10 10 1 1
+            style                       3
+            decoration
+            visible                     when(dvarbool("settings_map_selected") && dvarint("ui_mapCount") > 14);
+            textscale                   0.55
+            exp material                ("ui_scrollbar_arrow_up_a");
+        }
+        itemDef
+        {
+            rect                        244 374 10 10 1 1
+            style                       3
+            decoration
+            visible                     when(dvarbool("settings_map_selected") && dvarint("ui_mapCount") > 14);
+            textscale                   0.55
+            exp material                ("ui_scrollbar_arrow_dwn_a");
+        }
+        itemDef
+        {
+            name "usermap_preview"
+            rect -200 65 200 100 3 1
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible when((dvarint("settings_usermaps_selected") || (dvarstring("ui_mapname") != "" && dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname"))) && dvarint("ui_codxe_usermap_has_preview"));
+            background "$codxe_usermap_preview"
+        }
+        itemDef
+        {
+            name "usermap_title"
+            rect -200 185 200 32 3 1
+            decoration
+            autowrapped
+            visible when(dvarint("settings_usermaps_selected"));
+            textscale 0.381
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            textfont UI_FONT_NORMAL
+            forecolor 0.95294 0.72156 0.21176 1
+            exp text (dvarstring("ui_codxe_usermap_name"));
+        }
+        itemDef
+        {
+            name "usermap_description"
+            rect -200 220 200 135 3 1
+            decoration
+            autowrapped
+            visible when(dvarint("settings_usermaps_selected"));
+            textscale 0.3095
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            textfont UI_FONT_NORMAL
+            forecolor 0.62745 0.66667 0.67451 1
+            exp text (dvarstring("ui_codxe_usermap_description"));
+        }
+        itemDef
+        {
+            name "chosen_usermap_title"
+            rect -200 200 200 100 3 1
+            decoration
+            autowrapped
+            visible when(!dvarint("settings_usermaps_selected") && (dvarstring("ui_mapname") != "" && dvarstring("ui_mapname") == dvarstring("ui_codxe_usermap_mapname")));
+            textscale 0.381
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            textfont UI_FONT_NORMAL
+            forecolor 0.95294 0.72156 0.21176 1
+            exp text (dvarstring("ui_codxe_usermap_name"));
+        }
+        itemDef
+        {
+            rect 190 90 150 100 1 1
+            decoration
+            autowrapped
+            visible when(dvarint("settings_usermaps_selected") && dvarint("ui_codxe_usermap_count") == 0);
+            textscale 0.3095
+            textfont UI_FONT_NORMAL
+            text "@CODXE_NO_MAPS"
+        }
+    }
+}

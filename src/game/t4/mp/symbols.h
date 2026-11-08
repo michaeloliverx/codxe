@@ -234,6 +234,10 @@ static auto String_Parse = reinterpret_cast<int (*)(const char **p, char *out, i
 
 typedef bool (*StringTable_GetAsset_t)(const char *filename, StringTable **tablePtr);
 static StringTable_GetAsset_t StringTable_GetAsset = reinterpret_cast<StringTable_GetAsset_t>(0x822BB280);
+static auto UI_GetMapDisplayName = reinterpret_cast<const char *(*)(const char *mapName)>(0x8229F7A0);
+static auto UI_GetMapLoadName = reinterpret_cast<const char *(*)(const char *mapName)>(0x8229F818);
+static auto StringTable_Lookup = reinterpret_cast<const char *(*)(const StringTable *table, int comparisonColumn,
+                                                                  const char *value, int valueColumn)>(0x822BB1C8);
 
 static auto SV_ClientThink = reinterpret_cast<void (*)(client_t *cl, usercmd_s *cmd)>(0x82284D50);
 static auto SV_AllocateClientMemory = reinterpret_cast<void (*)()>(0x82287888);
@@ -283,6 +287,12 @@ static Key_AddCatcher_t Key_AddCatcher = reinterpret_cast<Key_AddCatcher_t>(0x82
 
 typedef int (*Key_RemoveCatcher_t)(int localClientNum, int catcher);
 static Key_RemoveCatcher_t Key_RemoveCatcher = reinterpret_cast<Key_RemoveCatcher_t>(0x821B40D8);
+
+// Native SDK entry points: each title uses its own D3DDevice layout.
+static D3DDevice **gfxDevice = reinterpret_cast<D3DDevice **>(0x85B48088);
+static auto R_SyncRenderThread = reinterpret_cast<void (*)()>(0x82400E90);
+static auto D3D_BlockUntilIdle = reinterpret_cast<void (*)(D3DDevice *)>(0x820D6218);
+static auto D3D_InvalidateCaches = reinterpret_cast<void (*)(D3DDevice *, void *, unsigned int)>(0x820D41B0);
 
 void Con_ToggleConsole();
 void Con_ToggleConsoleOutput();

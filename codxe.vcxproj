@@ -94,6 +94,7 @@
 
       <ClCompile Include="src\common\brush_collision_tracker.cpp" />
       <ClCompile Include="src\common\config.cpp" />
+      <ClCompile Include="src\common\usermaps.cpp" />
       <ClCompile Include="src\common\endian.cpp" />
       <ClCompile Include="src\common\gsc_loader.cpp" />
       <ClCompile Include="src\common\map_ents.cpp" />
@@ -102,6 +103,10 @@
       <ClCompile Include="src\common\string_utils.cpp" />
 
       <ClCompile Include="src\image\xenos_texture.cpp" />
+      <ClCompile Include="src\image\usermap_preview.cpp" />
+      <ClCompile Include="src\image\preview_dds.cpp">
+        <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      </ClCompile>
 
       <ClCompile Include="src\game\ngl\mp\main.cpp" />
       <ClCompile Include="src\game\ngl\mp\components\pm.cpp" />
@@ -139,6 +144,7 @@
       <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\image_loader.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\ui_feeder.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\usermaps.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\ui_script.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
@@ -206,6 +212,7 @@
       <ClCompile Include="src\game\t4\mp\components\gsc_loader.cpp" />
       <ClCompile Include="src\game\t4\mp\components\map.cpp" />
       <ClCompile Include="src\game\t4\mp\components\mods.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\usermaps.cpp" />
       <ClCompile Include="src\game\t4\mp\components\patches.cpp" />
       <ClCompile Include="src\game\t4\mp\components\pm.cpp" />
       <ClCompile Include="src\game\t4\mp\components\stats.cpp" />
@@ -256,6 +263,8 @@
       <ClInclude Include="src\common\branding.h" />
       <ClInclude Include="src\common\brush_collision_tracker.h" />
       <ClInclude Include="src\common\config.h" />
+      <ClInclude Include="src\common\arena.h" />
+      <ClInclude Include="src\common\usermaps.h" />
       <ClInclude Include="src\common\endian.h" />
       <ClInclude Include="src\common\gsc_loader.h" />
       <ClInclude Include="src\common\map_ents.h" />
@@ -264,6 +273,8 @@
       <ClInclude Include="src\common\string_utils.h" />
 
       <ClInclude Include="src\image\xenos_texture.h" />
+      <ClInclude Include="src\image\usermap_preview.h" />
+      <ClInclude Include="src\image\preview_dds.h" />
 
       <ClInclude Include="src\game\ngl\mp\main.h" />
       <ClInclude Include="src\game\ngl\mp\structs.h" />
@@ -302,6 +313,7 @@
       <ClInclude Include="src\game\iw3\mp\components\patches.h" />
       <ClInclude Include="src\game\iw3\mp\components\pm.h" />
       <ClInclude Include="src\game\iw3\mp\components\ui_feeder.h" />
+      <ClInclude Include="src\game\iw3\mp\components\usermaps.h" />
       <ClInclude Include="src\game\iw3\mp\components\ui_script.h" />
       <ClInclude Include="src\game\iw3\mp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw3\mp\components\stats.h" />
@@ -369,6 +381,7 @@
       <ClInclude Include="src\game\t4\mp\components\gsc_loader.h" />
       <ClInclude Include="src\game\t4\mp\components\map.h" />
       <ClInclude Include="src\game\t4\mp\components\mods.h" />
+      <ClInclude Include="src\game\t4\mp\components\usermaps.h" />
       <ClInclude Include="src\game\t4\mp\components\patches.h" />
       <ClInclude Include="src\game\t4\mp\components\pm.h" />
       <ClInclude Include="src\game\t4\mp\components\stats.h" />

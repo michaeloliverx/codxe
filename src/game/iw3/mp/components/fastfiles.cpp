@@ -3,6 +3,7 @@
 
 #include "common/string_utils.h"
 #include "mods.h"
+#include "common/usermaps.h"
 
 namespace iw3
 {
@@ -13,7 +14,6 @@ namespace
 const char *const MOD_ZONE = "mod";
 const char *const MOD_FASTFILE = "mod.ff";
 const char *const CODXE_ZONE_DIRECTORY = "codxe:\\zone";
-const char *const USERMAPS_DIRECTORY = "codxe:\\usermaps";
 const char *const FASTFILE_EXTENSION = ".ff";
 
 bool IsSafeZoneName(const char *name)
@@ -118,24 +118,12 @@ std::string FastFiles::GetModFastfilePath()
 
 const char *FastFiles::GetUsermapsDirectory()
 {
-    return USERMAPS_DIRECTORY;
+    return usermaps::GetDirectory();
 }
 
 std::string FastFiles::GetUsermapFastfilePath(const char *zoneName)
 {
-    if (!IsSafeZoneName(zoneName) || I_strnicmp(zoneName, "mp_", 3) != 0)
-        return std::string();
-
-    std::string filename = zoneName;
-    if (string_utils::EndsWith(filename, ".ff"))
-        filename.erase(filename.length() - 3);
-
-    std::string directory = filename;
-    if (string_utils::EndsWith(directory, "_load"))
-        directory.erase(directory.length() - 5);
-
-    const std::string usermapDirectory = filesystem::JoinPath(USERMAPS_DIRECTORY, directory.c_str());
-    return filesystem::JoinPath(usermapDirectory.c_str(), (filename + ".ff").c_str());
+    return usermaps::FastfilePath(zoneName);
 }
 
 std::string FastFiles::ResolveFastfilePath(const char *filename)

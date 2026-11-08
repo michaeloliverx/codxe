@@ -2,11 +2,13 @@
 >platform,xbox360
 >name,patch_ui_mp
 
-// Offline Create-a-Class and the frontend mod browser.
+// Offline Create-a-Class and frontend menus.
 menulist,ui_mp/menu_gamesetup_systemlink.menu
 menulist,ui_mp/patch_mp_menus.txt
-// Append only this browser when the engine registers its stock frontend list.
+// The mod browser is appended when the engine registers its stock frontend list.
 menulist,ui_mp/mods_menu.menu
+// Settings retains separate stock-map and custom-map feeders.
+menulist,ui_mp/settings.menu
 localize,codxe_ui_mp
 
 // Dependencies already resident in code_post_gfx_mp, common_mp or ui_mp.
@@ -14,6 +16,24 @@ material,,menu_lobby_title_strip
 material,,gradient
 material,,line_horizontal
 material,,specialty_new
+
+material,,gradient_left
+material,,menu_background_mp_tank_blurred
+material,,menu_button_backing
+material,,menu_button_backing_highlight
+material,,menu_white_line
+material,,menu_white_line_faded
+material,,ui_arrow_left
+material,,ui_button_xenon_3d_a_32x32
+material,,ui_scrollbar_arrow_dwn_a
+material,,ui_scrollbar_arrow_up_a
+material,,white
+
+
+
+// One resident texture is reused for the selected custom map.
+material,$codxe_usermap_preview
+techniqueset,,2d
 
 // Preserve the TU7 frontend patch and its normal unload/reload lifetime.
 assetlist,patch_ui_mp

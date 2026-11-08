@@ -17,7 +17,7 @@
 #include "mods.h"
 #include "pm.h"
 #include "sv_bots.h"
-#include "ui_feeder.h"
+#include "usermaps.h"
 
 namespace iw3
 {
@@ -59,7 +59,7 @@ const EventHandler vmShutdownHandlers[] = {
 
 const EventHandler dvarInitHandlers[] = {
     cg::OnDvarInit,        cj_tas::OnDvarInit,  clipmap::OnDvarInit, MirrorWorld::OnDvarInit,
-    Collision::OnDvarInit, ModList::OnDvarInit, pm::OnDvarInit,      UIFeeder::OnDvarInit,
+    Collision::OnDvarInit, ModList::OnDvarInit, pm::OnDvarInit,      Usermaps::OnDvarInit,
 };
 
 const EventHandler cmdInitHandlers[] = {
