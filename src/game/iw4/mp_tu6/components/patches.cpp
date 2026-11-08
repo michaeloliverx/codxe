@@ -5,6 +5,40 @@ namespace iw4
 {
 namespace mp_tu6
 {
+namespace
+{
+Detour SV_SpawnServer_Detour;
+
+void WriteClientLimit(uintptr_t address, uint32_t instruction)
+{
+    *reinterpret_cast<volatile uint32_t *>(address) = instruction;
+    KeFlushCacheRange(reinterpret_cast<void *>(address), sizeof(instruction));
+}
+
+void SetSplitscreenClientLimits(int maxClients)
+{
+    // CL_AllocatePerLocalClientMemory: keep four local views, but enlarge each view's client-state history.
+    // .text:82188B50                 li        r28, 4
+    WriteClientLimit(0x82188B50, POWERPC_LI(28, maxClients));
+
+    // SV_AllocateClientMemory: reserve enough space in g_serverHunkUser before allocating server clients.
+    // .text:822BF8E8                 li        r11, 4
+    WriteClientLimit(0x822BF8E8, POWERPC_LI(11, maxClients));
+
+    // SV_Startup: allocate and expose the same number of server clients.
+    // .text:822BF734                 li        r8, 4
+    WriteClientLimit(0x822BF734, POWERPC_LI(8, maxClients));
+}
+
+int SV_SpawnServer_Hook(const char *server, int mapIsPreloaded, int savegame, bool cheats)
+{
+    // CL_AllocatePerLocalClientMemory caches sv_maxclients near the start of SV_SpawnServer.
+    if (Dvar_GetBool("splitscreen"))
+        Dvar_SetIntByName("sv_maxclients", IW4_MAX_CLIENTS);
+
+    return SV_SpawnServer_Detour.GetOriginal<decltype(SV_SpawnServer)>()(server, mapIsPreloaded, savegame, cheats);
+}
+} // namespace
 
 Detour CL_ConsolePrint_Detour;
 
@@ -81,10 +115,17 @@ patches::patches()
     EnableBouncing();
     DisableDvarProtection();
     AllowMixedLanguageFastfiles();
+
+    SetSplitscreenClientLimits(IW4_MAX_CLIENTS);
+    SV_SpawnServer_Detour = Detour(SV_SpawnServer, SV_SpawnServer_Hook);
+    SV_SpawnServer_Detour.Install();
 }
 
 patches::~patches()
 {
+    SV_SpawnServer_Detour.Remove();
+    SetSplitscreenClientLimits(4);
+
 #ifndef NDEBUG
     CL_ConsolePrint_Detour.Remove();
 #endif
