@@ -46,6 +46,15 @@ static auto s_bspOnlySpawns = reinterpret_cast<SpawnFuncEntry *>(0x82035CC0);
 const int NUM_BSP_OR_DYNAMIC_SPAWNS = 6;
 static auto s_bspOrDynamicSpawns = reinterpret_cast<SpawnFuncEntry *>(0x82035D30);
 
+// TU7 renderer and client-view bindings.
+static auto cgArray = reinterpret_cast<cg_s **>(0x8268CD98);
+static auto clsDebug = reinterpret_cast<const clientDebug_t *>(0x826E4348);
+static auto debugFont = reinterpret_cast<Font_s **>(0x8268D220);
+static auto rgpLineMaterial = reinterpret_cast<Material **>(0x85B47E3C);
+static auto R_GetCommandBuffer = reinterpret_cast<GfxCmdHeader *(*)(GfxRenderCommand, int)>(0x82400F60);
+static auto RB_DrawLinesCmd = reinterpret_cast<void (*)(GfxRenderCommandExecState *)>(0x82414458);
+static auto RB_SetTessTechnique = reinterpret_cast<void (*)(const Material *, MaterialTechniqueType)>(0x82419510);
+
 // Functions
 static auto CG_BoldGameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC88);
 static auto CG_DrawActive = reinterpret_cast<void (*)(int localClientNum)>(0x82159560);

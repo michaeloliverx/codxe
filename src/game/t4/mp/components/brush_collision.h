@@ -13,6 +13,7 @@ class BrushCollision : public Module
     ~BrushCollision();
 
     static void OnDvarInit();
+    static void OnCGDrawActive(int localClientNum);
 };
 } // namespace mp
 } // namespace t4
