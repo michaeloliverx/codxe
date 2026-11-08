@@ -139,6 +139,8 @@ typedef dvar_t *(*Dvar_RegisterString_t)(const char *dvarName, const char *value
 static Dvar_RegisterString_t Dvar_RegisterString = reinterpret_cast<Dvar_RegisterString_t>(0x8230F010);
 
 static auto Dvar_SetString = reinterpret_cast<void (*)(const dvar_t *dvar, const char *value)>(0x8230F7D8);
+static auto Dvar_GetBool = reinterpret_cast<bool (*)(const char *dvarName)>(0x8230DBD8);
+static auto Dvar_SetIntByName = reinterpret_cast<void (*)(const char *dvarName, int value)>(0x8230F9A0);
 
 typedef void (*Field_AdjustScroll_t)(const ScreenPlacement *scrPlace, field_t *edit);
 static Field_AdjustScroll_t Field_AdjustScroll = reinterpret_cast<Field_AdjustScroll_t>(0x8217FA98);
@@ -239,6 +241,9 @@ static G_SelectWeaponIndex_t G_SelectWeaponIndex = reinterpret_cast<G_SelectWeap
 
 typedef void (*SV_ClientThink_t)(client_t *cl, usercmd_s *cmd);
 static SV_ClientThink_t SV_ClientThink = reinterpret_cast<SV_ClientThink_t>(0x822BC778);
+
+static auto SV_SpawnServer =
+    reinterpret_cast<int (*)(const char *server, int mapIsPreloaded, int savegame, bool cheats)>(0x822C0AC0);
 
 typedef void (*SV_BotUserMove_t)(client_t *cl);
 static SV_BotUserMove_t SV_BotUserMove = reinterpret_cast<SV_BotUserMove_t>(0x822C3208);
