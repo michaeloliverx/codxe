@@ -9,6 +9,8 @@
         onOpen
         {
             execNow "statGetInDvar 2301 ui_stat_rankxp" execnow "set ui_class_offset 200; set ui_multi_s 1000; set ui_multi_dt 0";
+            // The remembered class is unset on the first offline opening.
+            focusFirst;
             setfocusbydvar ui_customclass_selected;
         }
         onESC
