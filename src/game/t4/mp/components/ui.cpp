@@ -1,11 +1,37 @@
 #include "pch.h"
 #include "ui.h"
 #include "stats.h"
+#include "mods.h"
 
 namespace t4
 {
 namespace mp
 {
+
+Detour Menus_AddMenuList_Detour;
+
+void Menus_AddMenuList_Hook(UiContext *dc, MenuList *menuList)
+{
+    auto original = Menus_AddMenuList_Detour.GetOriginal<decltype(Menus_AddMenuList)>();
+    original(dc, menuList);
+
+    if (!menuList || !menuList->name || strcmp(menuList->name, "ui_mp/menus.txt") != 0)
+        return;
+
+    // Append before UI_Init initializes the registered menus and their item parents.
+    // Rebuilding the stock list with reference assets can retain default menu stubs.
+    auto mods =
+        reinterpret_cast<MenuList *>(DB_FindXAssetHeader(ASSET_TYPE_MENULIST, "ui_mp/mods_menu.menu", false, 0));
+    if (mods && mods->name && strcmp(mods->name, "ui_mp/mods_menu.menu") == 0)
+    {
+        original(dc, mods);
+        DbgPrint("[codxe][T4][UI] Registered mod browser alongside stock frontend menus\n");
+    }
+    else
+    {
+        DbgPrint("[codxe][T4][UI] Mod browser menulist is unavailable\n");
+    }
+}
 
 Detour Menus_OpenByName_Detour;
 
@@ -42,8 +68,16 @@ void UI_RunMenuScript_Hook(int localClientNum, const char **args, const char *ac
     if (!String_Parse(&argCopy, parsedCommand, sizeof(parsedCommand)))
         return;
 
+    if (ModList::RunMenuScript(localClientNum, parsedCommand))
+    {
+        // Item_RunScript resumes at this cursor after our custom command returns.
+        *args = argCopy;
+        return;
+    }
+
     if (strcmp(parsedCommand, "LoadOfflineStats") == 0)
     {
+        *args = argCopy;
         stats::LoadOfflineStats(localClientNum);
         return;
     }
@@ -71,6 +105,9 @@ void UI_RunMenuScript_Hook(int localClientNum, const char **args, const char *ac
 
 ui::ui()
 {
+    Menus_AddMenuList_Detour = Detour(Menus_AddMenuList, Menus_AddMenuList_Hook);
+    Menus_AddMenuList_Detour.Install();
+
     Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
     Menus_OpenByName_Detour.Install();
 
@@ -80,6 +117,8 @@ ui::ui()
 
 ui::~ui()
 {
+    Menus_AddMenuList_Detour.Remove();
+
     Menus_OpenByName_Detour.Remove();
 
     UI_RunMenuScript_Detour.Remove();

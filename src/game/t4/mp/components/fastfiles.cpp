@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "fastfiles.h"
+#include "mods.h"
 
 namespace t4
 {
@@ -8,8 +9,11 @@ namespace mp
 namespace
 {
 bool isSecure = true;
+// TU7 MP uses 0x20 for patch_mp; its separate mod allocation is 0x40.
+const int DB_ZONE_MOD = 0x40;
 
 Detour CreateFileA_Detour;
+Detour DB_LoadXAssets_Detour;
 Detour DB_AuthLoad_InflateInit_Detour;
 Detour DB_AuthLoad_Inflate_Detour;
 Detour DB_AuthLoad_InflateEnd_Detour;
@@ -36,8 +40,41 @@ std::string ResolveFastfilePath(const char *filename)
             return std::string();
     }
 
+    if (_stricmp(basename, "mod.ff") == 0)
+    {
+        const std::string modPath = ModList::ResolvePath("mod.ff");
+        return !modPath.empty() && filesystem::FileExists(modPath.c_str()) ? modPath : std::string();
+    }
+
     const std::string path = filesystem::JoinPath("codxe:\\zone", basename);
     return filesystem::FileExists(path.c_str()) ? path : std::string();
+}
+
+void DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)
+{
+    bool initialBatch = false;
+    bool containsMod = false;
+    for (unsigned int i = 0; i < zoneCount; ++i)
+    {
+        if (zoneInfo[i].name)
+        {
+            initialBatch = initialBatch || _stricmp(zoneInfo[i].name, "common_mp") == 0;
+            containsMod = containsMod || _stricmp(zoneInfo[i].name, "mod") == 0;
+        }
+    }
+
+    const std::string path = ModList::ResolvePath("mod.ff");
+    if (initialBatch && !containsMod && !path.empty() && filesystem::FileExists(path.c_str()))
+    {
+        std::vector<XZoneInfo> zones(zoneInfo, zoneInfo + zoneCount);
+        XZoneInfo mod = {"mod", DB_ZONE_MOD, 0};
+        zones.push_back(mod);
+        DB_LoadXAssets_Detour.GetOriginal<decltype(DB_LoadXAssets)>()(zones.data(),
+                                                                      static_cast<unsigned int>(zones.size()), sync);
+        return;
+    }
+
+    DB_LoadXAssets_Detour.GetOriginal<decltype(DB_LoadXAssets)>()(zoneInfo, zoneCount, sync);
 }
 
 HANDLE CreateFileA_Hook(const char *filename, DWORD desiredAccess, DWORD shareMode,
@@ -98,10 +135,22 @@ void DB_AuthLoad_InflateEnd_Hook(z_stream_s *stream)
 }
 } // namespace
 
+void FastFiles::ReloadModZone()
+{
+    // Free only the previous mod. Common, TU patch and frontend assets stay resident.
+    XZoneInfo zones[2] = {{nullptr, 0, DB_ZONE_MOD}, {"mod", DB_ZONE_MOD, 0}};
+    const std::string path = ModList::ResolvePath("mod.ff");
+    const bool hasFastfile = !path.empty() && filesystem::FileExists(path.c_str());
+    DB_LoadXAssets(zones, hasFastfile ? 2 : 1, 1);
+}
+
 FastFiles::FastFiles()
 {
     CreateFileA_Detour = Detour(GameCreateFileA, CreateFileA_Hook);
     CreateFileA_Detour.Install();
+
+    DB_LoadXAssets_Detour = Detour(DB_LoadXAssets, DB_LoadXAssets_Hook);
+    DB_LoadXAssets_Detour.Install();
 
     DB_AuthLoad_InflateInit_Detour = Detour(DB_AuthLoad_InflateInit, DB_AuthLoad_InflateInit_Hook);
     DB_AuthLoad_InflateInit_Detour.Install();
@@ -121,6 +170,7 @@ FastFiles::FastFiles()
 FastFiles::~FastFiles()
 {
     CreateFileA_Detour.Remove();
+    DB_LoadXAssets_Detour.Remove();
     DB_AuthLoad_InflateInit_Detour.Remove();
     DB_AuthLoad_Inflate_Detour.Remove();
     DB_AuthLoad_InflateEnd_Detour.Remove();

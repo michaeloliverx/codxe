@@ -65,6 +65,8 @@ static auto CM_LoadMap = reinterpret_cast<void (*)(const char *name)>(0x821A4CB0
 
 static auto Cbuf_ExecuteBuffer =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x822711A8);
+static auto Cmd_ExecFromDisk =
+    reinterpret_cast<bool (*)(int localClientNum, int controllerIndex, const char *filename)>(0x82271368);
 static auto CL_ControllerIndexFromClientNum = reinterpret_cast<int (*)(int localClientNum)>(0x821B47E8);
 static auto CL_LocalClientNumFromControllerIndex = reinterpret_cast<int (*)(int controllerIndex)>(0x821B47D0);
 typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
@@ -88,6 +90,8 @@ static auto DB_FindXAssetHeader =
         0x821EA5D8);
 static auto DB_GetAllXAssetOfType_FastFile =
     reinterpret_cast<int (*)(XAssetType type, XAssetHeader *assets, int maxCount)>(0x821E7428);
+static auto DB_LoadXAssets =
+    reinterpret_cast<void (*)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)>(0x821EA078);
 
 typedef const char *(*DB_GetXAssetName_t)(const XAsset *asset);
 static DB_GetXAssetName_t DB_GetXAssetName = reinterpret_cast<DB_GetXAssetName_t>(0x821D7958);
@@ -141,6 +145,7 @@ static auto Dvar_RegisterString =
         0x822BF370);
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822BFB20);
 static auto Dvar_SetIntByName = reinterpret_cast<void (*)(const char *dvarName, int value)>(0x822BFBC8);
+static auto Dvar_SetStringByName = reinterpret_cast<void (*)(const char *dvarName, const char *value)>(0x822BFC70);
 
 static auto GScr_AddFieldsForClient = reinterpret_cast<void (*)()>(0x8220A270);
 static auto GScr_AllocString = reinterpret_cast<int (*)(const char *s)>(0x8222D368);
@@ -158,6 +163,20 @@ static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82
 static auto Menu_IsMenuOpenAndVisible =
     reinterpret_cast<bool (*)(int localClientNum, const char *menuName)>(0x8229F6C0);
 static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x822AFE88);
+static auto Menus_AddMenuList = reinterpret_cast<void (*)(UiContext *dc, MenuList *menuList)>(0x822AEE10);
+static auto Menu_SetFeederSelection =
+    reinterpret_cast<void (*)(UiContext *dc, menuDef_t *menu, int feederID, int index, const char *menuName)>(
+        0x822AEA40);
+static auto UI_FeederCount = reinterpret_cast<int (*)(int localClientNum, float feederID)>(0x822A3198);
+static auto UI_FeederItemText =
+    reinterpret_cast<const char *(*)(int localClientNum, itemDef_s *item, float feederID, int index,
+                                     unsigned int column, Material **handle)>(0x822A3650);
+static auto UI_FeederSelection = reinterpret_cast<void (*)(int localClientNum, float feederID, int index)>(0x822A0E80);
+
+inline UiContext *UI_GetContext(int localClientNum)
+{
+    return reinterpret_cast<UiContext *>(0x84FAA578 + 0x14A0 * localClientNum);
+}
 
 static auto Pmove = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213FAE8);
 static auto PmoveSingle = reinterpret_cast<void (*)(pmove_t *pm)>(0x8213ECE8);

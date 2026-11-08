@@ -2,14 +2,18 @@
 >platform,xbox360
 >name,patch_ui_mp
 
-// Add offline Create-a-Class alongside Start Match and Settings.
+// Offline Create-a-Class and the frontend mod browser.
 menulist,ui_mp/menu_gamesetup_systemlink.menu
 menulist,ui_mp/patch_mp_menus.txt
+// Append only this browser when the engine registers its stock frontend list.
+menulist,ui_mp/mods_menu.menu
+localize,codxe_ui_mp
 
 // Dependencies already resident in code_post_gfx_mp, common_mp or ui_mp.
 material,,menu_lobby_title_strip
 material,,gradient
 material,,line_horizontal
+material,,specialty_new
 
 // Preserve the TU7 frontend patch and its normal unload/reload lifetime.
 assetlist,patch_ui_mp

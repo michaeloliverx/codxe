@@ -10,6 +10,7 @@
     loadMenu { "ui_mp/mature_content_disable_warning.menu" }
     loadMenu { "ui_mp/cac_main.menu" }
     loadMenu { "ui_mp/main.menu" }
+    loadMenu { "ui_mp/mods_menu.menu" }
     loadMenu { "ui_mp/systemlink_popup.menu" }
     loadMenu { "ui_mp/error_netconnect_popmenu.menu" }
     loadMenu { "ui_mp/popup_cannot_connect_to_lsp.menu" }

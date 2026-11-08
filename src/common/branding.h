@@ -4,18 +4,17 @@
 #include "version.h"
 namespace branding
 {
-inline const char *GetBrandingString()
+inline const char *GetBrandingString(const char *activeMod = Config::GetActiveMod())
 {
     static char brandingBuffer[256];
 
-    if (Config::GetActiveMod()[0] == '\0')
+    if (activeMod[0] == '\0')
     {
         _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 %s", GIT_VERSION);
     }
     else
     {
-        _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 %s\nMod: %s", GIT_VERSION,
-                    Config::GetActiveMod());
+        _snprintf_s(brandingBuffer, sizeof(brandingBuffer), "CoD ^2Xe^7 %s\nMod: %s", GIT_VERSION, activeMod);
     }
 
     return brandingBuffer;
