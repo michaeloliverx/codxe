@@ -107,6 +107,27 @@ void Usermaps::OnDvarInit()
     Dvar_SetIntByName("settings_usermaps_selected", 0);
 }
 
+void Usermaps::OnUIInit()
+{
+    if (maps.empty())
+        return;
+
+    const char *current = Dvar_GetString("ui_mapname");
+    selected = -1;
+    for (size_t i = 0; i < maps.size(); ++i)
+    {
+        if (_stricmp(maps[i].name.c_str(), current) == 0)
+        {
+            selected = static_cast<int>(i);
+            break;
+        }
+    }
+
+    // The frontend zone reloads its black placeholder after a match. Upload the
+    // chosen map again even when its name and image pool address are unchanged.
+    UpdateSelection();
+}
+
 int Usermaps::Count()
 {
     return static_cast<int>(maps.size());

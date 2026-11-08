@@ -14,6 +14,7 @@ class Usermaps : public Module
 
     static const int FEEDER_ID = 60;
     static void OnDvarInit();
+    static void OnUIInit();
     static bool RunMenuScript(int localClientNum, const char *command);
     static int Count();
     static const char *Text(int index);

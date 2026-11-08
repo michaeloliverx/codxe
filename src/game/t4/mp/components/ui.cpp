@@ -30,6 +30,10 @@ void Menus_AddMenuList_Hook(UiContext *dc, MenuList *menuList)
         else
             DbgPrint("[codxe][T4][UI] Browser menulist is unavailable: %s\n", browsers[i]);
     }
+
+    // The preview texture is shared by all local UI contexts.
+    if (dc == UI_GetContext(0))
+        Usermaps::OnUIInit();
 }
 
 Detour Menus_OpenByName_Detour;
