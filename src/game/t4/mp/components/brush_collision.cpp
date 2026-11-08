@@ -110,12 +110,9 @@ void HandleBrushCollisionChange()
     }
 }
 
-Detour CG_DrawActive_Detour;
-
-void CG_DrawActive_Hook(int localClientNum)
+void BrushCollision::OnCGDrawActive(int)
 {
     HandleBrushCollisionChange();
-    CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
 }
 
 void BrushCollision::OnDvarInit()
@@ -126,9 +123,6 @@ void BrushCollision::OnDvarInit()
 
 BrushCollision::BrushCollision()
 {
-    CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
-    CG_DrawActive_Detour.Install();
-
     CM_LoadMap_Detour = Detour(CM_LoadMap, CM_LoadMap_Hook);
     CM_LoadMap_Detour.Install();
 }
@@ -136,7 +130,6 @@ BrushCollision::BrushCollision()
 BrushCollision::~BrushCollision()
 {
 
-    CG_DrawActive_Detour.Remove();
     CM_LoadMap_Detour.Remove();
 }
 } // namespace mp

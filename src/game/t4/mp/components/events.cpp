@@ -3,6 +3,7 @@
 
 #include "brush_collision.h"
 #include "console.h"
+#include "debug_draw.h"
 #include "gsc_functions.h"
 #include "mods.h"
 #include "usermaps.h"
@@ -16,6 +17,11 @@ namespace mp
 namespace
 {
 typedef void (*EventHandler)();
+typedef void (*CGDrawHandler)(int localClientNum);
+
+const CGDrawHandler cgDrawActiveHandlers[] = {
+    DebugDraw::OnCGDrawActive,
+};
 
 const EventHandler dvarInitHandlers[] = {
     BrushCollision::OnDvarInit,
@@ -36,6 +42,15 @@ const EventHandler uiRefreshHandlers[] = {
     console::OnUIRefresh,
 };
 } // namespace
+
+void Events::CG_DrawActive_Hook(int localClientNum)
+{
+    BrushCollision::OnCGDrawActive(localClientNum);
+    CG_DrawActive_Detour.GetOriginal<decltype(CG_DrawActive)>()(localClientNum);
+    for (size_t i = 0; i < ARRAYSIZE(cgDrawActiveHandlers); ++i)
+        cgDrawActiveHandlers[i](localClientNum);
+}
+Detour Events::CG_DrawActive_Detour;
 
 void Events::Com_InitDvars_Hook()
 {
@@ -93,6 +108,9 @@ Detour Events::UI_Refresh_Detour;
 
 Events::Events()
 {
+    CG_DrawActive_Detour = Detour(CG_DrawActive, CG_DrawActive_Hook);
+    CG_DrawActive_Detour.Install();
+
     Com_InitDvars_Detour = Detour(Com_InitDvars, Com_InitDvars_Hook);
     Com_InitDvars_Detour.Install();
 
@@ -108,6 +126,7 @@ Events::Events()
 
 Events::~Events()
 {
+    CG_DrawActive_Detour.Remove();
     Com_InitDvars_Detour.Remove();
     Cmd_Init_Detour.Remove();
     Scr_ShutdownSystem_Detour.Remove();
