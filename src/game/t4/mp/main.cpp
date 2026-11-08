@@ -3,6 +3,7 @@
 #include "components/branding.h"
 #include "components/brush_collision.h"
 #include "components/console.h"
+#include "components/collision.h"
 #include "components/debug_draw.h"
 #include "components/debug.h"
 #include "components/events.h"
@@ -35,6 +36,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Branding());
     RegisterModule(new BrushCollision());
     RegisterModule(new DebugDraw());
+    RegisterModule(new Collision());
     RegisterModule(new console());
     RegisterModule(new FastFiles());
     RegisterModule(new GSCFields());

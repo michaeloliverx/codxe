@@ -46,14 +46,25 @@ static auto s_bspOnlySpawns = reinterpret_cast<SpawnFuncEntry *>(0x82035CC0);
 const int NUM_BSP_OR_DYNAMIC_SPAWNS = 6;
 static auto s_bspOrDynamicSpawns = reinterpret_cast<SpawnFuncEntry *>(0x82035D30);
 
-// TU7 renderer and client-view bindings.
+// TU7 renderer, collision and client-view bindings.
 static auto cgArray = reinterpret_cast<cg_s **>(0x8268CD98);
+static auto cg_entitiesArray = reinterpret_cast<centity_s **>(0x8268FC30);
+static auto dynEntProps = reinterpret_cast<const DynEntityProps *>(0x82025704);
 static auto clsDebug = reinterpret_cast<const clientDebug_t *>(0x826E4348);
 static auto debugFont = reinterpret_cast<Font_s **>(0x8268D220);
 static auto rgpLineMaterial = reinterpret_cast<Material **>(0x85B47E3C);
 static auto R_GetCommandBuffer = reinterpret_cast<GfxCmdHeader *(*)(GfxRenderCommand, int)>(0x82400F60);
 static auto RB_DrawLinesCmd = reinterpret_cast<void (*)(GfxRenderCommandExecState *)>(0x82414458);
 static auto RB_SetTessTechnique = reinterpret_cast<void (*)(const Material *, MaterialTechniqueType)>(0x82419510);
+static auto Dvar_RegisterInt =
+    reinterpret_cast<dvar_s *(*)(const char *, int, int, int, DvarFlags, const char *)>(0x822BF1F8);
+static auto CM_BoxTrace =
+    reinterpret_cast<void (*)(trace_t *, const float *, const float *, const float *, const float *, unsigned int, int,
+                              const void *, const void *)>(0x8226D7A0);
+inline pmove_t *CG_GetPredictionMove(int localClientNum)
+{
+    return reinterpret_cast<pmove_t *>(0x826A3F50 + 2080 * localClientNum);
+}
 
 // Functions
 static auto CG_BoldGameMessage = reinterpret_cast<void (*)(int localClientNum, const char *msg)>(0x8216EC88);
