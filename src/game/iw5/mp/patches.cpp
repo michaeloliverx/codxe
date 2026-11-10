@@ -66,6 +66,13 @@ void Jump_Start_Hook(pmove_t *pm, pml_t *pml, double height)
 
 patches::patches()
 {
+    // CL_AllocatePerLocalClientMemory clamps sv_maxclients to the human count only in offline splitscreen.
+    // Change the setter's argument before it sizes memory; keep the actual local-player count intact.
+    // .text:82176510                 mr        r4, r3
+    const uintptr_t address = 0x82176510;
+    *reinterpret_cast<volatile uint32_t *>(address) = POWERPC_LI(4, IW5_MAX_CLIENTS);
+    KeFlushCacheRange(reinterpret_cast<void *>(address), sizeof(uint32_t));
+
     // EnableBouncing();
     // DisableIdleGunSway();
     // DisableJumpSlowdown();
