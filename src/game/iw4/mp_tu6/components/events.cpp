@@ -8,6 +8,8 @@
 #include "mr.h"
 #include "pm.h"
 #include "stats.h"
+#include "mods.h"
+#include "usermaps.h"
 #include "sv_bots.h"
 
 namespace
@@ -17,6 +19,8 @@ typedef void (*CGDrawActiveHandler)(int localClientNum);
 
 const EventHandler dvarInitHandlers[] = {
     iw4::mp_tu6::pm::OnDvarInit,
+    iw4::mp_tu6::ModList::OnDvarInit,
+    iw4::mp_tu6::Usermaps::OnDvarInit,
 };
 
 const CGDrawActiveHandler cgDrawActiveHandlers[] = {

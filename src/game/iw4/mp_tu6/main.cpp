@@ -15,6 +15,12 @@
 #include "components/stats.h"
 #include "components/sv_bots.h"
 #include "main.h"
+#include "components/ui_feeder.h"
+#include "components/ui_script.h"
+#include "components/mods.h"
+#include "components/arenas.h"
+#include "components/usermaps.h"
+#include "components/usermap_preview.h"
 
 namespace iw4
 {
@@ -23,9 +29,15 @@ namespace mp_tu6
 
 IW4_MP_TU6_Plugin::IW4_MP_TU6_Plugin()
 {
-    RegisterModule(new Config());
     RegisterModule(new Events()); // Must be registered first to ensure hooks are in place
     RegisterModule(new fastfiles());
+    RegisterModule(new UIFeeder());
+    RegisterModule(new UIScript());
+    RegisterModule(new ModList());
+    RegisterModule(new Arenas());
+    RegisterModule(new Usermaps());
+    RegisterModule(new UsermapPreview());
+
     RegisterModule(new cg());
     RegisterModule(new DebugDraw());
     RegisterModule(new clipmap());

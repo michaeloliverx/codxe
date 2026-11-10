@@ -33,6 +33,26 @@ struct XZoneMemory
     XBlock blocks[6];
 };
 
+enum DBZoneFlags : __int32
+{
+    DB_ZONE_NONE = 0x0,
+    DB_ZONE_COMMON = 0x1,
+    DB_ZONE_UI = 0x2,
+    DB_ZONE_GAME = 0x4,
+    DB_ZONE_LOAD = 0x8,
+    DB_ZONE_DEV = 0x10,
+    // CodXe extension; stock Xenon has no mod zone flag.
+    DB_ZONE_MOD = 0x40,
+};
+
+struct XZoneInfo
+{
+    const char *name;
+    int allocFlags;
+    int freeFlags;
+};
+static_assert(sizeof(XZoneInfo) == 0xC, "");
+
 struct XZone
 {
     DBFile file;
@@ -1909,7 +1929,71 @@ struct client_fields_s
 };
 
 struct Font_s;
-struct Material;
+struct itemDef_s;
+struct menuDef_t;
+struct UiContext;
+
+union GfxTexture
+{
+    D3DBaseTexture basemap;
+    D3DTexture map;
+    D3DVolumeTexture volmap;
+    D3DCubeTexture cubemap;
+};
+struct GfxImageStreamData
+{
+    unsigned short width, height;
+    unsigned int pixelSize;
+};
+struct GfxImage
+{
+    GfxTexture texture;
+    int format;
+    unsigned char mapType, semantic, category;
+    int cardMemory;
+    unsigned short width, height, depth;
+    unsigned char levelCount, cached;
+    unsigned char *pixels;
+    GfxImageStreamData streams[4];
+    const char *name;
+};
+static_assert(sizeof(GfxImage) == 112, "");
+static_assert(offsetof(GfxImage, format) == 52, "");
+static_assert(offsetof(GfxImage, pixels) == 72, "");
+static_assert(offsetof(GfxImage, name) == 108, "");
+
+struct __declspec(align(8)) MaterialInfo
+{
+    const char *name;
+    unsigned char gameFlags, sortKey, atlasRow, atlasCol;
+    unsigned __int64 drawSurf;
+    unsigned int surfaceTypeBits;
+};
+struct MaterialTextureDef
+{
+    unsigned int nameHash;
+    char nameStart, nameEnd;
+    unsigned char samplerState, semantic;
+    union
+    {
+        GfxImage *image;
+        void *water;
+    } u;
+};
+struct __declspec(align(8)) Material
+{
+    MaterialInfo info;
+    unsigned char stateBitsEntry[33];
+    unsigned char textureCount, constantCount, stateBitsCount, stateFlags, cameraRegion, layerCount;
+    void *techniqueSet;
+    MaterialTextureDef *textureTable;
+    void *constantTable;
+    void *stateBitsTable;
+    const char **subMaterials;
+};
+static_assert(sizeof(Material) == 88, "");
+static_assert(offsetof(Material, techniqueSet) == 64, "");
+static_assert(offsetof(Material, textureTable) == 68, "");
 
 struct CachedAssets_t
 {
@@ -2208,6 +2292,7 @@ static_assert(offsetof(StringTable, values) == 0xC, "");
 
 union XAssetHeader
 {
+    GfxImage *image;
     clipMap_t *clipMap;
     GameWorldSp *gameWorldSp;
     GameWorldMp *gameWorldMp;

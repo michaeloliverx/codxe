@@ -1,0 +1,1127 @@
+// TU6 stock settings_map with the Custom Maps entry.
+{
+    menuDef
+    {
+        name                        "settings_map"
+        fullscreen                  1
+        rect                        0 0 640 480 0 0
+        style                       1
+        focuscolor                  1 1 1 1
+        soundLoop                   "music_mainmenu_mp"
+        onOpen
+        {
+            focusFirst;
+            setfocusbydvar ui_mapname;
+        }
+        onClose
+        {
+            execNow xupdatepartystate;
+        }
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            background                  "mw2_main_background"
+        }
+        itemDef
+        {
+            rect                        0 0 1708 480 0 0
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            background                  "mw2_main_cloud_overlay"
+            exp rect x                  ((0 - 107) - ((float(milliseconds() % 60000) / 60000) * (854)));
+        }
+        itemDef
+        {
+            rect                        0 0 -1708 -480 0 0
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            background                  "mw2_main_cloud_overlay"
+            exp rect x                  ((- 107 + 854) + ((float(milliseconds() % 50000) / 50000) * (854)));
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0
+            background                  "mockup_bg_glow"
+            exp forecolor a             (((sin(milliseconds() / 1500) + 1) * 0.25) + 0.25);
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0
+            background                  "mockup_bg_glow"
+            exp forecolor a             (((sin(milliseconds() / 480) + 1) * 0.25) + 0.25);
+        }
+        itemDef
+        {
+            rect                        0 28 640 356 4 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.15
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        -32 -4 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_tl"
+        }
+        itemDef
+        {
+            rect                        0 -4 640 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_t"
+        }
+        itemDef
+        {
+            rect                        640 -4 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_tr"
+        }
+        itemDef
+        {
+            rect                        640 28 32 356 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_r"
+        }
+        itemDef
+        {
+            rect                        640 384 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_br"
+        }
+        itemDef
+        {
+            rect                        0 384 640 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_b"
+        }
+        itemDef
+        {
+            rect                        -32 384 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_bl"
+        }
+        itemDef
+        {
+            rect                        -32 28 32 356 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_l"
+        }
+        itemDef
+        {
+            text                        "@MENU_CHOOSE_MAP_CAP"
+            rect                        0 0 272 28 1 1
+            decoration
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.5
+            textfont                    9
+        }
+        itemDef
+        {
+            name "custom_maps"
+            group "mw2_button"
+            text "Custom Maps"
+            rect -64 28 336 18 1 1
+            style 1
+            type 1
+            visible 1
+            textalign 6
+            textalignx -60
+            textscale 0.375
+            textfont 3
+            forecolor 0.4 0.7 1 1
+            background "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarString ui_info_name "CUSTOM_MAPS_DLC";
+                setLocalVarString ui_info_desc "DESC_CUSTOM_MAPS_DLC";
+                setLocalVarString ui_info_icon "logo_cod2";
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0;
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                open settings_usermaps;
+            }
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 46 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            forecolor                   0.55 0.93 0.56 1
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name "PATCH_DLC_MAPS";
+                setLocalVarString ui_info_icon "loadscreen_mp_bonusmaps";
+                if (coopready(4) || coopready(8))
+                {
+                    setLocalVarString ui_info_desc "PATCH_DLC_MAPS_DESC";
+                }
+                else
+                {
+                    setLocalVarString ui_info_desc "PATCH_DLC_MAPS_DESC_LOCKED";
+                }
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                open settings_bonus_map;
+            }
+            dvarTest                    "ui_mapname"
+            exp text                    ("@PATCH_DLC_MAPS");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 64 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_AFGHAN");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_AFGHAN");
+                setLocalVarString ui_info_icon ("preview_mp_afghan");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_afghan;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_afghan" }
+            exp text                    ("@" + "MPUI_AFGHAN");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 82 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_DERAIL");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_DERAIL");
+                setLocalVarString ui_info_icon ("preview_mp_derail");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_derail;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_derail" }
+            exp text                    ("@" + "MPUI_DERAIL");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 100 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_ESTATE");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_ESTATE");
+                setLocalVarString ui_info_icon ("preview_mp_estate");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_estate;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_estate" }
+            exp text                    ("@" + "MPUI_ESTATE");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 118 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_FAVELA");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_FAVELA");
+                setLocalVarString ui_info_icon ("preview_mp_favela");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_favela;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_favela" }
+            exp text                    ("@" + "MPUI_FAVELA");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 136 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_HIGHRISE");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_HIGHRISE");
+                setLocalVarString ui_info_icon ("preview_mp_highrise");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_highrise;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_highrise" }
+            exp text                    ("@" + "MPUI_HIGHRISE");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 154 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_INVASION");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_INVASION");
+                setLocalVarString ui_info_icon ("preview_mp_invasion");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_invasion;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_invasion" }
+            exp text                    ("@" + "MPUI_INVASION");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 172 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_CHECKPOINT");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_CHECKPOINT");
+                setLocalVarString ui_info_icon ("preview_mp_checkpoint");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_checkpoint;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_checkpoint" }
+            exp text                    ("@" + "MPUI_CHECKPOINT");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 190 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_QUARRY");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_QUARRY");
+                setLocalVarString ui_info_icon ("preview_mp_quarry");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_quarry;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_quarry" }
+            exp text                    ("@" + "MPUI_QUARRY");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 208 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_RUNDOWN");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_RUNDOWN");
+                setLocalVarString ui_info_icon ("preview_mp_rundown");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_rundown;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_rundown" }
+            exp text                    ("@" + "MPUI_RUNDOWN");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 226 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_RUST");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_RUST");
+                setLocalVarString ui_info_icon ("preview_mp_rust");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_rust;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_rust" }
+            exp text                    ("@" + "MPUI_RUST");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 244 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_BONEYARD");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_BONEYARD");
+                setLocalVarString ui_info_icon ("preview_mp_boneyard");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_boneyard;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_boneyard" }
+            exp text                    ("@" + "MPUI_BONEYARD");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 262 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_RAID");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_NIGHTSHIFT");
+                setLocalVarString ui_info_icon ("preview_mp_nightshift");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_nightshift;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_nightshift" }
+            exp text                    ("@" + "MPUI_RAID");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 280 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_SUBBASE");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_SUBBASE");
+                setLocalVarString ui_info_icon ("preview_mp_subbase");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_subbase;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_subbase" }
+            exp text                    ("@" + "MPUI_SUBBASE");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 298 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_TERMINAL");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_TERMINAL");
+                setLocalVarString ui_info_icon ("preview_mp_terminal");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_terminal;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_terminal" }
+            exp text                    ("@" + "MPUI_TERMINAL");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 316 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_UNDERPASS");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_UNDERPASS");
+                setLocalVarString ui_info_icon ("preview_mp_underpass");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_underpass;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_underpass" }
+            exp text                    ("@" + "MPUI_UNDERPASS");
+        }
+        itemDef
+        {
+            group                       "mw2_button"
+            rect                        -64 334 336 18 1 1
+            style                       1
+            type                        1
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.375
+            textfont                    3
+            disablecolor                0.6 0.55 0.55 1
+            background                  "menu_button_selection_bar"
+            onFocus
+            {
+                play mouse_over;
+                if (dvarstring(gameMode) != "mp")
+                {
+                    setItemColor mw2_button backcolor 0 0 0 0;
+                }
+                setItemColor self backcolor 0 0 0 1;
+                setLocalVarBool ui_menuAButton 1;
+                setLocalVarFloat ui_popupYPos getfocuseditemy();
+                setLocalVarString ui_info_name ("MPUI_WASTELAND");
+                setLocalVarString ui_info_desc ("MPUI_DESC_MAP_BRECOURT");
+                setLocalVarString ui_info_icon ("preview_mp_brecourt");
+            }
+            leaveFocus
+            {
+                setItemColor self backcolor 0 0 0 0.0;
+                setLocalVarString ui_hint_text "@NULL_EMPTY";
+                setLocalVarBool ui_menuAButton 0;
+            }
+            action
+            {
+                play mouse_click;
+                setdvar ui_mapname mp_brecourt;
+                close settings_map;
+                close self;
+            }
+            dvarTest                    "ui_mapname"
+            focusDvar                   { "mp_brecourt" }
+            exp text                    ("@" + "MPUI_WASTELAND");
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_UI_SELECTBUTTON"
+            rect                        0 0 272 22 1 1
+            decoration
+            visible                     when(localvarbool("ui_menuAButton") && !localvarbool("ui_centerPopup"));
+            textalign                   10
+            textalignx                  -41
+            textaligny                  -1
+            textscale                   0.28
+            textfont                    1
+            exp rect y                  (getfocuseditemy());
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK_CAPS"
+            rect                        -64 -20 336 24 1 3
+            decoration
+            visible                     1
+            textalign                   6
+            textalignx                  -30
+            textscale                   0.375
+            textfont                    3
+        }
+        itemDef
+        {
+            rect                        -292 28 292 356 3 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   0 0 0 0.7
+            background                  "black"
+        }
+        itemDef
+        {
+            name                        "mapimage"
+            rect                        -282 50 272 153 3 1
+            style                       3
+            decoration
+            visible                     when(localvarstring("ui_info_icon") != "logo_cod2");
+            textscale                   0.55
+            exp material                (localvarstring("ui_info_icon"));
+        }
+        // Center the existing MW2 logo in the preview area at its native 4:1 aspect ratio.
+        itemDef
+        {
+            name "custom_maps_logo"
+            rect -282 92.5 272 68 3 1
+            style 3
+            decoration
+            visible when(localvarstring("ui_info_icon") == "logo_cod2");
+            background "logo_cod2"
+        }
+        itemDef
+        {
+            name                        "longname"
+            rect                        -282 28 272 22 3 1
+            decoration
+            visible                     1
+            textalign                   4
+            textscale                   0.375
+            textfont                    9
+            exp text                    ("@" + localvarstring("ui_info_name"));
+        }
+        itemDef
+        {
+            name                        "description"
+            rect                        -282 203 272 20 3 1
+            decoration
+            autowrapped
+            visible                     1
+            textalign                   4
+            textscale                   0.375
+            textfont                    3
+            forecolor                   1 1 1 0.65
+            exp text                    ("@" + localvarstring("ui_info_desc"));
+        }
+        itemDef
+        {
+            text                        "@PLATFORM_BACK_CAPS"
+            rect                        -64 -20 336 24 1 3
+            decoration
+            visible                     1
+            textalign                   6
+            textalignx                  -30
+            textscale                   0.375
+            textfont                    3
+        }
+        itemDef
+        {
+            rect                        -100 0 100 600 1 1
+            style                       1
+            decoration
+            visible                     1
+            textscale                   0.55
+            backcolor                   0.5 0.6 0.8 0.5
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 -600 100 600 3 3
+            style                       1
+            decoration
+            visible                     1
+            textscale                   0.55
+            backcolor                   0.5 0.6 0.8 0.5
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        -900 -100 900 100 3 1
+            style                       1
+            decoration
+            visible                     1
+            textscale                   0.55
+            backcolor                   0.5 0.6 0.8 0.5
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        0 0 900 100 1 3
+            style                       1
+            decoration
+            visible                     1
+            textscale                   0.55
+            backcolor                   0.5 0.6 0.8 0.5
+            dvarTest                    "ui_safearea"
+            showDvar                    { "1" }
+        }
+        itemDef
+        {
+            rect                        390 56 0 0 0 0
+            decoration
+            visible                     when(dvarstring(ui_debug_localVarString) != "");
+            textscale                   0.375
+            textfont                    1
+            exp text                    (dvarstring(ui_debug_localVarString) + ": " + localvarstring(dvarstring(ui_debug_localVarString)));
+        }
+        itemDef
+        {
+            rect                        390 72 0 0 0 0
+            decoration
+            visible                     when(dvarstring(ui_debug_localVarInt) != "");
+            textscale                   0.375
+            textfont                    1
+            exp text                    (dvarstring(ui_debug_localVarInt) + ": " + localvarint(dvarstring(ui_debug_localVarInt)));
+        }
+        itemDef
+        {
+            rect                        390 72 0 0 0 0
+            decoration
+            visible                     when(dvarstring(ui_debug_localVarBool) != "");
+            textscale                   0.375
+            textfont                    1
+            exp text                    (dvarstring(ui_debug_localVarBool) + ": " + localvarbool(dvarstring(ui_debug_localVarBool)));
+        }
+    }
+}

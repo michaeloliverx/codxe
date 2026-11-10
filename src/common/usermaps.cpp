@@ -77,13 +77,23 @@ std::string FastfilePath(const char *zoneName)
 
 bool ReadMetadata(const std::string &directory, const std::string &map, std::string &name, std::string &description)
 {
+    arena::Fields fields;
+    if (!ReadMetadata(directory, map, fields))
+        return false;
+    name = fields["longname"];
+    description = fields["description"];
+    return true;
+}
+
+bool ReadMetadata(const std::string &directory, const std::string &map, arena::Fields &fields)
+{
     const char *filenames[] = {"map.arena", nullptr};
     const std::string named = map + ".arena";
     filenames[1] = named.c_str();
     for (size_t i = 0; i < ARRAYSIZE(filenames); ++i)
     {
         const std::string text = ReadSmallFile(filesystem::JoinPath(directory.c_str(), filenames[i]));
-        if (arena::Parse(text, map, name, description))
+        if (arena::Parse(text, map, fields))
             return true;
     }
     return false;
@@ -111,7 +121,9 @@ std::vector<Entry> ScanMultiplayer()
             continue;
         Entry entry;
         entry.name = map;
-        ReadMetadata(directory, map, entry.displayName, entry.description);
+        ReadMetadata(directory, map, entry.fields);
+        entry.displayName = entry.fields["longname"];
+        entry.description = entry.fields["description"];
         if (entry.displayName.empty())
             entry.displayName = map;
         const std::string preview = filesystem::JoinPath(directory.c_str(), "preview.dds");

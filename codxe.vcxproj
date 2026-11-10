@@ -168,7 +168,6 @@
 
       <ClCompile Include="src\game\iw4\mp\components\branding.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\events.cpp" />
-      <ClCompile Include="src\game\iw4\mp\components\fastfiles.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\patches.cpp" />
       <ClCompile Include="src\game\iw4\mp\components\pm.cpp" />
       <ClCompile Include="src\game\iw4\mp\main.cpp" />
@@ -180,6 +179,12 @@
       <ClCompile Include="src\game\iw4\mp_tu6\components\debug_draw.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\events.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\fastfiles.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\arenas.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\mods.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\ui_feeder.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\ui_script.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\usermaps.cpp" />
+      <ClCompile Include="src\game\iw4\mp_tu6\components\usermap_preview.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\gsc_fields.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\gsc.cpp" />
       <ClCompile Include="src\game\iw4\mp_tu6\components\mr.cpp" />
@@ -343,7 +348,6 @@
 
       <ClInclude Include="src\game\iw4\mp\components\branding.h" />
       <ClInclude Include="src\game\iw4\mp\components\events.h" />
-      <ClInclude Include="src\game\iw4\mp\components\fastfiles.h" />
       <ClInclude Include="src\game\iw4\mp\components\patches.h" />
       <ClInclude Include="src\game\iw4\mp\components\pm.h" />
       <ClInclude Include="src\game\iw4\mp\main.h" />
@@ -357,6 +361,12 @@
       <ClInclude Include="src\game\iw4\mp_tu6\components\debug_draw.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\events.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\fastfiles.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\arenas.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\mods.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\ui_feeder.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\ui_script.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\usermaps.h" />
+      <ClInclude Include="src\game\iw4\mp_tu6\components\usermap_preview.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\gsc_fields.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\gsc.h" />
       <ClInclude Include="src\game\iw4\mp_tu6\components\mr.h" />

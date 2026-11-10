@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "common/gsc_loader.h"
 #include "scr_parser.h"
+#include "mods.h"
 
 namespace iw4
 {
@@ -20,7 +21,8 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
         return contents;
     }
 
-    char *contents = gsc_loader::TryLoadOverride(extFilename, Hunk_AllocateTempMemoryHighInternal);
+    char *contents = gsc_loader::TryLoadOverride(extFilename, ModList::ResolvePath(extFilename).c_str(),
+                                                 Hunk_AllocateTempMemoryHighInternal);
     return contents ? contents : callOriginal();
 }
 

@@ -10,6 +10,7 @@ class fastfiles : public Module
 {
   public:
     fastfiles();
+    static void ReloadModZone();
     ~fastfiles();
 };
 } // namespace mp_tu6

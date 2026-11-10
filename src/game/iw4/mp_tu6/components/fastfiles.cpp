@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "fastfiles.h"
+#include "mods.h"
+#include "common/usermaps.h"
 
 namespace iw4
 {
@@ -7,29 +9,13 @@ namespace mp_tu6
 {
 namespace
 {
-const char *const CODXE_PATCH_ZONE = "codxe_patch_mp";
-const char *const CODXE_PATCH_PATH = "codxe:\\zone\\codxe_patch_mp.ff";
-const char *const CODXE_UI_ZONE = "codxe_ui_mp";
-const char *const CODXE_UI_PATH = "codxe:\\zone\\codxe_ui_mp.ff";
-const char *const CODXE_IMAGEFILE_FILENAME = "imagefile5.pak";
-const char *const FASTFILE_EXTENSION = ".ff";
-const unsigned int MAX_ZONE_COUNT = 32;
-
-struct XZoneInfo
-{
-    const char *name;
-    int allocFlags;
-    int freeFlags;
-};
-
 struct SysFile
 {
     void *handle;
     int startOffset;
 };
 
-static_assert(sizeof(XZoneInfo) == 12, "XZoneInfo size mismatch");
-static_assert(sizeof(SysFile) == 8, "SysFile size mismatch");
+static_assert(sizeof(SysFile) == 8, "");
 
 typedef void (*DB_LoadXAssets_t)(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
 typedef SysFile (*Sys_CreateFile_t)(const char *dir, const char *filename);
@@ -40,96 +26,57 @@ auto Sys_CreateFile = reinterpret_cast<Sys_CreateFile_t>(0x82319928);
 Detour DB_LoadXAssets_Detour;
 Detour Sys_CreateFile_Detour;
 
-const XZoneInfo *FindZone(const XZoneInfo *zoneInfo, unsigned int zoneCount, const char *name)
-{
-    for (unsigned int i = 0; i < zoneCount; ++i)
-    {
-        if (zoneInfo[i].name && std::strcmp(zoneInfo[i].name, name) == 0)
-            return &zoneInfo[i];
-    }
-
-    return nullptr;
-}
-
-bool IsSafeFastfileName(const char *filename)
-{
-    if (!filename)
-        return false;
-
-    const std::size_t filenameLength = std::strlen(filename);
-    const std::size_t extensionLength = std::strlen(FASTFILE_EXTENSION);
-
-    if (filenameLength <= extensionLength ||
-        std::strcmp(filename + filenameLength - extensionLength, FASTFILE_EXTENSION) != 0)
-    {
-        return false;
-    }
-
-    for (std::size_t i = 0; i < filenameLength - extensionLength; ++i)
-    {
-        const char c = filename[i];
-        const bool isLetter = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-        const bool isDigit = c >= '0' && c <= '9';
-        if (!isLetter && !isDigit && c != '_' && c != '-')
-            return false;
-    }
-
-    return true;
-}
-
 void DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)
 {
-    auto original = DB_LoadXAssets_Detour.GetOriginal<DB_LoadXAssets_t>();
-    const bool patchFileExists = filesystem::FileExists(CODXE_PATCH_PATH);
-    const bool uiFileExists = filesystem::FileExists(CODXE_UI_PATH);
-    const XZoneInfo *stockPatchZone = FindZone(zoneInfo, zoneCount, "patch_mp");
-    const XZoneInfo *stockUiZone = FindZone(zoneInfo, zoneCount, "ui_mp");
-    const bool injectPatch = patchFileExists && stockPatchZone;
-    const bool injectUi = uiFileExists && stockUiZone;
-    const unsigned int injectionCount = (injectPatch ? 1 : 0) + (injectUi ? 1 : 0);
-    const bool hasCapacity = zoneCount <= MAX_ZONE_COUNT && injectionCount <= MAX_ZONE_COUNT - zoneCount;
-
-    if (injectionCount == 0 || !hasCapacity)
-    {
-        original(zoneInfo, zoneCount, sync);
-        return;
-    }
-
-    XZoneInfo zones[MAX_ZONE_COUNT];
-    unsigned int outputZoneCount = 0;
-
+    bool initialBatch = false;
+    bool containsMod = false;
     for (unsigned int i = 0; i < zoneCount; ++i)
     {
-        if (injectUi && zoneInfo[i].name && std::strcmp(zoneInfo[i].name, "ui_mp") == 0)
-        {
-            zones[outputZoneCount].name = CODXE_UI_ZONE;
-            zones[outputZoneCount].allocFlags = stockUiZone->allocFlags;
-            zones[outputZoneCount].freeFlags = stockUiZone->freeFlags;
-            ++outputZoneCount;
-        }
-
-        zones[outputZoneCount] = zoneInfo[i];
-        ++outputZoneCount;
+        if (!zoneInfo[i].name)
+            continue;
+        initialBatch = initialBatch || _stricmp(zoneInfo[i].name, "common_mp") == 0;
+        containsMod = containsMod || _stricmp(zoneInfo[i].name, "mod") == 0;
     }
-
-    if (injectPatch)
+    const std::string path = ModList::ResolvePath("mod.ff");
+    if (initialBatch && !containsMod && zoneCount < 32 && !path.empty() && filesystem::FileExists(path.c_str()))
     {
-        zones[outputZoneCount].name = CODXE_PATCH_ZONE;
-        zones[outputZoneCount].allocFlags = stockPatchZone->allocFlags;
-        zones[outputZoneCount].freeFlags = stockPatchZone->freeFlags;
-        ++outputZoneCount;
+        std::vector<XZoneInfo> zones(zoneInfo, zoneInfo + zoneCount);
+        const XZoneInfo mod = {"mod", DB_ZONE_MOD, DB_ZONE_NONE};
+        zones.push_back(mod);
+        DB_LoadXAssets_Detour.GetOriginal<DB_LoadXAssets_t>()(zones.data(), static_cast<unsigned int>(zones.size()),
+                                                              sync);
+        return;
     }
+    DB_LoadXAssets_Detour.GetOriginal<DB_LoadXAssets_t>()(zoneInfo, zoneCount, sync);
+}
 
-    original(zones, outputZoneCount, sync);
+std::string ResolveFile(const char *filename)
+{
+    if (!filename || !*filename || std::strchr(filename, '/') || std::strchr(filename, '\\') ||
+        std::strchr(filename, ':') || std::strstr(filename, ".."))
+        return "";
+    const size_t length = std::strlen(filename);
+    const bool fastfile = length > 3 && _stricmp(filename + length - 3, ".ff") == 0;
+    const bool imagefile =
+        length > 4 && _strnicmp(filename, "imagefile", 9) == 0 && _stricmp(filename + length - 4, ".pak") == 0;
+    if (!fastfile && !imagefile)
+        return "";
+    const std::string mod = ModList::ResolvePath(filename);
+    if (!mod.empty() && filesystem::FileExists(mod.c_str()))
+        return mod;
+    if (fastfile)
+    {
+        const std::string map = usermaps::FastfilePath(filename);
+        if (!map.empty() && filesystem::FileExists(map.c_str()))
+            return map;
+    }
+    return Config::ResolveDataPath((std::string("zone/") + filename).c_str());
 }
 
 SysFile Sys_CreateFile_Hook(const char *dir, const char *filename)
 {
     auto original = Sys_CreateFile_Detour.GetOriginal<Sys_CreateFile_t>();
-    if (!filename || (!IsSafeFastfileName(filename) && std::strcmp(filename, CODXE_IMAGEFILE_FILENAME) != 0))
-        return original(dir, filename);
-
-    const std::string path = Config::ResolveDataPath((std::string("zone/") + filename).c_str());
+    const std::string path = ResolveFile(filename);
     if (path.empty())
         return original(dir, filename);
 
@@ -141,6 +88,13 @@ SysFile Sys_CreateFile_Hook(const char *dir, const char *filename)
 }
 
 } // namespace
+
+void fastfiles::ReloadModZone()
+{
+    XZoneInfo zones[2] = {{nullptr, DB_ZONE_NONE, DB_ZONE_MOD}, {"mod", DB_ZONE_MOD, DB_ZONE_NONE}};
+    const std::string path = ModList::ResolvePath("mod.ff");
+    DB_LoadXAssets(zones, !path.empty() && filesystem::FileExists(path.c_str()) ? 2 : 1, 1);
+}
 
 fastfiles::fastfiles()
 {

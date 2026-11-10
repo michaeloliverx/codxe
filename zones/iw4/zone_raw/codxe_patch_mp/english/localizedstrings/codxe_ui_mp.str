@@ -1,0 +1,9 @@
+VERSION "1"
+
+REFERENCE CUSTOM_MAPS_DLC
+LANG_ENGLISH "Custom Maps"
+
+REFERENCE DESC_CUSTOM_MAPS_DLC
+LANG_ENGLISH "Select an installed custom multiplayer map."
+
+ENDMARKER

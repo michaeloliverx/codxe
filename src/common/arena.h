@@ -2,9 +2,12 @@
 
 #include <string>
 #include <cctype>
+#include <map>
 
 namespace arena
 {
+typedef std::map<std::string, std::string> Fields;
+
 class Tokens
 {
     const std::string &text;
@@ -98,18 +101,20 @@ inline std::string Lower(std::string value)
 }
 
 // Metadata never changes the folder/fastfile used to launch a map.
-inline bool Parse(const std::string &text, const std::string &folder, std::string &name, std::string &description)
+inline bool Parse(const std::string &text, const std::string &folder, Fields &fields)
 {
     if (text.size() > 65536 || text.find('\0') != std::string::npos)
         return false;
     Tokens tokens(text);
-    std::string token, selectedName, selectedDescription;
+    std::string token;
+    Fields selectedFields;
     bool found = false;
     while (tokens.Next(token))
     {
         if (token != "{" || tokens.quoted)
             return false;
-        std::string map, longname, detail;
+        std::string map;
+        Fields parsed;
         bool closed = false;
         while (tokens.Next(token))
         {
@@ -125,24 +130,29 @@ inline bool Parse(const std::string &text, const std::string &folder, std::strin
                 return false;
             if (key == "map")
                 map = token;
-            else if (key == "longname")
-                longname = token;
-            else if (key == "description")
-                detail = token;
+            parsed[key] = token;
         }
         if (!closed)
             return false;
         if (!found && Lower(map) == Lower(folder))
         {
             found = true;
-            selectedName = longname;
-            selectedDescription = detail;
+            selectedFields.swap(parsed);
         }
     }
     if (!tokens.valid || !found)
         return false;
-    name = selectedName;
-    description = selectedDescription;
+    fields.swap(selectedFields);
+    return true;
+}
+
+inline bool Parse(const std::string &text, const std::string &folder, std::string &name, std::string &description)
+{
+    Fields fields;
+    if (!Parse(text, folder, fields))
+        return false;
+    name = fields["longname"];
+    description = fields["description"];
     return true;
 }
 } // namespace arena

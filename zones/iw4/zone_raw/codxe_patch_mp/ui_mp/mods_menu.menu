@@ -1,0 +1,245 @@
+#include "ui_mp/menudef.h"
+
+// Use the stock map selector's safe-area frame and background layers.
+{
+    menuDef
+    {
+        name "mods_menu"
+        fullscreen 1
+        rect 0 0 640 480 0 0
+        style 1
+        focuscolor 1 1 1 1
+        soundLoop "music_mainmenu_mp"
+        onOpen
+        {
+            uiScript LoadMods;
+            setfocus mods_list;
+        }
+        onESC
+        {
+            close self;
+        }
+
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            background                  "mw2_main_background"
+        }
+        itemDef
+        {
+            rect                        0 0 1708 480 0 0
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            background                  "mw2_main_cloud_overlay"
+            exp rect x                  ((0 - 107) - ((float(milliseconds() % 60000) / 60000) * (854)));
+        }
+        itemDef
+        {
+            rect                        0 0 -1708 -480 0 0
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            background                  "mw2_main_cloud_overlay"
+            exp rect x                  ((- 107 + 854) + ((float(milliseconds() % 50000) / 50000) * (854)));
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0
+            background                  "mockup_bg_glow"
+            exp forecolor a             (((sin(milliseconds() / 1500) + 1) * 0.25) + 0.25);
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0
+            background                  "mockup_bg_glow"
+            exp forecolor a             (((sin(milliseconds() / 480) + 1) * 0.25) + 0.25);
+        }
+        itemDef
+        {
+            rect                        0 28 640 356 4 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.15
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        -32 -4 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_tl"
+        }
+        itemDef
+        {
+            rect                        0 -4 640 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_t"
+        }
+        itemDef
+        {
+            rect                        640 -4 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_tr"
+        }
+        itemDef
+        {
+            rect                        640 28 32 356 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_r"
+        }
+        itemDef
+        {
+            rect                        640 384 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_br"
+        }
+        itemDef
+        {
+            rect                        0 384 640 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_b"
+        }
+        itemDef
+        {
+            rect                        -32 384 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_bl"
+        }
+        itemDef
+        {
+            rect                        -32 28 32 356 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_l"
+        }
+
+        execKeyInt BUTTON_X
+        {
+            uiScript ClearMods;
+        }
+        itemDef
+        {
+            text "MODS"
+            rect 0 0 272 28 1 1
+            decoration
+            visible 1
+            textfont 9
+            textscale 0.5
+        }
+        itemDef
+        {
+            name "mods_list"
+            rect -64 28 336 356 1 1
+            type ITEM_TYPE_LISTBOX
+            style 1
+            visible when(dvarint(ui_modCount) > 0);
+            textfont 3
+            textscale 0.375
+            textalignx -25
+            textaligny 1
+            outlinecolor 0 0 0 1
+            elementwidth 300
+            elementheight 18
+            feeder FEEDER_MODS
+            usepaging
+            columns 2
+                    0 300 63 2
+                    313 18 1 0
+            selectBorder 0 0 0 0
+            onFocus { play mouse_over; }
+            doubleclick { play mouse_click; uiScript RunMod; }
+        }
+        itemDef
+        {
+            text "No mods installed."
+            rect 0 60 272 44 1 1
+            decoration
+            visible when(dvarint(ui_modCount) == 0);
+            textfont 3
+            textscale 0.375
+        }
+        itemDef
+        {
+            rect -282 28 272 80 3 1
+            decoration
+            autowrapped
+            visible 1
+            textfont 3
+            textscale 0.375
+            exp text ("Active mod: " + dvarstring(fs_game));
+        }
+        itemDef
+        {
+            text "@PLATFORM_BACK_CAPS"
+            rect -64 -20 336 24 1 3
+            decoration
+            visible 1
+            textalign 6
+            textalignx -30
+            textfont 3
+            textscale 0.375
+        }
+        itemDef
+        {
+            text " Disable mod"
+            rect -292 -20 292 24 3 3
+            decoration
+            visible 1
+            textalign 4
+            textalignx 10
+            textfont 3
+            textscale 0.375
+        }
+    }
+}

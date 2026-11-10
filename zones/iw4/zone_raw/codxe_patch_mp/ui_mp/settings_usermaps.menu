@@ -1,0 +1,315 @@
+#include "ui_mp/menudef.h"
+
+// Use the stock map selector's safe-area frame and background layers.
+{
+    menuDef
+    {
+        name "settings_usermaps"
+        fullscreen 1
+        rect 0 0 640 480 0 0
+        style 1
+        focuscolor 1 1 1 1
+        soundLoop "music_mainmenu_mp"
+        onOpen
+        {
+            uiScript LoadUsermaps;
+            setfocus usermaps_list;
+        }
+        onESC
+        {
+            close self;
+        }
+        onClose
+        {
+            uiScript CloseUsermapPreview;
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            background                  "mw2_main_background"
+        }
+        itemDef
+        {
+            rect                        0 0 1708 480 0 0
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            background                  "mw2_main_cloud_overlay"
+            exp rect x                  ((0 - 107) - ((float(milliseconds() % 60000) / 60000) * (854)));
+        }
+        itemDef
+        {
+            rect                        0 0 -1708 -480 0 0
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.5
+            background                  "mw2_main_cloud_overlay"
+            exp rect x                  ((- 107 + 854) + ((float(milliseconds() % 50000) / 50000) * (854)));
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0
+            background                  "mockup_bg_glow"
+            exp forecolor a             (((sin(milliseconds() / 1500) + 1) * 0.25) + 0.25);
+        }
+        itemDef
+        {
+            rect                        0 0 640 480 4 4
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0
+            background                  "mockup_bg_glow"
+            exp forecolor a             (((sin(milliseconds() / 480) + 1) * 0.25) + 0.25);
+        }
+        itemDef
+        {
+            rect                        0 28 640 356 4 1
+            style                       3
+            decoration
+            visible                     1
+            textscale                   0.55
+            forecolor                   1 1 1 0.15
+            background                  "white"
+        }
+        itemDef
+        {
+            rect                        -32 -4 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_tl"
+        }
+        itemDef
+        {
+            rect                        0 -4 640 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_t"
+        }
+        itemDef
+        {
+            rect                        640 -4 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_tr"
+        }
+        itemDef
+        {
+            rect                        640 28 32 356 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_r"
+        }
+        itemDef
+        {
+            rect                        640 384 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_br"
+        }
+        itemDef
+        {
+            rect                        0 384 640 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_b"
+        }
+        itemDef
+        {
+            rect                        -32 384 32 32 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_bl"
+        }
+        itemDef
+        {
+            rect                        -32 28 32 356 4 1
+            style                       3
+            decoration
+            visible                     when(1);
+            textscale                   0.55
+            forecolor                   0 0 0 1
+            background                  "drop_shadow_l"
+        }
+        itemDef
+        {
+            text                        "Custom Maps"
+            rect                        0 0 272 28 1 1
+            decoration
+            visible                     1
+            textalign                   6
+            textalignx                  -60
+            textscale                   0.5
+            textfont                    9
+        }
+        itemDef
+        {
+            name "usermaps_list"
+            rect -64 28 336 356 1 1
+            style 1
+            type 6
+            visible when(dvarint(ui_codxe_usermap_count) > 0);
+            textfont 3
+            textscale 0.375
+            textalignx -25
+            // Center the map name and stock button glyph within the native highlight inset.
+            textaligny 1
+            forecolor 1 1 1 1
+            backcolor 0 0 0 0
+            outlinecolor 0 0 0 1
+            elementwidth 300
+            elementheight 18
+            feeder FEEDER_CODXE_USERMAPS
+            // Native paging: D-pad up/down jumps a page; the analog stick moves one row.
+            usepaging
+            // Both columns use native text rendering so textaligny applies to the name and A glyph.
+            columns 2
+                    0 300 63 2
+                    313 18 1 0
+            selectBorder 0 0 0 0
+            onFocus
+            {
+                play mouse_over;
+            }
+            doubleclick
+            {
+                play mouse_click;
+                uiScript ApplyMap;
+                close settings_map;
+                close self;
+                execNow xupdatepartystate;
+            }
+        }
+        itemDef
+        {
+            text "No custom maps installed."
+            rect 0 60 272 44 1 1
+            decoration
+            autowrapped
+            visible when(dvarint(ui_codxe_usermap_count) == 0);
+            textfont 3
+            textscale 0.375
+        }
+        itemDef
+        {
+            rect -292 28 292 356 3 1
+            style 3
+            decoration
+            visible 1
+            forecolor 0 0 0 0.7
+            background "black"
+        }
+        itemDef
+        {
+            name "usermap_name"
+            rect -282 28 272 18 3 1
+            decoration
+            autowrapped
+            visible when(dvarint(ui_codxe_usermap_count) > 0);
+            textalign 4
+            textscale 0.375
+            textfont 9
+            exp text (dvarstring(ui_codxe_usermap_name));
+        }
+        itemDef
+        {
+            text "Custom Maps"
+            rect -282 28 272 44 3 1
+            decoration
+            visible when(dvarint(ui_codxe_usermap_count) == 0);
+            textalign 4
+            textscale 0.375
+            textfont 9
+        }
+        // This material/image is supplied by the client, without an FF image asset.
+        itemDef
+        {
+            name "usermap_preview"
+            rect -282 50 272 153 3 1
+            style 3
+            decoration
+            visible when(dvarint(ui_codxe_usermap_has_preview) != 0);
+            exp material ("$codxe_usermap_preview");
+        }
+        // Missing/invalid previews use the stock logo in its native 4:1 aspect.
+        itemDef
+        {
+            name "usermap_logo"
+            rect -282 92.5 272 68 3 1
+            style 3
+            decoration
+            visible when(dvarint(ui_codxe_usermap_has_preview) == 0);
+            background "logo_cod2"
+        }
+        itemDef
+        {
+            name "usermap_description"
+            rect -282 203 272 154 3 1
+            decoration
+            autowrapped
+            visible when(dvarstring(ui_codxe_usermap_description) != "");
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 1 1 1 0.65
+            exp text (dvarstring(ui_codxe_usermap_description));
+        }
+        itemDef
+        {
+            text "@PLATFORM_BACK_CAPS"
+            rect -64 -20 336 24 1 3
+            decoration
+            visible 1
+            textalign 6
+            textalignx -30
+            textscale 0.375
+            textfont 3
+        }
+        itemDef
+        {
+            text "@PLATFORM_SELECT_CAPS"
+            rect -292 -20 292 24 3 3
+            decoration
+            visible when(dvarint(ui_codxe_usermap_count) > 0);
+            textalign 4
+            textalignx 10
+            textscale 0.375
+            textfont 3
+        }
+    }
+}

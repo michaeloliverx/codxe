@@ -5,14 +5,6 @@ namespace iw4
 {
 namespace mp
 {
-void DisableFastfileAuth()
-{
-    // fastfile_allowNoAuth
-    // Allow loading fastfiles with no auth.
-    // .text:8216A18C                 beq       cr6, loc_8216A1B0
-    ppc::Nop(0x8216A18C);
-}
-
 void EnableBouncing()
 {
     // .text:820DABE0                 cmpwi     cr6, r23, 0
@@ -23,7 +15,6 @@ void EnableBouncing()
 
 patches::patches()
 {
-    DisableFastfileAuth();
     EnableBouncing();
 }
 } // namespace mp
