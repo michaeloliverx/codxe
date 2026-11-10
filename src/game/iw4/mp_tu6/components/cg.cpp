@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "cg.h"
+#include "mods.h"
 
 namespace iw4
 {
@@ -10,7 +11,7 @@ void DrawBranding(int localClientNum)
 {
     auto const placement = ScrPlace_GetUnsafeFullPlacement();
 
-    const char *text = branding::GetBrandingString();
+    const char *text = branding::GetBrandingString(ModList::GetActiveName().c_str());
 
     const float color_white_rgba[4] = {1.0f, 1.0f, 1.0f, 0.5f}; // RGBA white color
 

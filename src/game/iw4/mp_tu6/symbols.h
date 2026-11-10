@@ -19,6 +19,50 @@ enum
 };
 
 // Functions
+
+typedef int (*UI_FeederCount_t)(int localClientNum, float feeder);
+static UI_FeederCount_t UI_FeederCount = reinterpret_cast<UI_FeederCount_t>(0x822E2A28);
+typedef const char *(*UI_FeederItemText_t)(int, itemDef_s *, float, int, int, float *, float *, float *, float *,
+                                           Material **);
+static UI_FeederItemText_t UI_FeederItemText = reinterpret_cast<UI_FeederItemText_t>(0x822E2DB0);
+typedef void (*UI_FeederSelection_t)(int localClientNum, float feeder, int index);
+static UI_FeederSelection_t UI_FeederSelection = reinterpret_cast<UI_FeederSelection_t>(0x822E0D90);
+typedef void (*UI_RunMenuScript_t)(int localClientNum, const char **args, const char *actualScript);
+static UI_RunMenuScript_t UI_RunMenuScript = reinterpret_cast<UI_RunMenuScript_t>(0x822E2090);
+static auto String_Parse = reinterpret_cast<int (*)(const char **, char *, int)>(0x822E7068);
+static auto UI_GetClientDC = reinterpret_cast<UiContext *(*)(int)>(0x822D96B8);
+static auto Menu_SetFeederSelection =
+    reinterpret_cast<void (*)(UiContext *, menuDef_t *, int, int, const char *)>(0x822EE628);
+static auto UI_LoadMenuLists = reinterpret_cast<void (*)(int)>(0x822DE1B0);
+static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *, const char *)>(0x822F0020);
+static auto Party_SetDisplayMapName = reinterpret_cast<void (*)(const char *)>(0x8219D008);
+typedef const char *(*UI_GetCurrentMapCustom_t)(const char *);
+static UI_GetCurrentMapCustom_t UI_GetCurrentMapCustom = reinterpret_cast<UI_GetCurrentMapCustom_t>(0x822DB0B0);
+typedef const char *(*UI_GetCurrentMapImage_t)();
+static UI_GetCurrentMapImage_t UI_GetCurrentMapImage = reinterpret_cast<UI_GetCurrentMapImage_t>(0x822DB038);
+typedef const char *(*UI_GetCurrentMapName_t)();
+static UI_GetCurrentMapName_t UI_GetCurrentMapName = reinterpret_cast<UI_GetCurrentMapName_t>(0x822E0090);
+typedef const char *(*UI_GetMapDisplayName_t)(const char *);
+static UI_GetMapDisplayName_t UI_GetMapDisplayName = reinterpret_cast<UI_GetMapDisplayName_t>(0x822DFFE8);
+static auto SEH_StringEd_GetString = reinterpret_cast<const char *(*)(const char *)>(0x822CBF88);
+static auto Dvar_FindMalleableVar = reinterpret_cast<dvar_t *(*)(const char *)>(0x8230DA10);
+static auto Dvar_SetStringByName = reinterpret_cast<void (*)(const char *, const char *)>(0x8230FD50);
+typedef bool (*Cmd_ExecFromDisk_t)(int, int, const char *);
+static Cmd_ExecFromDisk_t Cmd_ExecFromDisk = reinterpret_cast<Cmd_ExecFromDisk_t>(0x82277DE0);
+static auto Cbuf_ExecuteBuffer = reinterpret_cast<void (*)(int, int, const char *)>(0x82277B40);
+static auto R_SyncRenderThread = reinterpret_cast<void (*)()>(0x823C6298);
+static auto D3D_BlockUntilIdle = reinterpret_cast<void (*)(D3DDevice *)>(0x820E3368);
+static auto D3D_InvalidateCaches = reinterpret_cast<void (*)(D3DDevice *, void *, unsigned int)>(0x820E5328);
+static auto XGSetTextureHeader_Native = reinterpret_cast<decltype(&::XGSetTextureHeader)>(0x82429ED0);
+static auto XGOffsetResourceAddress_Native = reinterpret_cast<decltype(&::XGOffsetResourceAddress)>(0x8242A0E0);
+static D3DDevice **gfxDevice = reinterpret_cast<D3DDevice **>(0x83B3A420);
+
+inline const char *GetDvarString(const char *name)
+{
+    const dvar_t *dvar = Dvar_FindMalleableVar(name);
+    return dvar && dvar->current.string ? dvar->current.string : "";
+}
+
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822FDF08);
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82275C60);
