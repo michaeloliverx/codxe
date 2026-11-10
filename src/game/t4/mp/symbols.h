@@ -88,6 +88,7 @@ static auto Cbuf_ExecuteBuffer =
 static auto Cmd_ExecFromDisk =
     reinterpret_cast<bool (*)(int localClientNum, int controllerIndex, const char *filename)>(0x82271368);
 static auto CL_ControllerIndexFromClientNum = reinterpret_cast<int (*)(int localClientNum)>(0x821B47E8);
+static auto CL_AddViewAngles = reinterpret_cast<int (*)(int localClientNum, float *correction)>(0x821A52A0);
 static auto CL_LocalClientNumFromControllerIndex = reinterpret_cast<int (*)(int controllerIndex)>(0x821B47D0);
 typedef void (*Cbuf_AddText_t)(int localClientNum, const char *text);
 static Cbuf_AddText_t Cbuf_AddText = reinterpret_cast<Cbuf_AddText_t>(0x8226FF08);
