@@ -5,6 +5,8 @@ namespace iw5
 {
 namespace mp
 {
+const int IW5_MAX_CLIENTS = 18;
+
 // Global variables
 
 static auto cm = reinterpret_cast<clipMap_t *>(0x82FFBE00);

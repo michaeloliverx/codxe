@@ -7,7 +7,6 @@ namespace mp
 {
 namespace
 {
-const int IW5_MAX_CLIENTS = 18;
 const unsigned short ENTITYNUM_NONE = 2047;
 
 #define IW5_ANGLE2SHORT(x) ((int)((x) * 65536.0f / 360.0f) & USHRT_MAX)
@@ -127,7 +126,13 @@ int GetMaxClients()
         return 0;
 
     const int maxClients = sv_maxClients->current.integer;
-    return maxClients < IW5_MAX_CLIENTS ? maxClients : IW5_MAX_CLIENTS;
+    const int allocatedClients = *svs_numclients;
+    if (maxClients <= 0 || allocatedClients <= 0)
+        return 0;
+
+    // The dvar can change after the server has allocated its client array.
+    const int limit = maxClients < allocatedClients ? maxClients : allocatedClients;
+    return limit < IW5_MAX_CLIENTS ? limit : IW5_MAX_CLIENTS;
 }
 
 BotMovementInfo *GetBotInfo(scr_entref_t entref)
