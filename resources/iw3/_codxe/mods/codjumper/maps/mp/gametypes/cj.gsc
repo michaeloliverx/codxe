@@ -180,8 +180,8 @@ onPlayerConnectDvars()
 {
 	// JumpCrouch / binds helper
 	self setClientDvar("activeaction", "vstr VSTR_LEAN_DISABLED;");
-	self setClientDvar("VSTR_LEAN_ENABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 3; bind DPAD_LEFT +leanleft; bind DPAD_RIGHT +leanright");
-	self setClientDvar("VSTR_LEAN_DISABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 2; bind DPAD_LEFT +actionslot 3; bind DPAD_RIGHT +actionslot 4");
+	self setClientDvar("VSTR_LEAN_ENABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 3; bind DPAD_LEFT +leanleft; bind DPAD_RIGHT +cj_strafe");
+	self setClientDvar("VSTR_LEAN_DISABLED", "bind BUTTON_A vstr BUTTON_A_ACTION;bind DPAD_DOWN +actionslot 2; bind DPAD_LEFT +actionslot 3; bind DPAD_RIGHT +cj_strafe");
 	self setClientDvar("BUTTON_A_ACTION", "+gostand;-gostand");
 
 	// Remove unlocalized errors

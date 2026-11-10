@@ -125,6 +125,7 @@
       <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\mirror_world.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\cj_strafe.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\command.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
@@ -304,6 +305,8 @@
       <ClInclude Include="src\game\iw3\mp\components\cg.h" />
       <ClInclude Include="src\game\iw3\mp\components\mirror_world.h" />
       <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
+      <ClInclude Include="src\game\iw3\mp\components\cj_strafe.h" />
+      <ClInclude Include="src\game\iw3\mp\components\cj_strafe_target.h" />
       <ClInclude Include="src\game\iw3\mp\components\command.h" />
       <ClInclude Include="src\game\iw3\mp\components\cmds.h" />
       <ClInclude Include="src\game\iw3\mp\components\console.h" />

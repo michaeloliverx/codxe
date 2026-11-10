@@ -11,12 +11,19 @@ The following is an incomplete list of features currently exposed by the IW3 cli
 - `ufo`
 - `togglerecord` - Start or stop the movement recorder.
 - `startplayback` - Start playback of the current movement recorder.
+- `+cj_strafe` / `-cj_strafe` - Hold/release air-strafe assistance, bound to DPAD Right in the CJ profiles. Mode 1 assists yaw using the current stick input; mode 2 steers yaw and movement toward a marked target. Both preserve pitch, roll and buttons and yield during playback and RPG lookdown.
+- `cj_strafe_settarget` - Mark the BSP world surface under the crosshair for target mode and restore the DPAD Right helper binding in the current controller layout. Misses and sky leave the previous target unchanged. Targets persist across button release and reset on map load/disconnect.
+- `cj_strafe_cleartarget` - Clear the marked target and release assistance.
+- `cj_strafe_status` - Show the current assist state and live DPAD Right binding, and write a diagnostic snapshot to the Xenia/debug log. Target mode automatically logs button edges and rate-limited activation-state changes with the `[codxe][IW3][Strafe]` prefix.
 - `imagedump` - Dump all currently loaded textures to disk.
 
 ### Dvars
 
 - `pm_pc_mp_velocity_snap` - Enables PC Multiplayer style velocity snapping by rounding to nearest.
 - `pm_multi_bounce` - Enables multi-bounces.
+- `cj_strafe_guide` - Optional air-strafe target band and yaw correction; defaults to `0`. Set to `1` for guidance with or without holding the assist. The angle search uses native acceleration and the active velocity snapping on copied player state. This estimates unobstructed air acceleration; it does not predict wall, slope, or RPG impacts.
+- `cj_strafe_mode` - `0` disables held assistance, `1` assists the current stick input (default), `2` steers toward the marked target. Target mode generates ordinary movement bytes, limits view turning, and holds each movement/turn decision for at least 120 ms. It uses a short clear-air rollout and a ballistic estimate of target-height arrival; it does not plan routes around walls or trigger jumps, bounces, or RPG shots. The target marker remains visible in mode 2 even with the optional angle guide off.
+- `cj_strafe_yaw_speed` - Maximum helper turn rate in degrees per second. Defaults to `180`, range `30` to `360`. This limits camera steering in both held modes. Stick mode keeps a strafe branch until a deliberate change of movement quadrant and stays within a good speed-gain band to reduce jitter.
 - `noclip_brushes` - Disables player collision for clipmap brush indices, for example `"50 123 647"`.
 - `cm_showCollision` - World and solid brush-entity collision outlines: `0` off (default), `1` invisible player clip barriers, `2` all player collision. Outlines are cyan and draw through world geometry without writing depth.
 - `cm_showBounces` - Show bounce candidates: slope highlights on world brushes, terrain, and active solid brush-model entities, plus magenta terrain edge/corner markers. Entity collision follows its current position and rotation; slope angles are tested in world space. Defaults to `0`; set to `1` to enable independently of `cm_showCollision`. Slope colors run from green to red over the same normal-Z range (`0.3` to `0.7`) used by iw3mptool. This face-angle filter covers roughly 45.6 to 72.5 degrees above horizontal. Actual bounces still depend on movement and approach.

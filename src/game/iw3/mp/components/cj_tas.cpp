@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "command.h"
 #include "cj_tas.h"
+#include "cj_strafe.h"
 
 namespace iw3
 {
@@ -258,10 +259,12 @@ pmove_t *predict_pmove(int localClientNum, int framesToAdvance = 1)
     return pmove_clone;
 }
 
-void TAS_Cycle(int localClientNum)
+bool TAS_Cycle(int localClientNum)
 {
     if (!cj_tas::TAS_Enabled())
-        return;
+        return false;
+
+    bool aimingRpg = false;
 
     pmove_t *pmove_current = &cg_pmove[localClientNum];
     auto pmove_predicted = predict_pmove(localClientNum, 2);
@@ -276,6 +279,7 @@ void TAS_Cycle(int localClientNum)
 
     if (should_reset)
     {
+        aimingRpg = true;
         ca->viewangles[PITCH] = previous_pitch;
         ca->viewangles[YAW] = previous_yaw;
         should_reset = false;
@@ -293,6 +297,7 @@ void TAS_Cycle(int localClientNum)
 
     if (cj_tas_rpg_lookdown->current.enabled && shot_rpg_next_frame && holding_rpg && !reloading)
     {
+        aimingRpg = true;
         previous_pitch = ca->viewangles[PITCH];
         previous_yaw = ca->viewangles[YAW];
         should_reset = true;
@@ -332,6 +337,7 @@ void TAS_Cycle(int localClientNum)
     }
 
     delete_pmove(pmove_predicted);
+    return aimingRpg;
 }
 
 Detour CL_CreateNewCommands_Detour;
@@ -345,16 +351,22 @@ void CL_CreateNewCommands_Hook(int localClientNum)
         auto ca = &(*clients)[localClientNum];
         auto cmd = &ca->cmds[ca->cmdNumber & 0x7F];
 
-        if (is_recording)
-        {
-            CaptureCommand(cmd);
-        }
         if (is_playing)
         {
             UpdateCommand(cmd);
         }
 
-        TAS_Cycle(localClientNum);
+        const bool aimingRpg = TAS_Cycle(localClientNum);
+        cj_strafe::UpdateCommand(localClientNum, cmd, is_playing, aimingRpg);
+
+        if (is_recording)
+        {
+            CaptureCommand(cmd);
+        }
+    }
+    else
+    {
+        cj_strafe::ResetClient(localClientNum, true);
     }
 }
 
@@ -368,6 +380,7 @@ void CG_DrawTAS()
 
 void cj_tas::OnDvarInit()
 {
+    cj_strafe::RegisterDvars();
     cj_tas_playback_ignore_weapon =
         Dvar_RegisterBool("cj_tas_playback_ignore_weapon", false, 0, "Ignore weapon in playback");
 
@@ -386,8 +399,9 @@ void cj_tas::OnDvarInit()
         Dvar_RegisterInt("cj_tas_rpg_lookdown_pitch", 70, -70, 70, 0, "RPG lookdown pitch angle");
 }
 
-void cj_tas::OnCGDrawActive(int)
+void cj_tas::OnCGDrawActive(int localClientNum)
 {
+    cj_strafe::Draw(localClientNum);
     if (TAS_Enabled())
     {
         CG_DrawTAS();
@@ -396,6 +410,7 @@ void cj_tas::OnCGDrawActive(int)
 
 void cj_tas::OnCGInit()
 {
+    cj_strafe::Reset();
     // Weapon indexes change every game
     rpg_mp_index = BG_FindWeaponIndexForName("rpg_mp");
 }
@@ -410,6 +425,7 @@ cj_tas::cj_tas()
     command::add("togglerecord", Cmd_Togglerecord_f);
     command::add("startplayback", Cmd_Startplayback_f);
     command::add("stopplayback", Cmd_Stopplayback_f);
+    cj_strafe::RegisterCommands();
 }
 
 cj_tas::~cj_tas()
