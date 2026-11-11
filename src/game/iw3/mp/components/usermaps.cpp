@@ -193,6 +193,23 @@ void Usermaps::OnDvarInit()
         Dvar_RegisterString(names[i], "", DVAR_FLAG_NONE, "Custom map metadata");
 }
 
+void Usermaps::OnZoneRestart()
+{
+    previewMap.clear();
+    SetMetadata("ui_codxe_usermap_has_preview", "0");
+    const char *current = Dvar_GetString("ui_mapname");
+    for (size_t i = 0; i < maps.size(); ++i)
+    {
+        if (I_stricmp(maps[i].name.c_str(), current) == 0)
+        {
+            selectedUsermap = static_cast<int>(i);
+            UIFeeder::SetSelectedIndex(USERMAPS_FEEDER_ID, selectedUsermap);
+            UpdateUsermapSelection();
+            break;
+        }
+    }
+}
+
 Usermaps::Usermaps()
 {
     UIFeeder::Add(USERMAPS_FEEDER_ID, GetUsermapCount, GetUsermapText, SelectUsermap);

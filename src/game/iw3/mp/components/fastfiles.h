@@ -14,7 +14,9 @@ class FastFiles : public Module
 
     static const char *GetUsermapsDirectory();
     static std::string GetUsermapFastfilePath(const char *zoneName);
-    static void ReloadModZone();
+    static bool CanRestartZones(bool reportError = true);
+    static void RestartZones();
+    static const std::string &GetLoadedModName();
 
   private:
     static bool HasModFastfile();

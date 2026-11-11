@@ -34,6 +34,14 @@ namespace mp
 #define SHORT2ANGLE(x) ((x) * (360.0 / 65536))
 
 // Functions
+static auto Com_Restart = reinterpret_cast<void (*)()>(0x82237890);
+static auto CL_ShutdownRef = reinterpret_cast<void (*)()>(0x822D15A8);
+static auto CL_ClearClientMemory = reinterpret_cast<void (*)()>(0x822D29C8);
+static auto CL_InitRenderer = reinterpret_cast<void (*)()>(0x822D2838);
+static auto CL_StartHunkUsers = reinterpret_cast<void (*)()>(0x822D2020);
+static auto DB_ShutdownXAssets = reinterpret_cast<void (*)()>(0x822A1028);
+static auto SCR_UpdateScreen = reinterpret_cast<void (*)()>(0x822CA3E8);
+static auto UI_SetActiveMenu = reinterpret_cast<void (*)(int localClientNum, int menu)>(0x821EF880);
 static auto AngleDelta = reinterpret_cast<float (*)(float a1, float a2)>(0x821DABC0);
 static auto AngleNormalize180 = reinterpret_cast<float (*)(float angle)>(0x820A0088);
 static auto AngleNormalize360 = reinterpret_cast<float (*)(float angle)>(0x821D9DA8);
@@ -556,6 +564,10 @@ static auto cgsArray = reinterpret_cast<cgs_t *>(0x823F2890);
 static auto clients = reinterpret_cast<clientActive_t **>(0x82435AB8);
 static auto clientConnections = reinterpret_cast<clientConnection_t *>(0x824302E0);
 static auto clientUIActives = reinterpret_cast<clientUIActive_t *>(0x82435A10);
+static const int *cls_rendererStarted = reinterpret_cast<const int *>(0x824304E4);
+static const int *cls_uiStarted = reinterpret_cast<const int *>(0x824304EC);
+static char *g_mapname = reinterpret_cast<char *>(0x849F2D70);
+static char *g_gametype = reinterpret_cast<char *>(0x84A10E88);
 static auto con = reinterpret_cast<Console *>(0x82407590);
 static auto g_consoleField = reinterpret_cast<field_t *>(0x8242AA18);
 static auto g_console_field_width = reinterpret_cast<int *>(0x823A52F4);

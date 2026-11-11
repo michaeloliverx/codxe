@@ -3,6 +3,7 @@
 
 #include "common/string_utils.h"
 #include "mods.h"
+#include "usermaps.h"
 #include "common/usermaps.h"
 
 namespace iw3
@@ -13,8 +14,13 @@ namespace
 {
 const char *const MOD_ZONE = "mod";
 const char *const MOD_FASTFILE = "mod.ff";
+const char *const COMMON_ZONE = "common_mp";
+const char *const COMMON_FASTFILE = "common_mp.ff";
 const char *const CODXE_ZONE_DIRECTORY = "codxe:\\zone";
 const char *const FASTFILE_EXTENSION = ".ff";
+const int KEYCATCH_CONSOLE = 0x1;
+const int KEYCATCH_UI = 0x10;
+std::string loadedModName;
 
 bool IsSafeZoneName(const char *name)
 {
@@ -139,6 +145,13 @@ std::string FastFiles::ResolveFastfilePath(const char *filename)
             return path;
     }
 
+    if (I_stricmp(zoneName.c_str(), COMMON_ZONE) == 0)
+    {
+        const std::string path = ModList::ResolvePath(COMMON_FASTFILE);
+        if (!path.empty() && filesystem::FileExists(path.c_str()))
+            return path;
+    }
+
     const std::string usermapPath = GetUsermapFastfilePath(zoneName.c_str());
     if (!usermapPath.empty() && filesystem::FileExists(usermapPath.c_str()))
         return usermapPath;
@@ -173,6 +186,8 @@ HANDLE FastFiles::CreateFileA_Hook(const char *filename, DWORD desiredAccess, DW
 void FastFiles::DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync)
 {
     auto original = DB_LoadXAssets_Detour.GetOriginal<DB_LoadXAssets_t>();
+    if (IsInitialZoneBatch(zoneInfo, zoneCount))
+        loadedModName = ModList::GetActiveName();
     const bool injectMod =
         HasModFastfile() && IsInitialZoneBatch(zoneInfo, zoneCount) && !ContainsZone(zoneInfo, zoneCount, MOD_ZONE);
     if (!injectMod)
@@ -190,32 +205,59 @@ void FastFiles::DB_LoadXAssets_Hook(XZoneInfo *zoneInfo, unsigned int zoneCount,
     original(zones.data(), static_cast<unsigned int>(zones.size()), sync);
 }
 
-void FastFiles::ReloadModZone()
+const std::string &FastFiles::GetLoadedModName()
 {
-    XZoneInfo zones[2];
-    unsigned int zoneCount = 1;
+    return loadedModName;
+}
 
-    // A null zone name with freeFlags is the engine's native free-only descriptor.
-    zones[0].name = nullptr;
-    zones[0].allocFlags = DB_ZONE_NONE;
-    zones[0].freeFlags = DB_ZONE_MOD;
-
-    const std::string path = GetModFastfilePath();
-    if (!path.empty() && filesystem::FileExists(path.c_str()))
+bool FastFiles::CanRestartZones(bool reportError)
+{
+    if (!*cls_rendererStarted || !*cls_uiStarted || Dvar_GetBool("com_sv_running"))
     {
-        DbgPrint("[codxe][IW3][FastFiles] Loading mod fastfile: %s\n", path.c_str());
-        zones[1].name = MOD_ZONE;
-        zones[1].allocFlags = DB_ZONE_MOD;
-        zones[1].freeFlags = 0;
-        zoneCount = 2;
-    }
-    else
-    {
-        DbgPrint("[codxe][IW3][FastFiles] Active mod has no mod.ff; using loose files only\n");
+        if (reportError)
+            Com_PrintError(CON_CHANNEL_ERROR, "Return to the main menu before changing or restarting a mod.\n");
+        return false;
     }
 
-    DB_LoadXAssets(zones, zoneCount, 1);
-    DbgPrint("[codxe][IW3][FastFiles] Mod zone reload complete\n");
+    for (int i = 0; i < 4; ++i)
+    {
+        if (clientUIActives[i].connectionState != CA_DISCONNECTED || clientUIActives[i].cgameInitialized)
+        {
+            if (reportError)
+                Com_PrintError(CON_CHANNEL_ERROR, "Disconnect before changing or restarting a mod.\n");
+            return false;
+        }
+    }
+    return true;
+}
+
+void FastFiles::RestartZones()
+{
+    const int keyCatchers = clientUIActives[0].keyCatchers;
+    clientUIActives[0].keyCatchers &= ~(KEYCATCH_CONSOLE | KEYCATCH_UI);
+    SCR_UpdateScreen();
+    R_SyncRenderThread();
+    clientUIActives[0].keyCatchers = keyCatchers;
+
+    Com_Restart();
+    CL_ShutdownRef();
+    CL_ClearClientMemory();
+    DB_ShutdownXAssets();
+
+    XZoneInfo zones[] = {
+        {"code_post_gfx_mp", DB_ZONE_NONE, DB_ZONE_NONE},
+        {"patch_mp", DB_ZONE_PATCH, DB_ZONE_NONE},
+        {"ui_mp", DB_ZONE_GAME, DB_ZONE_NONE},
+        {COMMON_ZONE, DB_ZONE_COMMON, DB_ZONE_NONE},
+    };
+    DB_LoadXAssets(zones, ARRAYSIZE(zones), 1);
+
+    g_mapname[0] = '\0';
+    g_gametype[0] = '\0';
+    CL_InitRenderer();
+    CL_StartHunkUsers();
+    Usermaps::OnZoneRestart();
+    UI_SetActiveMenu(0, 1);
 }
 
 FastFiles::FastFiles()

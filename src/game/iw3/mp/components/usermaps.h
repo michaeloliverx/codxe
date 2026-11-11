@@ -13,6 +13,7 @@ class Usermaps : public Module
     ~Usermaps();
 
     static void OnDvarInit();
+    static void OnZoneRestart();
     static void LoadScript(int localClientNum, const char **args);
     static void ApplyScript(int localClientNum, const char **args);
     static void CloseScript(int localClientNum, const char **args);

@@ -12,6 +12,7 @@ class ModList : public Module
     ModList();
 
     static void OnDvarInit();
+    static void OnUIRefresh();
 
     static std::string GetActiveName();
     static std::string ResolvePath(const char *relativePath);
@@ -22,6 +23,8 @@ class ModList : public Module
     static std::string GetActivePath();
     static bool RunMod(const char *name);
     static void ClearMods();
+    static void QueueModChange(const std::string &name);
+    static void RestartMod_f();
 
     static void ScanMods();
     static void EnsureModsScanned();
@@ -37,6 +40,9 @@ class ModList : public Module
     static int CurrentMod;
     static bool ModsScanned;
     static dvar_s *fs_game;
+    static std::string PendingMod;
+    static bool ModChangePending;
+    static bool StartupModChecked;
 };
 } // namespace mp
 } // namespace iw3

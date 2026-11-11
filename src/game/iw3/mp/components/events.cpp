@@ -68,6 +68,7 @@ const EventHandler cmdInitHandlers[] = {
 
 const EventHandler uiRefreshHandlers[] = {
     console::OnUIRefresh,
+    ModList::OnUIRefresh,
 };
 } // namespace
 

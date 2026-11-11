@@ -2,6 +2,7 @@
 #include "mods.h"
 
 #include "fastfiles.h"
+#include "command.h"
 #include "ui_feeder.h"
 
 namespace iw3
@@ -56,15 +57,39 @@ std::vector<FeederEntry> ModList::Mods;
 int ModList::CurrentMod = 0;
 bool ModList::ModsScanned = false;
 dvar_s *ModList::fs_game = nullptr;
+std::string ModList::PendingMod;
+bool ModList::ModChangePending = false;
+bool ModList::StartupModChecked = false;
 
 ModList::ModList()
 {
     UIFeeder::Add(MODS_FEEDER_ID, GetItemCount, GetItemText, Select);
+    command::add("mod_restart", RestartMod_f);
 }
 
 void ModList::OnDvarInit()
 {
     fs_game = Dvar_RegisterString("fs_game", "", DVAR_ARCHIVE, "The active mod directory");
+}
+
+void ModList::OnUIRefresh()
+{
+    if (StartupModChecked || ModChangePending)
+        return;
+
+    const std::string name = GetActiveName();
+    if (I_stricmp(name.c_str(), FastFiles::GetLoadedModName().c_str()) == 0)
+    {
+        StartupModChecked = true;
+        return;
+    }
+    if (!FastFiles::CanRestartZones(false))
+        return;
+    StartupModChecked = true;
+    if (name.empty())
+        ClearMods();
+    else
+        RunMod(name.c_str());
 }
 
 std::string ModList::GetActiveName()
@@ -108,11 +133,9 @@ bool ModList::RunMod(const char *name)
         return false;
     }
 
-    const std::string fsGame = BuildFsGame(name);
-    DbgPrint("[codxe][IW3][ModList] Activating %s\n", fsGame.c_str());
-    Dvar_SetStringFromSource(fs_game, fsGame.c_str(), DVAR_SOURCE_INTERNAL);
-    FastFiles::ReloadModZone();
-    Cbuf_AddText(0, "exec mod.cfg\n");
+    if (!FastFiles::CanRestartZones())
+        return false;
+    QueueModChange(name);
     return true;
 }
 
@@ -121,10 +144,45 @@ void ModList::ClearMods()
     if (!fs_game)
         return;
 
-    DbgPrint("[codxe][IW3][ModList] Clearing %s\n",
-             fs_game->current.string && *fs_game->current.string ? fs_game->current.string : "<none>");
-    Dvar_SetStringFromSource(fs_game, "", DVAR_SOURCE_INTERNAL);
-    FastFiles::ReloadModZone();
+    if (FastFiles::CanRestartZones())
+        QueueModChange(std::string());
+}
+
+void ModList::QueueModChange(const std::string &name)
+{
+    PendingMod = name;
+    if (!ModChangePending)
+    {
+        Cbuf_AddText(0, "wait; mod_restart\n");
+        ModChangePending = true;
+    }
+}
+
+void ModList::RestartMod_f()
+{
+    if (!fs_game)
+        return;
+    const std::string name = ModChangePending ? PendingMod : GetActiveName();
+    ModChangePending = false;
+    PendingMod.clear();
+    if (!FastFiles::CanRestartZones())
+        return;
+    if (!name.empty())
+    {
+        const std::string path = filesystem::JoinPath(MOD_DIR, name.c_str());
+        if (!IsSafeModName(name.c_str()) || !filesystem::DirectoryExists(path.c_str()))
+        {
+            Com_PrintError(CON_CHANNEL_ERROR, "Mod directory does not exist: %s\n", path.c_str());
+            return;
+        }
+    }
+    const std::string fsGame = name.empty() ? std::string() : BuildFsGame(name.c_str());
+    StartupModChecked = true;
+    Dvar_SetStringFromSource(fs_game, fsGame.c_str(), DVAR_SOURCE_INTERNAL);
+    FastFiles::RestartZones();
+    const std::string config = ResolvePath("mod.cfg");
+    if (!config.empty() && filesystem::FileExists(config.c_str()))
+        Cbuf_AddText(0, "exec mod.cfg\n");
 }
 
 void ModList::ScanMods()
