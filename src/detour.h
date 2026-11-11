@@ -285,7 +285,7 @@ class Detour
         }
     }
 
-    bool Install()
+    bool Install(SIZE_T minimumLength = 0)
     {
         //
         // Check if we are already hooked.
@@ -293,7 +293,11 @@ class Detour
         if (this->OriginalLength != 0)
             return false;
 
-        const auto HookSize = Detour::WriteFarBranch(NULL, this->HookTarget, false, false);
+        auto HookSize = Detour::WriteFarBranch(NULL, this->HookTarget, false, false);
+        if (minimumLength > HookSize)
+            HookSize = minimumLength;
+        if ((HookSize & 3) != 0 || HookSize > sizeof(this->OriginalInstructions))
+            return false;
 
         //
         // Save the original instructions for unhooking later on.

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "sv_bots.h"
+#include "experimental/bot_native.h"
 
 namespace iw3
 {
@@ -35,6 +36,7 @@ static void CleanBotArray()
 void sv_bots::OnVMShutdown()
 {
     CleanBotArray();
+    bot_native::Reset();
 }
 
 Detour G_SelectWeaponIndex_Detour;
@@ -56,6 +58,8 @@ void SV_BotUserMove_Stub(client_t *cl)
     if (clientNum < 0 || clientNum >= MAX_CLIENTS)
         return;
 
+    const unsigned __int64 profileStart = bot_native::BeginBotInput();
+
     usercmd_s cmd;
     memset(&cmd, 0, sizeof(cmd));
 
@@ -63,7 +67,11 @@ void SV_BotUserMove_Stub(client_t *cl)
 
     cmd.weapon = g_botai[clientNum].weapon;
 
-    if (g_clients[clientNum].sess.archiveTime == 0)
+    const bool nativeControlled = bot_native::TickController(clientNum, cl, cmd);
+    if (!nativeControlled)
+        bot_native::TickAim(clientNum, cl);
+
+    if (!nativeControlled && g_clients[clientNum].sess.archiveTime == 0)
     {
         cmd.buttons = g_botai[clientNum].buttons;
 
@@ -130,6 +138,7 @@ void SV_BotUserMove_Stub(client_t *cl)
 
     cl->header.deltaMessage = cl->header.netchan.outgoingSequence - 1;
     SV_ClientThink(cl, &cmd);
+    bot_native::EndBotInput(profileStart);
 }
 
 struct BotAction_t
@@ -203,6 +212,7 @@ void Scr_BotStop(scr_entref_t entref)
         Scr_Error("Usage: <bot> botStop();");
 
     bot.buttons = 0;
+    bot_native::ClearAim(entref.entnum);
     bot.is_mirroring_client = false;
     bot.doMove = 0;
 }
@@ -347,6 +357,7 @@ void SV_CalcPings_Stub()
 
 sv_bots::sv_bots()
 {
+    bot_native::Install();
     G_SelectWeaponIndex_Detour = Detour(G_SelectWeaponIndex, G_SelectWeaponIndex_Hook);
     G_SelectWeaponIndex_Detour.Install();
 
@@ -362,6 +373,7 @@ sv_bots::sv_bots()
 
 sv_bots::~sv_bots()
 {
+    bot_native::Shutdown();
     G_SelectWeaponIndex_Detour.Remove();
     SV_BotUserMove_Detour.Remove();
     SV_UserinfoChanged_Detour.Remove();

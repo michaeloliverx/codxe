@@ -4,6 +4,7 @@
 #include "gsc_functions.h"
 #include "gsc_methods.h"
 #include "sv_bots.h"
+#include "experimental/bot_native.h"
 
 namespace iw3
 {
@@ -25,6 +26,18 @@ static const gsc::Entry<BuiltinFunction> functions[] = {
     {"precachestring", Scr_PrecacheString_Stub, BUILTIN_ANY},
     {"addtestclient", GScr_AddTestClient, BUILTIN_ANY},
     {"replacefunc", GSC::ReplaceFunc, BUILTIN_ANY},
+    {"botnavbegin", bot_native::NavBegin, BUILTIN_ANY},
+    {"botnavnode", bot_native::NavNode, BUILTIN_ANY},
+    {"botnavlink", bot_native::NavLink, BUILTIN_ANY},
+    {"botnavend", bot_native::NavEnd, BUILTIN_ANY},
+    {"botnavnearest", bot_native::NavNearest, BUILTIN_ANY},
+    {"botnavsearch", bot_native::NavSearch, BUILTIN_ANY},
+    {"botnavusage", bot_native::NavUsage, BUILTIN_ANY},
+    {"botnativeprofilebegin", bot_native::ProfileBegin, BUILTIN_ANY},
+    {"botnativeprofileend", bot_native::ProfileEnd, BUILTIN_ANY},
+    {"botnativeprofilestats", bot_native::ProfileStats, BUILTIN_ANY},
+    {"botnativeprofilereset", bot_native::ProfileReset, BUILTIN_ANY},
+    {"botnativepause", bot_native::Pause, BUILTIN_ANY},
 };
 
 static const gsc::Entry<BuiltinMethod> methods[] = {
@@ -48,6 +61,9 @@ static const gsc::Entry<BuiltinMethod> methods[] = {
     {"botaction", Scr_BotAction, BUILTIN_ANY},
     {"botmirror", Scr_BotMirror, BUILTIN_ANY},
     {"botstop", Scr_BotStop, BUILTIN_ANY},
+    {"botnativeaim", bot_native::AimAt, BUILTIN_ANY},
+    {"botnativeaimstop", bot_native::AimStop, BUILTIN_ANY},
+    {"botnativecontrol", bot_native::Control, BUILTIN_ANY},
 };
 } // namespace
 
@@ -65,7 +81,8 @@ BuiltinFunction Scr_GetFunction_Hook(const char **pName, int *type)
         }
     }
 
-    return Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
+    BuiltinFunction original = Scr_GetFunction_Detour.GetOriginal<decltype(Scr_GetFunction)>()(pName, type);
+    return bot_native::ProfileFunction(pName ? *pName : nullptr, original);
 }
 
 Detour Scr_GetMethod_Detour;
@@ -82,7 +99,8 @@ BuiltinMethod Scr_GetMethod_Hook(const char **pName, int *type)
         }
     }
 
-    return Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
+    BuiltinMethod original = Scr_GetMethod_Detour.GetOriginal<decltype(Scr_GetMethod)>()(pName, type);
+    return bot_native::ProfileMethod(pName ? *pName : nullptr, original);
 }
 
 Detour GSC::VM_Execute_Detour;

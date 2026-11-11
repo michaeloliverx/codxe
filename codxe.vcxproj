@@ -150,6 +150,7 @@
       <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\stats.cpp" />
       <ClCompile Include="src\game\iw3\mp\components\sv_bots.cpp" />
+      <ClCompile Include="src\game\iw3\mp\components\experimental\bot_native.cpp" />
       <ClCompile Include="src\game\iw3\mp\main.cpp" />
       <ClCompile Include="src\game\iw3\mp\symbols.cpp" />
 
