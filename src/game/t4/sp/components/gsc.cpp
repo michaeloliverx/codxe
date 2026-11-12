@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "gsc.h"
 #include "common/gsc_registry.h"
+#include <unordered_map>
 
 namespace t4
 {
 namespace sp
 {
+static std::unordered_map<const char*, const char*> ReplacedFunctionsSP;
 namespace
 {
 client_t *VM_GetClientForEntRef(scr_entref_t entref)
@@ -173,6 +175,99 @@ void ScriptEntCmd_CloneBrushModelToScriptModel(scr_entref_t entref)
     SV_LinkEntity(scriptEnt);
 }
 
+static const char* GetCodePosForParam(int index)
+{
+    const scriptInstance_t inst = SCRIPTINSTANCE_SERVER;
+    const int numParams = static_cast<int>(Scr_GetNumParam(inst));
+
+    if (index < 0 || index >= numParams)
+        return nullptr;
+
+    auto* top = *reinterpret_cast<VariableValue**>(0x84B2F214 + (static_cast<int>(inst) * 0x14));
+
+    if (!top)
+        return nullptr;
+
+    auto* value = top - index;
+
+    if (value->type != VAR_FUNCTION)
+        return nullptr;
+
+    return value->u.codePosValue;
+}
+static void GScr_ReplaceFunc()
+{
+    if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 2)
+    {
+        Scr_Error("replaceFunc: needs two parameters", SCRIPTINSTANCE_SERVER);
+        return;
+    }
+
+    const char* what = GetCodePosForParam(0);
+    const char* with = GetCodePosForParam(1);
+
+    if (!what)
+    {
+        Scr_Error("replaceFunc: first parameter is not a function", SCRIPTINSTANCE_SERVER);
+        return;
+    }
+
+    if (!with)
+    {
+        Scr_Error("replaceFunc: second parameter is not a function", SCRIPTINSTANCE_SERVER);
+        return;
+    }
+
+    ReplacedFunctionsSP[what] = with;
+}
+
+extern "C" const char* T4SP_GSC_GetReplacedPos(const char* pos)
+{
+    if (!pos)
+        return pos;
+
+    const auto it = ReplacedFunctionsSP.find(pos);
+
+    if (it != ReplacedFunctionsSP.end())
+        return it->second;
+
+    return pos;
+}
+
+Detour VMExecuteInternal_SP_Detour;
+
+extern "C" __declspec(naked) void VM_Execute_Hook_SP()
+{
+    __asm
+    {
+        mr      r3, r10
+        bl      T4SP_GSC_GetReplacedPos
+        mr      r10, r3
+
+        addi    r11, r10, 1
+        lbz     r9, 0(r10)
+        addi    r10, r27, -0x4068
+        slwi    r21, r31, 2
+
+        lis     r12, 0x8234
+        ori     r12, r12, 0x2EA8
+        mtctr   r12
+        bctr
+    }
+}
+
+Detour Scr_ShutdownSystem_SP_Detour;
+
+static int Scr_ShutdownSystem_Hook_SP(scriptInstance_t inst, int sys, int bComplete)
+{
+    if (inst == SCRIPTINSTANCE_SERVER && bComplete)
+    {
+        ReplacedFunctionsSP.clear();
+    }
+
+    return Scr_ShutdownSystem_SP_Detour.GetOriginal<Scr_ShutdownSystem_t>()(inst, sys, bComplete);
+}
+
 static const gsc::Entry<BuiltinMethod> methods[] = {
     {"jumpbuttonpressed", PlayerCmd_JumpButtonPressed, BUILTIN_ANY},
     {"secondaryoffhandbuttonpressed", PlayerCmd_secondaryOffhandButtonPressed, BUILTIN_ANY},
@@ -186,6 +281,7 @@ static const gsc::Entry<BuiltinMethod> methods[] = {
 
 static const gsc::Entry<BuiltinFunction> functions[] = {
     {"spawncollision", GScr_SpawnCollision, BUILTIN_ANY},
+    {"replaceFunc", GScr_ReplaceFunc, BUILTIN_ANY},
 };
 } // namespace
 
@@ -230,6 +326,12 @@ GSC::GSC()
 
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
+
+    VMExecuteInternal_SP_Detour = Detour(reinterpret_cast<void*>(0x82342E98), reinterpret_cast<const void*>(VM_Execute_Hook_SP));
+    VMExecuteInternal_SP_Detour.Install();
+
+    Scr_ShutdownSystem_SP_Detour = Detour(reinterpret_cast<void*>(0x82341D20), reinterpret_cast<const void*>(Scr_ShutdownSystem_Hook_SP));
+    Scr_ShutdownSystem_SP_Detour.Install();
 }
 
 GSC::~GSC()
@@ -237,6 +339,10 @@ GSC::~GSC()
     Scr_GetFunction_Detour.Remove();
 
     Scr_GetMethod_Detour.Remove();
+
+    VMExecuteInternal_SP_Detour.Remove();
+
+    Scr_ShutdownSystem_SP_Detour.Remove();
 }
 } // namespace sp
 } // namespace t4
