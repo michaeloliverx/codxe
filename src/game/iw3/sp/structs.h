@@ -5,6 +5,15 @@ namespace iw3
 {
 namespace sp
 {
+typedef void (*BuiltinFunction)();
+
+enum scr_builtin_type_t : __int32
+{
+    BUILTIN_ANY = 0x0,
+    BUILTIN_DEVELOPER_ONLY = 0x1,
+};
+static_assert(sizeof(scr_builtin_type_t) == 4, "");
+
 struct cmd_function_s
 {
     cmd_function_s *next;

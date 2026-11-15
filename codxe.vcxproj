@@ -155,6 +155,7 @@
 
       <ClCompile Include="src\game\iw3\sp\components\command.cpp" />
       <ClCompile Include="src\game\iw3\sp\components\events.cpp" />
+      <ClCompile Include="src\game\iw3\sp\components\gsc.cpp" />
       <ClCompile Include="src\game\iw3\sp\components\scr_parser.cpp" />
       <ClCompile Include="src\game\iw3\sp\main.cpp" />
 
@@ -331,6 +332,7 @@
 
       <ClInclude Include="src\game\iw3\sp\components\command.h" />
       <ClInclude Include="src\game\iw3\sp\components\events.h" />
+      <ClInclude Include="src\game\iw3\sp\components\gsc.h" />
       <ClInclude Include="src\game\iw3\sp\components\scr_parser.h" />
       <ClInclude Include="src\game\iw3\sp\main.h" />
       <ClInclude Include="src\game\iw3\sp\structs.h" />

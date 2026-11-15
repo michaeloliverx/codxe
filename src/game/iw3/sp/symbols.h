@@ -38,6 +38,10 @@ static auto DB_GetAllXAssetOfType_FastFile =
 static auto Load_MapEntsPtr = reinterpret_cast<void (*)()>(0x822B9788);
 
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x82192CC0);
+static auto Scr_Error = reinterpret_cast<void (*)(const char *error)>(0x821B1740);
+static auto Scr_GetFunction = reinterpret_cast<BuiltinFunction (*)(const char **pName, int *type)>(0x8222FD70);
+static auto Scr_GetNumParam = reinterpret_cast<unsigned int (*)()>(0x821B13D0);
+static auto Scr_GetString = reinterpret_cast<const char *(*)(unsigned int index)>(0x821B3488);
 static auto Scr_AddSourceBuffer =
     reinterpret_cast<char *(*)(const char *filename, const char *extFilename, const char *codePos, bool archive)>(
         0x821C5A18);
