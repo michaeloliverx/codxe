@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "components/command.h"
 #include "components/events.h"
+#include "components/gsc.h"
 #include "components/scr_parser.h"
 
 namespace
@@ -150,6 +151,7 @@ IW3_SP_Plugin::IW3_SP_Plugin()
     RegisterModule(new Config());
     RegisterModule(new Events());
     RegisterModule(new command());
+    RegisterModule(new GSC());
     RegisterModule(new scr_parser());
 
     CL_GamepadButtonEvent_Detour = Detour(CL_GamepadButtonEvent, CL_GamepadButtonEvent_Hook);
