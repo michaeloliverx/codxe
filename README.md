@@ -100,6 +100,12 @@ Or run:
 make build
 ```
 
+Builds require full Git history (`git fetch --unshallow` for a shallow clone).
+The revision is the number of commits reachable from the built commit: `r333`
+is embedded in the XEX's native execution-info version as `0.0.333.0`
+(`major.minor.build.qfe`). The generated configuration is `build/<Configuration>/obj/xex.xml`.
+The in-game version and ZIP name keep the existing hash/dirty suffix for local builds.
+
 ## Credits
 
 In some way or another, this project would not have been possible without the following people and projects:

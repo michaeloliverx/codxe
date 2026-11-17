@@ -28,6 +28,7 @@
     <OutDir>$(SolutionDir)build\$(Configuration)\bin\</OutDir>
     <IntDir>$(SolutionDir)build\$(Configuration)\obj\</IntDir>
     <GitVersionHeader>$(IntDir)git_version.h</GitVersionHeader>
+    <GitVersionXexConfiguration>$(IntDir)xex.xml</GitVersionXexConfiguration>
     <RemoteRoot>hdd:\Plugins</RemoteRoot>
     <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     <ImageXexOutput>$(OutDir)$(ProjectName).xex</ImageXexOutput>
@@ -76,7 +77,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">true</ExcludedFromBuild>
     </Deploy>
     <ImageXex>
-      <ConfigurationFile>$(SolutionDir)xex.xml</ConfigurationFile>
+      <ConfigurationFile>$(GitVersionXexConfiguration)</ConfigurationFile>
     </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -450,7 +451,15 @@
       <ClInclude Include="src\notifications.h" />
       <ClInclude Include="src\kernel.h" />
   </ItemGroup>
-  <Target Name="GenerateGitVersionHeader" BeforeTargets="ClCompile">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\generate-version.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(GitVersionHeader)&quot;" />
+  <Target Name="GenerateGitVersionHeader" BeforeTargets="ClCompile;ImageXex">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\generate-version.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(GitVersionHeader)&quot; -XexTemplatePath &quot;$(MSBuildProjectDirectory)\xex.xml&quot; -XexOutputPath &quot;$(GitVersionXexConfiguration)&quot;" />
+    <ItemGroup>
+      <FileWrites Include="$(GitVersionHeader);$(GitVersionXexConfiguration)" />
+    </ItemGroup>
+  </Target>
+  <!-- The SDK's ImageXex target only tracks the PE input, not its configuration. -->
+  <Target Name="InvalidateXexConfiguration" BeforeTargets="ImageXex" DependsOnTargets="GenerateGitVersionHeader"
+          Inputs="$(GitVersionXexConfiguration)" Outputs="$(ImageXexOutput)">
+    <Delete Files="$(ImageXexOutput)" />
   </Target>
 </Project>
