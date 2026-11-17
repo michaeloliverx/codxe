@@ -106,6 +106,9 @@ int Events::UI_Refresh_Hook(int localClientNum)
 {
     const int result = UI_Refresh_Detour.GetOriginal<UI_Refresh_t>()(localClientNum);
 
+    if (localClientNum == 0)
+        Usermaps::OnUIRefresh();
+
     for (size_t i = 0; i < ARRAYSIZE(uiRefreshHandlers); ++i)
     {
         uiRefreshHandlers[i]();
