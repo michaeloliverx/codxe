@@ -4,9 +4,7 @@ CodXe-owned replacement zones for World at War TU7 (USA/Europe).
 
 | Zone | Purpose |
 | --- | --- |
-| `code_post_gfx.ff` | Stock startup assets with packed mip tails omitted. |
-| `common.ff` | The same mip-tail reduction, plus opaque black split-screen sidebars. |
-| `patch.ff` | Extra Settings with FOV controls and a split-screen layout toggle. |
+| `patch.ff` | Extra Settings with FOV controls, a split-screen layout toggle and sidebar materials using the stock `$black` image. |
 | `patch_ui.ff` | Custom-map browser entry points and its reusable preview material. |
 
 Built fastfiles live in `resources/t4/_codxe/zone/`; release packaging copies
