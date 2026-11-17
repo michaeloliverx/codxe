@@ -69,9 +69,6 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\module\entry.cpp" />
-    <ClCompile Include="src\notifications.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="src\bootstrap\paths.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -29,7 +29,7 @@ EX_TITLE_TERMINATE_REGISTRATION notification = {reinterpret_cast<PVOID>(TitleTer
 
 BOOL Inactive(const char *message)
 {
-    xbox::notifications::Initialize(xbox::ENVIRONMENT_XBOX_RETAIL, message);
+    xbox::notifications::Initialize(message);
     return TRUE;
 }
 
@@ -117,7 +117,7 @@ extern "C" BOOL WINAPI CodxeLoaderEntry(HANDLE self, DWORD reason, LPVOID)
         ExRegisterTitleTerminateNotification(&notification, TRUE);
         DbgPrint("[codxe][loader] ready build=%u (%s), hook=%08X root=%s\n", profile->build, flavour,
                  profile->finish_load_address, installRoot);
-        xbox::notifications::Initialize(environment);
+        xbox::notifications::Initialize();
     }
     else if (reason == DLL_PROCESS_DETACH)
     {

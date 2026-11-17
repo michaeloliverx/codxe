@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "games.h"
 #include "../bootstrap/paths.h"
-#include "../notifications.h"
 
 extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE, DWORD, LPVOID);
 
@@ -59,8 +58,6 @@ bool StartGame(HANDLE self)
     new CODXE_PLUGIN_TYPE();
     DbgPrint("[codxe][%s] Initialized %s, data=%s\n", game->name, GIT_VERSION, dataRoot);
     xbox::Notify(game->description);
-    if (environment == xbox::ENVIRONMENT_XENIA)
-        xbox::notifications::Initialize(environment);
     return true;
 }
 } // namespace

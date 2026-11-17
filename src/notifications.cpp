@@ -58,7 +58,6 @@ PVOID g_startup_thread;
 StartupDelay g_startup_delay;
 volatile LONG g_stopping;
 volatile LONG g_title_generation;
-bool g_in_xenia;
 char g_console_message[128];
 WCHAR g_startup_text[160];
 WCHAR g_unloaded_text[] = L"CoD Xe: Unloaded";
@@ -141,7 +140,7 @@ DWORD WINAPI StartupThread(void *)
 }
 } // namespace
 
-void xbox::notifications::Initialize(Environment environment, const char *message)
+void xbox::notifications::Initialize(const char *message)
 {
     // Own the message: the startup worker outlives this call.
     size_t length = 0;
@@ -162,15 +161,6 @@ void xbox::notifications::Initialize(Environment environment, const char *messag
     if (!NT_SUCCESS(XexGetModuleHandle("xam.xex", &xam)) ||
         !NT_SUCCESS(XexGetProcedureAddress(xam, 656, &g_queue_notification)) || !g_queue_notification)
     {
-        return;
-    }
-
-    g_in_xenia = environment == ENVIRONMENT_XENIA;
-    if (g_in_xenia)
-    {
-        // Xenia implements the popup itself and loads plugins directly into the game.
-        g_queue_notification(XNOTIFYUI_TYPE_EXCLAIM, XUSER_INDEX_ANY, XNOTIFY_SYSTEM, g_startup_text, nullptr);
-        DbgPrint("[codxe] %s.\n", g_console_message);
         return;
     }
 
@@ -206,7 +196,7 @@ void xbox::notifications::Shutdown()
         g_startup_thread = nullptr;
     }
 
-    if (g_in_xenia || !g_queue_notification || !g_query_title || !g_query_state)
+    if (!g_queue_notification || !g_query_title || !g_query_state)
     {
         return;
     }
