@@ -37,6 +37,7 @@ static auto varclipMap_t = reinterpret_cast<clipMap_t **>(0x82756700);
 static auto con = reinterpret_cast<Console *>(0x826B8C9C);
 static auto g_consoleField = reinterpret_cast<field_t *>(0x826DCA40);
 static auto clientConnectionStates = reinterpret_cast<connstate_t *>(0x826E8B10);
+static auto clients = reinterpret_cast<clientActive_t **>(0x826E8BD8);
 static const PlayerKeyState *playerKeys = reinterpret_cast<PlayerKeyState *>(0x826DCB60);
 static ScreenPlacement &scrPlaceFull = *reinterpret_cast<ScreenPlacement *>(0x8274F6A8);
 
@@ -100,6 +101,7 @@ typedef void (*Cmd_Init_t)();
 static Cmd_Init_t Cmd_Init = reinterpret_cast<Cmd_Init_t>(0x82271570);
 
 static auto CL_WritePacket = reinterpret_cast<void (*)(int localClientNum)>(0x821B0F30);
+static auto CL_FinishMove = reinterpret_cast<int (*)(int localClientNum, usercmd_s *cmd)>(0x821B0708);
 
 typedef void (*Com_Printf_t)(int channel, const char *fmt, ...);
 static Com_Printf_t Com_Printf = reinterpret_cast<Com_Printf_t>(0x82271BE0);

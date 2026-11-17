@@ -1158,6 +1158,23 @@ static_assert(offsetof(usercmd_s, meleeChargeYaw) == 0x1C, "");
 static_assert(offsetof(usercmd_s, meleeChargeDist) == 0x20, "");
 static_assert(offsetof(usercmd_s, selectedLocation) == 0x28, "");
 
+struct clientActive_t
+{
+    char unknown0[158284];
+    float cgameKickAngles[3];
+    char unknown1[40];
+    float viewangles[3];
+    char unknown2[262164];
+    usercmd_s cmds[128];
+    int cmdNumber;
+    char unknown3[1667748];
+};
+static_assert(offsetof(clientActive_t, cgameKickAngles) == 158284, "");
+static_assert(offsetof(clientActive_t, viewangles) == 158336, "");
+static_assert(offsetof(clientActive_t, cmds) == 420512, "");
+static_assert(offsetof(clientActive_t, cmdNumber) == 426144, "");
+static_assert(sizeof(clientActive_t) == 2093896, "");
+
 enum netadrtype_t : __int32
 {
     NA_BOT = 0x0,
@@ -1622,13 +1639,14 @@ enum connstate_t
     CA_DISCONNECTED = 0x0,
     CA_CINEMATIC = 0x1,
     CA_LOGO = 0x2,
-    CA_CONNECTING = 0x3,
-    CA_CHALLENGING = 0x4,
-    CA_CONNECTED = 0x5,
-    CA_SENDINGSTATS = 0x6,
-    CA_LOADING = 0x7,
-    CA_PRIMED = 0x8,
-    CA_ACTIVE = 0x9,
+    // TU7 has an additional state before connecting.
+    CA_CONNECTING = 0x4,
+    CA_CHALLENGING = 0x5,
+    CA_CONNECTED = 0x6,
+    CA_SENDINGSTATS = 0x7,
+    CA_LOADING = 0x8,
+    CA_PRIMED = 0x9,
+    CA_ACTIVE = 0xA,
 };
 
 enum Vartype_t : __int32

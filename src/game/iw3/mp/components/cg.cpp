@@ -138,9 +138,9 @@ void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 
 static const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-void CG_DrawPlayerInfo()
+void CG_DrawPlayerInfo(int localClientNum)
 {
-    auto ps = CG_GetPredictedPlayerState(0);
+    auto ps = CG_GetPredictedPlayerState(localClientNum);
     int speed2D = static_cast<int>(sqrtf(ps->velocity[0] * ps->velocity[0] + ps->velocity[1] * ps->velocity[1]));
 
     char buff[256];
@@ -183,11 +183,11 @@ void cg::OnDvarInit()
         Dvar_RegisterBool("cg_draw_player_info", false, 0, "Draw player info (origin, viewangles, speed) on screen");
 }
 
-void cg::OnCGDrawActive(int)
+void cg::OnCGDrawActive(int localClientNum)
 {
     if (cg_draw_player_info->current.enabled)
     {
-        CG_DrawPlayerInfo();
+        CG_DrawPlayerInfo(localClientNum);
     }
 }
 
