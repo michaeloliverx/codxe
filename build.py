@@ -22,7 +22,7 @@ GAME_DIRECTORIES = {
 REQUIRED_ZONES = {
     "iw4": ("patch_mp",),
     "iw3": ("patch_mp",),
-    "t4": ("code_post_gfx", "common", "patch", "patch_ui", "patch_mp", "patch_ui_mp"),
+    "t4": ("patch", "patch_ui", "patch_mp", "patch_ui_mp"),
 }
 
 

@@ -3,6 +3,10 @@
 >platform,xbox360
 >name,patch
 
+// Override the stock split-screen backdrop images with opaque 1x1 black textures.
+image,splitscreen_sidebars
+image,splitscreen_sidebars_wide
+
 material,,menu_button_backing
 material,,ingameoptions_thumbstick
 material,,xenon_stick_move
@@ -12,6 +16,8 @@ material,,xenon_stick_move_look
 material,,menu_popup_back
 material,,menu_white_line
 material,,white_line_faded_center
+material,,white
+material,,cinematic
 
 // The game registers its in-game menus from ui/ingame.txt in common.ff.
 // Extend that list so the Extra Settings submenu exists in the active UI context.
