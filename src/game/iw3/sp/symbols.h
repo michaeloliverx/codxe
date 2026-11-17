@@ -12,9 +12,6 @@ static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const c
 
 static auto CL_ConsolePrint = reinterpret_cast<void (*)(int localClientNum, int channel, const char *txt, int duration,
                                                         int pixelWidth, int flags)>(0x822D7040);
-static auto CL_GamepadButtonEvent =
-    reinterpret_cast<void (*)(int localClientNum, int controllerIndex, int key, int down, unsigned int time)>(
-        0x822CE630);
 
 static auto Cmd_AddCommandInternal =
     reinterpret_cast<void (*)(const char *cmdName, void (*function)(), cmd_function_s *allocedCmd)>(0x821DFAD0);
