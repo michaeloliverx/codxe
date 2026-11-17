@@ -104,11 +104,6 @@ void InitializeHudElemMethods()
     Scr_FreeHudElem_Detour.Install();
 }
 
-void ShutdownHudElemMethods()
-{
-    Scr_FreeHudElem_Detour.Remove();
-}
-
 void ClearHudElemLocalizedStringState()
 {
     ZeroMemory(g_isLocStringPrecached, sizeof(g_isLocStringPrecached));

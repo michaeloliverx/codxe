@@ -85,13 +85,5 @@ patches::patches()
     CL_ConsolePrint_Detour.Install();
 #endif
 }
-
-patches::~patches()
-{
-#ifndef NDEBUG
-    CL_ConsolePrint_Detour.Remove();
-#endif
-    // Jump_Start_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw5

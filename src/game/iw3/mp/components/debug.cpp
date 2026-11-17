@@ -20,10 +20,5 @@ Debug::Debug()
     ConsolePrintDetour = Detour(CL_ConsolePrint, CL_ConsolePrint_Hook);
     ConsolePrintDetour.Install();
 }
-
-Debug::~Debug()
-{
-    ConsolePrintDetour.Remove();
-}
 } // namespace mp
 } // namespace iw3

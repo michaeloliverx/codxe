@@ -193,11 +193,5 @@ DebugDraw::DebugDraw()
     DrawLinesDetour = Detour(RB_DrawLinesCmd, RB_DrawLinesCmd_Hook);
     DrawLinesDetour.Install();
 }
-
-DebugDraw::~DebugDraw()
-{
-    DrawLinesDetour.Remove();
-    SetTessTechniqueDetour.Remove();
-}
 } // namespace mp
 } // namespace t4

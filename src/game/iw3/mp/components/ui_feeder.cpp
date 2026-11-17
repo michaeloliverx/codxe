@@ -175,16 +175,5 @@ UIFeeder::UIFeeder()
     Item_ListBox_Scroll_Detour = Detour(Item_ListBox_Scroll, Item_ListBox_Scroll_Hook);
     Item_ListBox_Scroll_Detour.Install();
 }
-
-UIFeeder::~UIFeeder()
-{
-    Item_ListBox_Scroll_Detour.Remove();
-    UI_FeederSelection_Detour.Remove();
-    UI_FeederItemText_Detour.Remove();
-    UI_FeederItemColor_Detour.Remove();
-    UI_FeederCount_Detour.Remove();
-    SelectedIndices.clear();
-    Feeders.clear();
-}
 } // namespace mp
 } // namespace iw3

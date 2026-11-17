@@ -105,9 +105,5 @@ void clipmap::OnCGDrawActive(int)
 clipmap::clipmap()
 {
 }
-
-clipmap::~clipmap()
-{
-}
 } // namespace mp
 } // namespace iw3

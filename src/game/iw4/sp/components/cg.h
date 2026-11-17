@@ -10,7 +10,6 @@ class cg : public Module
 {
   public:
     cg();
-    ~cg();
 };
 } // namespace sp
 } // namespace iw4

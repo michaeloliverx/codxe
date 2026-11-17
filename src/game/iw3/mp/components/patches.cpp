@@ -52,11 +52,5 @@ Patches::Patches()
     SV_SpawnServer_Detour = Detour(SV_SpawnServer, SV_SpawnServer_Hook);
     SV_SpawnServer_Detour.Install();
 }
-
-Patches::~Patches()
-{
-    SV_SpawnServer_Detour.Remove();
-    SV_AllocateClientMemory_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

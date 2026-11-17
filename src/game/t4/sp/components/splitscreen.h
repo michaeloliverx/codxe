@@ -8,7 +8,6 @@ class SplitScreen : public Module
 {
   public:
     SplitScreen();
-    ~SplitScreen();
 
     static void OnDvarInit();
 };

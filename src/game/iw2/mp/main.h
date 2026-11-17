@@ -11,7 +11,6 @@ class IW2_MP_Plugin : public Plugin
 
   public:
     IW2_MP_Plugin();
-    ~IW2_MP_Plugin();
 };
 } // namespace mp
 } // namespace iw2

@@ -289,12 +289,5 @@ GSC::GSC()
     PlayerCmd_GetViewmodel_Detour = Detour(PlayerCmd_GetViewmodel, PlayerCmd_GetViewmodel_Hook);
     PlayerCmd_GetViewmodel_Detour.Install();
 }
-
-GSC::~GSC()
-{
-    CloseAllScriptFiles();
-    PlayerCmd_GetViewmodel_Detour.Remove();
-    Scr_GetFunction_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw5

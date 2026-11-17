@@ -10,7 +10,6 @@ class cg : public Module
 {
   public:
     cg();
-    ~cg();
 
     static void OnDvarInit();
     static void OnCGDrawActive(int localClientNum);

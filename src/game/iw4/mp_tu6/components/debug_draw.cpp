@@ -97,10 +97,5 @@ DebugDraw::DebugDraw()
     DrawLinesDetour = Detour(RB_DrawLinesCmd, RB_DrawLinesCmd_Hook);
     DrawLinesDetour.Install();
 }
-
-DebugDraw::~DebugDraw()
-{
-    DrawLinesDetour.Remove();
-}
 } // namespace mp_tu6
 } // namespace iw4

@@ -123,14 +123,5 @@ SplitScreen::SplitScreen()
     DrawViewDetour = Detour(RB_DrawView, RB_DrawView_Hook);
     DrawViewDetour.Install();
 }
-
-SplitScreen::~SplitScreen()
-{
-    DrawViewDetour.Remove();
-    UpdateViewDetour.Remove();
-    SetViewDetour.Remove();
-    if (horizontalLayout)
-        ApplyLayout(false);
-}
 } // namespace sp
 } // namespace t4

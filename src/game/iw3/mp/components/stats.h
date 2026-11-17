@@ -10,7 +10,6 @@ class Stats : public Module
 {
   public:
     Stats();
-    ~Stats();
 
     static void EnsureOfflineStats(int localClientNum);
 

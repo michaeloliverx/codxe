@@ -10,7 +10,6 @@ class stats : public Module
 {
   public:
     stats();
-    ~stats();
 
     static void OnCmdInit();
     static void LoadOfflineStats(int localClientNum);

@@ -143,12 +143,5 @@ cmds::cmds()
 
     command::add("dumpraw", Cmd_Dumpraw_f);
 }
-
-cmds::~cmds()
-{
-    ClientCommand_Detour.Remove();
-
-    Cmd_ExecFromFastFile_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

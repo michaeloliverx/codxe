@@ -94,15 +94,6 @@ Config::Config()
     }
 }
 
-Config::~Config()
-{
-    // Reset to defaults on cleanup
-    active_mod[0] = '\0';
-    dump_rawfile = false;
-    dump_map_ents = false;
-    DbgPrint("[codxe][Config] Configuration unloaded\n");
-}
-
 bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
 {
     HJSONREADER hJsonReader = XJSONCreateReader();

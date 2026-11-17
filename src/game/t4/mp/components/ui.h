@@ -10,7 +10,6 @@ class ui : public Module
 {
   public:
     ui();
-    ~ui();
 };
 } // namespace mp
 } // namespace t4

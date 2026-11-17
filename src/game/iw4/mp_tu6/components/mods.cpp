@@ -153,12 +153,5 @@ ModList::ModList()
     Cmd_ExecFromDisk_Detour = Detour(Cmd_ExecFromDisk, Exec);
     Cmd_ExecFromDisk_Detour.Install();
 }
-
-ModList::~ModList()
-{
-    Cmd_ExecFromDisk_Detour.Remove();
-    mods.clear();
-    fs_game = nullptr;
-}
 } // namespace mp_tu6
 } // namespace iw4

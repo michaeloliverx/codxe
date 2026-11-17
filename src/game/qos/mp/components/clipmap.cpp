@@ -169,9 +169,5 @@ void clipmap::OnCGDrawActive()
 clipmap::clipmap()
 {
 }
-
-clipmap::~clipmap()
-{
-}
 } // namespace mp
 } // namespace qos

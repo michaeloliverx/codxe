@@ -285,11 +285,6 @@ console::console()
     CL_Input_Detour.Install();
 }
 
-console::~console()
-{
-    CL_Input_Detour.Remove();
-}
-
 void console::OnUIRefresh()
 {
     frame();

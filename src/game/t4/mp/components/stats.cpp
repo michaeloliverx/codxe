@@ -453,12 +453,5 @@ stats::stats()
     LiveStorage_UploadStats_Detour = Detour(LiveStorage_UploadStats, LiveStorage_UploadStats_Hook);
     LiveStorage_UploadStats_Detour.Install();
 }
-
-stats::~stats()
-{
-    LiveStorage_UploadStats_Detour.Remove();
-    LiveStorage_ReadStats_Detour.Remove();
-}
-
 } // namespace mp
 } // namespace t4

@@ -236,16 +236,5 @@ ModList::ModList()
     Cmd_ExecFromDisk_Detour = Detour(Cmd_ExecFromDisk, Cmd_ExecFromDisk_Hook);
     Cmd_ExecFromDisk_Detour.Install();
 }
-
-ModList::~ModList()
-{
-    Cmd_ExecFromDisk_Detour.Remove();
-    UI_FeederSelection_Detour.Remove();
-    UI_FeederItemText_Detour.Remove();
-    UI_FeederCount_Detour.Remove();
-    mods.clear();
-    selectedMod = 0;
-    fs_game = nullptr;
-}
 } // namespace mp
 } // namespace t4

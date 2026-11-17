@@ -451,13 +451,5 @@ Bots::Bots()
     SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Hook);
     SV_CalcPings_Detour.Install();
 }
-
-Bots::~Bots()
-{
-    G_SelectWeapon_Detour.Remove();
-    SV_ClientThink_Detour.Remove();
-    SV_CalcPings_Detour.Remove();
-    ResetBotState();
-}
 } // namespace mp
 } // namespace iw5

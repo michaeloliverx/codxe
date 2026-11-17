@@ -69,11 +69,5 @@ pm::pm()
     CL_AddViewAngles_Detour = Detour(CL_AddViewAngles, CL_AddViewAngles_Hook);
     CL_AddViewAngles_Detour.Install();
 }
-
-pm::~pm()
-{
-    CL_AddViewAngles_Detour.Remove();
-    PmoveSingle_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4

@@ -176,8 +176,3 @@ clipmap::clipmap()
     DB_LinkXAssetEntry1_Detour = Detour(iw4::mp_tu6::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
     DB_LinkXAssetEntry1_Detour.Install();
 }
-
-clipmap::~clipmap()
-{
-    DB_LinkXAssetEntry1_Detour.Remove();
-}

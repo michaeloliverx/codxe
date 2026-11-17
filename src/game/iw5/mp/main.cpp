@@ -233,13 +233,5 @@ IW5_MP_Plugin::IW5_MP_Plugin()
     DB_IsXAssetDefault_Detour = Detour(DB_IsXAssetDefault, DB_IsXAssetDefault_Hook);
     DB_IsXAssetDefault_Detour.Install();
 }
-
-IW5_MP_Plugin::~IW5_MP_Plugin()
-{
-    ResetLoadedScripts(true);
-    DB_FindXAssetHeader_Detour.Remove();
-    DB_IsXAssetDefault_Detour.Remove();
-}
-
 } // namespace mp
 } // namespace iw5

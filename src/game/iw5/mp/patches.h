@@ -10,7 +10,6 @@ class patches : public Module
 {
   public:
     patches();
-    ~patches();
 };
 } // namespace mp
 } // namespace iw5

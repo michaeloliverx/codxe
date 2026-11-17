@@ -10,7 +10,6 @@ class cj_tas : public Module
 {
   public:
     cj_tas();
-    ~cj_tas();
 
     static void OnDvarInit();
     static void OnCGDrawActive(int);

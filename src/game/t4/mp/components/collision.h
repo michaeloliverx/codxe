@@ -9,7 +9,6 @@ namespace mp
 class Collision : public Module
 {
   public:
-    ~Collision();
     static void OnDvarInit();
     static void OnCGInit();
     static void OnCGDrawActive(int localClientNum);

@@ -10,7 +10,6 @@ class ModList : public Module
 {
   public:
     ModList();
-    ~ModList();
 
     static void OnDvarInit();
     static bool RunMenuScript(int localClientNum, const char *command);

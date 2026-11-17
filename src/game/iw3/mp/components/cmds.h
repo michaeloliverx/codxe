@@ -10,7 +10,6 @@ class cmds : public Module
 {
   public:
     cmds();
-    ~cmds();
 };
 } // namespace mp
 } // namespace iw3

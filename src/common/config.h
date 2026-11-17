@@ -9,7 +9,6 @@ class Config : public Module
 {
   public:
     Config();
-    ~Config();
 
     static bool dump_rawfile;
     static bool dump_map_ents;

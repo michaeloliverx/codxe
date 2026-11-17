@@ -13,11 +13,5 @@ NGL_MP_Plugin::NGL_MP_Plugin()
 
     RegisterModule(new PlayerMovement());
 }
-
-NGL_MP_Plugin::~NGL_MP_Plugin()
-{
-    DbgPrint("NGL MP Plugin shutting down\n");
-}
-
 } // namespace mp
 } // namespace ngl

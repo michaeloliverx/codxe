@@ -11,7 +11,6 @@ class UIScript : public Module
   public:
     typedef void (*Callback)(int localClientNum, const char **args);
     UIScript();
-    ~UIScript();
     static void Add(const char *name, Callback callback);
 
   private:

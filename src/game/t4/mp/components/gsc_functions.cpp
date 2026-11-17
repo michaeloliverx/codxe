@@ -291,13 +291,5 @@ GSCFunctions::GSCFunctions()
     VM_Execute_Detour = Detour(reinterpret_cast<void *>(0x82346470), reinterpret_cast<const void *>(VM_Execute_Hook));
     VM_Execute_Detour.Install();
 }
-
-GSCFunctions::~GSCFunctions()
-{
-    Scr_GetFunction_Detour.Remove();
-    VM_Execute_Detour.Remove();
-    ReplacedFunctions.clear();
-    CloseAllScriptFiles();
-}
 } // namespace mp
 } // namespace t4

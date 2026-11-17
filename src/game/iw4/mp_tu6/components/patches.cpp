@@ -120,15 +120,5 @@ patches::patches()
     SV_SpawnServer_Detour = Detour(SV_SpawnServer, SV_SpawnServer_Hook);
     SV_SpawnServer_Detour.Install();
 }
-
-patches::~patches()
-{
-    SV_SpawnServer_Detour.Remove();
-    SetSplitscreenClientLimits(4);
-
-#ifndef NDEBUG
-    CL_ConsolePrint_Detour.Remove();
-#endif
-}
 } // namespace mp_tu6
 } // namespace iw4

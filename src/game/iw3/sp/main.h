@@ -7,7 +7,6 @@ class IW3_SP_Plugin : public Plugin
 {
   public:
     IW3_SP_Plugin();
-    ~IW3_SP_Plugin();
 };
 } // namespace sp
 } // namespace iw3

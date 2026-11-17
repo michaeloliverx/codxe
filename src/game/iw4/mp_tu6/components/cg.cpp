@@ -34,10 +34,5 @@ cg::cg()
     UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
     UI_DrawBuildNumber_Detour.Install();
 }
-
-cg::~cg()
-{
-    UI_DrawBuildNumber_Detour.Remove();
-}
 } // namespace mp_tu6
 } // namespace iw4

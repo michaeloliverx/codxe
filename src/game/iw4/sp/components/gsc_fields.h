@@ -10,7 +10,6 @@ class GSCFields : public Module
 {
   public:
     GSCFields();
-    ~GSCFields();
 };
 } // namespace sp
 } // namespace iw4

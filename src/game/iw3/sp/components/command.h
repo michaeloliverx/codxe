@@ -10,7 +10,6 @@ class command : public Module
 {
   public:
     command();
-    ~command();
 
     static void add(const char *name, void (*callback)());
     static void OnCmdInit();

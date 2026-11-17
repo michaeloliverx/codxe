@@ -331,16 +331,5 @@ FastFiles::FastFiles()
     // that final "file not supported" dirty-disc call.
     ppc::Nop(0x821D89CC);
 }
-
-FastFiles::~FastFiles()
-{
-    SoundReadBlocking_Detour.Remove();
-    CreateFileA_Detour.Remove();
-    DB_LoadXAssets_Detour.Remove();
-    DB_AuthLoad_InflateInit_Detour.Remove();
-    DB_AuthLoad_Inflate_Detour.Remove();
-    DB_AuthLoad_InflateEnd_Detour.Remove();
-    usermapPackHandle = 0;
-}
 } // namespace mp
 } // namespace t4

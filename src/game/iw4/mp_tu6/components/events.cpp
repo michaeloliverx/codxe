@@ -105,11 +105,3 @@ Events::Events()
     Scr_ShutdownSystem_Detour = Detour(iw4::mp_tu6::Scr_ShutdownSystem, Scr_ShutdownSystem_Hook);
     Scr_ShutdownSystem_Detour.Install();
 }
-
-Events::~Events()
-{
-    Com_InitDvars_Detour.Remove();
-    CG_DrawActive_Detour.Remove();
-    Cmd_Init_Detour.Remove();
-    Scr_ShutdownSystem_Detour.Remove();
-}

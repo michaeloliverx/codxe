@@ -11,16 +11,6 @@ command::command()
 {
 }
 
-command::~command()
-{
-    for (size_t i = 0; i < commands.size(); ++i)
-    {
-        delete commands[i];
-    }
-
-    commands.clear();
-}
-
 void command::add(const char *name, void (*callback)())
 {
     cmd_function_s *new_command = allocate();

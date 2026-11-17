@@ -10,7 +10,6 @@ class MovementRecorder : public Module
 {
   public:
     MovementRecorder();
-    ~MovementRecorder();
 
     static void OnCGDrawActive(int localClientNum);
     static void OnCmdInit();

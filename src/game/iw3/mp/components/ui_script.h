@@ -10,7 +10,6 @@ class UIScript : public Module
 {
   public:
     UIScript();
-    ~UIScript();
 
   private:
     static bool Run(int localClientNum, const char **args);

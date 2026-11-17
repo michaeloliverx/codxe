@@ -11,7 +11,6 @@ class image_loader : public Module
 
   public:
     image_loader();
-    ~image_loader();
 
     static void OnAssetLink(XAsset *asset);
     static void OnDelayStreamLoad();

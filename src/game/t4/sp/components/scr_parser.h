@@ -10,7 +10,6 @@ class scr_parser : public Module
 {
   public:
     scr_parser();
-    ~scr_parser();
 };
 } // namespace sp
 } // namespace t4

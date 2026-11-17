@@ -47,10 +47,5 @@ GSC::GSC()
     Scr_GetFunction_Detour = Detour(Scr_GetFunction, Scr_GetFunction_Hook);
     Scr_GetFunction_Detour.Install();
 }
-
-GSC::~GSC()
-{
-    Scr_GetFunction_Detour.Remove();
-}
 } // namespace sp
 } // namespace iw3

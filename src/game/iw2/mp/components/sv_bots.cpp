@@ -326,15 +326,5 @@ SVBots::SVBots()
     calcPingsDetour = Detour(SV_CalcPings, CalcPings);
     calcPingsDetour.Install();
 }
-
-SVBots::~SVBots()
-{
-    clientConnectDetour.Remove();
-    serverCommandDetour.Remove();
-    botUserMoveDetour.Remove();
-    enterWorldDetour.Remove();
-    calcPingsDetour.Remove();
-    OnVMShutdown();
-}
 } // namespace mp
 } // namespace iw2

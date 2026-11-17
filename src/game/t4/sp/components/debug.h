@@ -8,7 +8,6 @@ class Debug : public Module
 {
   public:
     Debug();
-    ~Debug();
 
   private:
     static Detour ConsolePrintDetour;

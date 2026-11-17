@@ -29,10 +29,5 @@ GSCLoader::GSCLoader()
     Scr_AddSourceBuffer_Detour = Detour(Scr_AddSourceBuffer, GSCLoader::Scr_AddSourceBuffer_Hook);
     Scr_AddSourceBuffer_Detour.Install();
 }
-
-GSCLoader::~GSCLoader()
-{
-    Scr_AddSourceBuffer_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4

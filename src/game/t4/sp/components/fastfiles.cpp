@@ -85,17 +85,6 @@ int SoundReadBlocking_Hook(SoundPackSlot *slot, DWORD offset, DWORD bytes, void 
     return success ? 1 : 0;
 }
 
-struct ExpandedXAssetPool
-{
-    XAssetType type;
-    void *originalPool;
-    int originalSize;
-    void *expandedPool;
-};
-
-ExpandedXAssetPool expandedXAssetPools[3] = {};
-unsigned int expandedXAssetPoolCount = 0;
-
 bool EndsWithIgnoreCase(const std::string &value, const char *suffix)
 {
     const size_t suffixLength = std::strlen(suffix);
@@ -438,43 +427,13 @@ void DB_ReallocXAssetPool(XAssetType type, unsigned int newSize)
         return;
     }
 
-    if (expandedXAssetPoolCount == ARRAYSIZE(expandedXAssetPools))
-    {
-        DbgPrint("[codxe][T4 SP][FastFiles] Cannot track expanded %s asset pool\n", g_assetNames[type]);
-        free(pool);
-        return;
-    }
-
-    ExpandedXAssetPool &expandedPool = expandedXAssetPools[expandedXAssetPoolCount++];
-    expandedPool.type = type;
-    expandedPool.originalPool = DB_XAssetPool[type];
-    expandedPool.originalSize = g_poolSize[type];
-    expandedPool.expandedPool = pool;
-
-    DB_XAssetPool[type] = expandedPool.expandedPool;
+    DB_XAssetPool[type] = pool;
     g_poolSize[type] = newSize;
-}
-
-void RestoreExpandedXAssetPools()
-{
-    while (expandedXAssetPoolCount)
-    {
-        ExpandedXAssetPool &expandedPool = expandedXAssetPools[--expandedXAssetPoolCount];
-        DB_XAssetPool[expandedPool.type] = expandedPool.originalPool;
-        g_poolSize[expandedPool.type] = expandedPool.originalSize;
-        free(expandedPool.expandedPool);
-        memset(&expandedPool, 0, sizeof(expandedPool));
-    }
 }
 } // namespace
 
 FastFiles::FastFiles()
 {
-    // The DLL remains resident across title launches, so explicitly reset title-lifetime state.
-    activeUsermap[0] = '\0';
-    usermapPackHandle = 0;
-    expandedXAssetPoolCount = 0;
-
     DB_ReallocXAssetPool(ASSET_TYPE_MENULIST, 512);      // Stock: 128
     DB_ReallocXAssetPool(ASSET_TYPE_FX, 600);            // Stock: 400
     DB_ReallocXAssetPool(ASSET_TYPE_LOADED_SOUND, 2400); // Stock: 1600
@@ -491,19 +450,6 @@ FastFiles::FastFiles()
 
     SoundReadBlocking_Detour = Detour(reinterpret_cast<void *>(0x823673D0), SoundReadBlocking_Hook);
     SoundReadBlocking_Detour.Install();
-}
-
-FastFiles::~FastFiles()
-{
-    BinkOpen_Detour.Remove();
-    SoundReadBlocking_Detour.Remove();
-    DB_LoadXAssets_Detour.Remove();
-    Sys_CreateFile_Detour.Remove();
-
-    RestoreExpandedXAssetPools();
-
-    activeUsermap[0] = '\0';
-    usermapPackHandle = 0;
 }
 } // namespace sp
 } // namespace t4

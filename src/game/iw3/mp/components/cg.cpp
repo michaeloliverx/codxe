@@ -213,15 +213,5 @@ cg::cg()
     UI_SafeTranslateString_Detour = Detour(UI_SafeTranslateString, UI_SafeTranslateString_Hook);
     UI_SafeTranslateString_Detour.Install();
 }
-
-cg::~cg()
-{
-    Menus_OpenByName_Detour.Remove();
-    UI_DrawBuildNumber_Detour.Remove();
-    UI_SafeTranslateString_Detour.Remove();
-    BG_CalculateWeaponPosition_IdleAngles_Detour.Remove();
-    BG_CalculateView_IdleAngles_Detour.Remove();
-    R_DrawAllDynEnt_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

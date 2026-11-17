@@ -10,7 +10,6 @@ class cg : public Module
 {
   public:
     cg();
-    ~cg();
 };
 } // namespace mp_tu6
 } // namespace iw4

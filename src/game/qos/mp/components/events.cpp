@@ -54,12 +54,5 @@ Events::Events()
     CG_Init_Detour = Detour(CG_Init, CG_Init_Hook);
     CG_Init_Detour.Install();
 }
-
-Events::~Events()
-{
-    CG_DrawActive_Detour.Remove();
-    CG_Init_Detour.Remove();
-}
-
 } // namespace mp
 } // namespace qos

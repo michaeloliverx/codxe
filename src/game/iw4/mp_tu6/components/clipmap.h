@@ -6,7 +6,6 @@ class clipmap : public Module
 {
   public:
     clipmap();
-    ~clipmap();
 
     static void OnCGDrawActive(int localClientNum);
 };

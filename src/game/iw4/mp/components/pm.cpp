@@ -46,10 +46,5 @@ pm::pm()
     Weapon_RocketLauncher_Fire_Detour = Detour(Weapon_RocketLauncher_Fire, Weapon_RocketLauncher_Fire_Hook);
     Weapon_RocketLauncher_Fire_Detour.Install();
 }
-
-pm::~pm()
-{
-    Weapon_RocketLauncher_Fire_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw4

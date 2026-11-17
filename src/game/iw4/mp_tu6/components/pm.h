@@ -10,7 +10,6 @@ class pm : public Module
 {
   public:
     pm();
-    ~pm();
 
     static void OnDvarInit();
 };

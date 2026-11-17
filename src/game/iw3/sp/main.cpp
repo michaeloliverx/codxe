@@ -103,11 +103,5 @@ IW3_SP_Plugin::IW3_SP_Plugin()
 
     command::add("dumpraw", Cmd_Dumpraw_f);
 }
-
-IW3_SP_Plugin::~IW3_SP_Plugin()
-{
-    Load_MapEntsPtr_Detour.Remove();
-}
-
 } // namespace sp
 } // namespace iw3

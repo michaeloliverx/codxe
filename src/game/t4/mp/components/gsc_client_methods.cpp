@@ -190,10 +190,5 @@ GSCClientMethods::GSCClientMethods()
     Player_GetMethod_Detour = Detour(Player_GetMethod, Player_GetMethod_Hook);
     Player_GetMethod_Detour.Install();
 }
-
-GSCClientMethods::~GSCClientMethods()
-{
-    Player_GetMethod_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4

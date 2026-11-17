@@ -57,13 +57,5 @@ UIFeeder::UIFeeder()
     UI_FeederSelection_Detour = Detour(UI_FeederSelection, Select);
     UI_FeederSelection_Detour.Install();
 }
-
-UIFeeder::~UIFeeder()
-{
-    UI_FeederSelection_Detour.Remove();
-    UI_FeederItemText_Detour.Remove();
-    UI_FeederCount_Detour.Remove();
-    Feeders.clear();
-}
 } // namespace mp_tu6
 } // namespace iw4

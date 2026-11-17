@@ -299,11 +299,6 @@ console::console()
     CL_WritePacket_Detour.Install();
 }
 
-console::~console()
-{
-    CL_WritePacket_Detour.Remove();
-}
-
 void console::OnUIRefresh()
 {
     frame();

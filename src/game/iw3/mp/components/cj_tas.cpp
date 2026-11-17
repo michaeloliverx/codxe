@@ -411,10 +411,5 @@ cj_tas::cj_tas()
     command::add("startplayback", Cmd_Startplayback_f);
     command::add("stopplayback", Cmd_Stopplayback_f);
 }
-
-cj_tas::~cj_tas()
-{
-    CL_CreateNewCommands_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

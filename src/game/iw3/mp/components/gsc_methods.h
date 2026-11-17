@@ -9,7 +9,6 @@ namespace mp
 void Scr_PrecacheString_Stub();
 void HECmd_SetText_Stub(scr_entref_t entref);
 void InitializeHudElemMethods();
-void ShutdownHudElemMethods();
 void ClearHudElemLocalizedStringState();
 
 void PlayerCmd_ButtonPressed(scr_entref_t entref);

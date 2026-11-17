@@ -18,7 +18,6 @@ class Bots : public Module
 {
   public:
     Bots();
-    ~Bots();
 };
 } // namespace mp
 } // namespace iw5

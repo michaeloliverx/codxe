@@ -24,11 +24,6 @@ UIScript::UIScript()
     UI_RunMenuScript_Detour.Install();
 }
 
-UIScript::~UIScript()
-{
-    UI_RunMenuScript_Detour.Remove();
-}
-
 bool UIScript::Run(int localClientNum, const char **args)
 {
     if (!args || !*args)

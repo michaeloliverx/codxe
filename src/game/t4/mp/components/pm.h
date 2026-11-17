@@ -10,7 +10,6 @@ class pm : public Module
 {
   public:
     pm();
-    ~pm();
 };
 } // namespace mp
 } // namespace t4

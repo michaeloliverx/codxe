@@ -10,7 +10,6 @@ class Branding : public Module
 {
   public:
     Branding();
-    ~Branding();
 
   private:
     static void DrawBranding();

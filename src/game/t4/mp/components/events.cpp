@@ -138,16 +138,5 @@ Events::Events()
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
 }
-
-Events::~Events()
-{
-    CG_DrawActive_Detour.Remove();
-    CG_Init_Detour.Remove();
-    Com_InitDvars_Detour.Remove();
-    Cmd_Init_Detour.Remove();
-    Scr_ShutdownSystem_Detour.Remove();
-    UI_Refresh_Detour.Remove();
-}
-
 } // namespace mp
 } // namespace t4

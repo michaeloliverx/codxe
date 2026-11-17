@@ -33,10 +33,5 @@ cg::cg()
     UI_RefreshViewport_Detour = Detour(UI_RefreshViewport, UI_RefreshViewport_Hook);
     UI_RefreshViewport_Detour.Install();
 }
-
-cg::~cg()
-{
-    UI_RefreshViewport_Detour.Remove();
-}
 } // namespace sp
 } // namespace iw4

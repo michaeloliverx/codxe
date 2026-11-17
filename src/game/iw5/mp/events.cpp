@@ -54,12 +54,5 @@ Events::Events()
     G_ShutdownGame_Detour = Detour(G_ShutdownGame, G_ShutdownGame_Hook);
     G_ShutdownGame_Detour.Install();
 }
-
-Events::~Events()
-{
-    Com_InitDvars_Detour.Remove();
-    G_ShutdownGame_Detour.Remove();
-}
-
 } // namespace mp
 } // namespace iw5

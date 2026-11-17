@@ -10,7 +10,6 @@ class Patches : public Module
 {
   public:
     Patches();
-    ~Patches();
 };
 } // namespace mp
 } // namespace t4

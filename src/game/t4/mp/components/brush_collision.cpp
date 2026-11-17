@@ -126,11 +126,5 @@ BrushCollision::BrushCollision()
     CM_LoadMap_Detour = Detour(CM_LoadMap, CM_LoadMap_Hook);
     CM_LoadMap_Detour.Install();
 }
-
-BrushCollision::~BrushCollision()
-{
-
-    CM_LoadMap_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4

@@ -10,7 +10,6 @@ class clipmap : public Module
 {
   public:
     clipmap();
-    ~clipmap();
 
     static void OnCGDrawActive();
     static void OnCGInit();

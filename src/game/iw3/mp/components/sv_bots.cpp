@@ -359,16 +359,5 @@ sv_bots::sv_bots()
     SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Stub);
     SV_CalcPings_Detour.Install();
 }
-
-sv_bots::~sv_bots()
-{
-    G_SelectWeaponIndex_Detour.Remove();
-    SV_BotUserMove_Detour.Remove();
-    SV_UserinfoChanged_Detour.Remove();
-    SV_CalcPings_Detour.Remove();
-
-    CleanBotArray();
-    s_pendingBotName[0] = '\0';
-}
 } // namespace mp
 } // namespace iw3

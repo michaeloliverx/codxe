@@ -17,7 +17,6 @@ class UIFeeder : public Module
     };
 
     UIFeeder();
-    ~UIFeeder();
     static void Add(float id, const Callbacks &callbacks);
 
   private:

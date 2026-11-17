@@ -34,10 +34,5 @@ Events::Events()
     Cmd_Init_Detour = Detour(Cmd_Init, Cmd_Init_Hook);
     Cmd_Init_Detour.Install();
 }
-
-Events::~Events()
-{
-    Cmd_Init_Detour.Remove();
-}
 } // namespace sp
 } // namespace iw3

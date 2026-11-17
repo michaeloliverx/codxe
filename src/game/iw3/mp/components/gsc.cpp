@@ -185,18 +185,5 @@ void GSC::OnVMShutdown()
     ReplacedFunctions.clear();
     ClearHudElemLocalizedStringState();
 }
-
-GSC::~GSC()
-{
-    ShutdownHudElemMethods();
-
-    Scr_GetFunction_Detour.Remove();
-
-    Scr_GetMethod_Detour.Remove();
-
-    VM_Execute_Detour.Remove();
-
-    ReplacedFunctions.clear();
-}
 } // namespace mp
 } // namespace iw3

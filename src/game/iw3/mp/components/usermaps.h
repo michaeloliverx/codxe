@@ -10,7 +10,6 @@ class Usermaps : public Module
 {
   public:
     Usermaps();
-    ~Usermaps();
 
     static void OnDvarInit();
     static void LoadScript(int localClientNum, const char **args);

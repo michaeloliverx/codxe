@@ -68,11 +68,5 @@ Patches::Patches()
     // default loc_warnings off to prevent console spam
     *(volatile uint8_t *)0x82292ABF = 0x0;
 }
-
-Patches::~Patches()
-{
-    SV_SpawnServer_Detour.Remove();
-    SV_AllocateClientMemory_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4
