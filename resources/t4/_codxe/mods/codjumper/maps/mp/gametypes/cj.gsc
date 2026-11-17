@@ -54,16 +54,10 @@ onPlayerSpawned()
 	{
 		self waittill("spawned_player");
 
+		self removeGrenades();
 		self thread watch_player_buttons();
 		self thread replenish_ammo();
 		self.god = true; // Enable god mode
-
-		// Remove all grenades
-		self TakeWeapon("frag_grenade_mp");
-		self TakeWeapon("m8_white_smoke_mp");
-		self TakeWeapon("sticky_grenade_mp");
-		self TakeWeapon("tabun_gas_mp");
-		self TakeWeapon("molotov_mp");
 
 		self setClientDvar("cg_drawCrosshair", 0);
 		self setClientDvar("ui_hud_hardcore", 1);			// Hardcore HUD
@@ -76,6 +70,16 @@ onPlayerSpawned()
 		// whips edits
 		self thread EnableAllChanges();
 	}
+}
+
+removeGrenades()
+{
+	self takeWeapon("frag_grenade_mp");
+	self takeWeapon("m8_white_smoke_mp");
+	self takeWeapon("sticky_grenade_mp");
+	self takeWeapon("tabun_gas_mp");
+	self takeWeapon("molotov_mp");
+	self takeWeapon("signal_flare_mp");
 }
 
 init_player_once()
