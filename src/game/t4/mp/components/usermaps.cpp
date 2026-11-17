@@ -12,6 +12,7 @@ namespace
 {
 std::vector<usermaps::Entry> maps;
 int selected = 0;
+bool previewRefreshPending = false;
 Detour StringTable_Lookup_Detour;
 Detour UI_GetMapDisplayName_Detour;
 Detour UI_GetMapLoadName_Detour;
@@ -57,8 +58,10 @@ const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColu
                                                                                  valueColumn);
 }
 
-void UpdateSelection()
+void UpdateSelection(bool uploadPreview = true)
 {
+    if (uploadPreview)
+        previewRefreshPending = false;
     const usermaps::Entry *entry =
         selected >= 0 && selected < static_cast<int>(maps.size()) ? &maps[selected] : nullptr;
     Dvar_SetStringByName("ui_codxe_usermap_name", entry ? entry->displayName.c_str() : "");
@@ -68,7 +71,7 @@ void UpdateSelection()
 
     // Reuse one zone-owned texture. No previews are retained for unselected maps.
     bool uploaded = false;
-    if (entry && !entry->previewPath.empty())
+    if (uploadPreview && entry && !entry->previewPath.empty())
     {
         auto image =
             reinterpret_cast<GfxImage *>(DB_FindXAssetHeader(ASSET_TYPE_IMAGE, "codxe_usermap_preview", false, 0));
@@ -123,9 +126,26 @@ void Usermaps::OnUIInit()
         }
     }
 
-    // The frontend zone reloads its black placeholder after a match. Upload the
-    // chosen map again even when its name and image pool address are unchanged.
+    // Menu registration runs inside UI_Init. Synchronizing the renderer here
+    // can wait on frontend work which itself needs UI initialization to finish.
+    // Publish metadata now and resolve the reloaded image on a later UI refresh.
+    UpdateSelection(false);
+    previewRefreshPending = selected >= 0;
+    if (previewRefreshPending)
+        DbgPrint("[codxe][T4][Usermaps] Queued preview refresh after UI initialization\n");
+}
+
+void Usermaps::OnUIRefresh()
+{
+    if (!previewRefreshPending)
+        return;
+
+    // Clear before uploading, including failures. Each frontend-zone reload
+    // requires a fresh upload even if the image pool reused its old address.
+    previewRefreshPending = false;
+    DbgPrint("[codxe][T4][Usermaps] Refreshing preview after UI initialization\n");
     UpdateSelection();
+    DbgPrint("[codxe][T4][Usermaps] Preview refresh completed\n");
 }
 
 int Usermaps::Count()
@@ -200,6 +220,7 @@ Usermaps::~Usermaps()
     StringTable_Lookup_Detour.Remove();
     maps.clear();
     selected = 0;
+    previewRefreshPending = false;
 }
 } // namespace mp
 } // namespace t4
