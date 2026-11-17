@@ -43,8 +43,6 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)third_party\xkelib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <ForcedIncludeFiles>$(GitVersionHeader);%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <PreprocessorDefinitions>$(CodxeDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
