@@ -224,6 +224,7 @@
       <ClCompile Include="src\game\t4\mp\components\usermaps.cpp" />
       <ClCompile Include="src\game\t4\mp\components\patches.cpp" />
       <ClCompile Include="src\game\t4\mp\components\pm.cpp" />
+      <ClCompile Include="src\game\t4\mp\components\movement_recorder.cpp" />
       <ClCompile Include="src\game\t4\mp\components\stats.cpp" />
       <ClCompile Include="src\game\t4\mp\components\sv_bots.cpp" />
       <ClCompile Include="src\game\t4\mp\components\ui.cpp" />
@@ -403,6 +404,7 @@
       <ClInclude Include="src\game\t4\mp\components\usermaps.h" />
       <ClInclude Include="src\game\t4\mp\components\patches.h" />
       <ClInclude Include="src\game\t4\mp\components\pm.h" />
+      <ClInclude Include="src\game\t4\mp\components\movement_recorder.h" />
       <ClInclude Include="src\game\t4\mp\components\stats.h" />
       <ClInclude Include="src\game\t4\mp\components\sv_bots.h" />
       <ClInclude Include="src\game\t4\mp\components\ui.h" />

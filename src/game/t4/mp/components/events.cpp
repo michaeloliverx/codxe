@@ -7,6 +7,7 @@
 #include "debug_draw.h"
 #include "gsc_functions.h"
 #include "mods.h"
+#include "movement_recorder.h"
 #include "usermaps.h"
 #include "stats.h"
 #include "sv_bots.h"
@@ -34,6 +35,7 @@ const EventHandler dvarInitHandlers[] = {
 
 const EventHandler cmdInitHandlers[] = {
     stats::OnCmdInit,
+    MovementRecorder::OnCmdInit,
 };
 
 const EventHandler vmShutdownHandlers[] = {
@@ -58,6 +60,7 @@ Detour Events::CG_DrawActive_Detour;
 void Events::CG_Init_Hook(int localClientNum, int serverMessageNum, int serverCommandSequence, int clientNum)
 {
     Collision::OnCGInit();
+    MovementRecorder::OnCGInit(localClientNum);
     CG_Init_Detour.GetOriginal<decltype(CG_Init)>()(localClientNum, serverMessageNum, serverCommandSequence, clientNum);
 }
 Detour Events::CG_Init_Detour;

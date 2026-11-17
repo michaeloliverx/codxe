@@ -14,6 +14,7 @@
 #include "components/gsc_loader.h"
 #include "components/map.h"
 #include "components/mods.h"
+#include "components/movement_recorder.h"
 #include "components/patches.h"
 #include "components/pm.h"
 #include "components/stats.h"
@@ -49,6 +50,7 @@ T4_MP_Plugin::T4_MP_Plugin()
     RegisterModule(new Usermaps());
     RegisterModule(new Patches());
     RegisterModule(new pm());
+    RegisterModule(new MovementRecorder());
     RegisterModule(new stats());
     RegisterModule(new ui());
 }
