@@ -3,9 +3,11 @@
 >platform,xbox360
 >name,patch
 
-// Override the stock split-screen backdrop images with opaque 1x1 black textures.
-image,splitscreen_sidebars
-image,splitscreen_sidebars_wide
+// Reuse the resident black image for both split-screen backdrop materials.
+techniqueset,,2d
+image,,$black
+material,splitscreen_sidebars
+material,splitscreen_sidebars_wide
 
 material,,menu_button_backing
 material,,ingameoptions_thumbstick
