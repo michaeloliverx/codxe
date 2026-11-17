@@ -3,6 +3,7 @@
 
 #include "common/string_utils.h"
 #include "mods.h"
+#include "streamed_paths.h"
 #include "usermaps.h"
 #include "common/usermaps.h"
 
@@ -64,6 +65,24 @@ std::string GetZoneNameFromFastfileRequest(const char *filename)
 
     const std::string zoneName(basename, length - 3);
     return IsSafeZoneName(zoneName.c_str()) ? zoneName : std::string();
+}
+
+std::string GetActiveUsermapDirectory()
+{
+    const char *map = Dvar_GetString("mapname");
+    const std::string fastfile = usermaps::FastfilePath(map);
+    if (fastfile.empty() || !filesystem::FileExists(fastfile.c_str()))
+        return std::string();
+    return filesystem::JoinPath(usermaps::GetDirectory(), map);
+}
+
+std::string ResolveStreamedPath(const char *filename, bool highmip)
+{
+    const std::string relative = streamed_paths::RelativePath(filename, highmip);
+    if (relative.empty())
+        return std::string();
+    return streamed_paths::Resolve(relative, GetActiveUsermapDirectory(), ModList::GetActivePath(),
+                                   filesystem::FileExists);
 }
 
 bool ContainsZone(const XZoneInfo *zoneInfo, unsigned int zoneCount, const char *name)
@@ -168,14 +187,27 @@ HANDLE FastFiles::CreateFileA_Hook(const char *filename, DWORD desiredAccess, DW
                                    DWORD flagsAndAttributes, HANDLE templateFile)
 {
     std::string replacement;
+    bool redirectedFastfile = false;
     if (creationDisposition == OPEN_EXISTING && (desiredAccess & GENERIC_READ) && !(desiredAccess & GENERIC_WRITE))
+    {
         replacement = ResolveFastfilePath(filename);
+        redirectedFastfile = !replacement.empty();
+        if (replacement.empty())
+            replacement = ResolveStreamedPath(filename, true);
+        if (replacement.empty())
+            replacement = ResolveStreamedPath(filename, false);
+    }
 
     if (!replacement.empty())
     {
-        // TU4 opens D:\patch_mp.ff directly, bypassing DB_BuildOSPath.
-        // Redirect the open so stock zone names, flags and lifetimes remain intact.
-        DbgPrint("[codxe][IW3][FastFiles] Redirecting fastfile %s to %s\n", filename, replacement.c_str());
+        if (redirectedFastfile)
+        {
+            // TU4 opens D:\patch_mp.ff directly, bypassing DB_BuildOSPath.
+            // Keep the existing fastfile diagnostic without highmip/audio spam.
+            const std::string message = std::string("[codxe][IW3][FastFiles] Redirecting fastfile ") + filename +
+                                        " to " + replacement + "\n";
+            DbgPrint("%s", message.c_str());
+        }
         filename = replacement.c_str();
     }
 

@@ -15,12 +15,12 @@ class ModList : public Module
     static void OnUIRefresh();
 
     static std::string GetActiveName();
+    static std::string GetActivePath();
     static std::string ResolvePath(const char *relativePath);
 
   private:
     friend class UIScript;
 
-    static std::string GetActivePath();
     static bool RunMod(const char *name);
     static void ClearMods();
     static void QueueModChange(const std::string &name);
