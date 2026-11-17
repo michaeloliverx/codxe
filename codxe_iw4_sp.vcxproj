@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Xbox 360"><Configuration>Debug</Configuration><Platform>Xbox 360</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Xbox 360"><Configuration>Release</Configuration><Platform>Xbox 360</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{D6888F8C-9EC3-57F5-8CAB-1CA0217E7808}</ProjectGuid>
+    <Keyword>Xbox360Proj</Keyword>
+    <CodxeGame>iw4_sp</CodxeGame>
+    <CodxeModuleName>codxe.iw4.sp</CodxeModuleName>
+    <CodxeGameDefine>IW4_SP</CodxeGameDefine>
+    <CodxeSourceDirectory>iw4\sp</CodxeSourceDirectory>
+    <CodxePluginType>iw4::sp::IW4_SP_Plugin</CodxePluginType>
+  </PropertyGroup>
+  <Import Project="codxe_module.props" />
+</Project>

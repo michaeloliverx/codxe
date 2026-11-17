@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="4.0">
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>2010-01</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <CodxeOutput>$(ProjectDir)build\$(Configuration)\</CodxeOutput>
+    <OutDir>$(CodxeOutput)bin\</OutDir>
+    <IntDir>$(CodxeOutput)obj\$(CodxeGame)\</IntDir>
+    <TargetName>$(CodxeModuleName)</TargetName>
+    <OutputFile>$(OutDir)$(TargetName).exe</OutputFile>
+    <ImageXexOutput>$(OutDir)$(TargetName).xex</ImageXexOutput>
+    <GitVersionHeader>$(IntDir)git_version.h</GitVersionHeader>
+    <GitVersionXexConfiguration>$(IntDir)xex.xml</GitVersionXexConfiguration>
+    <XexTemplate>$(ProjectDir)xex_module.xml</XexTemplate>
+    <!-- Incremental PowerPC ILT stubs clobber r11 in naked mid-function hooks. -->
+    <LinkIncremental>false</LinkIncremental>
+    <CodxeDefines>_XBOX;CODXE_GAME_$(CodxeGameDefine);CODXE_GAME_NAME=$(CodxeGame);CODXE_PLUGIN_TYPE=$(CodxePluginType)</CodxeDefines>
+    <CodxeDefines Condition="'$(Configuration)'=='Release'">NDEBUG;$(CodxeDefines)</CodxeDefines>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)third_party\xkelib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <ForcedIncludeFiles>$(GitVersionHeader)</ForcedIncludeFiles>
+      <PreprocessorDefinitions>$(CodxeDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/wd4481 /wd4201 /wd4505 %(AdditionalOptions)</AdditionalOptions>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <StringPooling>true</StringPooling>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutputFile)</OutputFile>
+      <AdditionalDependencies>xapilib.lib;xboxkrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/DLL /ENTRY:CodxeModuleEntry /ALIGN:128,4096 /INCREMENTAL:NO %(AdditionalOptions)</AdditionalOptions>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalLibraryDirectories>$(ProjectDir)build\$(Configuration)\lib\xkelib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <ImageXex>
+      <ConfigurationFile>$(GitVersionXexConfiguration)</ConfigurationFile>
+    </ImageXex>
+    <Deploy>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </Deploy>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\module\entry.cpp" />
+    <ClCompile Include="src\notifications.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\bootstrap\paths.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\common\brush_collision_tracker.cpp" />
+    <ClCompile Include="src\common\config.cpp" />
+    <ClCompile Include="src\common\usermaps.cpp" />
+    <ClCompile Include="src\common\endian.cpp" />
+    <ClCompile Include="src\common\gsc_loader.cpp" />
+    <ClCompile Include="src\common\map_ents.cpp" />
+    <ClCompile Include="src\common\ppc.cpp" />
+    <ClCompile Include="src\common\script_files.cpp" />
+    <ClCompile Include="src\common\string_utils.cpp" />
+    <ClCompile Include="src\game\$(CodxeSourceDirectory)\**\*.cpp" />
+    <ClCompile Include="src\detour.cpp" />
+    <ClCompile Include="src\filesystem.cpp" />
+    <ClCompile Include="src\xbox360.cpp" />
+    <ClCompile Include="src\image\xenos_texture.cpp" />
+    <ClCompile Include="src\image\usermap_preview.cpp" />
+    <ClCompile Include="src\image\preview_dds.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClInclude Include="src\common\*.h;src\image\*.h;src\game\$(CodxeSourceDirectory)\**\*.h;src\*.h;src\module\*.h" />
+    <None Include="xex_module.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="third_party\xkelib.vcxproj">
+      <Project>{83FEF217-22EE-4768-80BF-9F48D5B4564C}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="codxe_version.targets" />
+</Project>

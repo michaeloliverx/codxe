@@ -73,7 +73,7 @@ jobs:
         run: |
           Start-Process -FilePath "xbox360_sdk.exe" -ArgumentList "/U", "/T full" -Wait
 
-      - name: Build Plugin
+      - name: Build monitor, title modules and platform packages
         id: build
         env:
           CODXE_RELEASE_BUILD: "1"
@@ -86,7 +86,8 @@ jobs:
           python build.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          echo "ZIP_FILE=codxe-r${commitCount}.zip" >> $env:GITHUB_OUTPUT
+          echo "XBOX_ZIP=codxe-r${commitCount}-xbox360.zip" >> $env:GITHUB_OUTPUT
+          echo "XENIA_ZIP=codxe-r${commitCount}-xenia.zip" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
       - name: Create Release
@@ -100,6 +101,7 @@ jobs:
           prerelease: ${{ github.event.inputs.prerelease }}
           generate_release_notes: true
           files: |
-            build/${{ steps.build.outputs.ZIP_FILE }}
+            build/${{ steps.build.outputs.XBOX_ZIP }}
+            build/${{ steps.build.outputs.XENIA_ZIP }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

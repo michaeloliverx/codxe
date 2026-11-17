@@ -14,8 +14,7 @@ class Config : public Module
     static bool dump_rawfile;
     static bool dump_map_ents;
 
-    static bool Initialize(HANDLE module);
-    static bool MountGameDirectory(const char *game);
+    static bool MountDataRoot(const char *path);
     static const char *GetDataRoot();
     static const char *GetActiveMod();
     static std::string ResolveModPath(const char *relativePath);

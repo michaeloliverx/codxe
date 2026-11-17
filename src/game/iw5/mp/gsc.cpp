@@ -11,6 +11,7 @@ namespace mp
 
 namespace
 {
+const int CONTENTS_PLAYERCLIP = 0x10000;
 static const unsigned int GSC_TOKEN_OPENFILE = 0x99;
 static const unsigned int GSC_TOKEN_CLOSEFILE = 0x9A;
 static const unsigned int GSC_TOKEN_FPRINTLN = 0x9B;

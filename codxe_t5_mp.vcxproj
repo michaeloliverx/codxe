@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Xbox 360"><Configuration>Debug</Configuration><Platform>Xbox 360</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Xbox 360"><Configuration>Release</Configuration><Platform>Xbox 360</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2977ECE3-9833-549D-8B87-9DD7CAF4755F}</ProjectGuid>
+    <Keyword>Xbox360Proj</Keyword>
+    <CodxeGame>t5_mp</CodxeGame>
+    <CodxeModuleName>codxe.t5.mp</CodxeModuleName>
+    <CodxeGameDefine>T5_MP</CodxeGameDefine>
+    <CodxeSourceDirectory>t5\mp</CodxeSourceDirectory>
+    <CodxePluginType>t5::mp::T5_MP_Plugin</CodxePluginType>
+  </PropertyGroup>
+  <Import Project="codxe_module.props" />
+</Project>

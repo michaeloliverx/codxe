@@ -12,19 +12,6 @@ bool Config::dump_map_ents = false;
 namespace
 {
 const char *const CONFIG_PATH = "codxe:\\codxe.json";
-char installRoot[MAX_PATH];
-
-bool MountDevice(const char *name, const char *path)
-{
-    STRING link, device;
-    RtlInitAnsiString(&link, name);
-    RtlInitAnsiString(&device, path);
-    ObDeleteSymbolicLink(&link);
-    const NTSTATUS status = ObCreateSymbolicLink(&link, &device);
-    if (!NT_SUCCESS(status))
-        DbgPrint("[codxe][Config] Could not mount %s at %s: %08X\n", path, name, status);
-    return NT_SUCCESS(status);
-}
 
 bool ReadFileToString(const char *path, std::string &outString)
 {
@@ -78,52 +65,16 @@ bool ReadFileToString(const char *path, std::string &outString)
 
 } // namespace
 
-bool Config::Initialize(HANDLE module)
+bool Config::MountDataRoot(const char *path)
 {
-    if (xbox::GetEnvironment() == xbox::ENVIRONMENT_XENIA)
-    {
-        // Canary mounts the current title's plugin folder and omits FullDllName.
-        strcpy_s(installRoot, "\\Device\\Plugins\\_codxe");
-    }
-    else
-    {
-        const auto self = static_cast<PLDR_DATA_TABLE_ENTRY>(module);
-        const unsigned length = self->FullDllName.Length / sizeof(WCHAR);
-        if (length >= ARRAYSIZE(installRoot))
-            return false;
-        unsigned lastSlash = 0;
-        for (unsigned i = 0; i < length; ++i)
-        {
-            const WCHAR c = self->FullDllName.Buffer[i];
-            if (c > 127)
-                return false;
-            installRoot[i] = static_cast<char>(c);
-            if (c == '\\')
-                lastSlash = i;
-        }
-        if (!lastSlash)
-            return false;
-        installRoot[lastSlash] = 0;
-    }
-    DbgPrint("[codxe][Config] Install root: %s\n", installRoot);
-    return true;
-}
-
-bool Config::MountGameDirectory(const char *game)
-{
-    char path[MAX_PATH];
-    if (_snprintf_s(path, ARRAYSIZE(path), _TRUNCATE, "%s\\games\\%s", installRoot, game) < 0)
-    {
-        DbgPrint("[codxe][Config] Data path is too long for %s\n", game);
-        return false;
-    }
-    if (!MountDevice("\\??\\codxe:", path))
-        return false;
-    // The current loader constructs components in system context; game I/O uses title context.
-    if (xbox::GetEnvironment() != xbox::ENVIRONMENT_XENIA && !MountDevice("\\System??\\codxe:", path))
-        return false;
-    DbgPrint("[codxe][Config] Game data: %s\n", path);
-    return true;
+    STRING link, device;
+    RtlInitAnsiString(&link, "\\??\\codxe:");
+    RtlInitAnsiString(&device, path);
+    ObDeleteSymbolicLink(&link);
+    const NTSTATUS status = ObCreateSymbolicLink(&link, &device);
+    if (!NT_SUCCESS(status))
+        DbgPrint("[codxe][Config] Could not mount %s: %08X\n", path, status);
+    return NT_SUCCESS(status);
 }
 
 const char *Config::GetDataRoot()

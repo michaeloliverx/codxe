@@ -8,6 +8,13 @@ namespace iw4
 {
 namespace mp_tu6
 {
+enum
+{
+    PITCH,
+    YAW,
+    ROLL
+};
+
 struct RecordedCmd
 {
     int serverTime;

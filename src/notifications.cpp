@@ -1,4 +1,5 @@
-#include "pch.h"
+#include <xtl.h>
+#include <xkelib.h>
 #include "notifications.h"
 
 namespace
@@ -140,20 +141,22 @@ DWORD WINAPI StartupThread(void *)
 }
 } // namespace
 
-void xbox::notifications::Initialize(const char *message)
+void xbox::notifications::Initialize(Environment environment, const char *message)
 {
     // Own the message: the startup worker outlives this call.
-    _snprintf_s(g_console_message, sizeof(g_console_message), _TRUNCATE, "%s", message);
-    char text[ARRAYSIZE(g_startup_text)];
-    _snprintf_s(text, sizeof(text), _TRUNCATE, "CoD Xe: %s", g_console_message);
-    for (size_t i = 0; i < ARRAYSIZE(text); ++i)
+    size_t length = 0;
+    while (message[length] && length + 1 < ARRAYSIZE(g_console_message))
     {
-        g_startup_text[i] = static_cast<unsigned char>(text[i]);
-        if (text[i] == '\0')
-        {
-            break;
-        }
+        g_console_message[length] = message[length];
+        ++length;
     }
+    g_console_message[length] = 0;
+    const char prefix[] = "CoD Xe: ";
+    size_t used = 0;
+    for (size_t i = 0; prefix[i]; ++i)
+        g_startup_text[used++] = prefix[i];
+    for (size_t i = 0; i <= length; ++i)
+        g_startup_text[used++] = static_cast<unsigned char>(g_console_message[i]);
 
     HANDLE xam = nullptr;
     if (!NT_SUCCESS(XexGetModuleHandle("xam.xex", &xam)) ||
@@ -162,7 +165,7 @@ void xbox::notifications::Initialize(const char *message)
         return;
     }
 
-    g_in_xenia = GetEnvironment() == ENVIRONMENT_XENIA;
+    g_in_xenia = environment == ENVIRONMENT_XENIA;
     if (g_in_xenia)
     {
         // Xenia implements the popup itself and loads plugins directly into the game.
