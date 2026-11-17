@@ -301,6 +301,9 @@ FastFiles::FastFiles()
     DB_ReallocXAssetPool(ASSET_TYPE_LOCALIZE_ENTRY, 14000); // Stock: 6144
     DB_ReallocXAssetPool(ASSET_TYPE_FX, 600);               // Stock: 400
 
+    // Mod overrides retain stock definitions; this does not expand gameplay weapon IDs.
+    DB_ReallocXAssetPool(ASSET_TYPE_WEAPON, 256);           // Stock: 128
+
     CreateFileA_Detour = Detour(GameCreateFileA, CreateFileA_Hook);
     CreateFileA_Detour.Install();
 
