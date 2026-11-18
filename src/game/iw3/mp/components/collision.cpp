@@ -712,10 +712,5 @@ void Collision::OnCGDrawActive(int localClientNum)
     }
     batch.Flush();
 }
-
-Collision::~Collision()
-{
-    ClearMap();
-}
 } // namespace mp
 } // namespace iw3

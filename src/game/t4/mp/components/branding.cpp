@@ -29,10 +29,5 @@ Branding::Branding()
     UI_DrawBuildNumber_Detour = Detour(UI_DrawBuildNumber, Branding::UI_DrawBuildNumber_Hook);
     UI_DrawBuildNumber_Detour.Install();
 }
-
-Branding::~Branding()
-{
-    UI_DrawBuildNumber_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4

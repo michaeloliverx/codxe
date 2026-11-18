@@ -10,7 +10,6 @@ class Events : public Module
 {
   public:
     Events();
-    ~Events();
 
   private:
     static Detour Com_InitDvars_Detour;

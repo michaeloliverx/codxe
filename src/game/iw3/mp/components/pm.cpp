@@ -146,16 +146,5 @@ pm::pm()
     Pmove_Detour = Detour(Pmove, Pmove_Hook);
     Pmove_Detour.Install();
 }
-
-pm::~pm()
-{
-    PM_FoliageSounds_Detour.Remove();
-
-    Sys_SnapVector_Detour.Remove();
-
-    Pmove_Detour.Remove();
-
-    PmoveSingle_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

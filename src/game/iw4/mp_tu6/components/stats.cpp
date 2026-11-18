@@ -105,10 +105,5 @@ void stats::OnCmdInit()
 stats::stats()
 {
 }
-
-stats::~stats()
-{
-}
-
 } // namespace mp_tu6
 } // namespace iw4

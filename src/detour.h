@@ -125,16 +125,6 @@ class Detour
         return Detour::WriteFarBranchEx(Destination, BranchTarget, Linked, PreserveRegister);
     }
 
-    static SIZE_T GetTrampolinePoolSize()
-    {
-        return Detour::TrampolineSize;
-    }
-
-    static void ResetTrampolinePool(SIZE_T size = 0)
-    {
-        Detour::TrampolineSize = size;
-    }
-
     //
     // Writes both conditional and unconditional branches using the count register to the destination address that will
     // branch to the target address.

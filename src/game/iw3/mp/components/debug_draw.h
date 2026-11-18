@@ -10,7 +10,6 @@ class DebugDraw : public Module
 {
   public:
     DebugDraw();
-    ~DebugDraw();
 
     static void OnCGDrawActive(int localClientNum);
 

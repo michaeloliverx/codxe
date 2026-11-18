@@ -8,6 +8,13 @@ namespace iw4
 {
 namespace mp_tu6
 {
+enum
+{
+    PITCH,
+    YAW,
+    ROLL
+};
+
 struct RecordedCmd
 {
     int serverTime;
@@ -252,11 +259,6 @@ MovementRecorder::MovementRecorder()
 {
     CL_CreateNewCommands_Detour = Detour(CL_CreateNewCommands, CL_CreateNewCommands_Hook);
     CL_CreateNewCommands_Detour.Install();
-}
-
-MovementRecorder::~MovementRecorder()
-{
-    CL_CreateNewCommands_Detour.Remove();
 }
 } // namespace mp_tu6
 } // namespace iw4

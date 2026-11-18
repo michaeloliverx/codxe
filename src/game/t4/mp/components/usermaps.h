@@ -10,7 +10,6 @@ class Usermaps : public Module
 {
   public:
     Usermaps();
-    ~Usermaps();
 
     static const int FEEDER_ID = 60;
     static void OnDvarInit();

@@ -10,7 +10,6 @@ class FastFiles : public Module
 {
   public:
     FastFiles();
-    ~FastFiles();
 
     static const char *GetUsermapsDirectory();
     static std::string GetUsermapFastfilePath(const char *zoneName);

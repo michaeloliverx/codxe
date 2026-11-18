@@ -10,7 +10,6 @@ class UIFeeder : public Module
 {
   public:
     UIFeeder();
-    ~UIFeeder();
 
     static void Add(float feederID, UIFeederGetItemCount_t getItemCount, UIFeederGetItemText_t getItemText,
                     UIFeederSelect_t select);

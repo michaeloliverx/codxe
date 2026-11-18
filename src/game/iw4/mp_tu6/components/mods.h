@@ -9,7 +9,6 @@ class ModList : public Module
 {
   public:
     ModList();
-    ~ModList();
     static void OnDvarInit();
     static std::string GetActiveName();
     static std::string ResolvePath(const char *relativePath);

@@ -780,21 +780,5 @@ mpsp::mpsp()
     SV_AddEntitiesVisibleFromPoint_Detour = Detour(SV_AddEntitiesVisibleFromPoint, SV_AddEntitiesVisibleFromPoint_Hook);
     SV_AddEntitiesVisibleFromPoint_Detour.Install();
 }
-
-mpsp::~mpsp()
-{
-    Com_sprintf_Detour.Remove();
-
-    DB_LoadXFileInternal_Detour.Remove();
-
-    DB_AuthLoad_Inflate_Detour.Remove();
-
-    DB_AuthLoad_InflateEnd_Detour.Remove();
-
-    Load_XAssetArrayCustom_Detour.Remove();
-
-    SV_AddEntitiesVisibleFromPoint_Detour.Remove();
-}
-
 } // namespace mp
 } // namespace iw3

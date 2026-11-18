@@ -18,10 +18,5 @@ IW2_MP_Plugin::IW2_MP_Plugin()
     RegisterModule(new scr_parser());
     RegisterModule(new PlayerMovement());
 }
-
-IW2_MP_Plugin::~IW2_MP_Plugin()
-{
-}
-
 } // namespace mp
 } // namespace iw2

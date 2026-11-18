@@ -16,7 +16,6 @@ class sv_bots : public Module
 {
   public:
     sv_bots();
-    ~sv_bots();
 
     static void OnVMShutdown();
 };

@@ -45,70 +45,66 @@
 #include "common/map_ents.h"
 #include "common/ppc.h"
 
-// NGL-specific includes
-#include "game/ngl/mp/main.h"
-#include "game/ngl/mp/structs.h"
-#include "game/ngl/mp/symbols.h"
-
-// IW2-specific includes
+#if defined(CODXE_GAME_IW2_SP)
 #include "game/iw2/sp/main.h"
 #include "game/iw2/sp/structs.h"
 #include "game/iw2/sp/symbols.h"
-
+#elif defined(CODXE_GAME_IW2_MP)
 #include "game/iw2/mp/main.h"
 #include "game/iw2/mp/structs.h"
 #include "game/iw2/mp/symbols.h"
-
-// IW3-specific includes
-#include "game/iw3/mp/main.h"
-#include "game/iw3/mp/structs.h"
-#include "game/iw3/mp/symbols.h"
-
+#elif defined(CODXE_GAME_NGL_MP)
+#include "game/ngl/mp/main.h"
+#include "game/ngl/mp/structs.h"
+#include "game/ngl/mp/symbols.h"
+#elif defined(CODXE_GAME_IW3_SP)
 #include "game/iw3/sp/main.h"
 #include "game/iw3/sp/structs.h"
 #include "game/iw3/sp/symbols.h"
-
-// IW4-specific includes
-#include "game/iw4/sp/main.h"
-#include "game/iw4/sp/structs.h"
-#include "game/iw4/sp/symbols.h"
-
-#include "game/iw4/mp/main.h"
-#include "game/iw4/mp/structs.h"
-#include "game/iw4/mp/symbols.h"
-
-#include "game/iw4/mp_tu6/main.h"
-#include "game/iw4/mp_tu6/structs.h"
-#include "game/iw4/mp_tu6/symbols.h"
-
-// IW5-specific includes
-#include "game/iw5/mp/main.h"
-#include "game/iw5/mp/structs.h"
-#include "game/iw5/mp/symbols.h"
-
-// T4-specific includes
-#include "game/t4/mp/main.h"
-#include "game/t4/mp/structs.h"
-#include "game/t4/mp/symbols.h"
-
-#include "game/t4/sp/main.h"
-#include "game/t4/sp/structs.h"
-#include "game/t4/sp/symbols.h"
-
-// T5-specific includes
-#include "game/t5/mp/main.h"
-#include "game/t5/mp/structs.h"
-#include "game/t5/mp/symbols.h"
-
-#include "game/t5/sp/main.h"
-#include "game/t5/sp/structs.h"
-#include "game/t5/sp/symbols.h"
-
-// QOS-specific includes
+#elif defined(CODXE_GAME_IW3_MP)
+#include "game/iw3/mp/main.h"
+#include "game/iw3/mp/structs.h"
+#include "game/iw3/mp/symbols.h"
+#elif defined(CODXE_GAME_QOS_SP)
 #include "game/qos/sp/main.h"
 #include "game/qos/sp/structs.h"
 #include "game/qos/sp/symbols.h"
-
+#elif defined(CODXE_GAME_QOS_MP)
 #include "game/qos/mp/main.h"
 #include "game/qos/mp/structs.h"
 #include "game/qos/mp/symbols.h"
+#elif defined(CODXE_GAME_T4_SP)
+#include "game/t4/sp/main.h"
+#include "game/t4/sp/structs.h"
+#include "game/t4/sp/symbols.h"
+#elif defined(CODXE_GAME_T4_MP)
+#include "game/t4/mp/main.h"
+#include "game/t4/mp/structs.h"
+#include "game/t4/mp/symbols.h"
+#elif defined(CODXE_GAME_IW4_SP)
+#include "game/iw4/sp/main.h"
+#include "game/iw4/sp/structs.h"
+#include "game/iw4/sp/symbols.h"
+#elif defined(CODXE_GAME_IW4_MP)
+#include "game/iw4/mp/main.h"
+#include "game/iw4/mp/structs.h"
+#include "game/iw4/mp/symbols.h"
+#elif defined(CODXE_GAME_IW4_MP_TU6)
+#include "game/iw4/mp_tu6/main.h"
+#include "game/iw4/mp_tu6/structs.h"
+#include "game/iw4/mp_tu6/symbols.h"
+#elif defined(CODXE_GAME_T5_SP)
+#include "game/t5/sp/main.h"
+#include "game/t5/sp/structs.h"
+#include "game/t5/sp/symbols.h"
+#elif defined(CODXE_GAME_T5_MP)
+#include "game/t5/mp/main.h"
+#include "game/t5/mp/structs.h"
+#include "game/t5/mp/symbols.h"
+#elif defined(CODXE_GAME_IW5_MP)
+#include "game/iw5/mp/main.h"
+#include "game/iw5/mp/structs.h"
+#include "game/iw5/mp/symbols.h"
+#else
+#error Select a game module project.
+#endif

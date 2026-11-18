@@ -33,10 +33,5 @@ scr_parser::scr_parser()
     Scr_AddSourceBuffer_Detour = Detour(Scr_AddSourceBuffer, Scr_AddSourceBuffer_Hook);
     Scr_AddSourceBuffer_Detour.Install();
 }
-
-scr_parser::~scr_parser()
-{
-    Scr_AddSourceBuffer_Detour.Remove();
-}
 } // namespace sp
 } // namespace t4

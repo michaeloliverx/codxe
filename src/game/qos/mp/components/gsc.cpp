@@ -140,12 +140,5 @@ GSC::GSC()
     Scr_GetMethod_Detour = Detour(Scr_GetMethod, Scr_GetMethod_Hook);
     Scr_GetMethod_Detour.Install();
 }
-
-GSC::~GSC()
-{
-    Scr_GetFunction_Detour.Remove();
-
-    Scr_GetMethod_Detour.Remove();
-}
 } // namespace mp
 } // namespace qos

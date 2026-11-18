@@ -117,14 +117,5 @@ ui::ui()
     UI_RunMenuScript_Detour = Detour(UI_RunMenuScript, UI_RunMenuScript_Hook);
     UI_RunMenuScript_Detour.Install();
 }
-
-ui::~ui()
-{
-    Menus_AddMenuList_Detour.Remove();
-
-    Menus_OpenByName_Detour.Remove();
-
-    UI_RunMenuScript_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4

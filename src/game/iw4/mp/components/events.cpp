@@ -33,10 +33,5 @@ Events::Events()
     Com_InitDvars_Detour = Detour(Com_InitDvars, Events::Com_InitDvars_Hook);
     Com_InitDvars_Detour.Install();
 }
-
-Events::~Events()
-{
-    Com_InitDvars_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw4

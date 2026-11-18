@@ -10,7 +10,6 @@ class FastFiles : public Module
 {
   public:
     FastFiles();
-    ~FastFiles();
 };
 } // namespace sp
 } // namespace t4

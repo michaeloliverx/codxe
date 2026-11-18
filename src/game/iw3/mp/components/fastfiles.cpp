@@ -233,11 +233,5 @@ FastFiles::FastFiles()
     DB_LoadXAssets_Detour = Detour(DB_LoadXAssets, DB_LoadXAssets_Hook);
     DB_LoadXAssets_Detour.Install();
 }
-
-FastFiles::~FastFiles()
-{
-    DB_LoadXAssets_Detour.Remove();
-    CreateFileA_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

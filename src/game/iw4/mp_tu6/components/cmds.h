@@ -10,7 +10,6 @@ class cmds : public Module
 {
   public:
     cmds();
-    ~cmds();
 };
 } // namespace mp_tu6
 } // namespace iw4

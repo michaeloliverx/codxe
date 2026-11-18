@@ -10,7 +10,6 @@ class GSCLoader : public Module
 {
   public:
     GSCLoader();
-    ~GSCLoader();
 
   private:
     static char *Scr_AddSourceBuffer_Hook(scriptInstance_t inst, const char *filename, const char *extFilename,

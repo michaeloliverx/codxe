@@ -74,10 +74,5 @@ Map::Map()
     Load_clipMap_t_Detour = Detour(Load_clipMap_t, Load_clipMap_t_Hook);
     Load_clipMap_t_Detour.Install();
 }
-
-Map::~Map()
-{
-    Load_clipMap_t_Detour.Remove();
-}
 } // namespace mp
 } // namespace t4

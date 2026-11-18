@@ -10,7 +10,6 @@ class console : public Module
 {
   public:
     console();
-    ~console();
 
     static void OnUIRefresh();
     static void frame();

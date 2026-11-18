@@ -216,10 +216,5 @@ void GScr_Float()
 GSCFunctions::GSCFunctions()
 {
 }
-
-GSCFunctions::~GSCFunctions()
-{
-    CloseAllScriptFiles();
-}
 } // namespace mp
 } // namespace iw3

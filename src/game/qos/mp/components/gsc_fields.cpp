@@ -114,12 +114,5 @@ GSCFields::GSCFields()
     Scr_GetObjectField_Detour = Detour(Scr_GetObjectField, Scr_GetObjectField_Hook);
     Scr_GetObjectField_Detour.Install();
 }
-
-GSCFields::~GSCFields()
-{
-    GScr_AddFieldsForClient_Detour.Remove();
-    Scr_SetClientField_Detour.Remove();
-    Scr_GetObjectField_Detour.Remove();
-}
 } // namespace mp
 } // namespace qos

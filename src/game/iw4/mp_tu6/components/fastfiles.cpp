@@ -104,11 +104,5 @@ fastfiles::fastfiles()
     DB_LoadXAssets_Detour = Detour(DB_LoadXAssets, DB_LoadXAssets_Hook);
     DB_LoadXAssets_Detour.Install();
 }
-
-fastfiles::~fastfiles()
-{
-    DB_LoadXAssets_Detour.Remove();
-    Sys_CreateFile_Detour.Remove();
-}
 } // namespace mp_tu6
 } // namespace iw4

@@ -168,12 +168,5 @@ GSCFields::GSCFields()
     Scr_SetEntityField_Detour = Detour(Scr_SetEntityField, Scr_SetEntityField_Hook);
     Scr_SetEntityField_Detour.Install();
 }
-
-GSCFields::~GSCFields()
-{
-    GScr_AddFieldsForClient_Detour.Remove();
-    Scr_GetEntityField_Detour.Remove();
-    Scr_SetEntityField_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

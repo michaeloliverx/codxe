@@ -10,7 +10,6 @@ class clipmap : public Module
 {
   public:
     clipmap();
-    ~clipmap();
 };
 } // namespace sp
 } // namespace iw4

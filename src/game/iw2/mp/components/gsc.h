@@ -11,7 +11,6 @@ class GSC : public Module
 {
   public:
     GSC();
-    ~GSC();
 };
 } // namespace mp
 } // namespace iw2

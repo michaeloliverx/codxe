@@ -10,7 +10,6 @@ class FastFiles : public Module
 {
   public:
     FastFiles();
-    ~FastFiles();
 
     static void ReloadModZone();
 };

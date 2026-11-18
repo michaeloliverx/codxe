@@ -669,25 +669,5 @@ ui::ui()
     StringTable_Lookup_Detour = Detour(StringTable_Lookup, StringTable_Lookup_Hook);
     StringTable_Lookup_Detour.Install();
 }
-
-ui::~ui()
-{
-    StringTable_Lookup_Detour.Remove();
-    UI_FeederSelection_Detour.Remove();
-    UI_FeederItemText_Detour.Remove();
-    UI_FeederCount_Detour.Remove();
-    Item_Slider_HandleKey_Detour.Remove();
-    Menus_OpenByName_Detour.Remove();
-    UI_Refresh_Detour.Remove();
-
-    usermaps.clear();
-    defaultPreviewPixels.clear();
-    selectedUsermap = 0;
-    usermapsScanned = false;
-    usermapDvarsRegistered = false;
-    usermapNameLookupLogged = false;
-    usermapPreviewLookupLogged = false;
-    previewImage = nullptr;
-}
 } // namespace sp
 } // namespace t4

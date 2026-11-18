@@ -59,10 +59,5 @@ clipmap::clipmap()
     Load_clipMap_t_Detour = Detour(Load_clipMap_t, Load_clipMap_t_Hook);
     Load_clipMap_t_Detour.Install();
 }
-
-clipmap::~clipmap()
-{
-    Load_clipMap_t_Detour.Remove();
-}
 } // namespace sp
 } // namespace iw4

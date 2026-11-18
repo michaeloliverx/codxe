@@ -10,7 +10,6 @@ class MirrorWorld : public Module
 {
   public:
     MirrorWorld();
-    ~MirrorWorld();
 
     static void OnDvarInit();
 };

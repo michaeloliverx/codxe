@@ -10,7 +10,6 @@ class GSC : public Module
 {
   public:
     GSC();
-    ~GSC();
 };
 } // namespace sp
 } // namespace iw3

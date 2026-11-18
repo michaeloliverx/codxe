@@ -276,11 +276,6 @@ console::console()
     SCR_DrawScreenField_Detour.Install();
 }
 
-console::~console()
-{
-    SCR_DrawScreenField_Detour.Remove();
-}
-
 void console::Frame()
 {
     const iw4::mp_tu6::connstate_t connection_state = iw4::mp_tu6::clientUIActives[local_client_num].connectionState;

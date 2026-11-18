@@ -714,10 +714,5 @@ void Collision::OnCGDrawActive(int localClientNum)
     }
     batch.Flush();
 }
-
-Collision::~Collision()
-{
-    ClearMap();
-}
 } // namespace mp
 } // namespace t4

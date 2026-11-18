@@ -10,7 +10,6 @@ class BrushCollision : public Module
 {
   public:
     BrushCollision();
-    ~BrushCollision();
 
     static void OnDvarInit();
     static void OnCGDrawActive(int localClientNum);

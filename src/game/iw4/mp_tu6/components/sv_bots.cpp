@@ -372,15 +372,5 @@ SVBots::SVBots()
     // remove bot check inside of Player_ActivateHoldCmd
     ppc::Nop(0x82263658);
 }
-
-SVBots::~SVBots()
-{
-    G_SelectWeaponIndex_Detour.Remove();
-    SV_BotUserMove_Detour.Remove();
-    SV_CalcPings_Detour.Remove();
-
-    CleanBotArray();
-}
-
 } // namespace mp_tu6
 } // namespace iw4

@@ -23,7 +23,6 @@ class PlayerMovement : public Module
 {
   public:
     PlayerMovement();
-    virtual ~PlayerMovement();
 
   private:
     void install_patch();

@@ -5,11 +5,11 @@ title_id = "415607E6"
 # TU4
 
 [[plugin]]
-file = "_codxe/codxe.xex"
+file = "_codxe/modules/codxe.iw3.sp.xex"
 hash = "B4B0A3571D5160E2" # default.xex
 is_enabled = true
 
 [[plugin]]
-file = "_codxe/codxe.xex"
+file = "_codxe/modules/codxe.iw3.mp.xex"
 hash = "F5F903E4F326EB10" # default_mp.xex
 is_enabled = true

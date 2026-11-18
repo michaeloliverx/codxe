@@ -11,6 +11,7 @@ namespace mp
 
 namespace
 {
+const int CONTENTS_PLAYERCLIP = 0x10000;
 static const unsigned int GSC_TOKEN_OPENFILE = 0x99;
 static const unsigned int GSC_TOKEN_CLOSEFILE = 0x9A;
 static const unsigned int GSC_TOKEN_FPRINTLN = 0x9B;
@@ -287,13 +288,6 @@ GSC::GSC()
 
     PlayerCmd_GetViewmodel_Detour = Detour(PlayerCmd_GetViewmodel, PlayerCmd_GetViewmodel_Hook);
     PlayerCmd_GetViewmodel_Detour.Install();
-}
-
-GSC::~GSC()
-{
-    CloseAllScriptFiles();
-    PlayerCmd_GetViewmodel_Detour.Remove();
-    Scr_GetFunction_Detour.Remove();
 }
 } // namespace mp
 } // namespace iw5

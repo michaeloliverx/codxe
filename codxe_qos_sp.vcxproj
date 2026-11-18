@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Xbox 360"><Configuration>Debug</Configuration><Platform>Xbox 360</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Xbox 360"><Configuration>Release</Configuration><Platform>Xbox 360</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{057C18A9-0477-58F0-8789-4E280D625BD5}</ProjectGuid>
+    <Keyword>Xbox360Proj</Keyword>
+    <CodxeGame>qos_sp</CodxeGame>
+    <CodxeModuleName>codxe.qos.sp</CodxeModuleName>
+    <CodxeGameDefine>QOS_SP</CodxeGameDefine>
+    <CodxeSourceDirectory>qos\sp</CodxeSourceDirectory>
+    <CodxePluginType>qos::sp::QOS_SP_Plugin</CodxePluginType>
+  </PropertyGroup>
+  <Import Project="codxe_module.props" />
+</Project>

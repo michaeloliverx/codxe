@@ -10,7 +10,6 @@ class GSCClientMethods : public Module
 {
   public:
     GSCClientMethods();
-    ~GSCClientMethods();
 };
 } // namespace mp
 } // namespace t4

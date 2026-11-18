@@ -20,7 +20,6 @@ class GSCFunctions : public Module
 {
   public:
     GSCFunctions();
-    ~GSCFunctions();
 
     static void OnVMShutdown();
 };

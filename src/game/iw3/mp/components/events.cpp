@@ -203,18 +203,5 @@ Events::Events()
     DB_LinkXAssetEntry_Detour = Detour(DB_LinkXAssetEntry, DB_LinkXAssetEntry_Hook);
     DB_LinkXAssetEntry_Detour.Install();
 }
-
-Events::~Events()
-{
-    CG_DrawActive_Detour.Remove();
-    CG_Init_Detour.Remove();
-    Load_DelayStream_Detour.Remove();
-    Scr_ShutdownSystem_Detour.Remove();
-    Com_InitDvars_Detour.Remove();
-    Cmd_Init_Detour.Remove();
-    UI_Refresh_Detour.Remove();
-    DB_LinkXAssetEntry_Detour.Remove();
-}
-
 } // namespace mp
 } // namespace iw3

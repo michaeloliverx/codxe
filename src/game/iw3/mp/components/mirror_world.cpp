@@ -279,19 +279,5 @@ MirrorWorld::MirrorWorld()
     FinishMoveDetour = Detour(CL_FinishMove, CL_FinishMove_Hook);
     FinishMoveDetour.Install();
 }
-
-MirrorWorld::~MirrorWorld()
-{
-    FinishMoveDetour.Remove();
-    GamepadInputDetour.Remove();
-    CreateCmdDetour.Remove();
-    PrimArgumentsDetour.Remove();
-    ObjectArgumentsDetour.Remove();
-    StableArgumentsDetour.Remove();
-    SetupPassDetour.Remove();
-    WeaponAnglesDetour.Remove();
-    SaveWeaponOffsetDetour.Remove();
-    AddViewWeaponDetour.Remove();
-}
 } // namespace mp
 } // namespace iw3

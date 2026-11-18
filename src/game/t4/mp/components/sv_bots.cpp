@@ -310,21 +310,5 @@ SVBots::SVBots()
     SV_CalcPings_Detour = Detour(SV_CalcPings, SV_CalcPings_Hook);
     SV_CalcPings_Detour.Install();
 }
-
-SVBots::~SVBots()
-{
-
-    G_SelectWeaponIndex_Detour.Remove();
-
-    SV_BotUserMove_Detour.Remove();
-
-    SV_UserinfoChanged_Detour.Remove();
-
-    SV_CalcPings_Detour.Remove();
-
-    CleanBotArray();
-    s_pendingBotName[0] = '\0';
-}
-
 } // namespace mp
 } // namespace t4

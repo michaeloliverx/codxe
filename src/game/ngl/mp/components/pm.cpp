@@ -115,13 +115,5 @@ PlayerMovement::PlayerMovement()
 
     install_patch();
 }
-
-PlayerMovement::~PlayerMovement()
-{
-    PM_ProjectVelocity_Detour.Remove();
-    Cvar_RegisterCommands_Detour.Remove();
-    bg_bounces = nullptr;
-}
-
 } // namespace mp
 } // namespace ngl

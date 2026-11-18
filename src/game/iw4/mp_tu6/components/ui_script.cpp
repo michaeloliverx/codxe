@@ -40,11 +40,5 @@ UIScript::UIScript()
     UI_RunMenuScript_Detour = Detour(UI_RunMenuScript, Run);
     UI_RunMenuScript_Detour.Install();
 }
-
-UIScript::~UIScript()
-{
-    UI_RunMenuScript_Detour.Remove();
-    Scripts.clear();
-}
 } // namespace mp_tu6
 } // namespace iw4

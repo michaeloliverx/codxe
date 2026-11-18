@@ -1164,10 +1164,5 @@ image_loader::image_loader()
 
     command::add("imagedump", Cmd_imagedump);
 }
-
-image_loader::~image_loader()
-{
-    R_StreamLoadFileSynchronously_Detour.Remove();
-}
 } // namespace mp
 } // namespace iw3

@@ -2,6 +2,11 @@
 #include "common/brush_collision_tracker.h"
 #include "clipmap.h"
 
+namespace
+{
+const int CONTENTS_PLAYERCLIP = 0x10000;
+}
+
 iw4::mp_tu6::dvar_t *noclip_brushes = nullptr;
 
 void RemoveBrushCollision(unsigned int index)
@@ -170,9 +175,4 @@ clipmap::clipmap()
 {
     DB_LinkXAssetEntry1_Detour = Detour(iw4::mp_tu6::DB_LinkXAssetEntry1, DB_LinkXAssetEntry1_Hook);
     DB_LinkXAssetEntry1_Detour.Install();
-}
-
-clipmap::~clipmap()
-{
-    DB_LinkXAssetEntry1_Detour.Remove();
 }

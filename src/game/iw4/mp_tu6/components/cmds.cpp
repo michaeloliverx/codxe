@@ -81,10 +81,5 @@ cmds::cmds()
     ClientCommand_Detour = Detour(ClientCommand, ClientCommand_Hook);
     ClientCommand_Detour.Install();
 }
-
-cmds::~cmds()
-{
-    ClientCommand_Detour.Remove();
-}
 } // namespace mp_tu6
 } // namespace iw4

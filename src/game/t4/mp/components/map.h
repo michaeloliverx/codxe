@@ -10,7 +10,6 @@ class Map : public Module
 {
   public:
     Map();
-    ~Map();
 };
 } // namespace mp
 } // namespace t4

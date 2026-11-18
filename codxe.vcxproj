@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="4.0">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Xbox 360">
       <Configuration>Debug</Configuration>
@@ -14,72 +14,80 @@
     <ProjectGuid>{9B1700C7-D20C-4489-A47E-60D639F18F89}</ProjectGuid>
     <Keyword>Xbox360Proj</Keyword>
   </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>2010-01</PlatformToolset>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <PropertyGroup>
-    <OutDir>$(SolutionDir)build\$(Configuration)\bin\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Configuration)\obj\</IntDir>
+    <CodxeOutput>$(ProjectDir)build\$(Configuration)\</CodxeOutput>
+    <OutDir>$(CodxeOutput)bin\</OutDir>
+    <IntDir>$(CodxeOutput)obj\codxe\</IntDir>
+    <TargetName>codxe</TargetName>
+    <OutputFile>$(OutDir)$(TargetName).exe</OutputFile>
+    <ImageXexOutput>$(OutDir)$(TargetName).xex</ImageXexOutput>
     <GitVersionHeader>$(IntDir)git_version.h</GitVersionHeader>
     <GitVersionXexConfiguration>$(IntDir)xex.xml</GitVersionXexConfiguration>
-    <RemoteRoot>hdd:\Plugins</RemoteRoot>
-    <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-    <ImageXexOutput>$(OutDir)$(ProjectName).xex</ImageXexOutput>
+    <XexTemplate>$(ProjectDir)xex.xml</XexTemplate>
+    <LinkIncremental>false</LinkIncremental>
+    <CodxeDefines>_XBOX</CodxeDefines>
+    <CodxeDefines Condition="'$(Configuration)'=='Release'">NDEBUG;$(CodxeDefines)</CodxeDefines>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <ObjectFileName>$(IntDir)$(ProjectName)\%(RelativeDir)</ObjectFileName>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)third_party\xkelib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)\pch.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <ForcedIncludeFiles>$(GitVersionHeader);%(ForcedIncludeFiles)</ForcedIncludeFiles>
-      <!-- Disable warning C4481: nonstandard extension used: override specifier 'override'
-           This allows use of the C++11 'override' keyword with the Xbox 360 compiler (pre-C++11) -->
-      <AdditionalOptions>/wd4481 %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>$(CodxeDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/Zl /wd4481 /wd4201 /wd4505 %(AdditionalOptions)</AdditionalOptions>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ExceptionHandling>false</ExceptionHandling>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
-      <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
-      <FunctionLevelLinking Condition="'$(Configuration)'=='Release'">true</FunctionLevelLinking>
-      <StringPooling Condition="'$(Configuration)'=='Release'">true</StringPooling>
-      <IntrinsicFunctions Condition="'$(Configuration)'=='Release'">true</IntrinsicFunctions>
-      <FavorSizeOrSpeed Condition="'$(Configuration)'=='Release'">Size</FavorSizeOrSpeed>
-      <PreprocessorDefinitions Condition="'$(Configuration)'=='Debug'">_XBOX</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)'=='Release'">NDEBUG;_XBOX</PreprocessorDefinitions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
-      <!-- Prefer SDK implementations for APIs also exported directly by XAM. -->
-      <AdditionalDependencies>xapilib.lib;xboxkrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)build\$(Configuration)\lib\xkelib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(OutputFile)</OutputFile>
+      <AdditionalDependencies>xboxkrnl.lib;$(IntDir)crtgpr.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/DLL /ENTRY:CodxeLoaderEntry /NODEFAULTLIB /ALIGN:128,4096 /INCREMENTAL:NO %(AdditionalOptions)</AdditionalOptions>
+      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>$(OutDir)$(ProjectName).map</MapFileName>
-      <OptimizeReferences Condition="'$(Configuration)'=='Release'">true</OptimizeReferences>
-      <SetChecksum Condition="'$(Configuration)'=='Release'">true</SetChecksum>
-      <AdditionalOptions>/DLL /ENTRY:"_DllMainCRTStartup" /ALIGN:128,4096 %(AdditionalOptions)</AdditionalOptions>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalLibraryDirectories>$(ProjectDir)build\$(Configuration)\lib\xkelib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <Deploy>
-      <DeploymentType>CopyToHardDrive</DeploymentType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">true</ExcludedFromBuild>
-    </Deploy>
     <ImageXex>
       <ConfigurationFile>$(GitVersionXexConfiguration)</ConfigurationFile>
     </ImageXex>
+    <Deploy>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </Deploy>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\bootstrap\main.cpp" />
+    <ClCompile Include="src\bootstrap\hook.cpp" />
+    <ClCompile Include="src\kernel.cpp" />
+    <ClCompile Include="src\bootstrap\ppc.cpp" />
+    <ClCompile Include="src\bootstrap\paths.cpp" />
+    <ClCompile Include="src\notifications.cpp" />
+    <ClCompile Include="src\bootstrap\freestanding.c">
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <ClInclude Include="src\bootstrap\*.h;src\kernel.h;src\notifications.h;src\xbox360.h;src\module\games.h" />
+    <None Include="xex.xml" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="third_party\xkelib.vcxproj">
       <Project>{83FEF217-22EE-4768-80BF-9F48D5B4564C}</Project>
@@ -87,379 +95,10 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-      <!-- Precompiled header -->
-      <ClCompile Include="src\pch.cpp">
-        <PrecompiledHeader>Create</PrecompiledHeader>
-      </ClCompile>
-
-      <ClCompile Include="src\common\brush_collision_tracker.cpp" />
-      <ClCompile Include="src\common\config.cpp" />
-      <ClCompile Include="src\common\usermaps.cpp" />
-      <ClCompile Include="src\common\endian.cpp" />
-      <ClCompile Include="src\common\gsc_loader.cpp" />
-      <ClCompile Include="src\common\map_ents.cpp" />
-      <ClCompile Include="src\common\ppc.cpp" />
-      <ClCompile Include="src\common\script_files.cpp" />
-      <ClCompile Include="src\common\string_utils.cpp" />
-
-      <ClCompile Include="src\image\xenos_texture.cpp" />
-      <ClCompile Include="src\image\usermap_preview.cpp" />
-      <ClCompile Include="src\image\preview_dds.cpp">
-        <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      </ClCompile>
-
-      <ClCompile Include="src\game\ngl\mp\main.cpp" />
-      <ClCompile Include="src\game\ngl\mp\components\pm.cpp" />
-
-      <ClCompile Include="src\game\iw2\sp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\iw2\sp\main.cpp" />
-
-      <ClCompile Include="src\game\iw2\mp\components\gsc.cpp" />
-      <ClCompile Include="src\game\iw2\mp\components\gsc_files.cpp" />
-      <ClCompile Include="src\game\iw2\mp\components\sv_bots.cpp" />
-      <ClCompile Include="src\game\iw2\mp\components\pm.cpp" />
-      <ClCompile Include="src\game\iw2\mp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\iw2\mp\main.cpp" />
-
-      <ClCompile Include="src\game\iw3\mp\components\assets.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\cg.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\mirror_world.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\cj_tas.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\clipmap.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\command.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\cmds.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\console.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\bounce_edges.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\collision.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\debug_draw.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\debug.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\events.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\gsc.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\gsc_fields.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\gsc_functions.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\gsc_methods.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\fastfiles.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\mods.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\patches.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\pm.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\image_loader.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\ui_feeder.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\usermaps.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\ui_script.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\mpsp.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\stats.cpp" />
-      <ClCompile Include="src\game\iw3\mp\components\sv_bots.cpp" />
-      <ClCompile Include="src\game\iw3\mp\main.cpp" />
-      <ClCompile Include="src\game\iw3\mp\symbols.cpp" />
-
-      <ClCompile Include="src\game\iw3\sp\components\command.cpp" />
-      <ClCompile Include="src\game\iw3\sp\components\events.cpp" />
-      <ClCompile Include="src\game\iw3\sp\components\gsc.cpp" />
-      <ClCompile Include="src\game\iw3\sp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\iw3\sp\main.cpp" />
-
-      <ClCompile Include="src\game\iw4\sp\components\cg.cpp" />
-      <ClCompile Include="src\game\iw4\sp\components\clipmap.cpp" />
-      <ClCompile Include="src\game\iw4\sp\components\gsc_fields.cpp" />
-      <ClCompile Include="src\game\iw4\sp\components\gsc.cpp" />
-      <ClCompile Include="src\game\iw4\sp\components\pm.cpp" />
-      <ClCompile Include="src\game\iw4\sp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\iw4\sp\main.cpp" />
-
-      <ClCompile Include="src\game\iw4\mp\components\branding.cpp" />
-      <ClCompile Include="src\game\iw4\mp\components\events.cpp" />
-      <ClCompile Include="src\game\iw4\mp\components\patches.cpp" />
-      <ClCompile Include="src\game\iw4\mp\components\pm.cpp" />
-      <ClCompile Include="src\game\iw4\mp\main.cpp" />
-
-      <ClCompile Include="src\game\iw4\mp_tu6\components\cg.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\clipmap.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\cmds.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\console.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\debug_draw.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\events.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\fastfiles.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\arenas.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\mods.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\ui_feeder.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\ui_script.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\usermaps.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\usermap_preview.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\gsc_fields.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\gsc.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\mr.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\patches.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\pm.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\stats.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\components\sv_bots.cpp" />
-      <ClCompile Include="src\game\iw4\mp_tu6\main.cpp" />
-
-      <ClCompile Include="src\game\iw5\mp\main.cpp" />
-      <ClCompile Include="src\game\iw5\mp\branding.cpp" />
-      <ClCompile Include="src\game\iw5\mp\bots.cpp" />
-      <ClCompile Include="src\game\iw5\mp\events.cpp" />
-      <ClCompile Include="src\game\iw5\mp\patches.cpp" />
-      <ClCompile Include="src\game\iw5\mp\pm.cpp" />
-      <ClCompile Include="src\game\iw5\mp\gsc.cpp" />
-
-      <ClCompile Include="src\game\t4\mp\main.cpp" />
-      <ClCompile Include="src\game\t4\mp\symbols.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\branding.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\brush_collision.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\console.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\collision.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\bounce_edges.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\debug_draw.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\debug.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\events.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\fastfiles.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\gsc_fields.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\gsc_client_methods.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\gsc_functions.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\gsc_loader.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\map.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\mods.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\usermaps.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\patches.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\pm.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\stats.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\sv_bots.cpp" />
-      <ClCompile Include="src\game\t4\mp\components\ui.cpp" />
-
-      <ClCompile Include="src\game\t4\sp\components\clipmap.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\console.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\debug.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\events.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\fastfiles.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\gsc_fields.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\gsc.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\splitscreen.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\fov.cpp" />
-      <ClCompile Include="src\game\t4\sp\components\ui.cpp" />
-      <ClCompile Include="src\game\t4\sp\main.cpp" />
-
-      <ClCompile Include="src\game\t5\sp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\t5\sp\main.cpp" />
-
-      <ClCompile Include="src\game\t5\mp\components\scr_parser.cpp" />
-      <ClCompile Include="src\game\t5\mp\main.cpp" />
-
-      <ClCompile Include="src\game\qos\sp\main.cpp" />
-      <ClCompile Include="src\game\qos\sp\components\scr_parser.cpp" />
-
-      <ClCompile Include="src\game\qos\mp\main.cpp" />
-      <ClCompile Include="src\game\qos\mp\components\clipmap.cpp" />
-      <ClCompile Include="src\game\qos\mp\components\events.cpp" />
-      <ClCompile Include="src\game\qos\mp\components\gsc.cpp" />
-      <ClCompile Include="src\game\qos\mp\components\gsc_fields.cpp" />
-      <ClCompile Include="src\game\qos\mp\components\scr_parser.cpp" />
-
-      <ClCompile Include="src\dllmain.cpp" />
-      <ClCompile Include="src\detour.cpp" />
-      <ClCompile Include="src\filesystem.cpp" />
-      <ClCompile Include="src\plugin_manager.cpp" />
-      <ClCompile Include="src\xbox360.cpp" />
-      <ClCompile Include="src\notifications.cpp" />
-      <ClCompile Include="src\kernel.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-      <!-- Precompiled header -->
-      <ClInclude Include="src\pch.h" />
-
-      <ClInclude Include="src\common\branding.h" />
-      <ClInclude Include="src\common\brush_collision_tracker.h" />
-      <ClInclude Include="src\common\config.h" />
-      <ClInclude Include="src\common\arena.h" />
-      <ClInclude Include="src\common\usermaps.h" />
-      <ClInclude Include="src\common\endian.h" />
-      <ClInclude Include="src\common\gsc_loader.h" />
-      <ClInclude Include="src\common\map_ents.h" />
-      <ClInclude Include="src\common\ppc.h" />
-      <ClInclude Include="src\common\script_files.h" />
-      <ClInclude Include="src\common\string_utils.h" />
-
-      <ClInclude Include="src\image\xenos_texture.h" />
-      <ClInclude Include="src\image\usermap_preview.h" />
-      <ClInclude Include="src\image\preview_dds.h" />
-
-      <ClInclude Include="src\game\ngl\mp\main.h" />
-      <ClInclude Include="src\game\ngl\mp\structs.h" />
-      <ClInclude Include="src\game\ngl\mp\symbols.h" />
-      <ClInclude Include="src\game\ngl\mp\components\pm.h" />
-
-      <ClInclude Include="src\game\iw2\sp\components\scr_parser.h" />
-      <ClInclude Include="src\game\iw2\sp\main.h" />
-      <ClInclude Include="src\game\iw2\sp\structs.h" />
-      <ClInclude Include="src\game\iw2\sp\symbols.h" />
-
-      <ClInclude Include="src\game\iw2\mp\components\pm.h" />
-      <ClInclude Include="src\game\iw2\mp\components\scr_parser.h" />
-      <ClInclude Include="src\game\iw2\mp\main.h" />
-      <ClInclude Include="src\game\iw2\mp\structs.h" />
-      <ClInclude Include="src\game\iw2\mp\symbols.h" />
-
-      <ClInclude Include="src\game\iw3\mp\components\assets.h" />
-      <ClInclude Include="src\game\iw3\mp\components\cg.h" />
-      <ClInclude Include="src\game\iw3\mp\components\mirror_world.h" />
-      <ClInclude Include="src\game\iw3\mp\components\cj_tas.h" />
-      <ClInclude Include="src\game\iw3\mp\components\command.h" />
-      <ClInclude Include="src\game\iw3\mp\components\cmds.h" />
-      <ClInclude Include="src\game\iw3\mp\components\console.h" />
-      <ClInclude Include="src\game\iw3\mp\components\bounce_edges.h" />
-      <ClInclude Include="src\game\iw3\mp\components\collision.h" />
-      <ClInclude Include="src\game\iw3\mp\components\debug_draw.h" />
-      <ClInclude Include="src\game\iw3\mp\components\collision_geometry.h" />
-      <ClInclude Include="src\game\iw3\mp\components\debug.h" />
-      <ClInclude Include="src\game\iw3\mp\components\clipmap.h" />
-      <ClInclude Include="src\game\iw3\mp\components\gsc.h" />
-      <ClInclude Include="src\game\iw3\mp\components\gsc_fields.h" />
-      <ClInclude Include="src\game\iw3\mp\components\gsc_methods.h" />
-      <ClInclude Include="src\game\iw3\mp\components\fastfiles.h" />
-      <ClInclude Include="src\game\iw3\mp\components\mods.h" />
-      <ClInclude Include="src\game\iw3\mp\components\patches.h" />
-      <ClInclude Include="src\game\iw3\mp\components\pm.h" />
-      <ClInclude Include="src\game\iw3\mp\components\ui_feeder.h" />
-      <ClInclude Include="src\game\iw3\mp\components\usermaps.h" />
-      <ClInclude Include="src\game\iw3\mp\components\ui_script.h" />
-      <ClInclude Include="src\game\iw3\mp\components\scr_parser.h" />
-      <ClInclude Include="src\game\iw3\mp\components\stats.h" />
-      <ClInclude Include="src\game\iw3\mp\main.h" />
-      <ClInclude Include="src\game\iw3\mp\structs.h" />
-      <ClInclude Include="src\game\iw3\mp\symbols.h" />
-
-      <ClInclude Include="src\game\iw3\sp\components\command.h" />
-      <ClInclude Include="src\game\iw3\sp\components\events.h" />
-      <ClInclude Include="src\game\iw3\sp\components\gsc.h" />
-      <ClInclude Include="src\game\iw3\sp\components\scr_parser.h" />
-      <ClInclude Include="src\game\iw3\sp\main.h" />
-      <ClInclude Include="src\game\iw3\sp\structs.h" />
-      <ClInclude Include="src\game\iw3\sp\symbols.h" />
-
-      <ClInclude Include="src\game\iw4\sp\components\cg.h" />
-      <ClInclude Include="src\game\iw4\sp\components\clipmap.h" />
-      <ClInclude Include="src\game\iw4\sp\components\gsc_fields.h" />
-      <ClInclude Include="src\game\iw4\sp\components\gsc.h" />
-      <ClInclude Include="src\game\iw4\sp\components\pm.h" />
-      <ClInclude Include="src\game\iw4\sp\components\scr_parser.h" />
-      <ClInclude Include="src\game\iw4\sp\main.h" />
-      <ClInclude Include="src\game\iw4\sp\structs.h" />
-      <ClInclude Include="src\game\iw4\sp\symbols.h" />
-
-      <ClInclude Include="src\game\iw4\mp\components\branding.h" />
-      <ClInclude Include="src\game\iw4\mp\components\events.h" />
-      <ClInclude Include="src\game\iw4\mp\components\patches.h" />
-      <ClInclude Include="src\game\iw4\mp\components\pm.h" />
-      <ClInclude Include="src\game\iw4\mp\main.h" />
-      <ClInclude Include="src\game\iw4\mp\structs.h" />
-      <ClInclude Include="src\game\iw4\mp\symbols.h" />
-
-      <ClInclude Include="src\game\iw4\mp_tu6\components\cg.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\clipmap.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\cmds.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\console.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\debug_draw.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\events.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\fastfiles.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\arenas.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\mods.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\ui_feeder.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\ui_script.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\usermaps.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\usermap_preview.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\gsc_fields.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\gsc.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\mr.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\patches.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\pm.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\scr_parser.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\stats.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\components\sv_bots.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\main.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\structs.h" />
-      <ClInclude Include="src\game\iw4\mp_tu6\symbols.h" />
-
-      <ClInclude Include="src\game\t4\mp\main.h" />
-      <ClInclude Include="src\game\t4\mp\symbols.h" />
-      <ClInclude Include="src\game\t4\mp\structs.h" />
-      <ClInclude Include="src\game\t4\mp\components\branding.h" />
-      <ClInclude Include="src\game\t4\mp\components\brush_collision.h" />
-      <ClInclude Include="src\game\t4\mp\components\console.h" />
-      <ClInclude Include="src\game\t4\mp\components\collision.h" />
-      <ClInclude Include="src\game\t4\mp\components\collision_geometry.h" />
-      <ClInclude Include="src\game\t4\mp\components\bounce_edges.h" />
-      <ClInclude Include="src\game\t4\mp\components\debug_draw.h" />
-      <ClInclude Include="src\game\t4\mp\components\debug.h" />
-      <ClInclude Include="src\game\t4\mp\components\events.h" />
-      <ClInclude Include="src\game\t4\mp\components\fastfiles.h" />
-      <ClInclude Include="src\game\t4\mp\components\gsc_fields.h" />
-      <ClInclude Include="src\game\t4\mp\components\gsc_client_methods.h" />
-      <ClInclude Include="src\game\t4\mp\components\gsc_functions.h" />
-      <ClInclude Include="src\game\t4\mp\components\gsc_loader.h" />
-      <ClInclude Include="src\game\t4\mp\components\map.h" />
-      <ClInclude Include="src\game\t4\mp\components\mods.h" />
-      <ClInclude Include="src\game\t4\mp\components\usermaps.h" />
-      <ClInclude Include="src\game\t4\mp\components\patches.h" />
-      <ClInclude Include="src\game\t4\mp\components\pm.h" />
-      <ClInclude Include="src\game\t4\mp\components\stats.h" />
-      <ClInclude Include="src\game\t4\mp\components\sv_bots.h" />
-      <ClInclude Include="src\game\t4\mp\components\ui.h" />
-
-      <ClInclude Include="src\game\t4\sp\components\clipmap.h" />
-      <ClInclude Include="src\game\t4\sp\components\console.h" />
-      <ClInclude Include="src\game\t4\sp\components\debug.h" />
-      <ClInclude Include="src\game\t4\sp\components\events.h" />
-      <ClInclude Include="src\game\t4\sp\components\fastfiles.h" />
-      <ClInclude Include="src\game\t4\sp\components\gsc_fields.h" />
-      <ClInclude Include="src\game\t4\sp\components\gsc.h" />
-      <ClInclude Include="src\game\t4\sp\components\scr_parser.h" />
-      <ClInclude Include="src\game\t4\sp\components\splitscreen.h" />
-      <ClInclude Include="src\game\t4\sp\components\ui.h" />
-      <ClInclude Include="src\game\t4\sp\main.h" />
-      <ClInclude Include="src\game\t4\sp\structs.h" />
-      <ClInclude Include="src\game\t4\sp\symbols.h" />
-
-      <ClInclude Include="src\game\t5\sp\components\scr_parser.h" />
-      <ClInclude Include="src\game\t5\sp\main.h" />
-      <ClInclude Include="src\game\t5\sp\structs.h" />
-      <ClInclude Include="src\game\t5\sp\symbols.h" />
-
-      <ClInclude Include="src\game\t5\mp\components\scr_parser.h" />
-      <ClInclude Include="src\game\t5\mp\main.h" />
-      <ClInclude Include="src\game\t5\mp\structs.h" />
-      <ClInclude Include="src\game\t5\mp\symbols.h" />
-
-      <ClInclude Include="src\game\qos\sp\main.h" />
-      <ClInclude Include="src\game\qos\sp\components\scr_parser.h" />
-      <ClInclude Include="src\game\qos\sp\structs.h" />
-      <ClInclude Include="src\game\qos\sp\symbols.h" />
-
-      <ClInclude Include="src\game\qos\mp\main.h" />
-      <ClInclude Include="src\game\qos\mp\components\gsc.h" />
-      <ClInclude Include="src\game\qos\mp\components\scr_parser.h" />
-      <ClInclude Include="src\game\qos\mp\structs.h" />
-      <ClInclude Include="src\game\qos\mp\symbols.h" />
-
-      <ClInclude Include="src\detour.h" />
-      <ClInclude Include="src\filesystem.h" />
-      <ClInclude Include="src\plugin_manager.h" />
-      <ClInclude Include="src\plugin.h" />
-      <ClInclude Include="src\xbox360.h" />
-      <ClInclude Include="src\notifications.h" />
-      <ClInclude Include="src\kernel.h" />
-  </ItemGroup>
-  <Target Name="GenerateGitVersionHeader" BeforeTargets="ClCompile;ImageXex">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\generate-version.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(GitVersionHeader)&quot; -XexTemplatePath &quot;$(MSBuildProjectDirectory)\xex.xml&quot; -XexOutputPath &quot;$(GitVersionXexConfiguration)&quot;" />
-    <ItemGroup>
-      <FileWrites Include="$(GitVersionHeader);$(GitVersionXexConfiguration)" />
-    </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="ExtractRegisterHelpers" BeforeTargets="Link" Inputs="$(XEDK)\lib\xbox\libcmt.lib" Outputs="$(IntDir)crtgpr.obj">
+    <MakeDir Directories="$(IntDir)" />
+    <Exec Command="&quot;$(XEDK)\bin\win32\lib.exe&quot; /nologo /extract:obj\xbox\crtgpr.obj /out:&quot;$(IntDir)crtgpr.obj&quot; &quot;$(XEDK)\lib\xbox\libcmt.lib&quot;" />
   </Target>
-  <!-- The SDK's ImageXex target only tracks the PE input, not its configuration. -->
-  <Target Name="InvalidateXexConfiguration" BeforeTargets="ImageXex" DependsOnTargets="GenerateGitVersionHeader"
-          Inputs="$(GitVersionXexConfiguration)" Outputs="$(ImageXexOutput)">
-    <Delete Files="$(ImageXexOutput)" />
-  </Target>
+  <Import Project="codxe_version.targets" />
 </Project>

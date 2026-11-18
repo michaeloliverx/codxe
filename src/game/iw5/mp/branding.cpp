@@ -28,8 +28,3 @@ Branding::Branding()
     UI_DrawBuildNumber_Detour = Detour(iw5::mp::UI_DrawBuildNumber, UI_DrawBuildNumber_Hook);
     UI_DrawBuildNumber_Detour.Install();
 }
-
-Branding::~Branding()
-{
-    UI_DrawBuildNumber_Detour.Remove();
-}

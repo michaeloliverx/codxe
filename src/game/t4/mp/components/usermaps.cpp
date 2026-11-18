@@ -212,15 +212,5 @@ Usermaps::Usermaps()
     UI_GetMapLoadName_Detour = Detour(UI_GetMapLoadName, UI_GetMapLoadName_Hook);
     UI_GetMapLoadName_Detour.Install();
 }
-
-Usermaps::~Usermaps()
-{
-    UI_GetMapLoadName_Detour.Remove();
-    UI_GetMapDisplayName_Detour.Remove();
-    StringTable_Lookup_Detour.Remove();
-    maps.clear();
-    selected = 0;
-    previewRefreshPending = false;
-}
 } // namespace mp
 } // namespace t4
