@@ -3,15 +3,11 @@
 #include "pch.h"
 
 extern const char *const MOD_DIR;
-extern const char *const DUMP_DIR;
 
 class Config : public Module
 {
   public:
     Config();
-
-    static bool dump_rawfile;
-    static bool dump_map_ents;
 
     static bool MountDataRoot(const char *path);
     static const char *GetDataRoot();

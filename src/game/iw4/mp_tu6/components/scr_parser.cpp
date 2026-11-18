@@ -14,13 +14,6 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename)
     auto callOriginal = [&]()
     { return Scr_AddSourceBuffer_Detour.GetOriginal<decltype(Scr_AddSourceBuffer)>()(filename, extFilename); };
 
-    if (Config::dump_rawfile)
-    {
-        char *contents = callOriginal();
-        gsc_loader::DumpSource(extFilename, contents);
-        return contents;
-    }
-
     char *contents = gsc_loader::TryLoadOverride(extFilename, ModList::ResolvePath(extFilename).c_str(),
                                                  Hunk_AllocateTempMemoryHighInternal);
     return contents ? contents : callOriginal();

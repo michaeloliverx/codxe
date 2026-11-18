@@ -65,17 +65,6 @@ void Load_clipMap_t_Hook(bool atStreamStart)
 
     auto mapEnts = (*varclipMap_t)->mapEnts;
 
-    // Dump map entities if enabled
-    if (Config::dump_map_ents)
-    {
-        const std::string dumpPath = map_ents::BuildPath(DUMP_DIR, mapEnts->name);
-        if (!dumpPath.empty())
-        {
-            filesystem::WriteFileToDisk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
-            DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
-        }
-    }
-
     OverrideMapEnts(mapEnts);
 }
 

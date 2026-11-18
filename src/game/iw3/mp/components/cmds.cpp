@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "command.h"
 #include "events.h"
 #include "cmds.h"
 #include "mods.h"
@@ -8,19 +7,6 @@ namespace iw3
 {
 namespace mp
 {
-void Cmd_Dumpraw_f()
-{
-    XAssetHeader files[2048];
-    auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_RAWFILE, files, 2048);
-
-    for (int i = 0; i < count; i++)
-    {
-        auto rawfile = files[i].rawfile;
-        const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, rawfile->name);
-        filesystem::WriteFileToDisk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
-    }
-}
-
 // Client commands
 
 void Cmd_UFO_f(gentity_s *ent)
@@ -140,8 +126,6 @@ cmds::cmds()
 
     Cmd_ExecFromFastFile_Detour = Detour(Cmd_ExecFromFastFile, Cmd_ExecFromFastFile_Hook);
     Cmd_ExecFromFastFile_Detour.Install();
-
-    command::add("dumpraw", Cmd_Dumpraw_f);
 }
 } // namespace mp
 } // namespace iw3

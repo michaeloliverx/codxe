@@ -16,13 +16,6 @@ char *Scr_AddSourceBuffer_Hook(const char *filename, const char *extFilename, co
                                                                                        archive);
     };
 
-    if (Config::dump_rawfile)
-    {
-        char *contents = callOriginal();
-        gsc_loader::DumpSource(extFilename, contents);
-        return contents;
-    }
-
     char *contents = gsc_loader::TryLoadOverride(extFilename, Hunk_AllocateTempMemoryHighInternal);
     return contents ? contents : callOriginal();
 }

@@ -2,12 +2,9 @@
 #include "config.h"
 
 const char *const MOD_DIR = "codxe:\\mods";
-const char *const DUMP_DIR = "codxe:\\dump";
 
 // Default values
 char Config::active_mod[MAX_PATH] = {};
-bool Config::dump_rawfile = false;
-bool Config::dump_map_ents = false;
 
 namespace
 {
@@ -127,14 +124,6 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
                 XJSONGetTokenValue(hJsonReader, valueBuffer, ARRAYSIZE(valueBuffer));
                 wcstombs_s(nullptr, active_mod, ARRAYSIZE(active_mod), valueBuffer, _TRUNCATE);
             }
-            else if (wcscmp(propertyName, L"dump_rawfile") == 0)
-            {
-                dump_rawfile = (jsonTokenType == Json_True);
-            }
-            else if (wcscmp(propertyName, L"dump_map_ents") == 0)
-            {
-                dump_map_ents = (jsonTokenType == Json_True);
-            }
             else
             {
                 DbgPrint("[codxe][Config] WARNING: Ignoring unknown property: %ls\n", propertyName);
@@ -146,8 +135,6 @@ bool Config::LoadFromJson(const char *jsonBuffer, DWORD bufferSize)
 
     DbgPrint("[codxe][Config] Configuration loaded:\n");
     DbgPrint("  Active Mod: %s\n", active_mod);
-    DbgPrint("  Dump Raw Scripts: %s\n", dump_rawfile ? "true" : "false");
-    DbgPrint("  Dump Map Entities: %s\n", dump_map_ents ? "true" : "false");
 
     return true;
 }

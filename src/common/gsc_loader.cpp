@@ -46,30 +46,4 @@ char *TryLoadOverride(const char *scriptPath, const char *overridePath, Allocate
     DbgPrint("GSCLoader: Loaded override script: %s\n", overridePath);
     return buffer;
 }
-
-void DumpSource(const char *scriptPath, const char *contents)
-{
-    if (!scriptPath || !contents)
-        return;
-
-    const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, scriptPath);
-    if (dumpPath.empty())
-        return;
-
-    filesystem::CreateParentDirectories(dumpPath.c_str());
-
-    HANDLE file =
-        CreateFileA(dumpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE)
-        return;
-
-    const DWORD contentsSize = static_cast<DWORD>(std::strlen(contents));
-    DWORD bytesWritten = 0;
-    const bool success =
-        WriteFile(file, contents, contentsSize, &bytesWritten, nullptr) && bytesWritten == contentsSize;
-    CloseHandle(file);
-
-    if (success)
-        DbgPrint("GSCLoader: Dumped script: %s\n", dumpPath.c_str());
-}
 } // namespace gsc_loader

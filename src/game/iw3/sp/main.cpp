@@ -26,17 +26,6 @@ void Load_MapEntsPtr_Hook()
     {
         MapEnts *mapEnts = *varMapEntsPtr;
 
-        // Dump stock map ents if enabled (numEntityChars includes the null terminator, which is not written)
-        if (Config::dump_map_ents && mapEnts->numEntityChars > 0)
-        {
-            const std::string dumpPath = map_ents::BuildPath(DUMP_DIR, mapEnts->name);
-            if (!dumpPath.empty())
-            {
-                filesystem::WriteFileToDisk(dumpPath.c_str(), mapEnts->entityString, mapEnts->numEntityChars - 1);
-                DbgPrint("Dumped map ents to: %s\n", dumpPath.c_str());
-            }
-        }
-
         // Load map ents from file
         // Path to check for existing entity file
         const std::string rawFilePath =
@@ -76,19 +65,6 @@ void Load_MapEntsPtr_Hook()
     }
 }
 
-void Cmd_Dumpraw_f()
-{
-    XAssetHeader files[2048];
-    auto count = DB_GetAllXAssetOfType_FastFile(ASSET_TYPE_RAWFILE, files, 2048);
-
-    for (int i = 0; i < count; i++)
-    {
-        auto rawfile = files[i].rawfile;
-        const std::string dumpPath = filesystem::JoinPath(DUMP_DIR, rawfile->name);
-        filesystem::WriteFileToDisk(dumpPath.c_str(), rawfile->buffer, rawfile->len);
-    }
-}
-
 IW3_SP_Plugin::IW3_SP_Plugin()
 {
     DbgPrint("IW3 SP: Plugin loaded\n");
@@ -100,8 +76,6 @@ IW3_SP_Plugin::IW3_SP_Plugin()
 
     Load_MapEntsPtr_Detour = Detour(Load_MapEntsPtr, Load_MapEntsPtr_Hook);
     Load_MapEntsPtr_Detour.Install();
-
-    command::add("dumpraw", Cmd_Dumpraw_f);
 }
 } // namespace sp
 } // namespace iw3

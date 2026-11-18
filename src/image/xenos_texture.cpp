@@ -141,11 +141,15 @@ namespace xenos_texture
 const TextureFormatInfo *GetTextureFormatInfo(uint32_t gpuFormat)
 {
     static const TextureFormatInfo formats[] = {
-        {GPUTEXTUREFORMAT_8, 1u, 1u, 1u, 8u},        {GPUTEXTUREFORMAT_8_8, 1u, 1u, 2u, 16u},
-        {GPUTEXTUREFORMAT_8_8_8_8, 1u, 1u, 4u, 32u}, {GPUTEXTUREFORMAT_DXT1, 4u, 4u, 8u, 4u},
-        {GPUTEXTUREFORMAT_DXT2_3, 4u, 4u, 16u, 8u},  {GPUTEXTUREFORMAT_DXT4_5, 4u, 4u, 16u, 8u},
-        {GPUTEXTUREFORMAT_DXN, 4u, 4u, 16u, 8u},     {GPUTEXTUREFORMAT_DXT3A, 4u, 4u, 8u, 4u},
-        {GPUTEXTUREFORMAT_DXT5A, 4u, 4u, 8u, 4u},
+        {GPUTEXTUREFORMAT_8, 1u, 1u, 1u},
+        {GPUTEXTUREFORMAT_8_8, 1u, 1u, 2u},
+        {GPUTEXTUREFORMAT_8_8_8_8, 1u, 1u, 4u},
+        {GPUTEXTUREFORMAT_DXT1, 4u, 4u, 8u},
+        {GPUTEXTUREFORMAT_DXT2_3, 4u, 4u, 16u},
+        {GPUTEXTUREFORMAT_DXT4_5, 4u, 4u, 16u},
+        {GPUTEXTUREFORMAT_DXN, 4u, 4u, 16u},
+        {GPUTEXTUREFORMAT_DXT3A, 4u, 4u, 8u},
+        {GPUTEXTUREFORMAT_DXT5A, 4u, 4u, 8u},
     };
 
     for (size_t i = 0; i < sizeof(formats) / sizeof(formats[0]); ++i)
@@ -322,51 +326,6 @@ bool TileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32
             {
                 return false;
             }
-
-            memcpy(destinationBytes + destinationOffset, sourceBytes + sourceOffset, formatInfo->bytesPerBlock);
-        }
-    }
-
-    return true;
-}
-
-bool UntileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat, uint32_t basePitch,
-                        void *destination, uint32_t destinationRowPitch, const void *source)
-{
-    return UntileTextureLevel(width, height, mipLevel, gpuFormat, basePitch, destination, static_cast<size_t>(-1),
-                              destinationRowPitch, source, static_cast<size_t>(-1));
-}
-
-bool UntileTextureLevel(uint32_t width, uint32_t height, uint32_t mipLevel, uint32_t gpuFormat, uint32_t basePitch,
-                        void *destination, size_t destinationSize, uint32_t destinationRowPitch, const void *source,
-                        size_t sourceSize)
-{
-    const TextureFormatInfo *formatInfo = GetTextureFormatInfo(gpuFormat);
-    if (formatInfo == NULL || destination == NULL || source == NULL || destinationRowPitch == 0)
-        return false;
-
-    const TextureLevelLayout layout = CalculateLevelLayout(width, height, mipLevel, *formatInfo, basePitch);
-    if (destinationRowPitch < layout.widthBlocks * formatInfo->bytesPerBlock)
-        return false;
-
-    const uint32_t log2BytesPerBlock = CalculateLog2BytesPerBlock(formatInfo->bytesPerBlock);
-    unsigned char *destinationBytes = static_cast<unsigned char *>(destination);
-    const unsigned char *sourceBytes = static_cast<const unsigned char *>(source);
-
-    for (uint32_t y = 0; y < layout.heightBlocks; ++y)
-    {
-        const uint32_t sourceRowOffset = TiledOffset2DRow(y, layout.storedWidthBlocks, log2BytesPerBlock);
-        for (uint32_t x = 0; x < layout.widthBlocks; ++x)
-        {
-            uint32_t tiledOffset = TiledOffset2DColumn(x, y, log2BytesPerBlock, sourceRowOffset);
-            tiledOffset >>= log2BytesPerBlock;
-
-            const size_t destinationOffset =
-                static_cast<size_t>(y) * destinationRowPitch + static_cast<size_t>(x) * formatInfo->bytesPerBlock;
-            const size_t sourceOffset = static_cast<size_t>(tiledOffset) * formatInfo->bytesPerBlock;
-            if (destinationOffset + formatInfo->bytesPerBlock > destinationSize ||
-                sourceOffset + formatInfo->bytesPerBlock > sourceSize)
-                return false;
 
             memcpy(destinationBytes + destinationOffset, sourceBytes + sourceOffset, formatInfo->bytesPerBlock);
         }

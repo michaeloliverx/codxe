@@ -11,7 +11,6 @@ The following is an incomplete list of features currently exposed by the IW3 cli
 - `ufo`
 - `togglerecord` - Start or stop the movement recorder.
 - `startplayback` - Start playback of the current movement recorder.
-- `imagedump` - Dump all currently loaded textures to disk.
 
 ### Dvars
 

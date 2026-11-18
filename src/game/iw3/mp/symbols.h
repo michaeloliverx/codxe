@@ -201,7 +201,6 @@ static auto R_SetPassShaderPrimArguments =
     reinterpret_cast<void (*)(GfxCmdBufContext context, unsigned int argCount, const MaterialShaderArgument *args)>(
         0x821341B8);
 static auto R_DrawAllDynEnt = reinterpret_cast<void (*)(const GfxViewInfo *viewInfo)>(0x8215FF98);
-static auto R_GetImageList = reinterpret_cast<void (*)(ImageList *imageList)>(0x82152A58);
 static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name)>(0x8216EC00);
 static auto R_StreamLoadFileSynchronously =
     reinterpret_cast<int (*)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)>(0x82151510);
