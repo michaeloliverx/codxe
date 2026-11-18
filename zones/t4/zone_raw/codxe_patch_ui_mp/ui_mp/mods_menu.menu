@@ -27,6 +27,15 @@
         }
         itemDef
         {
+            rect                        -107 0 1708 480 0 0
+            style                       WINDOW_STYLE_SHADER
+            decoration
+            visible                     1
+            background                  "animbg_fogscrollthin"
+            exp rect X                  ((- 961) + ((float(milliseconds() % 50000) / 50000) * (854)));
+        }
+        itemDef
+        {
             rect                        -107 0 854 66 0 0
             style                       WINDOW_STYLE_SHADER
             decoration
@@ -35,7 +44,7 @@
         }
         itemDef
         {
-            rect                        -107 420 854 60 0 0
+            rect                        -107 420 854 70 0 0
             style                       WINDOW_STYLE_SHADER
             decoration
             visible                     1
@@ -43,7 +52,25 @@
         }
         itemDef
         {
-            rect                        22 34 100 100 1 1
+            rect                        -5 40 640 25 4 4
+            style                       WINDOW_STYLE_SHADER
+            decoration
+            visible                     1
+            forecolor                   0.2137 0.2346 0.2398 0.75
+            background                  "menu_lobby_title_back"
+        }
+        itemDef
+        {
+            rect                        -107 65 854 1 4 4
+            style                       WINDOW_STYLE_SHADER
+            decoration
+            visible                     1
+            forecolor                   0.2 0.216 0.22 1
+            background                  "menu_white_line_faded"
+        }
+        itemDef
+        {
+            rect                        22 5 100 100 1 1
             decoration
             visible                     1
             textalign                   4
@@ -55,20 +82,21 @@
         itemDef
         {
             name                        "mod_list"
-            rect                        34 82 560 286 1 1
+            rect                        3 43 238 310 1 1
             type                        ITEM_TYPE_LISTBOX
             visible                     1
             textscale                   0.381
-            textstyle                   ITEM_TEXTSTYLE_SHADOWED
+            textstyle                   ITEM_TEXTSTYLE_SHADOWEDMORE
             textfont                    UI_FONT_NORMAL
             forecolor                   0.69 0.69 0.69 1
             outlinecolor                0.9 0.95 1 0.5
             noscrollbars
-            elementwidth                558
-            elementheight               23
+            // T4 uses one ninth of elementwidth as the selectIcon's left offset.
+            elementwidth                27
+            elementheight               22
             feeder                      FEEDER_MODS
             columns                     1
-                                        0 550 64 0
+                                        18 216 64 0
             doubleclick
             {
                 play mouse_click;
@@ -86,30 +114,55 @@
         }
         itemDef
         {
-            rect                        34 110 550 30 1 1
+            rect                        22 45 216 22 1 1
             decoration
             visible                     when(dvarint("ui_modCount") == 0);
+            textalign                   8
             textscale                   0.381
+            textstyle                   ITEM_TEXTSTYLE_SHADOWEDMORE
             textfont                    UI_FONT_NORMAL
+            forecolor                   0.69 0.69 0.69 1
             text                        "@CODXE_NO_MODS"
         }
         itemDef
         {
-            rect                        34 392 550 22 1 1
+            rect                        22 365 550 22 1 1
             decoration
             visible                     when(dvarstring("fs_game") != "");
+            textalign                   8
             textscale                   0.3095
+            textstyle                   ITEM_TEXTSTYLE_SHADOWEDMORE
             textfont                    UI_FONT_NORMAL
+            forecolor                   0.69 0.69 0.69 1
             exp text                    (locString("@CODXE_ACTIVE_MOD") + dvarstring("fs_game"));
         }
         itemDef
         {
-            rect                        34 444 550 22 1 1
+            rect                        0 -20 16 16 1 3
+            style                       WINDOW_STYLE_SHADER
             decoration
             visible                     1
+            background                  "ui_arrow_left"
+        }
+        itemDef
+        {
+            rect                        18 -4 0 0 1 3
+            decoration
+            visible                     1
+            textalign                   12
             textscale                   0.3095
             textfont                    UI_FONT_NORMAL
-            exp text                    ("@CODXE_MOD_BUTTONS");
+            text                        "@PLATFORM_BACK"
+        }
+        itemDef
+        {
+            rect                        90 -4 0 0 1 3
+            decoration
+            visible                     1
+            textalign                   12
+            textscale                   0.3095
+            textfont                    UI_FONT_NORMAL
+            text                        "@CODXE_CLEAR_MOD"
             execKeyInt BUTTON_A
             {
                 play mouse_click;

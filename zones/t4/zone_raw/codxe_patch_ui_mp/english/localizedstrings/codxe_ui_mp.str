@@ -11,8 +11,8 @@ LANG_ENGLISH "No mods found"
 REFERENCE CODXE_ACTIVE_MOD
 LANG_ENGLISH "Active mod: "
 
-REFERENCE CODXE_MOD_BUTTONS
-LANG_ENGLISH " Load mod     Launch without mods     Back"
+REFERENCE CODXE_CLEAR_MOD
+LANG_ENGLISH " Launch without mods"
 
 REFERENCE CODXE_NO_MAPS
 LANG_ENGLISH "No custom multiplayer maps found"
