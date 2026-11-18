@@ -1,9 +1,9 @@
 #include <xtl.h>
 #include <xkelib.h>
-#include "../kernel.h"
 #include "hook.h"
-#include "paths.h"
-#include "../notifications.h"
+#include "kernel.h"
+#include "notifications.h"
+#include "../common/paths.h"
 #include "../module/games.h"
 
 namespace
@@ -71,8 +71,8 @@ DWORD WINAPI TitleEntry(void *parameter)
 
 void FinishLoad(LDR_DATA_TABLE_ENTRY *module, const char *commandLine)
 {
-    typedef void (*FinishFn)(LDR_DATA_TABLE_ENTRY *, const char *);
-    reinterpret_cast<FinishFn>(finishHook.Original())(module, commandLine);
+    typedef void (*XexpFinishExecutableLoad_t)(LDR_DATA_TABLE_ENTRY *, const char *);
+    reinterpret_cast<XexpFinishExecutableLoad_t>(finishHook.Original())(module, commandLine);
     pendingTitle = TitleLaunch();
     if (!module)
         return;
@@ -101,22 +101,20 @@ extern "C" BOOL WINAPI CodxeLoaderEntry(HANDLE self, DWORD reason, LPVOID)
             return FALSE;
         const XBOX_KRNL_VERSION version = *XboxKrnlVersion;
         const DWORD hardwareFlags = XboxHardwareInfo->Flags;
-        const xbox::Environment environment =
-            (hardwareFlags & HARDWARE_FLAG_NOT_RETAIL) ? xbox::ENVIRONMENT_XBOX_DEVKIT : xbox::ENVIRONMENT_XBOX_RETAIL;
-        const char *flavour = environment == xbox::ENVIRONMENT_XBOX_DEVKIT ? "development" : "retail";
+        const char *flavour = (hardwareFlags & HARDWARE_FLAG_NOT_RETAIL) ? "development" : "retail";
         DbgPrint("[codxe][loader] Kernel: %u.%u.%u.%u (%s, hardware flags=0x%08X).\n", version.Major, version.Minor,
                  version.Build, version.Qfe, flavour, hardwareFlags);
-        const xbox::KernelProfile *profile = xbox::FindKernelProfile(version.Build, environment);
-        if (!profile)
+        xbox::KernelHookTarget target;
+        if (!xbox::ResolveFinishLoad(target))
         {
-            DbgPrint("[codxe][loader] Unsupported kernel/flavour; inactive\n");
+            DbgPrint("[codxe][loader] Kernel load routine not recognized; inactive\n");
             return Inactive("Unsupported kernel - inactive");
         }
-        if (!finishHook.Install(*profile, FinishLoad))
+        if (!finishHook.Install(target, FinishLoad))
             return Inactive("Kernel hook mismatch - inactive");
         ExRegisterTitleTerminateNotification(&notification, TRUE);
-        DbgPrint("[codxe][loader] ready build=%u (%s), hook=%08X root=%s\n", profile->build, flavour,
-                 profile->finish_load_address, installRoot);
+        DbgPrint("[codxe][loader] ready build=%u (%s), hook=%08X root=%s\n", version.Build, flavour, target.address,
+                 installRoot);
         xbox::notifications::Initialize();
     }
     else if (reason == DLL_PROCESS_DETACH)

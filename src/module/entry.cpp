@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "games.h"
-#include "../bootstrap/paths.h"
+#include "../common/paths.h"
 
 extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE, DWORD, LPVOID);
 
