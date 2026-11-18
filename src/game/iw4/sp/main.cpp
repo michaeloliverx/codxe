@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "components/cg.h"
 #include "components/clipmap.h"
+#include "components/console.h"
 #include "components/gsc_fields.h"
 #include "components/gsc.h"
 #include "components/pm.h"
@@ -36,6 +37,7 @@ IW4_SP_Plugin::IW4_SP_Plugin()
     RegisterModule(new Config());
     RegisterModule(new cg());
     RegisterModule(new clipmap());
+    RegisterModule(new console());
     RegisterModule(new GSCFields());
     RegisterModule(new GSC());
     RegisterModule(new pm());

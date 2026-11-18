@@ -7,6 +7,23 @@ namespace iw4
 {
 namespace sp
 {
+enum connstate_t : __int32
+{
+    CA_DISCONNECTED = 0,
+    CA_ACTIVE = 6,
+};
+
+struct cmd_function_s
+{
+    cmd_function_s *next;
+    const char *name;
+    const char *autoCompleteDir;
+    const char *autoCompleteExt;
+    void (*function)();
+};
+static_assert(sizeof(cmd_function_s) == 0x14, "");
+static_assert(offsetof(cmd_function_s, function) == 0x10, "");
+
 struct playerState_s
 {
     char pad[40];
