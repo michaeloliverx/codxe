@@ -55,16 +55,11 @@ Several supported games ship with a ready-to-use `codjumper` mod in this repo:
 - [`resources/iw5/_codxe/mods/codjumper`](resources/iw5/_codxe/mods/codjumper)
 - [`resources/t4/_codxe/mods/codjumper`](resources/t4/_codxe/mods/codjumper)
 
-These mods are practical examples of the `_codxe` mod layout and a starting point.
+## GSC Examples
 
-Several games also include an `example` mod that demonstrates the GSC loader with small, focused scripts:
-
-- [`resources/iw2/_codxe/mods/example`](resources/iw2/_codxe/mods/example)
-- [`resources/iw3/_codxe/mods/example`](resources/iw3/_codxe/mods/example)
-- [`resources/iw4/_codxe/mods/example`](resources/iw4/_codxe/mods/example)
-- [`resources/qos/_codxe/mods/example`](resources/qos/_codxe/mods/example)
-- [`resources/t4/_codxe/mods/example`](resources/t4/_codxe/mods/example)
-- [`resources/t5/_codxe/mods/example`](resources/t5/_codxe/mods/example)
+The repository's [examples directory](examples) has small GSC loader demos for
+IW2, IW3, IW4, Quantum of Solace, T4 and T5. To try one, copy the matching
+`examples/<game>/example` folder into `mods/` and follow the [mod setup](docs/features.md#setup).
 
 ## Xenia Canary Setup
 

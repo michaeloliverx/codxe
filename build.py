@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parent
 BUILD = ROOT / "build"
 MSBUILD = Path(r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe")
 RESOURCES = ROOT / "resources"
+IGNORE_CONFIGS = shutil.ignore_patterns("codxe.json", "codxe.example.json")
 # Title IDs, resource directories and XEX variants to include in the packages.
 # Keep this list in sync with the supported executables in src/module/games.h.
 PACKAGED_GAMES = {
@@ -82,9 +83,10 @@ def audit(configuration, entries):
 
 
 def copy_game_data(game, destination):
-    shutil.copytree(RESOURCES / game / "_codxe", destination,
-                    ignore=shutil.ignore_patterns("codxe.json"))
-    (destination / "mods").mkdir(exist_ok=True)
+    source = RESOURCES / game / "_codxe"
+    if source.is_dir():
+        shutil.copytree(source, destination, ignore=IGNORE_CONFIGS)
+    (destination / "mods").mkdir(parents=True, exist_ok=True)
     (destination / "usermaps").mkdir(exist_ok=True)
 
 
@@ -126,7 +128,7 @@ def package(configuration, entries, release):
             shutil.rmtree(stage)
         stage.mkdir(parents=True)
         if platform == "xenia":
-            shutil.copytree(RESOURCES / "xenia", stage, dirs_exist_ok=True)
+            shutil.copytree(RESOURCES / "xenia", stage, ignore=IGNORE_CONFIGS, dirs_exist_ok=True)
         else:
             shared = stage / "_codxe"
             (shared / "modules").mkdir(parents=True)
@@ -147,7 +149,7 @@ def package(configuration, entries, release):
         for game in sorted({entry["game"] for entry in entries}):
             updates = RESOURCES / game / "Title Updates"
             if updates.is_dir():
-                shutil.copytree(updates, stage / "title-updates" / game)
+                shutil.copytree(updates, stage / "title-updates" / game, ignore=IGNORE_CONFIGS)
 
         if platform == "xenia":
             verify_xenia(stage, entries)

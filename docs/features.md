@@ -6,7 +6,9 @@ The raw GSC loader enables loading `.gsc` scripts directly from the mod director
 
 ### Setup
 
-Create a `_codxe\mods` folder in your game directory, and place a `codxe.json` in `_codxe` to define which mod is active.
+Put your mod in `mods/` inside the game data directory and create `codxe.json`
+beside `mods/`. On Xbox 360, use `_codxe/games/<game>/` on the mounted device.
+On Xenia, use `plugins/<title_id>/_codxe/` in Canary's storage directory.
 
 In `codxe.json`, set `"active_mod"` to the name of your mod folder:
 
@@ -19,22 +21,21 @@ In `codxe.json`, set `"active_mod"` to the name of your mod folder:
 Once configured, the engine will redirect script lookups to:
 
 ```text
-game:\_codxe\mods\my_mod\
+<device>:\_codxe\games\iw3\mods\my_mod\
 ```
 
 Example tree structure:
 
 ```text
-game:.
-`-- _codxe
-    |-- codxe.json
-    `-- mods
-        `-- my_mod
-            `-- maps
-                `-- mp
-                    `-- gametypes
-                        |-- _callbacksetup.gsc
-                        `-- custom_logic.gsc
+_codxe/
+  codxe.xex
+  modules/codxe.iw3.mp.xex
+  games/iw3/
+    codxe.json
+    mods/my_mod/
+      maps/mp/gametypes/
+        _callbacksetup.gsc
+        custom_logic.gsc
 ```
 
 The underscore keeps the folder at the top of file listings and separates CoD Xe system files from the game's core content.
@@ -46,7 +47,7 @@ The loader operates using a virtual filesystem. All `.gsc` scripts, whether load
 For example:
 
 - A file in `common_mp.ff/maps/mp/gametypes/_callbacksetup.gsc`
-- Can be overridden by `game:\_codxe\mods\my_mod\maps\mp\gametypes\_callbacksetup.gsc`
+- Can be overridden by `<device>:\_codxe\games\iw3\mods\my_mod\maps\mp\gametypes\_callbacksetup.gsc`
 
 Your version will take precedence over the copy embedded in the original fastfile. You can also add new scripts and call them from overridden entry points such as `_callbacksetup.gsc`.
 
