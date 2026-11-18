@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="GenerateGitVersionHeader" BeforeTargets="ClCompile;ImageXex">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ProjectDir)tools\generate-version.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(GitVersionHeader)&quot; -XexTemplatePath &quot;$(XexTemplate)&quot; -XexOutputPath &quot;$(GitVersionXexConfiguration)&quot;" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(CodxeRoot)\tools\generate-version.ps1&quot; -RepositoryRoot &quot;$(CodxeRoot)&quot; -OutputPath &quot;$(GitVersionHeader)&quot; -XexTemplatePath &quot;$(XexTemplate)&quot; -XexOutputPath &quot;$(GitVersionXexConfiguration)&quot;" />
     <ItemGroup>
       <FileWrites Include="$(GitVersionHeader);$(GitVersionXexConfiguration)" />
     </ItemGroup>

@@ -1,36 +1,36 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "codxe", "codxe.vcxproj", "{9B1700C7-D20C-4489-A47E-60D639F18F89}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "codxe", "projects\codxe.vcxproj", "{9B1700C7-D20C-4489-A47E-60D639F18F89}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw2_sp", "codxe_iw2_sp.vcxproj", "{6173EB08-EA58-596B-BF7D-6E6125B8D5A8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw2_sp", "projects\codxe_iw2_sp.vcxproj", "{6173EB08-EA58-596B-BF7D-6E6125B8D5A8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw2_mp", "codxe_iw2_mp.vcxproj", "{807B2E72-484D-55DA-AE4F-7508ABFBDE41}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw2_mp", "projects\codxe_iw2_mp.vcxproj", "{807B2E72-484D-55DA-AE4F-7508ABFBDE41}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ngl_mp", "codxe_ngl_mp.vcxproj", "{940EF729-F279-500B-9AF5-8D806DD14355}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ngl_mp", "projects\codxe_ngl_mp.vcxproj", "{940EF729-F279-500B-9AF5-8D806DD14355}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw3_sp", "codxe_iw3_sp.vcxproj", "{2F74285B-C8B3-5AE4-8806-06D4B56AA72C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw3_sp", "projects\codxe_iw3_sp.vcxproj", "{2F74285B-C8B3-5AE4-8806-06D4B56AA72C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw3_mp", "codxe_iw3_mp.vcxproj", "{34BC92AB-ADC2-524E-B589-48DB3D92CA83}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw3_mp", "projects\codxe_iw3_mp.vcxproj", "{34BC92AB-ADC2-524E-B589-48DB3D92CA83}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qos_sp", "codxe_qos_sp.vcxproj", "{057C18A9-0477-58F0-8789-4E280D625BD5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qos_sp", "projects\codxe_qos_sp.vcxproj", "{057C18A9-0477-58F0-8789-4E280D625BD5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qos_mp", "codxe_qos_mp.vcxproj", "{EF76C26F-9607-5772-A1DE-08628A53E6D1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qos_mp", "projects\codxe_qos_mp.vcxproj", "{EF76C26F-9607-5772-A1DE-08628A53E6D1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t4_sp", "codxe_t4_sp.vcxproj", "{317C4212-7EF4-4892-AC21-862B3A893B9D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t4_sp", "projects\codxe_t4_sp.vcxproj", "{317C4212-7EF4-4892-AC21-862B3A893B9D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t4_mp", "codxe_t4_mp.vcxproj", "{294D28D8-97B3-5A43-883D-942A47D1BE71}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t4_mp", "projects\codxe_t4_mp.vcxproj", "{294D28D8-97B3-5A43-883D-942A47D1BE71}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw4_sp", "codxe_iw4_sp.vcxproj", "{D6888F8C-9EC3-57F5-8CAB-1CA0217E7808}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw4_sp", "projects\codxe_iw4_sp.vcxproj", "{D6888F8C-9EC3-57F5-8CAB-1CA0217E7808}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw4_mp", "codxe_iw4_mp.vcxproj", "{038C5521-DD64-5CAD-B13C-90CCCC958945}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw4_mp", "projects\codxe_iw4_mp.vcxproj", "{038C5521-DD64-5CAD-B13C-90CCCC958945}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw4_mp_tu6", "codxe_iw4_mp_tu6.vcxproj", "{539FA3D7-6D9F-58BA-9792-1144E3950E0D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw4_mp_tu6", "projects\codxe_iw4_mp_tu6.vcxproj", "{539FA3D7-6D9F-58BA-9792-1144E3950E0D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t5_sp", "codxe_t5_sp.vcxproj", "{6203814F-30CA-5401-8F6D-1854E60005E0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t5_sp", "projects\codxe_t5_sp.vcxproj", "{6203814F-30CA-5401-8F6D-1854E60005E0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t5_mp", "codxe_t5_mp.vcxproj", "{2977ECE3-9833-549D-8B87-9DD7CAF4755F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "t5_mp", "projects\codxe_t5_mp.vcxproj", "{2977ECE3-9833-549D-8B87-9DD7CAF4755F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw5_mp", "codxe_iw5_mp.vcxproj", "{6B46C5B7-0215-5936-8219-6A4F1064A363}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iw5_mp", "projects\codxe_iw5_mp.vcxproj", "{6B46C5B7-0215-5936-8219-6A4F1064A363}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "third_party", "third_party", "{5EDBC353-BB34-44B1-A7A5-51D09661D9D1}"
 EndProject

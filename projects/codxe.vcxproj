@@ -22,7 +22,8 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup>
-    <CodxeOutput>$(ProjectDir)build\$(Configuration)\</CodxeOutput>
+    <CodxeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</CodxeRoot>
+    <CodxeOutput>$(CodxeRoot)\build\$(Configuration)\</CodxeOutput>
     <OutDir>$(CodxeOutput)bin\</OutDir>
     <IntDir>$(CodxeOutput)obj\codxe\</IntDir>
     <TargetName>codxe</TargetName>
@@ -41,9 +42,9 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)third_party\xkelib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CodxeRoot)\src;$(CodxeRoot)\third_party\xkelib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
       <ForcedIncludeFiles>$(GitVersionHeader);%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <PreprocessorDefinitions>$(CodxeDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/Zl /wd4481 /wd4201 /wd4505 %(AdditionalOptions)</AdditionalOptions>
@@ -66,7 +67,7 @@
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalLibraryDirectories>$(ProjectDir)build\$(Configuration)\lib\xkelib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CodxeOutput)lib\xkelib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ImageXex>
       <ConfigurationFile>$(GitVersionXexConfiguration)</ConfigurationFile>
@@ -76,16 +77,16 @@
     </Deploy>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\bootstrap\main.cpp" />
-    <ClCompile Include="src\bootstrap\hook.cpp" />
-    <ClCompile Include="src\bootstrap\kernel.cpp" />
-    <ClCompile Include="src\bootstrap\notifications.cpp" />
-    <ClCompile Include="src\common\paths.cpp" />
-    <ClInclude Include="src\bootstrap\*.h;src\common\paths.h;src\common\ppc.h;src\module\games.h" />
+    <ClCompile Include="..\src\bootstrap\main.cpp" />
+    <ClCompile Include="..\src\bootstrap\hook.cpp" />
+    <ClCompile Include="..\src\bootstrap\kernel.cpp" />
+    <ClCompile Include="..\src\bootstrap\notifications.cpp" />
+    <ClCompile Include="..\src\common\paths.cpp" />
+    <ClInclude Include="..\src\bootstrap\*.h;..\src\common\paths.h;..\src\common\ppc.h;..\src\module\games.h" />
     <None Include="xex.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="third_party\xkelib.vcxproj">
+    <ProjectReference Include="..\third_party\xkelib.vcxproj">
       <Project>{83FEF217-22EE-4768-80BF-9F48D5B4564C}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
