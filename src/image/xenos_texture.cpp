@@ -141,14 +141,10 @@ namespace xenos_texture
 const TextureFormatInfo *GetTextureFormatInfo(uint32_t gpuFormat)
 {
     static const TextureFormatInfo formats[] = {
-        {GPUTEXTUREFORMAT_8, 1u, 1u, 1u},
-        {GPUTEXTUREFORMAT_8_8, 1u, 1u, 2u},
-        {GPUTEXTUREFORMAT_8_8_8_8, 1u, 1u, 4u},
-        {GPUTEXTUREFORMAT_DXT1, 4u, 4u, 8u},
-        {GPUTEXTUREFORMAT_DXT2_3, 4u, 4u, 16u},
-        {GPUTEXTUREFORMAT_DXT4_5, 4u, 4u, 16u},
-        {GPUTEXTUREFORMAT_DXN, 4u, 4u, 16u},
-        {GPUTEXTUREFORMAT_DXT3A, 4u, 4u, 8u},
+        {GPUTEXTUREFORMAT_8, 1u, 1u, 1u},       {GPUTEXTUREFORMAT_8_8, 1u, 1u, 2u},
+        {GPUTEXTUREFORMAT_8_8_8_8, 1u, 1u, 4u}, {GPUTEXTUREFORMAT_DXT1, 4u, 4u, 8u},
+        {GPUTEXTUREFORMAT_DXT2_3, 4u, 4u, 16u}, {GPUTEXTUREFORMAT_DXT4_5, 4u, 4u, 16u},
+        {GPUTEXTUREFORMAT_DXN, 4u, 4u, 16u},    {GPUTEXTUREFORMAT_DXT3A, 4u, 4u, 8u},
         {GPUTEXTUREFORMAT_DXT5A, 4u, 4u, 8u},
     };
 

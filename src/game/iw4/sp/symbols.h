@@ -10,6 +10,16 @@ namespace sp
 static auto Hunk_AllocateTempMemoryHighInternal = reinterpret_cast<void *(*)(int size)>(0x822DB330);
 
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x8227CF90);
+static auto Cmd_AddCommandInternal =
+    reinterpret_cast<void (*)(const char *name, void (*function)(), cmd_function_s *command)>(0x8227DA88);
+static auto CL_KeyEvent =
+    reinterpret_cast<void (*)(int localClientNum, int key, int down, unsigned int time)>(0x82130578);
+static auto CL_CharEvent = reinterpret_cast<void (*)(int localClientNum, int key)>(0x82130CF8);
+static auto Com_Frame = reinterpret_cast<int (*)()>(0x82284610);
+static auto Con_IsActive = reinterpret_cast<bool (*)(int localClientNum)>(0x82125E58);
+static auto Con_ToggleConsole = reinterpret_cast<void (*)()>(0x82125F30);
+static auto Con_ToggleConsoleOutput = reinterpret_cast<void (*)()>(0x82125740);
+static auto Sys_Milliseconds = reinterpret_cast<unsigned int (*)()>(0x82310188);
 
 static auto Dvar_SetBoolByName = reinterpret_cast<void (*)(const char *dvarName, bool value)>(0x822E2148);
 
@@ -69,6 +79,7 @@ static auto UI_DrawText =
         0x822C1D60);
 
 // Data
+static auto clientConnectionState = reinterpret_cast<const connstate_t *>(0x82648AC4);
 static auto fields = reinterpret_cast<client_fields_s *>(0x8201ACF0);
 static auto g_clients = reinterpret_cast<gclient_s *>(0x82EAC5E8);
 static auto g_entities = reinterpret_cast<gentity_s *>(0x82CC67B8);

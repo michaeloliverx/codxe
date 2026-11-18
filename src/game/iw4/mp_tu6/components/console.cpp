@@ -1,8 +1,11 @@
 #include "pch.h"
 #include "console.h"
+#include "game/iw4/common/console_keys.h"
 
 namespace
 {
+using namespace iw4::console_keys;
+
 static const DWORD keyboard_user_index = 0;
 static const DWORD keyboard_flags = XINPUT_FLAG_KEYBOARD;
 static const int local_client_num = 0;
@@ -35,11 +38,6 @@ bool has_shift_flag(const XINPUT_KEYSTROKE &keystroke)
 #endif
 }
 
-bool is_printable_ascii(WCHAR ch)
-{
-    return ch >= 32 && ch <= 126;
-}
-
 bool should_process_key_down(const XINPUT_KEYSTROKE &keystroke)
 {
     return (keystroke.Flags & XINPUT_KEYSTROKE_KEYDOWN) != 0 || is_repeat(keystroke);
@@ -47,7 +45,7 @@ bool should_process_key_down(const XINPUT_KEYSTROKE &keystroke)
 
 void update_modifier_state(int key, bool down)
 {
-    if (key == iw4::mp_tu6::K_SHIFT)
+    if (key == K_SHIFT)
     {
         shift_down = down;
     }
@@ -100,114 +98,9 @@ void register_commands()
     iw4::mp_tu6::Cmd_AddCommandInternal("toggleconsole", Cmd_ToggleConsole_f, &Cmd_ToggleConsole_VAR);
 }
 
-int convert_virtual_key(WORD virtual_key, WCHAR unicode)
-{
-    if (virtual_key == VK_OEM_3)
-    {
-        return unicode == '~' ? '~' : '`';
-    }
-
-#ifdef VK_OEM_8
-    if (virtual_key == VK_OEM_8)
-    {
-        return unicode == '~' ? '~' : '`';
-    }
-#endif
-
-    if (is_printable_ascii(unicode))
-    {
-        if (unicode >= 'A' && unicode <= 'Z')
-        {
-            return static_cast<int>(unicode - 'A' + 'a');
-        }
-
-        return static_cast<int>(unicode);
-    }
-
-    if (virtual_key >= VK_F1 && virtual_key <= VK_F12)
-    {
-        return iw4::mp_tu6::K_F1 + (virtual_key - VK_F1);
-    }
-
-    if (virtual_key >= VK_NUMPAD0 && virtual_key <= VK_NUMPAD9)
-    {
-        static const int keypad_numbers[] = {
-            iw4::mp_tu6::K_KP_INS,       iw4::mp_tu6::K_KP_END,  iw4::mp_tu6::K_KP_DOWNARROW,  iw4::mp_tu6::K_KP_PGDN,
-            iw4::mp_tu6::K_KP_LEFTARROW, iw4::mp_tu6::K_KP_5,    iw4::mp_tu6::K_KP_RIGHTARROW, iw4::mp_tu6::K_KP_HOME,
-            iw4::mp_tu6::K_KP_UPARROW,   iw4::mp_tu6::K_KP_PGUP,
-        };
-
-        return keypad_numbers[virtual_key - VK_NUMPAD0];
-    }
-
-    switch (virtual_key)
-    {
-    case VK_BACK:
-        return iw4::mp_tu6::K_BACKSPACE;
-    case VK_TAB:
-        return iw4::mp_tu6::K_TAB;
-    case VK_RETURN:
-        return iw4::mp_tu6::K_ENTER;
-    case VK_ESCAPE:
-        return iw4::mp_tu6::K_ESCAPE;
-    case VK_SPACE:
-        return iw4::mp_tu6::K_SPACE;
-    case VK_PRIOR:
-        return iw4::mp_tu6::K_PGUP;
-    case VK_NEXT:
-        return iw4::mp_tu6::K_PGDN;
-    case VK_END:
-        return iw4::mp_tu6::K_END;
-    case VK_HOME:
-        return iw4::mp_tu6::K_HOME;
-    case VK_LEFT:
-        return iw4::mp_tu6::K_LEFTARROW;
-    case VK_UP:
-        return iw4::mp_tu6::K_UPARROW;
-    case VK_RIGHT:
-        return iw4::mp_tu6::K_RIGHTARROW;
-    case VK_DOWN:
-        return iw4::mp_tu6::K_DOWNARROW;
-    case VK_INSERT:
-        return iw4::mp_tu6::K_INS;
-    case VK_DELETE:
-        return iw4::mp_tu6::K_DEL;
-    case VK_SHIFT:
-    case VK_LSHIFT:
-    case VK_RSHIFT:
-        return iw4::mp_tu6::K_SHIFT;
-    case VK_CONTROL:
-    case VK_LCONTROL:
-    case VK_RCONTROL:
-        return iw4::mp_tu6::K_CTRL;
-    case VK_MENU:
-    case VK_LMENU:
-    case VK_RMENU:
-        return iw4::mp_tu6::K_ALT;
-    case VK_CAPITAL:
-        return iw4::mp_tu6::K_CAPSLOCK;
-    case VK_PAUSE:
-        return iw4::mp_tu6::K_PAUSE;
-    case VK_NUMLOCK:
-        return iw4::mp_tu6::K_KP_NUMLOCK;
-    case VK_MULTIPLY:
-        return iw4::mp_tu6::K_KP_STAR;
-    case VK_ADD:
-        return iw4::mp_tu6::K_KP_PLUS;
-    case VK_SUBTRACT:
-        return iw4::mp_tu6::K_KP_MINUS;
-    case VK_DECIMAL:
-        return iw4::mp_tu6::K_KP_DEL;
-    case VK_DIVIDE:
-        return iw4::mp_tu6::K_KP_SLASH;
-    default:
-        return iw4::mp_tu6::K_NONE;
-    }
-}
-
 void send_char_event(int key, const XINPUT_KEYSTROKE &keystroke)
 {
-    if (key == iw4::mp_tu6::K_BACKSPACE)
+    if (key == K_BACKSPACE)
     {
         iw4::mp_tu6::CL_CharEvent(local_client_num, '\b');
         return;
