@@ -5,14 +5,21 @@
 #pragma section(".text")
 __declspec(allocate(".text")) static DWORD trampoline[11];
 
-bool ResidentHook::Install(const xbox::KernelProfile &profile, const void *destination)
+bool ResidentHook::Install(const xbox::KernelHookTarget &target, const void *destination)
 {
-    if (!xbox::IsKernelHookValid(profile))
-        return false;
-    source = reinterpret_cast<DWORD *>(profile.finish_load_address);
-    for (unsigned i = 0; i < 4; ++i)
-        saved[i] = source[i];
-    codxe::BuildLoaderTrampoline(saved, profile.finish_load_address, trampoline);
+    DWORD *instructions = reinterpret_cast<DWORD *>(target.address);
+    for (unsigned i = 0; i < ARRAYSIZE(saved); ++i)
+    {
+        if (!MmIsAddressValid(instructions + i) ||
+            static_cast<const volatile DWORD *>(instructions)[i] != target.prologue[i])
+        {
+            DbgPrint("[codxe][loader] Kernel hook mismatch at %p.\n", instructions + i);
+            return false;
+        }
+        saved[i] = target.prologue[i];
+    }
+    source = instructions;
+    codxe::BuildLoaderTrampoline(saved, target.address, trampoline);
     KeFlushCacheRange(trampoline, sizeof(trampoline));
     codxe::WriteBranch(source, reinterpret_cast<DWORD>(destination), false);
     KeFlushCacheRange(source, sizeof(saved));

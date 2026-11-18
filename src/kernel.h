@@ -1,18 +1,14 @@
 #pragma once
 
 #include <xtl.h>
-#include "xbox360.h"
 
 namespace xbox
 {
-struct KernelProfile
+struct KernelHookTarget
 {
-    WORD build;
-    Environment environment;
-    DWORD finish_load_address;
+    DWORD address;
     DWORD prologue[4];
 };
 
-const KernelProfile *FindKernelProfile(WORD build, Environment environment);
-bool IsKernelHookValid(const KernelProfile &profile);
+bool ResolveFinishLoad(KernelHookTarget &target);
 } // namespace xbox
