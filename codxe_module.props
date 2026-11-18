@@ -69,7 +69,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\module\entry.cpp" />
-    <ClCompile Include="src\bootstrap\paths.cpp">
+    <ClCompile Include="src\common\paths.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\common\brush_collision_tracker.cpp" />

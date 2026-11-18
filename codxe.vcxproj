@@ -78,14 +78,10 @@
   <ItemGroup>
     <ClCompile Include="src\bootstrap\main.cpp" />
     <ClCompile Include="src\bootstrap\hook.cpp" />
-    <ClCompile Include="src\kernel.cpp" />
-    <ClCompile Include="src\bootstrap\ppc.cpp" />
-    <ClCompile Include="src\bootstrap\paths.cpp" />
-    <ClCompile Include="src\notifications.cpp" />
-    <ClCompile Include="src\bootstrap\freestanding.c">
-      <CompileAs>CompileAsC</CompileAs>
-    </ClCompile>
-    <ClInclude Include="src\bootstrap\*.h;src\kernel.h;src\notifications.h;src\xbox360.h;src\module\games.h" />
+    <ClCompile Include="src\bootstrap\kernel.cpp" />
+    <ClCompile Include="src\bootstrap\notifications.cpp" />
+    <ClCompile Include="src\common\paths.cpp" />
+    <ClInclude Include="src\bootstrap\*.h;src\common\paths.h;src\common\ppc.h;src\module\games.h" />
     <None Include="xex.xml" />
   </ItemGroup>
   <ItemGroup>

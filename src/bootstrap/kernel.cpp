@@ -1,6 +1,6 @@
 #include "kernel.h"
 #include <xkelib.h>
-#include "bootstrap/ppc.h"
+#include "../common/ppc.h"
 
 namespace
 {
@@ -67,7 +67,7 @@ bool HasLocalBranches(const DWORD *words, unsigned wordCount, DWORD address)
         else if (opcode == PPC_OPCODE_B && !IsRelativeCall(instruction))
         {
             if ((instruction & PPC_BRANCH_FLAGS) ||
-                codxe::RelativeBranchTarget(pc, instruction) - address >= wordCount * sizeof(DWORD))
+                ppc::RelativeBranchTarget(pc, instruction) - address >= wordCount * sizeof(DWORD))
                 return false;
         }
     }
@@ -83,7 +83,7 @@ unsigned ReadFunction(const KernelImage &image, DWORD address, DWORD *words)
     if (words[0] != 0x7D8802A6 || !IsRelativeCall(words[1]) || (words[2] & 0xFFFF8000) != 0x94218000)
         return 0;
 
-    const DWORD saveRegisters = codxe::RelativeBranchTarget(address + 4, words[1]);
+    const DWORD saveRegisters = ppc::RelativeBranchTarget(address + 4, words[1]);
     const DWORD frameSize = -static_cast<SHORT>(words[2] & 0xFFFF);
     for (unsigned i = 3; i < MAX_FUNCTION_WORDS; ++i)
     {
@@ -93,7 +93,7 @@ unsigned ReadFunction(const KernelImage &image, DWORD address, DWORD *words)
             return 0;
         // addi r1,r1,frame; b __restgprlr_N
         if ((words[i] & PPC_BRANCH_FORM_MASK) == PPC_RELATIVE_B && words[i - 1] == (0x38210000 | frameSize) &&
-            codxe::RelativeBranchTarget(pc, words[i]) == saveRegisters + SAVE_TO_RESTORE_OFFSET)
+            ppc::RelativeBranchTarget(pc, words[i]) == saveRegisters + SAVE_TO_RESTORE_OFFSET)
             return HasLocalBranches(words, i + 1, address) ? i + 1 : 0;
     }
     return 0;
@@ -111,11 +111,11 @@ DWORD FindFinishCall(const KernelImage &image, DWORD loaderAddress, DWORD leaveC
     for (unsigned i = 1; i < wordCount; ++i)
     {
         if (!IsRelativeCall(words[i]) ||
-            codxe::RelativeBranchTarget(loaderAddress + i * sizeof(DWORD), words[i]) != leaveCriticalSection)
+            ppc::RelativeBranchTarget(loaderAddress + i * sizeof(DWORD), words[i]) != leaveCriticalSection)
             continue;
         if (i < 2 || finishAddress || (words[i - 1] & PPC_D_FORM_MASK) != 0x80610000 || !IsRelativeCall(words[i - 2]))
             return 0;
-        finishAddress = codxe::RelativeBranchTarget(loaderAddress + (i - 2) * sizeof(DWORD), words[i - 2]);
+        finishAddress = ppc::RelativeBranchTarget(loaderAddress + (i - 2) * sizeof(DWORD), words[i - 2]);
         if (!finishAddress || finishAddress == leaveCriticalSection)
             return 0;
     }
@@ -148,7 +148,7 @@ bool VerifyFinishFunction(const KernelImage &image, DWORD address, DWORD executa
         0x9181FFF8, // stw r12,-8(r1)
         0x4E800020, // blr
     };
-    const DWORD helper = codxe::RelativeBranchTarget(address + 4, words[1]);
+    const DWORD helper = ppc::RelativeBranchTarget(address + 4, words[1]);
     for (unsigned i = 0; i < ARRAYSIZE(saveGprLr29); ++i)
     {
         DWORD word;

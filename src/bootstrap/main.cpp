@@ -1,9 +1,9 @@
 #include <xtl.h>
 #include <xkelib.h>
-#include "../kernel.h"
 #include "hook.h"
-#include "paths.h"
-#include "../notifications.h"
+#include "kernel.h"
+#include "notifications.h"
+#include "../common/paths.h"
 #include "../module/games.h"
 
 namespace

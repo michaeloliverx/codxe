@@ -1,6 +1,6 @@
 #pragma once
 #include <xtl.h>
-#include "../kernel.h"
+#include "kernel.h"
 
 // The resident hook owns no heap or CRT state.
 struct ResidentHook
