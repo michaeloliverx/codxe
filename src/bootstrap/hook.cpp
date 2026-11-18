@@ -28,7 +28,7 @@ bool ResidentHook::Install(const xbox::KernelHookTarget &target, const void *des
 
 void ResidentHook::Remove()
 {
-    for (unsigned i = 0; i < 4; ++i)
+    for (unsigned i = 0; i < ARRAYSIZE(saved); ++i)
         static_cast<volatile DWORD *>(source)[i] = saved[i];
     KeFlushCacheRange(source, sizeof(saved));
     source = NULL;

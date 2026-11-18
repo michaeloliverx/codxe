@@ -10,6 +10,7 @@ void codxe::WriteBranch(volatile DWORD *out, DWORD target, bool linked)
 
 DWORD codxe::RelativeBranchTarget(DWORD address, DWORD instruction)
 {
+    // The 24-bit branch field plus two low zero bits is a signed byte offset from the instruction.
     DWORD displacement = instruction & 0x03FFFFFC;
     if (displacement & 0x02000000)
         displacement |= 0xFC000000;
@@ -18,10 +19,11 @@ DWORD codxe::RelativeBranchTarget(DWORD address, DWORD instruction)
 
 void codxe::BuildLoaderTrampoline(const DWORD source[4], DWORD address, DWORD out[11])
 {
-    // The resolver verifies mflr, bl __savegprlr_29, stwu, mr.
+    // Capture the caller's LR before the relocated call to __savegprlr_29 changes LR.
+    // Replay the two remaining instructions, then resume after the four overwritten words.
     out[0] = source[0];
     WriteBranch(out + 1, RelativeBranchTarget(address + 4, source[1]), true);
     out[5] = source[2];
     out[6] = source[3];
-    WriteBranch(out + 7, address + 16, false);
+    WriteBranch(out + 7, address + 4 * sizeof(DWORD), false);
 }
