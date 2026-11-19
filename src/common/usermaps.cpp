@@ -32,6 +32,31 @@ bool EndsWith(const std::string &text, const char *suffix)
     const size_t length = std::strlen(suffix);
     return text.size() >= length && _stricmp(text.c_str() + text.size() - length, suffix) == 0;
 }
+
+std::string ReadMetadataLine(const arena::Fields &fields, const char *key, size_t maxLength)
+{
+    const arena::Fields::const_iterator field = fields.find(key);
+    if (field == fields.end())
+        return std::string();
+
+    const std::string &text = field->second;
+    const size_t start = text.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos)
+        return std::string();
+
+    const size_t length = text.find_last_not_of(" \t\r\n") - start + 1;
+    if (length > maxLength)
+        return std::string();
+
+    // Keep metadata on one line and exclude game control and color codes.
+    const std::string label = text.substr(start, length);
+    if (label.find('^') != std::string::npos ||
+        std::find_if(label.begin(), label.end(), [](unsigned char c) { return c < ' ' || c == 127; }) != label.end())
+    {
+        return std::string();
+    }
+    return label;
+}
 } // namespace
 
 const char *GetDirectory()
@@ -99,6 +124,14 @@ bool ReadMetadata(const std::string &directory, const std::string &map, arena::F
     return false;
 }
 
+Credits ReadCredits(const arena::Fields &fields)
+{
+    Credits credits;
+    credits.author = ReadMetadataLine(fields, "author", 40);
+    credits.revision = ReadMetadataLine(fields, "revision", 24);
+    return credits;
+}
+
 std::vector<Entry> ScanMultiplayer()
 {
     std::vector<Entry> result;
@@ -121,9 +154,11 @@ std::vector<Entry> ScanMultiplayer()
             continue;
         Entry entry;
         entry.name = map;
-        ReadMetadata(directory, map, entry.fields);
-        entry.displayName = entry.fields["longname"];
-        entry.description = entry.fields["description"];
+        arena::Fields fields;
+        ReadMetadata(directory, map, fields);
+        entry.displayName = fields["longname"];
+        entry.description = fields["description"];
+        entry.credits = ReadCredits(fields);
         if (entry.displayName.empty())
             entry.displayName = map;
         const std::string preview = filesystem::JoinPath(directory.c_str(), "preview.dds");

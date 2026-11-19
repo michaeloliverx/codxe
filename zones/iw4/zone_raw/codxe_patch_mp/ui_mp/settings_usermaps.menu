@@ -1,5 +1,11 @@
 #include "ui_mp/menudef.h"
 
+#define HAS_MAP_AUTHOR (dvarstring("ui_codxe_usermap_author") != "")
+#define HAS_MAP_REVISION (dvarstring("ui_codxe_usermap_revision") != "")
+#define HAS_MAP_METADATA (HAS_MAP_AUTHOR || HAS_MAP_REVISION)
+#define MAP_METADATA_SECOND_ROW ((HAS_MAP_AUTHOR && HAS_MAP_REVISION) * 17)
+#define MAP_DESCRIPTION_Y (203 + HAS_MAP_METADATA * 34 + MAP_METADATA_SECOND_ROW)
+
 // Use the stock map selector's safe-area frame and background layers.
 {
     menuDef
@@ -278,11 +284,69 @@
         }
         itemDef
         {
+            rect -282 207 60 17 3 1
+            decoration
+            visible when(HAS_MAP_AUTHOR);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.69 0.69 0.69 1
+            text "Author:"
+        }
+        itemDef
+        {
+            rect -222 207 212 17 3 1
+            decoration
+            visible when(HAS_MAP_AUTHOR);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.9 0.9 0.9 1
+            exp text (dvarstring("ui_codxe_usermap_author"));
+        }
+        itemDef
+        {
+            rect -282 207 60 17 3 1
+            decoration
+            visible when(HAS_MAP_REVISION);
+            exp rect Y (207 + HAS_MAP_AUTHOR * 17);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.69 0.69 0.69 1
+            text "Revision:"
+        }
+        itemDef
+        {
+            rect -222 207 212 17 3 1
+            decoration
+            visible when(HAS_MAP_REVISION);
+            exp rect Y (207 + HAS_MAP_AUTHOR * 17);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.9 0.9 0.9 1
+            exp text (dvarstring("ui_codxe_usermap_revision"));
+        }
+        itemDef
+        {
+            rect -282 228 272 1 3 1
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible when(HAS_MAP_METADATA && dvarstring("ui_codxe_usermap_description") != "");
+            exp rect Y (228 + MAP_METADATA_SECOND_ROW);
+            forecolor 0.5 0.5 0.5 0.4
+            background "white"
+        }
+        itemDef
+        {
             name "usermap_description"
             rect -282 203 272 154 3 1
             decoration
             autowrapped
-            visible when(dvarstring(ui_codxe_usermap_description) != "");
+            visible when(dvarstring("ui_codxe_usermap_description") != "");
+            exp rect Y (MAP_DESCRIPTION_Y);
+            exp rect H (357 - MAP_DESCRIPTION_Y);
             textalign 4
             textscale 0.375
             textfont 3

@@ -87,8 +87,7 @@ struct UsermapEntry
     std::string name;
     std::string displayName;
     std::string description;
-    std::string author;
-    std::string revision;
+    usermaps::Credits credits;
     std::string previewPath;
 };
 
@@ -302,34 +301,14 @@ void UpdateSelectedUsermap()
                 static_cast<unsigned int>(usermaps.size()));
     SetMenuDvar("ui_codxe_usermap_name", entry.displayName);
     SetMenuDvar("ui_codxe_usermap_description", entry.description);
-    SetMenuDvar("ui_codxe_usermap_author", entry.author);
-    SetMenuDvar("ui_codxe_usermap_revision", entry.revision);
+    SetMenuDvar("ui_codxe_usermap_author", entry.credits.author);
+    SetMenuDvar("ui_codxe_usermap_revision", entry.credits.revision);
     SetMenuDvar("ui_codxe_usermap_count", count);
 
     const bool replaced = !entry.previewPath.empty() && ReplacePreview(entry.previewPath);
     SetMenuDvar("ui_codxe_usermap_has_preview", replaced ? "1" : "0");
     if (!replaced)
         RestoreDefaultPreview();
-}
-
-std::string ReadMetadataLine(const std::string &text, size_t maxLength)
-{
-    const size_t start = text.find_first_not_of(" \t\r\n");
-    if (start == std::string::npos)
-        return std::string();
-
-    const size_t length = text.find_last_not_of(" \t\r\n") - start + 1;
-    if (length > maxLength)
-        return std::string();
-
-    // Keep metadata on one line and exclude game control and color codes.
-    const std::string label = text.substr(start, length);
-    if (label.find('^') != std::string::npos ||
-        std::find_if(label.begin(), label.end(), [](unsigned char c) { return c < ' ' || c == 127; }) != label.end())
-    {
-        return std::string();
-    }
-    return label;
 }
 
 void ScanUsermaps()
@@ -373,8 +352,7 @@ void ScanUsermaps()
         usermaps::ReadMetadata(directory, name, fields);
         entry.displayName = fields["longname"];
         entry.description = fields["description"];
-        entry.author = ReadMetadataLine(fields["author"], 40);
-        entry.revision = ReadMetadataLine(fields["revision"], 24);
+        entry.credits = usermaps::ReadCredits(fields);
         if (entry.displayName.empty())
             entry.displayName = name;
 

@@ -66,6 +66,8 @@ void UpdateSelection(bool uploadPreview = true)
         selected >= 0 && selected < static_cast<int>(maps.size()) ? &maps[selected] : nullptr;
     Dvar_SetStringByName("ui_codxe_usermap_name", entry ? entry->displayName.c_str() : "");
     Dvar_SetStringByName("ui_codxe_usermap_description", entry ? entry->description.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_usermap_author", entry ? entry->credits.author.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_usermap_revision", entry ? entry->credits.revision.c_str() : "");
     Dvar_SetStringByName("ui_codxe_usermap_mapname", entry ? entry->name.c_str() : "");
     Dvar_SetIntByName("ui_codxe_usermap_count", static_cast<int>(maps.size()));
 
@@ -102,7 +104,8 @@ void Scan(int localClientNum)
 
 void Usermaps::OnDvarInit()
 {
-    const char *strings[] = {"ui_codxe_usermap_name", "ui_codxe_usermap_description", "ui_codxe_usermap_mapname"};
+    const char *strings[] = {"ui_codxe_usermap_name", "ui_codxe_usermap_description", "ui_codxe_usermap_author",
+                             "ui_codxe_usermap_revision", "ui_codxe_usermap_mapname"};
     for (size_t i = 0; i < ARRAYSIZE(strings); ++i)
         Dvar_RegisterString(strings[i], "", DVAR_FLAG_NONE, "Custom map metadata");
     Dvar_SetIntByName("ui_codxe_usermap_count", 0);

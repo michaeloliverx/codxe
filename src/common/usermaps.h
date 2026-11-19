@@ -6,13 +6,19 @@
 
 namespace usermaps
 {
+struct Credits
+{
+    std::string author;
+    std::string revision;
+};
+
 struct Entry
 {
     std::string name;
     std::string displayName;
     std::string description;
     std::string previewPath;
-    arena::Fields fields;
+    Credits credits;
 };
 
 const char *GetDirectory();
@@ -21,5 +27,6 @@ bool IsMultiplayerName(const char *name);
 std::string FastfilePath(const char *zoneName);
 bool ReadMetadata(const std::string &directory, const std::string &map, std::string &name, std::string &description);
 bool ReadMetadata(const std::string &directory, const std::string &map, arena::Fields &fields);
+Credits ReadCredits(const arena::Fields &fields);
 std::vector<Entry> ScanMultiplayer();
 } // namespace usermaps

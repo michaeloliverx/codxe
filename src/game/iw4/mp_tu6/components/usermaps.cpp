@@ -22,6 +22,20 @@ int selected[4] = {};
 dvar_t *ui_codxe_usermap_count = nullptr;
 dvar_t *ui_codxe_usermap_name = nullptr;
 dvar_t *ui_codxe_usermap_description = nullptr;
+dvar_t *ui_codxe_usermap_author = nullptr;
+dvar_t *ui_codxe_usermap_revision = nullptr;
+
+void SetMapMetadata(const usermaps::Entry *entry)
+{
+    if (ui_codxe_usermap_name)
+        Dvar_SetString(ui_codxe_usermap_name, entry ? entry->displayName.c_str() : "");
+    if (ui_codxe_usermap_description)
+        Dvar_SetString(ui_codxe_usermap_description, entry ? entry->description.c_str() : "");
+    if (ui_codxe_usermap_author)
+        Dvar_SetString(ui_codxe_usermap_author, entry ? entry->credits.author.c_str() : "");
+    if (ui_codxe_usermap_revision)
+        Dvar_SetString(ui_codxe_usermap_revision, entry ? entry->credits.revision.c_str() : "");
+}
 } // namespace
 
 void Usermaps::OnDvarInit()
@@ -30,6 +44,8 @@ void Usermaps::OnDvarInit()
     ui_codxe_usermap_name = Dvar_RegisterString("ui_codxe_usermap_name", "", 0, "Selected custom map name");
     ui_codxe_usermap_description =
         Dvar_RegisterString("ui_codxe_usermap_description", "", 0, "Selected custom map description");
+    ui_codxe_usermap_author = Dvar_RegisterString("ui_codxe_usermap_author", "", 0, "Selected custom map author");
+    ui_codxe_usermap_revision = Dvar_RegisterString("ui_codxe_usermap_revision", "", 0, "Selected custom map revision");
     Dvar_RegisterString("ui_codxe_usermap_has_preview", "0", 0, "Selected map has a preview");
 }
 
@@ -55,10 +71,7 @@ void Usermaps::Select(int localClientNum, int index)
     if (localClientNum >= 0 && localClientNum < static_cast<int>(ARRAYSIZE(selected)) && index >= 0 && index < Count())
     {
         selected[localClientNum] = index;
-        if (ui_codxe_usermap_name)
-            Dvar_SetString(ui_codxe_usermap_name, maps[index].displayName.c_str());
-        if (ui_codxe_usermap_description)
-            Dvar_SetString(ui_codxe_usermap_description, maps[index].description.c_str());
+        SetMapMetadata(&maps[index]);
         Dvar_SetStringByName("ui_codxe_usermap_has_preview", EnsurePreview(maps[index].name.c_str()) ? "1" : "0");
     }
 }
@@ -70,10 +83,7 @@ void Usermaps::Load(int localClientNum, const char ** /*args*/)
     maps.clear();
     Arenas::Reload();
     memset(selected, 0, sizeof(selected));
-    if (ui_codxe_usermap_name)
-        Dvar_SetString(ui_codxe_usermap_name, "");
-    if (ui_codxe_usermap_description)
-        Dvar_SetString(ui_codxe_usermap_description, "");
+    SetMapMetadata(nullptr);
     maps = usermaps::ScanMultiplayer();
     for (size_t i = 0; i < maps.size(); ++i)
     {

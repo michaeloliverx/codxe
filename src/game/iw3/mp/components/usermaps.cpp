@@ -51,6 +51,8 @@ void UpdateUsermapSelection()
     SetMetadata("ui_codxe_usermap_counter", counter);
     SetMetadata("ui_codxe_usermap_name", entry ? entry->displayName.c_str() : "");
     SetMetadata("ui_codxe_usermap_description", entry ? entry->description.c_str() : "");
+    SetMetadata("ui_codxe_usermap_author", entry ? entry->credits.author.c_str() : "");
+    SetMetadata("ui_codxe_usermap_revision", entry ? entry->credits.revision.c_str() : "");
     char count[16];
     _snprintf_s(count, ARRAYSIZE(count), _TRUNCATE, "%u", static_cast<unsigned int>(maps.size()));
     SetMetadata("ui_codxe_usermap_count", count);
@@ -188,6 +190,7 @@ void Usermaps::CloseScript(int /*localClientNum*/, const char ** /*args*/)
 void Usermaps::OnDvarInit()
 {
     const char *names[] = {"ui_codxe_usermap_counter", "ui_codxe_usermap_name", "ui_codxe_usermap_description",
+                           "ui_codxe_usermap_author", "ui_codxe_usermap_revision",
                            "ui_codxe_usermap_count", "ui_codxe_usermap_has_preview"};
     for (size_t i = 0; i < ARRAYSIZE(names); ++i)
         Dvar_RegisterString(names[i], "", DVAR_FLAG_NONE, "Custom map metadata");
