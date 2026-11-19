@@ -7,6 +7,10 @@
 namespace arena
 {
 typedef std::map<std::string, std::string> Fields;
+const size_t MAX_FILE_SIZE = 65536;
+
+std::string ReadText(const std::string &path);
+std::string ReadPlainLine(const Fields &fields, const char *key, size_t maxLength);
 
 class Tokens
 {
@@ -101,9 +105,9 @@ inline std::string Lower(std::string value)
 }
 
 // Metadata never changes the folder/fastfile used to launch a map.
-inline bool Parse(const std::string &text, const std::string &folder, Fields &fields)
+inline bool Parse(const std::string &text, const std::string &folder, Fields &fields, const char *identityKey = "map")
 {
-    if (text.size() > 65536 || text.find('\0') != std::string::npos)
+    if (text.size() > MAX_FILE_SIZE || text.find('\0') != std::string::npos)
         return false;
     Tokens tokens(text);
     std::string token;
@@ -128,13 +132,13 @@ inline bool Parse(const std::string &text, const std::string &folder, Fields &fi
             const std::string key = Lower(token);
             if (!tokens.Next(token) || (!tokens.quoted && (token == "{" || token == "}")))
                 return false;
-            if (key == "map")
+            if (identityKey && key == identityKey)
                 map = token;
             parsed[key] = token;
         }
         if (!closed)
             return false;
-        if (!found && Lower(map) == Lower(folder))
+        if (!found && (!identityKey || Lower(map) == Lower(folder)))
         {
             found = true;
             selectedFields.swap(parsed);
@@ -144,6 +148,11 @@ inline bool Parse(const std::string &text, const std::string &folder, Fields &fi
         return false;
     fields.swap(selectedFields);
     return true;
+}
+
+inline bool Parse(const std::string &text, Fields &fields)
+{
+    return Parse(text, std::string(), fields, nullptr);
 }
 
 inline bool Parse(const std::string &text, const std::string &folder, std::string &name, std::string &description)

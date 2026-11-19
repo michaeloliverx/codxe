@@ -200,17 +200,39 @@ struct DxGlobals
 struct Material;
 struct menuDef_t;
 
+struct ListBoxColumn
+{
+    int pos;
+    int width;
+    int maxChars;
+    int alignment;
+};
+
+struct listBoxDef_s
+{
+    unsigned char _pad0[0x30];
+    unsigned int columnCount;
+    ListBoxColumn columns[16];
+};
+static_assert(offsetof(listBoxDef_s, columns) == 0x34, "");
+
 struct itemDef_s
 {
-    unsigned char _pad0[0x178];
+    unsigned char _pad0[0x114];
+    int fontEnum;
+    unsigned char _pad1[0xC];
+    float textScale;
+    unsigned char _pad2[0x50];
     float special;
     int cursorPos[4];
     void *typeData;
-    unsigned char _pad1[0x44];
+    unsigned char _pad3[0x44];
 };
 static_assert(sizeof(itemDef_s) == 0x1D4, "");
+static_assert(offsetof(itemDef_s, fontEnum) == 0x114 && offsetof(itemDef_s, textScale) == 0x124, "");
 static_assert(offsetof(itemDef_s, special) == 0x178, "");
 static_assert(offsetof(itemDef_s, cursorPos) == 0x17C, "");
+static_assert(offsetof(itemDef_s, typeData) == 0x18C, "");
 
 struct FeederEntry
 {

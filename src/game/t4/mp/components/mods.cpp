@@ -3,6 +3,8 @@
 
 #include "fastfiles.h"
 #include "usermaps.h"
+#include "common/mod_metadata.h"
+#include "image/usermap_preview.h"
 
 namespace t4
 {
@@ -13,13 +15,7 @@ namespace
 const float MODS_FEEDER_ID = 9.0f;
 const char *const FS_GAME_PREFIX = "mods/";
 
-struct ModEntry
-{
-    std::string name;
-    std::string displayName;
-};
-
-std::vector<ModEntry> mods;
+std::vector<mod_metadata::Entry> mods;
 int selectedMod = 0;
 dvar_s *fs_game = nullptr;
 
@@ -43,16 +39,55 @@ bool IsSafeModName(const char *name)
     return true;
 }
 
-std::string ReadDisplayName(const std::string &directory, const std::string &fallback)
+int MeasureModTitleWrapHeight(const char *title)
 {
-    std::string text = filesystem::ReadFileToString(filesystem::JoinPath(directory.c_str(), "description.txt"));
-    const size_t lineEnd = text.find_first_of("\r\n");
-    if (lineEnd != std::string::npos)
-        text.erase(lineEnd);
+    // Match the title's UI_FONT_NORMAL, text scale, and width in mods_menu.
+    const float scale = 0.381f;
+    const unsigned int width = 275;
+    Font_s *font = ui_normalFont;
+    if (!font || font->pixelHeight <= 0)
+        return 0;
 
-    const size_t first = text.find_first_not_of(" \t");
-    const size_t last = text.find_last_not_of(" \t");
-    return first == std::string::npos ? fallback : text.substr(first, last - first + 1);
+    const float drawScale = scale * 48.0f / font->pixelHeight;
+    const int lineHeight = static_cast<int>(font->pixelHeight * drawScale) + 2;
+    int extraHeight = 0;
+    while (*title)
+    {
+        const char *next = R_TextLineWrapPosition(title, 1024, width, font, drawScale);
+        if (!next || next <= title)
+            break;
+        while (std::isspace(static_cast<unsigned char>(*next)))
+            ++next;
+        if (!*next)
+            break;
+        extraHeight += lineHeight;
+        title = next;
+    }
+    return extraHeight;
+}
+
+void UpdateSelection()
+{
+    const mod_metadata::Entry *entry = mods.empty() ? nullptr : &mods[selectedMod];
+    Dvar_SetStringByName("ui_codxe_mod_name", entry ? entry->displayName.c_str() : "");
+    const int extraTitleHeight = entry ? MeasureModTitleWrapHeight(entry->displayName.c_str()) : 0;
+    Dvar_SetIntByName("ui_codxe_mod_title_wrap_height", extraTitleHeight);
+    Dvar_SetStringByName("ui_codxe_mod_description", entry ? entry->description.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_mod_author", entry ? entry->credits.author.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_mod_revision", entry ? entry->credits.revision.c_str() : "");
+
+    bool uploaded = false;
+    if (entry && !entry->previewPath.empty())
+    {
+        const char *const imageName = "codxe_mod_preview";
+        GfxImage *preview = reinterpret_cast<GfxImage *>(DB_FindXAssetHeader(ASSET_TYPE_IMAGE, imageName, false, 0));
+        const image::preview::DeviceFunctions backend = {gfxDevice, R_SyncRenderThread, D3D_BlockUntilIdle,
+                                                         D3D_InvalidateCaches, nullptr};
+        if (preview && preview->name && std::strcmp(preview->name, imageName) == 0)
+            uploaded = image::preview::UploadDDS(entry->previewPath, preview->texture.basemap, preview->pixels,
+                                                 preview->width, preview->height, backend);
+    }
+    Dvar_SetIntByName("ui_codxe_mod_has_preview", uploaded ? 1 : 0);
 }
 
 void ScanMods(int localClientNum)
@@ -70,21 +105,20 @@ void ScanMods(int localClientNum)
             if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || !IsSafeModName(data.cFileName))
                 continue;
 
-            ModEntry entry;
-            entry.name = data.cFileName;
-            entry.displayName = ReadDisplayName(filesystem::JoinPath(MOD_DIR, data.cFileName), entry.name);
-            mods.push_back(entry);
+            const std::string directory = filesystem::JoinPath(MOD_DIR, data.cFileName);
+            mods.push_back(mod_metadata::Read(directory.c_str(), data.cFileName));
         } while (FindNextFileA(handle, &data));
         FindClose(handle);
     }
 
-    std::sort(mods.begin(), mods.end(), [](const ModEntry &left, const ModEntry &right)
+    std::sort(mods.begin(), mods.end(), [](const mod_metadata::Entry &left, const mod_metadata::Entry &right)
               { return _stricmp(left.displayName.c_str(), right.displayName.c_str()) < 0; });
 
     Dvar_SetIntByName("ui_modCount", static_cast<int>(mods.size()));
 
     // Reset both the native listbox cursor and scroll position when rescanning.
     Menu_SetFeederSelection(UI_GetContext(localClientNum), nullptr, static_cast<int>(MODS_FEEDER_ID), 0, "mods_menu");
+    UpdateSelection();
     DbgPrint("[codxe][T4][ModList] Found %u mod(s) in %s\n", static_cast<unsigned int>(mods.size()), MOD_DIR);
 }
 
@@ -160,8 +194,11 @@ void UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
     }
     if (feederID == MODS_FEEDER_ID)
     {
-        if (index >= 0 && index < static_cast<int>(mods.size()))
+        if (index >= 0 && index < static_cast<int>(mods.size()) && index != selectedMod)
+        {
             selectedMod = index;
+            UpdateSelection();
+        }
         return;
     }
 
@@ -185,6 +222,12 @@ bool Cmd_ExecFromDisk_Hook(int localClientNum, int controllerIndex, const char *
 void ModList::OnDvarInit()
 {
     fs_game = Dvar_RegisterString("fs_game", "", DVAR_ARCHIVE, "The active mod directory");
+    const char *names[] = {"ui_codxe_mod_name", "ui_codxe_mod_description", "ui_codxe_mod_author",
+                           "ui_codxe_mod_revision"};
+    for (size_t i = 0; i < ARRAYSIZE(names); ++i)
+        Dvar_RegisterString(names[i], "", DVAR_FLAG_NONE, "Selected mod metadata");
+    Dvar_SetIntByName("ui_codxe_mod_has_preview", 0);
+    Dvar_SetIntByName("ui_codxe_mod_title_wrap_height", 0);
 }
 
 std::string ModList::GetActiveName()

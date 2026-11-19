@@ -3,6 +3,8 @@
 #include "fastfiles.h"
 #include "ui_feeder.h"
 #include "ui_script.h"
+#include "usermap_preview.h"
+#include "common/mod_metadata.h"
 
 namespace iw4
 {
@@ -12,7 +14,7 @@ namespace
 {
 const int MODS_FEEDER = 9;
 const char *const MODS_DIRECTORY = "codxe:\\mods";
-std::vector<std::string> mods;
+std::vector<mod_metadata::Entry> mods;
 int selected[4] = {};
 dvar_t *fs_game = nullptr;
 Detour Cmd_ExecFromDisk_Detour;
@@ -34,17 +36,32 @@ int Count()
 
 const char *Text(int client, int index, int column)
 {
+    if (index < 0 || index >= Count())
+        return "";
     if (column == 0)
-        return mods[index].c_str();
+        return mods[index].displayName.c_str();
     if (column == 1 && client >= 0 && client < ARRAYSIZE(selected) && selected[client] == index)
         return "\x01"; // Stock A-button glyph, matching the custom map list.
     return "";
 }
 
+void UpdateSelection(int index)
+{
+    const mod_metadata::Entry *entry = index >= 0 && index < Count() ? &mods[index] : nullptr;
+    Dvar_SetStringByName("ui_codxe_mod_name", entry ? entry->displayName.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_mod_description", entry ? entry->description.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_mod_author", entry ? entry->credits.author.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_mod_revision", entry ? entry->credits.revision.c_str() : "");
+    Dvar_SetStringByName("ui_codxe_mod_has_preview", entry && UsermapPreview::LoadMod(entry->previewPath) ? "1" : "0");
+}
+
 void Select(int client, int index)
 {
-    if (client >= 0 && client < ARRAYSIZE(selected))
+    if (client >= 0 && client < ARRAYSIZE(selected) && index >= 0 && index < Count() && index != selected[client])
+    {
         selected[client] = index;
+        UpdateSelection(index);
+    }
 }
 
 void Load(int client, const char **)
@@ -59,13 +76,18 @@ void Load(int client, const char **)
         do
         {
             if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && IsSafeModName(data.cFileName))
-                mods.push_back(data.cFileName);
+            {
+                const std::string directory = filesystem::JoinPath(MODS_DIRECTORY, data.cFileName);
+                mods.push_back(mod_metadata::Read(directory.c_str(), data.cFileName));
+            }
         } while (FindNextFileA(search, &data));
         FindClose(search);
     }
-    std::sort(mods.begin(), mods.end());
+    std::sort(mods.begin(), mods.end(), [](const mod_metadata::Entry &left, const mod_metadata::Entry &right)
+              { return left.displayName < right.displayName; });
     Dvar_SetStringByName("ui_modCount", va("%d", Count()));
     Menu_SetFeederSelection(UI_GetClientDC(client), nullptr, MODS_FEEDER, 0, "mods_menu");
+    UpdateSelection(0);
 }
 
 bool CanChangeMod()
@@ -88,10 +110,11 @@ void Run(int client, const char **)
     const int index = selected[client];
     if (index < 0 || index >= Count())
         return;
-    const std::string path = filesystem::JoinPath(MODS_DIRECTORY, mods[index].c_str());
+    const std::string &folder = mods[index].name;
+    const std::string path = filesystem::JoinPath(MODS_DIRECTORY, folder.c_str());
     if (!filesystem::DirectoryExists(path.c_str()))
         return;
-    Dvar_SetString(fs_game, ("mods/" + mods[index]).c_str());
+    Dvar_SetString(fs_game, ("mods/" + folder).c_str());
     fastfiles::ReloadModZone();
     RefreshMenus(client);
     Cbuf_AddText(client, "exec mod.cfg\n");
@@ -123,6 +146,10 @@ void ModList::OnDvarInit()
 {
     fs_game = Dvar_RegisterString("fs_game", "", 1, "The active mod directory");
     Dvar_RegisterString("ui_modCount", "0", 0, "Number of installed mods");
+    const char *names[] = {"ui_codxe_mod_name", "ui_codxe_mod_description", "ui_codxe_mod_author",
+                           "ui_codxe_mod_revision", "ui_codxe_mod_has_preview"};
+    for (size_t i = 0; i < ARRAYSIZE(names); ++i)
+        Dvar_RegisterString(names[i], "", 0, "Selected mod metadata");
 }
 
 std::string ModList::GetActiveName()

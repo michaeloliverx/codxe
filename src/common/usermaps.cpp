@@ -1,61 +1,14 @@
 #include "pch.h"
 #include "usermaps.h"
-#include "arena.h"
 
 namespace usermaps
 {
 namespace
 {
-std::string ReadSmallFile(const std::string &path)
-{
-    HANDLE file = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                              FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE)
-        return std::string();
-
-    DWORD high = 0;
-    const DWORD size = GetFileSize(file, &high);
-    std::string text;
-    if (!high && size > 0 && size <= 65536)
-    {
-        text.resize(size);
-        DWORD read = 0;
-        if (!ReadFile(file, &text[0], size, &read, nullptr) || read != size)
-            text.clear();
-    }
-    CloseHandle(file);
-    return text;
-}
-
 bool EndsWith(const std::string &text, const char *suffix)
 {
     const size_t length = std::strlen(suffix);
     return text.size() >= length && _stricmp(text.c_str() + text.size() - length, suffix) == 0;
-}
-
-std::string ReadMetadataLine(const arena::Fields &fields, const char *key, size_t maxLength)
-{
-    const arena::Fields::const_iterator field = fields.find(key);
-    if (field == fields.end())
-        return std::string();
-
-    const std::string &text = field->second;
-    const size_t start = text.find_first_not_of(" \t\r\n");
-    if (start == std::string::npos)
-        return std::string();
-
-    const size_t length = text.find_last_not_of(" \t\r\n") - start + 1;
-    if (length > maxLength)
-        return std::string();
-
-    // Keep metadata on one line and exclude game control and color codes.
-    const std::string label = text.substr(start, length);
-    if (label.find('^') != std::string::npos ||
-        std::find_if(label.begin(), label.end(), [](unsigned char c) { return c < ' ' || c == 127; }) != label.end())
-    {
-        return std::string();
-    }
-    return label;
 }
 } // namespace
 
@@ -117,7 +70,7 @@ bool ReadMetadata(const std::string &directory, const std::string &map, arena::F
     filenames[1] = named.c_str();
     for (size_t i = 0; i < ARRAYSIZE(filenames); ++i)
     {
-        const std::string text = ReadSmallFile(filesystem::JoinPath(directory.c_str(), filenames[i]));
+        const std::string text = arena::ReadText(filesystem::JoinPath(directory.c_str(), filenames[i]));
         if (arena::Parse(text, map, fields))
             return true;
     }
@@ -127,8 +80,8 @@ bool ReadMetadata(const std::string &directory, const std::string &map, arena::F
 Credits ReadCredits(const arena::Fields &fields)
 {
     Credits credits;
-    credits.author = ReadMetadataLine(fields, "author", 40);
-    credits.revision = ReadMetadataLine(fields, "revision", 24);
+    credits.author = arena::ReadPlainLine(fields, "author", 40);
+    credits.revision = arena::ReadPlainLine(fields, "revision", 24);
     return credits;
 }
 

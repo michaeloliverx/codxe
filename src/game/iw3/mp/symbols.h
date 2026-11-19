@@ -202,6 +202,14 @@ static auto R_SetPassShaderPrimArguments =
         0x821341B8);
 static auto R_DrawAllDynEnt = reinterpret_cast<void (*)(const GfxViewInfo *viewInfo)>(0x8215FF98);
 static auto R_RegisterFont = reinterpret_cast<Font_s *(*)(const char *name)>(0x8216EC00);
+static auto R_TextWidth = reinterpret_cast<int (*)(const char *text, int maxChars, Font_s *font)>(0x8216EB00);
+static auto R_TextLineWrapPosition =
+    reinterpret_cast<const char *(*)(const char *text, int maxChars, unsigned int width, Font_s *font,
+                                      double scale)>(0x8216E8F8);
+static auto UI_GetFontHandle = reinterpret_cast<Font_s *(*)(int fontEnum, double scale)>(0x821EA078);
+static auto SEH_DecodeLetter =
+    reinterpret_cast<int (*)(unsigned char first, unsigned char second, int *byteCount)>(0x821FA538);
+static Font_s *const &ui_bigFont = *reinterpret_cast<Font_s **>(0x849F80A8);
 static auto R_StreamLoadFileSynchronously =
     reinterpret_cast<int (*)(const char *filename, unsigned int bytesToRead, unsigned __int8 *outData)>(0x82151510);
 

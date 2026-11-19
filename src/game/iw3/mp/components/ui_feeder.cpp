@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "ui_feeder.h"
 
+#include <climits>
+
 namespace iw3
 {
 namespace mp
@@ -15,6 +17,58 @@ const char *const FEEDER_ACTION_GLYPH = "\x01";
 const char *const FEEDER_BACKGROUND_MATERIAL = "gradient_fadein";
 const char *const FEEDER_BACKGROUND_END_MATERIAL = "button_highlight_end";
 
+const char *FitFeederName(const itemDef_s *item, const char *name)
+{
+    if (!item || !item->typeData || !name || !*name)
+        return name ? name : "";
+
+    const listBoxDef_s *list = static_cast<const listBoxDef_s *>(item->typeData);
+    if (list->columnCount <= FEEDER_NAME_COLUMN)
+        return name;
+    const ListBoxColumn &column = list->columns[FEEDER_NAME_COLUMN];
+    Font_s *font = item->fontEnum == 2 ? ui_bigFont : UI_GetFontHandle(item->fontEnum, item->textScale);
+    if (!font || font->pixelHeight <= 0 || item->textScale <= 0)
+        return name;
+
+    // The native listbox aligns the text to its column but never clips it to that width.
+    const float scale = item->textScale * 48.0f / font->pixelHeight;
+    const float width = column.width - 2.0f;
+    const int maxChars = column.maxChars > 0 ? column.maxChars : INT_MAX;
+    if (R_TextWidth(name, maxChars, font) * scale <= width)
+        return name;
+
+    const char ellipsis[] = "...";
+    const int suffixChars = sizeof(ellipsis) - 1;
+    const float prefixWidth = width - R_TextWidth(ellipsis, 0, font) * scale;
+    if (prefixWidth < 0 || maxChars < suffixChars)
+        return "";
+
+    const char *end = name;
+    const char *fittedEnd = name;
+    int chars = 0;
+    while (*end && chars < maxChars - suffixChars)
+    {
+        int bytes = 0;
+        const int letter = SEH_DecodeLetter(end[0], end[1], &bytes);
+        if (bytes <= 0 || letter == '\r' || letter == '\n')
+            break;
+        end += bytes;
+        if (letter == '^' && *end >= '0' && *end <= '9')
+        {
+            ++end;
+            continue;
+        }
+        if (R_TextWidth(name, ++chars, font) * scale > prefixWidth)
+            break;
+        fittedEnd = end;
+    }
+
+    // The listbox consumes the result immediately when it queues the draw.
+    static std::string fitted;
+    fitted.assign(name, fittedEnd);
+    fitted += ellipsis;
+    return fitted.c_str();
+}
 } // namespace
 
 std::map<float, UIFeederCallbacks> UIFeeder::Feeders;
@@ -90,7 +144,7 @@ const char *UIFeeder::UI_FeederItemText_Hook(int localClientNum, itemDef_s *item
     if (column == FEEDER_ACTION_COLUMN)
         return SelectedIndices[feederID] == index ? FEEDER_ACTION_GLYPH : "";
 
-    return column == FEEDER_NAME_COLUMN ? feeder->second.getItemText(index) : "";
+    return column == FEEDER_NAME_COLUMN ? FitFeederName(item, feeder->second.getItemText(index)) : "";
 }
 
 void UIFeeder::UI_FeederItemColor_Hook(int localClientNum, itemDef_s *item, float feederID, int index, int column,

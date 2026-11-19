@@ -31,8 +31,9 @@ material,,white
 
 
 
-// One resident texture is reused for the selected custom map.
+// The custom-map and Mods menus each reuse a resident preview texture.
 material,$codxe_usermap_preview
+material,$codxe_mod_preview
 techniqueset,,2d
 
 // Preserve the TU7 frontend patch and its normal unload/reload lifetime.

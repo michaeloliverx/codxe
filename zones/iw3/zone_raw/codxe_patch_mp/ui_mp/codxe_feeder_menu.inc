@@ -3,7 +3,7 @@
 
 #define CODXE_FEEDER_ACTION_Y 378
 
-#define CODXE_FEEDER_LIST_STYLE \
+#define CODXE_FEEDER_LIST_STYLE(rowWidth, nameWidth, actionX, nameAlignment) \
             style                       WINDOW_STYLE_FILLED \
             type                        ITEM_TYPE_LISTBOX \
             borderSize                  1 \
@@ -17,9 +17,9 @@
             elementwidth                120 \
             elementheight               22 \
             columns                     4 \
-                                        0 215 0 0 \
-                                        215 5 0 0 \
-                                        6 178 64 2 \
-                                        190 20 1 0
+                                        0 rowWidth 0 0 \
+                                        rowWidth 5 0 0 \
+                                        6 nameWidth 64 nameAlignment \
+                                        actionX 20 1 0
 
 #endif

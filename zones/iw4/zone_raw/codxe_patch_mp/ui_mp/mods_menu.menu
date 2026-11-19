@@ -1,5 +1,14 @@
 #include "ui_mp/menudef.h"
 
+#define MOD_HAS_PREVIEW (dvarint("ui_codxe_mod_has_preview") != 0)
+#define MOD_HAS_AUTHOR (dvarstring("ui_codxe_mod_author") != "")
+#define MOD_HAS_REVISION (dvarstring("ui_codxe_mod_revision") != "")
+#define MOD_HAS_CREDITS (MOD_HAS_AUTHOR || MOD_HAS_REVISION)
+#define MOD_TITLE_Y (38 + MOD_HAS_PREVIEW * 149)
+#define MOD_CREDITS_Y (MOD_TITLE_Y + 32)
+#define MOD_SECOND_ROW ((MOD_HAS_AUTHOR && MOD_HAS_REVISION) * 17)
+#define MOD_DESCRIPTION_Y (MOD_CREDITS_Y + MOD_HAS_CREDITS * 42 + MOD_SECOND_ROW)
+
 // Use the stock map selector's safe-area frame and background layers.
 {
     menuDef
@@ -211,10 +220,115 @@
         }
         itemDef
         {
-            rect -282 28 272 80 3 1
+            rect -292 28 292 356 3 1
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible 1
+            forecolor 0 0 0 0.7
+            background "black"
+        }
+        itemDef
+        {
+            name "mod_preview"
+            rect -282 38 272 132 3 1
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible when(MOD_HAS_PREVIEW);
+            exp material ("$codxe_mod_preview");
+        }
+        itemDef
+        {
+            name "mod_title"
+            rect -282 38 272 30 3 1
             decoration
             autowrapped
-            visible 1
+            visible when(dvarstring("ui_codxe_mod_name") != "");
+            exp rect Y (MOD_TITLE_Y);
+            textalign 4
+            textscale 0.375
+            textfont 9
+            forecolor 1 1 1 1
+            exp text (dvarstring("ui_codxe_mod_name"));
+        }
+        itemDef
+        {
+            rect -282 70 60 17 3 1
+            decoration
+            visible when(MOD_HAS_AUTHOR);
+            exp rect Y (MOD_CREDITS_Y);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.69 0.69 0.69 1
+            text "Author:"
+        }
+        itemDef
+        {
+            rect -222 70 212 17 3 1
+            decoration
+            visible when(MOD_HAS_AUTHOR);
+            exp rect Y (MOD_CREDITS_Y);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.9 0.9 0.9 1
+            exp text (dvarstring("ui_codxe_mod_author"));
+        }
+        itemDef
+        {
+            rect -282 70 60 17 3 1
+            decoration
+            visible when(MOD_HAS_REVISION);
+            exp rect Y (MOD_CREDITS_Y + MOD_HAS_AUTHOR * 17);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.69 0.69 0.69 1
+            text "Revision:"
+        }
+        itemDef
+        {
+            rect -222 70 212 17 3 1
+            decoration
+            visible when(MOD_HAS_REVISION);
+            exp rect Y (MOD_CREDITS_Y + MOD_HAS_AUTHOR * 17);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.9 0.9 0.9 1
+            exp text (dvarstring("ui_codxe_mod_revision"));
+        }
+        itemDef
+        {
+            rect -282 92 272 1 3 1
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible when(MOD_HAS_CREDITS && dvarstring("ui_codxe_mod_description") != "");
+            exp rect Y (MOD_CREDITS_Y + 22 + MOD_SECOND_ROW);
+            forecolor 0.5 0.5 0.5 0.4
+            background "white"
+        }
+        itemDef
+        {
+            name "mod_description"
+            rect -282 70 272 280 3 1
+            decoration
+            autowrapped
+            visible when(dvarstring("ui_codxe_mod_description") != "");
+            exp rect Y (MOD_DESCRIPTION_Y);
+            exp rect H (350 - MOD_DESCRIPTION_Y);
+            textalign 4
+            textscale 0.375
+            textfont 3
+            forecolor 0.69 0.69 0.69 1
+            exp text (dvarstring("ui_codxe_mod_description"));
+        }
+        itemDef
+        {
+            rect -282 355 272 25 3 1
+            decoration
+            autowrapped
+            visible when(dvarstring(fs_game) != "");
             textfont 3
             textscale 0.375
             exp text ("Active mod: " + dvarstring(fs_game));

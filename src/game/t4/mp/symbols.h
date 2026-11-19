@@ -210,6 +210,10 @@ static auto R_AddCmdDrawText =
     reinterpret_cast<void (*)(const char *text, int fontSize, Font_s *font, float x, float y, float scaleX,
                               float scaleY, float rotation, const float *color, int flags)>(0x82401C30);
 static auto R_CheckDvarModified = reinterpret_cast<int (*)(const dvar_s *dvar)>(0x8240D860);
+static auto R_TextLineWrapPosition =
+    reinterpret_cast<const char *(*)(const char *text, int maxChars, unsigned int width, Font_s *font,
+                                      double scale)>(0x82400020);
+static Font_s *const &ui_normalFont = *reinterpret_cast<Font_s **>(0x84FAF848);
 
 static auto ScriptEnt_GetMethod = reinterpret_cast<BuiltinMethod (*)(const char **pName)>(0x82244B50);
 static auto Scr_AddArray = reinterpret_cast<void (*)(scriptInstance_t inst)>(0x82345C80);

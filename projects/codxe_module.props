@@ -76,6 +76,8 @@
     <ClCompile Include="..\src\common\brush_collision_tracker.cpp" />
     <ClCompile Include="..\src\common\config.cpp" />
     <ClCompile Include="..\src\common\usermaps.cpp" />
+    <ClCompile Include="..\src\common\arena.cpp" />
+    <ClCompile Include="..\src\common\mod_metadata.cpp" />
     <ClCompile Include="..\src\common\endian.cpp" />
     <ClCompile Include="..\src\common\gsc_loader.cpp" />
     <ClCompile Include="..\src\common\map_ents.cpp" />

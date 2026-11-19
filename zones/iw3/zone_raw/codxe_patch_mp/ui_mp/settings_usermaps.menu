@@ -113,7 +113,7 @@
         {
             name                        "usermap_list"
             rect                        64 84 240 322 0 0
-            CODXE_FEEDER_LIST_STYLE
+            CODXE_FEEDER_LIST_STYLE(215, 178, 190, 2)
             feeder                      FEEDER_CODXE_USERMAPS
             doubleClick
             {

@@ -12,12 +12,19 @@ namespace mp_tu6
 namespace
 {
 const char *const PREVIEW_MATERIAL = "$codxe_usermap_preview";
-GfxImage preview = {};
-Material material = {};
-MaterialTextureDef texture = {};
+const char *const MOD_PREVIEW_MATERIAL = "$codxe_mod_preview";
+struct PreviewSlot
+{
+    GfxImage image;
+    Material material;
+    MaterialTextureDef texture;
+};
+
+PreviewSlot mapPreview = {};
+PreviewSlot modPreview = {};
 Detour Material_RegisterHandle_Detour;
 
-bool AllocateImage()
+bool AllocateImage(GfxImage &preview, const char *name)
 {
     if (preview.pixels)
         return true;
@@ -39,8 +46,18 @@ bool AllocateImage()
     preview.height = image::preview::HEIGHT;
     preview.depth = 1;
     preview.levelCount = 1;
-    preview.name = PREVIEW_MATERIAL;
+    preview.name = name;
     return true;
+}
+
+bool LoadPreview(GfxImage &preview, const char *name, const std::string &path)
+{
+    if (path.empty() || !AllocateImage(preview, name))
+        return false;
+    const image::preview::DeviceFunctions backend = {gfxDevice, R_SyncRenderThread, D3D_BlockUntilIdle,
+                                                     D3D_InvalidateCaches, nullptr};
+    return image::preview::UploadDDS(path, &preview.texture.basemap, preview.pixels, preview.width, preview.height,
+                                     backend);
 }
 
 Material *RegisterMaterial(const char *name)
@@ -48,7 +65,8 @@ Material *RegisterMaterial(const char *name)
     auto original = Material_RegisterHandle_Detour.GetOriginal<Material_RegisterHandle_t>();
     if (!name)
         return original(name);
-    if (std::strcmp(name, PREVIEW_MATERIAL) != 0)
+    const bool isMod = std::strcmp(name, MOD_PREVIEW_MATERIAL) == 0;
+    if (!isMod && std::strcmp(name, PREVIEW_MATERIAL) != 0)
     {
         // The private lobby builds preview_<map> directly instead of using
         // getmapimage(). Resolve installed custom maps through the same image.
@@ -61,28 +79,29 @@ Material *RegisterMaterial(const char *name)
             return Arenas::GetField(map, "mapimage", value) ? original("logo_cod2") : original(name);
         }
     }
+    PreviewSlot &preview = isMod ? modPreview : mapPreview;
     Material *base = original("white");
-    if (!base || base->textureCount != 1 || !base->textureTable || !preview.pixels)
+    if (!base || base->textureCount != 1 || !base->textureTable || !preview.image.pixels)
         return original("logo_cod2");
-    // Keep one private image across fastfile unloads. Reacquire the resident UI
+    // Keep private images across fastfile unloads. Reacquire the resident UI
     // material's technique and state so a frontend reload cannot leave stale pointers.
-    material = *base;
-    texture = base->textureTable[0];
-    material.info.name = PREVIEW_MATERIAL;
-    material.textureTable = &texture;
-    texture.u.image = &preview;
-    return &material;
+    preview.material = *base;
+    preview.texture = base->textureTable[0];
+    preview.material.info.name = preview.image.name;
+    preview.material.textureTable = &preview.texture;
+    preview.texture.u.image = &preview.image;
+    return &preview.material;
 }
 } // namespace
 
 bool UsermapPreview::Load(const std::string &path)
 {
-    if (path.empty() || !AllocateImage())
-        return false;
-    const image::preview::DeviceFunctions backend = {gfxDevice, R_SyncRenderThread, D3D_BlockUntilIdle,
-                                                     D3D_InvalidateCaches, nullptr};
-    return image::preview::UploadDDS(path, &preview.texture.basemap, preview.pixels, preview.width, preview.height,
-                                     backend);
+    return LoadPreview(mapPreview.image, PREVIEW_MATERIAL, path);
+}
+
+bool UsermapPreview::LoadMod(const std::string &path)
+{
+    return LoadPreview(modPreview.image, MOD_PREVIEW_MATERIAL, path);
 }
 
 UsermapPreview::UsermapPreview()
@@ -94,13 +113,17 @@ UsermapPreview::UsermapPreview()
 UsermapPreview::~UsermapPreview()
 {
     Material_RegisterHandle_Detour.Remove();
-    if (preview.pixels)
+    if (mapPreview.image.pixels || modPreview.image.pixels)
     {
         R_SyncRenderThread();
         if (*gfxDevice)
             D3D_BlockUntilIdle(*gfxDevice);
-        XPhysicalFree(preview.pixels);
-        memset(&preview, 0, sizeof(preview));
+        if (mapPreview.image.pixels)
+            XPhysicalFree(mapPreview.image.pixels);
+        if (modPreview.image.pixels)
+            XPhysicalFree(modPreview.image.pixels);
+        memset(&mapPreview, 0, sizeof(mapPreview));
+        memset(&modPreview, 0, sizeof(modPreview));
     }
 }
 } // namespace mp_tu6

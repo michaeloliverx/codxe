@@ -1,6 +1,15 @@
 #include "ui_mp/menudef.h"
 #include "ui_mp/codxe_feeder_menu.inc"
 
+#define MOD_HAS_PREVIEW (dvarint("ui_codxe_mod_has_preview") != 0)
+#define MOD_HAS_AUTHOR (dvarstring("ui_codxe_mod_author") != "")
+#define MOD_HAS_REVISION (dvarstring("ui_codxe_mod_revision") != "")
+#define MOD_HAS_CREDITS (MOD_HAS_AUTHOR || MOD_HAS_REVISION)
+#define MOD_TITLE_Y (100 + MOD_HAS_PREVIEW * 153)
+#define MOD_CREDITS_Y (MOD_TITLE_Y + 8 + dvarint("ui_codxe_mod_title_wrap_height"))
+#define MOD_SECOND_ROW ((MOD_HAS_AUTHOR && MOD_HAS_REVISION) * 17)
+#define MOD_DESCRIPTION_Y (MOD_CREDITS_Y + MOD_HAS_CREDITS * 42 + MOD_SECOND_ROW)
+
 {
     menuDef
     {
@@ -89,8 +98,8 @@
         itemDef
         {
             name                        "mod_list"
-            rect                        64 84 240 286 0 0
-            CODXE_FEEDER_LIST_STYLE
+            rect                        34 84 288 286 0 0
+            CODXE_FEEDER_LIST_STYLE(260, 236, 244, 0)
             feeder                      FEEDER_MODS
             doubleClick
             {
@@ -110,6 +119,110 @@
                 uiScript "RunMod";
                 close self;
             }
+        }
+        itemDef
+        {
+            name "mod_preview"
+            rect 328 84 267 150 0 0
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible when(MOD_HAS_PREVIEW);
+            background "$codxe_mod_preview"
+        }
+        itemDef
+        {
+            name "mod_title"
+            rect 328 100 267 30 0 0
+            decoration
+            autowrapped
+            visible when(dvarstring("ui_codxe_mod_name") != "");
+            exp rect Y (MOD_TITLE_Y);
+            textscale 0.4
+            textfont UI_FONT_NORMAL
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 1 0.8 0.4 1
+            exp text (dvarstring("ui_codxe_mod_name"));
+        }
+        itemDef
+        {
+            rect 328 122 60 17 0 0
+            decoration
+            visible when(MOD_HAS_AUTHOR);
+            exp rect Y (MOD_CREDITS_Y);
+            textalign 0
+            textaligny 12
+            textscale 0.375
+            textfont UI_FONT_NORMAL
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.69 0.69 0.69 1
+            text "Author:"
+        }
+        itemDef
+        {
+            rect 388 122 207 17 0 0
+            decoration
+            visible when(MOD_HAS_AUTHOR);
+            exp rect Y (MOD_CREDITS_Y);
+            textalign 0
+            textaligny 12
+            textscale 0.375
+            textfont UI_FONT_NORMAL
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.9 0.9 0.9 1
+            exp text (dvarstring("ui_codxe_mod_author"));
+        }
+        itemDef
+        {
+            rect 328 122 60 17 0 0
+            decoration
+            visible when(MOD_HAS_REVISION);
+            exp rect Y (MOD_CREDITS_Y + MOD_HAS_AUTHOR * 17);
+            textalign 0
+            textaligny 12
+            textscale 0.375
+            textfont UI_FONT_NORMAL
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.69 0.69 0.69 1
+            text "Revision:"
+        }
+        itemDef
+        {
+            rect 388 122 207 17 0 0
+            decoration
+            visible when(MOD_HAS_REVISION);
+            exp rect Y (MOD_CREDITS_Y + MOD_HAS_AUTHOR * 17);
+            textalign 0
+            textaligny 12
+            textscale 0.375
+            textfont UI_FONT_NORMAL
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.9 0.9 0.9 1
+            exp text (dvarstring("ui_codxe_mod_revision"));
+        }
+        itemDef
+        {
+            rect 328 144 267 1 0 0
+            style WINDOW_STYLE_SHADER
+            decoration
+            visible when(MOD_HAS_CREDITS && dvarstring("ui_codxe_mod_description") != "");
+            exp rect Y (MOD_CREDITS_Y + 22 + MOD_SECOND_ROW);
+            forecolor 0.5 0.5 0.5 0.4
+            background "line_horizontal"
+        }
+        itemDef
+        {
+            name "mod_description"
+            rect 328 122 267 250 0 0
+            decoration
+            autowrapped
+            visible when(dvarstring("ui_codxe_mod_description") != "");
+            exp rect Y (MOD_DESCRIPTION_Y);
+            exp rect H (372 - MOD_DESCRIPTION_Y);
+            textscale 0.375
+            textfont UI_FONT_NORMAL
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.69 0.69 0.69 1
+            exp text (dvarstring("ui_codxe_mod_description"));
         }
         itemDef
         {

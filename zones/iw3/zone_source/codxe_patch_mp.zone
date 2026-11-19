@@ -74,6 +74,7 @@ xanim,,viewmodel_p90_sprint_out
 
 // One resident texture is reused for the selected custom map.
 material,$codxe_usermap_preview
+material,$codxe_mod_preview
 techniqueset,,2d
 
 // Preserve every original TU4 patch asset.

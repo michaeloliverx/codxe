@@ -11,6 +11,7 @@ class UsermapPreview : public Module
     UsermapPreview();
     ~UsermapPreview();
     static bool Load(const std::string &path);
+    static bool LoadMod(const std::string &path);
 };
 } // namespace mp_tu6
 } // namespace iw4

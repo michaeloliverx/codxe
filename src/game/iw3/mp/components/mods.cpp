@@ -3,6 +3,7 @@
 
 #include "fastfiles.h"
 #include "ui_feeder.h"
+#include "image/usermap_preview.h"
 
 namespace iw3
 {
@@ -33,26 +34,41 @@ std::string BuildFsGame(const char *name)
     return std::string(FS_GAME_PREFIX) + name;
 }
 
-std::string ReadDisplayName(const std::string &path, const std::string &fallback)
+void SetMetadata(const char *name, const char *value)
 {
-    std::string displayName = filesystem::ReadFileToString(path);
-    const size_t lineEnd = displayName.find_first_of("\r\n");
-    if (lineEnd != std::string::npos)
-        displayName.erase(lineEnd);
+    dvar_s *dvar = Dvar_FindMalleableVar(name);
+    if (dvar)
+        Dvar_SetStringFromSource(dvar, value, DVAR_SOURCE_INTERNAL);
+}
+int MeasureModTitleWrapHeight(const char *title)
+{
+    // Match the font, scale, and width of mod_title in the IW3 menu.
+    const float scale = 0.4f;
+    const unsigned int width = 267;
+    Font_s *font = UI_GetFontHandle(1, scale);
+    if (!font || font->pixelHeight <= 0)
+        return 0;
 
-    size_t first = 0;
-    while (first < displayName.length() && static_cast<unsigned char>(displayName[first]) <= ' ')
-        ++first;
-
-    size_t last = displayName.length();
-    while (last > first && static_cast<unsigned char>(displayName[last - 1]) <= ' ')
-        --last;
-
-    return first == last ? fallback : displayName.substr(first, last - first);
+    const float drawScale = scale * 48.0f / font->pixelHeight;
+    const int lineHeight = static_cast<int>(scale * 48.0f) + 5;
+    int extraHeight = 0;
+    while (*title)
+    {
+        const char *next = R_TextLineWrapPosition(title, 1024, width, font, drawScale);
+        if (!next || next <= title)
+            break;
+        while (std::isspace(static_cast<unsigned char>(*next)))
+            ++next;
+        if (!*next)
+            break;
+        extraHeight += lineHeight;
+        title = next;
+    }
+    return extraHeight;
 }
 } // namespace
 
-std::vector<FeederEntry> ModList::Mods;
+std::vector<mod_metadata::Entry> ModList::Mods;
 int ModList::CurrentMod = 0;
 bool ModList::ModsScanned = false;
 dvar_s *ModList::fs_game = nullptr;
@@ -65,6 +81,10 @@ ModList::ModList()
 void ModList::OnDvarInit()
 {
     fs_game = Dvar_RegisterString("fs_game", "", DVAR_ARCHIVE, "The active mod directory");
+    const char *names[] = {"ui_codxe_mod_name", "ui_codxe_mod_description", "ui_codxe_mod_author",
+                           "ui_codxe_mod_revision", "ui_codxe_mod_has_preview", "ui_codxe_mod_title_wrap_height"};
+    for (size_t i = 0; i < ARRAYSIZE(names); ++i)
+        Dvar_RegisterString(names[i], "", DVAR_FLAG_NONE, "Selected mod metadata");
 }
 
 std::string ModList::GetActiveName()
@@ -153,15 +173,12 @@ void ModList::ScanMods()
         if (name == "." || name == ".." || (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
             continue;
 
-        FeederEntry entry;
-        entry.name = name;
         const std::string directory = filesystem::JoinPath(MOD_DIR, name.c_str());
-        entry.displayName = ReadDisplayName(filesystem::JoinPath(directory.c_str(), "description.txt"), name);
-        Mods.push_back(entry);
+        Mods.push_back(mod_metadata::Read(directory.c_str(), name.c_str()));
     } while (FindNextFileA(findHandle, &findData) != 0);
 
     FindClose(findHandle);
-    std::sort(Mods.begin(), Mods.end(), [](const FeederEntry &left, const FeederEntry &right)
+    std::sort(Mods.begin(), Mods.end(), [](const mod_metadata::Entry &left, const mod_metadata::Entry &right)
               { return I_stricmp(left.displayName.c_str(), right.displayName.c_str()) < 0; });
 
     for (size_t i = 0; i < Mods.size(); ++i)
@@ -199,16 +216,42 @@ const char *ModList::GetItemText(int index)
 void ModList::Select(int index)
 {
     EnsureModsScanned();
-    if (index < 0 || index >= static_cast<int>(Mods.size()))
+    if (index < 0 || index >= static_cast<int>(Mods.size()) || index == CurrentMod)
         return;
 
     CurrentMod = index;
+    UpdateSelection();
     DbgPrint("[codxe][IW3][ModList] Selected mod: %s\n", Mods[CurrentMod].name.c_str());
+}
+
+void ModList::UpdateSelection()
+{
+    const mod_metadata::Entry *entry = Mods.empty() ? nullptr : &Mods[CurrentMod];
+    SetMetadata("ui_codxe_mod_name", entry ? entry->displayName.c_str() : "");
+    const int extraTitleHeight = entry ? MeasureModTitleWrapHeight(entry->displayName.c_str()) : 0;
+    SetMetadata("ui_codxe_mod_title_wrap_height", va("%d", extraTitleHeight));
+    SetMetadata("ui_codxe_mod_description", entry ? entry->description.c_str() : "");
+    SetMetadata("ui_codxe_mod_author", entry ? entry->credits.author.c_str() : "");
+    SetMetadata("ui_codxe_mod_revision", entry ? entry->credits.revision.c_str() : "");
+
+    bool uploaded = false;
+    if (entry && !entry->previewPath.empty())
+    {
+        const char *const imageName = "codxe_mod_preview";
+        GfxImage *preview = DB_FindXAssetHeader(ASSET_TYPE_IMAGE, imageName).image;
+        const image::preview::DeviceFunctions backend = {gfxDevice, R_SyncRenderThread, D3D_BlockUntilIdle, nullptr,
+                                                         D3D_Reserve};
+        if (preview && preview->name && std::strcmp(preview->name, imageName) == 0)
+            uploaded = image::preview::UploadDDS(entry->previewPath, preview->texture.basemap, preview->pixels,
+                                                 preview->width, preview->height, backend);
+    }
+    SetMetadata("ui_codxe_mod_has_preview", uploaded ? "1" : "0");
 }
 
 void ModList::LoadModsScript(int /*localClientNum*/, const char ** /*args*/)
 {
     ScanMods();
+    UpdateSelection();
 }
 
 void ModList::RunModScript(int /*localClientNum*/, const char ** /*args*/)

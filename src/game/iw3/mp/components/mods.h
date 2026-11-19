@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pch.h"
+#include "common/mod_metadata.h"
 
 namespace iw3
 {
@@ -28,12 +29,13 @@ class ModList : public Module
     static int GetItemCount();
     static const char *GetItemText(int index);
     static void Select(int index);
+    static void UpdateSelection();
 
     static void LoadModsScript(int localClientNum, const char **args);
     static void RunModScript(int localClientNum, const char **args);
     static void ClearModsScript(int localClientNum, const char **args);
 
-    static std::vector<FeederEntry> Mods;
+    static std::vector<mod_metadata::Entry> Mods;
     static int CurrentMod;
     static bool ModsScanned;
     static dvar_s *fs_game;
