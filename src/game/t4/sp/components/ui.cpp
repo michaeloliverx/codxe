@@ -86,6 +86,8 @@ struct UsermapEntry
     std::string name;
     std::string displayName;
     std::string description;
+    std::string author;
+    std::string revision;
     std::string previewPath;
 };
 
@@ -115,8 +117,9 @@ void EnsureUsermapDvarsRegistered()
     Dvar_RegisterString("ui_codxe_usermap_mode", "", DVAR_FLAG_NONE, "Custom map launch mode");
     Dvar_RegisterString("ui_codxe_usermap_name", "", DVAR_FLAG_NONE, "Selected custom map display name");
     Dvar_RegisterString("ui_codxe_usermap_description", "", DVAR_FLAG_NONE, "Selected custom map description");
+    Dvar_RegisterString("ui_codxe_usermap_author", "", DVAR_FLAG_NONE, "Selected custom map author");
+    Dvar_RegisterString("ui_codxe_usermap_revision", "", DVAR_FLAG_NONE, "Selected custom map revision");
     Dvar_RegisterString("ui_codxe_usermap_count", "", DVAR_FLAG_NONE, "Selected custom map index");
-    Dvar_RegisterString("ui_codxe_usermap_preview_hint", "", DVAR_FLAG_NONE, "Custom map preview instructions");
     Dvar_RegisterString("ui_codxe_usermap_mapname", "", DVAR_FLAG_NONE, "Selected custom map fastfile name");
 
     usermapDvarsRegistered = true;
@@ -126,78 +129,6 @@ bool StartsWithIgnoreCase(const std::string &value, const char *prefix)
 {
     const size_t prefixLength = std::strlen(prefix);
     return value.length() >= prefixLength && _strnicmp(value.c_str(), prefix, prefixLength) == 0;
-}
-
-void ReadJsonMetadata(const std::string &path, std::string &displayName, std::string &description)
-{
-    const std::string contents = filesystem::ReadFileToString(path);
-    if (contents.empty())
-        return;
-
-    HJSONREADER reader = XJSONCreateReader();
-    if (!reader || FAILED(XJSONSetBuffer(reader, contents.data(), static_cast<DWORD>(contents.size()), TRUE)))
-    {
-        if (reader)
-            XJSONCloseReader(reader);
-        DbgPrint("[codxe][T4 SP][UI] Failed to parse usermap metadata: %s\n", path.c_str());
-        return;
-    }
-
-    int depth = 0;
-    int version = 0;
-    JSONTOKENTYPE tokenType;
-    DWORD tokenLength;
-    DWORD parsed;
-    HRESULT result;
-    char propertyName[64];
-    char value[1024];
-
-    while ((result = XJSONReadToken(reader, &tokenType, &tokenLength, &parsed)) == S_OK)
-    {
-        if (tokenType == Json_BeginObject || tokenType == Json_BeginArray)
-        {
-            ++depth;
-            continue;
-        }
-        if (tokenType == Json_EndObject || tokenType == Json_EndArray)
-        {
-            --depth;
-            continue;
-        }
-        if (tokenType != Json_FieldName)
-            continue;
-
-        if (FAILED(XJSONGetTokenValue(reader, propertyName, ARRAYSIZE(propertyName))) ||
-            XJSONReadToken(reader, &tokenType, &tokenLength, &parsed) != S_OK)
-        {
-            result = E_FAIL;
-            break;
-        }
-
-        if (tokenType == Json_BeginObject || tokenType == Json_BeginArray)
-        {
-            ++depth;
-            continue;
-        }
-        if (depth != 1 || FAILED(XJSONGetTokenValue(reader, value, ARRAYSIZE(value))))
-            continue;
-
-        if (_stricmp(propertyName, "version") == 0 && tokenType == Json_Number)
-            version = std::strtol(value, nullptr, 10);
-        else if (_stricmp(propertyName, "name") == 0 && tokenType == Json_String)
-            displayName = value;
-        else if (_stricmp(propertyName, "description") == 0 && tokenType == Json_String)
-            description = value;
-    }
-
-    XJSONCloseReader(reader);
-
-    if (FAILED(result) || version != 1)
-    {
-        displayName.clear();
-        description.clear();
-        DbgPrint("[codxe][T4 SP][UI] Invalid or unsupported usermap metadata: %s\n", path.c_str());
-    }
 }
 
 bool IsSafeUsermapName(const char *name)
@@ -344,9 +275,10 @@ void UpdateSelectedUsermap()
     {
         SetMenuDvar("ui_codxe_usermap_name", "No custom maps found");
         SetMenuDvar("ui_codxe_usermap_description", "");
+        SetMenuDvar("ui_codxe_usermap_author", "");
+        SetMenuDvar("ui_codxe_usermap_revision", "");
         SetMenuDvar("ui_codxe_usermap_count", "0");
         SetMenuDvar("ui_codxe_usermap_has_preview", "0");
-        SetMenuDvar("ui_codxe_usermap_preview_hint", "Add preview.dds beside the map fastfile");
         RestoreDefaultPreview();
         return;
     }
@@ -357,13 +289,34 @@ void UpdateSelectedUsermap()
                 static_cast<unsigned int>(usermaps.size()));
     SetMenuDvar("ui_codxe_usermap_name", entry.displayName);
     SetMenuDvar("ui_codxe_usermap_description", entry.description);
+    SetMenuDvar("ui_codxe_usermap_author", entry.author);
+    SetMenuDvar("ui_codxe_usermap_revision", entry.revision);
     SetMenuDvar("ui_codxe_usermap_count", count);
-    SetMenuDvar("ui_codxe_usermap_preview_hint", std::string("Add preview.dds to usermaps/") + entry.name);
 
     const bool replaced = !entry.previewPath.empty() && ReplacePreview(entry.previewPath);
     SetMenuDvar("ui_codxe_usermap_has_preview", replaced ? "1" : "0");
     if (!replaced)
         RestoreDefaultPreview();
+}
+
+std::string ReadMetadataLine(const std::string &text, size_t maxLength)
+{
+    const size_t start = text.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos)
+        return std::string();
+
+    const size_t length = text.find_last_not_of(" \t\r\n") - start + 1;
+    if (length > maxLength)
+        return std::string();
+
+    // Keep metadata on one line and exclude game control and color codes.
+    const std::string label = text.substr(start, length);
+    if (label.find('^') != std::string::npos ||
+        std::find_if(label.begin(), label.end(), [](unsigned char c) { return c < ' ' || c == 127; }) != label.end())
+    {
+        return std::string();
+    }
+    return label;
 }
 
 void ScanUsermaps()
@@ -403,8 +356,12 @@ void ScanUsermaps()
 
         UsermapEntry entry;
         entry.name = name;
-        if (!usermaps::ReadMetadata(directory, name, entry.displayName, entry.description))
-            ReadJsonMetadata(filesystem::JoinPath(directory.c_str(), "map.json"), entry.displayName, entry.description);
+        arena::Fields fields;
+        usermaps::ReadMetadata(directory, name, fields);
+        entry.displayName = fields["longname"];
+        entry.description = fields["description"];
+        entry.author = ReadMetadataLine(fields["author"], 40);
+        entry.revision = ReadMetadataLine(fields["revision"], 24);
         if (entry.displayName.empty())
             entry.displayName = name;
 

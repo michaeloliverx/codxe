@@ -187,6 +187,9 @@ static auto SV_LocateGameData = reinterpret_cast<void (*)(gentity_s *gEnts, int 
 static auto Load_clipMap_t = reinterpret_cast<void (*)(bool atStreamStart)>(0x82165290);
 
 static auto UI_Refresh = reinterpret_cast<void (*)(int localClientNum)>(0x8226B7D0);
+static auto UI_Init = reinterpret_cast<dvar_s *(*)(int localClientNum)>(0x8227CFD8);
+static auto Menu_IsMenuOpenAndVisible =
+    reinterpret_cast<bool (*)(int localClientNum, const char *menuName)>(0x82268558);
 static auto UI_FeederCount = reinterpret_cast<int (*)(int localClientNum, float feederID)>(0x8226A580);
 static auto UI_FeederItemText =
     reinterpret_cast<const char *(*)(int localClientNum, itemDef_s *item, float feederID, int index,
