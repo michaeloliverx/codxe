@@ -12,7 +12,10 @@ namespace mp
 namespace
 {
 const float USERMAPS_FEEDER_ID = 60.0f;
+const float TAGS_FEEDER_ID = 66.0f;
 std::vector<usermaps::Entry> maps;
+usermaps::TagFilter filter;
+int highlightedTag = 0;
 int selectedUsermap = 0;
 bool usermapsScanned = false;
 std::string previewMap;
@@ -46,15 +49,15 @@ void UpdateUsermapSelection()
         selectedUsermap >= 0 && selectedUsermap < static_cast<int>(maps.size()) ? &maps[selectedUsermap] : nullptr;
     char counter[32] = "";
     if (entry)
-        _snprintf_s(counter, ARRAYSIZE(counter), _TRUNCATE, "%u / %u", selectedUsermap + 1,
-                    static_cast<unsigned int>(maps.size()));
+        _snprintf_s(counter, ARRAYSIZE(counter), _TRUNCATE, "%d / %d", filter.RowForMap(selectedUsermap) + 1,
+                    filter.MapCount());
     SetMetadata("ui_codxe_usermap_counter", counter);
     SetMetadata("ui_codxe_usermap_name", entry ? entry->displayName.c_str() : "");
     SetMetadata("ui_codxe_usermap_description", entry ? entry->description.c_str() : "");
     SetMetadata("ui_codxe_usermap_author", entry ? entry->credits.author.c_str() : "");
     SetMetadata("ui_codxe_usermap_revision", entry ? entry->credits.revision.c_str() : "");
     char count[16];
-    _snprintf_s(count, ARRAYSIZE(count), _TRUNCATE, "%u", static_cast<unsigned int>(maps.size()));
+    _snprintf_s(count, ARRAYSIZE(count), _TRUNCATE, "%d", filter.MapCount());
     SetMetadata("ui_codxe_usermap_count", count);
 
     // Reuse one zone-owned texture rather than allocating one image per map.
@@ -72,11 +75,19 @@ void UpdateUsermapSelection()
     SetMetadata("ui_codxe_usermap_has_preview", uploaded ? "1" : "0");
 }
 
+void UpdateFilterLabel()
+{
+    SetMetadata("ui_codxe_usermap_has_tags", filter.HasTags() ? "1" : "0");
+    SetMetadata("ui_codxe_usermap_tag", filter.Prompt().c_str());
+}
+
 void ScanUsermaps()
 {
     const std::string previous =
         selectedUsermap >= 0 && selectedUsermap < static_cast<int>(maps.size()) ? maps[selectedUsermap].name : "";
     maps = usermaps::ScanMultiplayer();
+    filter.Reset(maps);
+    UpdateFilterLabel();
     selectedUsermap = 0;
     usermapsScanned = true;
     for (size_t i = 0; i < maps.size(); ++i)
@@ -98,16 +109,17 @@ void EnsureUsermapsScanned()
 int GetUsermapCount()
 {
     EnsureUsermapsScanned();
-    return static_cast<int>(maps.size());
+    return filter.MapCount();
 }
 
 const char *GetUsermapText(int index)
 {
     EnsureUsermapsScanned();
-    return index >= 0 && index < static_cast<int>(maps.size()) ? maps[index].displayName.c_str() : "";
+    const int map = filter.MapIndex(index);
+    return map >= 0 ? maps[map].displayName.c_str() : "";
 }
 
-void SelectUsermap(int index)
+void SelectMap(int index)
 {
     EnsureUsermapsScanned();
     if (index < 0 || index >= static_cast<int>(maps.size()))
@@ -118,6 +130,26 @@ void SelectUsermap(int index)
     selectedUsermap = index;
     UpdateUsermapSelection();
     DbgPrint("[codxe][IW3][UIFeeder] Selected usermap: %s\n", maps[selectedUsermap].name.c_str());
+}
+
+void SelectUsermap(int row)
+{
+    SelectMap(filter.MapIndex(row));
+}
+
+int GetTagCount()
+{
+    return filter.TagCount();
+}
+
+const char *GetTagText(int row)
+{
+    return filter.TagText(row);
+}
+
+void HighlightTag(int row)
+{
+    highlightedTag = row;
 }
 
 // The stock lobby uses mapsTable column 4. Supply its material through the
@@ -142,6 +174,22 @@ const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColu
 void Usermaps::LoadScript(int /*localClientNum*/, const char ** /*args*/)
 {
     ScanUsermaps();
+}
+
+void Usermaps::LoadFilters(int, const char **)
+{
+    highlightedTag = filter.SelectedTag();
+    UIFeeder::SetSelectedIndex(TAGS_FEEDER_ID, highlightedTag);
+}
+
+void Usermaps::ApplyFilter(int, const char **)
+{
+    filter.SelectTag(highlightedTag);
+    const int row = (std::max)(0, filter.RowForMap(selectedUsermap));
+    selectedUsermap = filter.MapIndex(row);
+    UIFeeder::SetSelectedIndex(USERMAPS_FEEDER_ID, row);
+    UpdateFilterLabel();
+    UpdateUsermapSelection();
 }
 
 void Usermaps::ApplyScript(int /*localClientNum*/, const char ** /*args*/)
@@ -180,8 +228,8 @@ void Usermaps::CloseScript(int /*localClientNum*/, const char ** /*args*/)
     {
         if (I_stricmp(maps[i].name.c_str(), current) == 0)
         {
-            SelectUsermap(static_cast<int>(i));
-            UIFeeder::SetSelectedIndex(USERMAPS_FEEDER_ID, selectedUsermap);
+            SelectMap(static_cast<int>(i));
+            UIFeeder::SetSelectedIndex(USERMAPS_FEEDER_ID, filter.RowForMap(selectedUsermap));
             break;
         }
     }
@@ -191,7 +239,8 @@ void Usermaps::OnDvarInit()
 {
     const char *names[] = {"ui_codxe_usermap_counter", "ui_codxe_usermap_name", "ui_codxe_usermap_description",
                            "ui_codxe_usermap_author", "ui_codxe_usermap_revision",
-                           "ui_codxe_usermap_count", "ui_codxe_usermap_has_preview"};
+                           "ui_codxe_usermap_count", "ui_codxe_usermap_has_preview", "ui_codxe_usermap_has_tags",
+                           "ui_codxe_usermap_tag"};
     for (size_t i = 0; i < ARRAYSIZE(names); ++i)
         Dvar_RegisterString(names[i], "", DVAR_FLAG_NONE, "Custom map metadata");
 }
@@ -199,6 +248,7 @@ void Usermaps::OnDvarInit()
 Usermaps::Usermaps()
 {
     UIFeeder::Add(USERMAPS_FEEDER_ID, GetUsermapCount, GetUsermapText, SelectUsermap);
+    UIFeeder::Add(TAGS_FEEDER_ID, GetTagCount, GetTagText, HighlightTag);
     StringTable_Lookup_Detour = Detour(StringTable_Lookup, StringTable_Lookup_Hook);
     StringTable_Lookup_Detour.Install();
     UI_GetMapDisplayName_Detour = Detour(UI_GetMapDisplayName, UI_GetMapDisplayName_Hook);

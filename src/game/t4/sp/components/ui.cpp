@@ -40,7 +40,8 @@ __declspec(naked) void SoloZombieScoreGate()
     }
 }
 
-const float CODXE_USERMAPS_FEEDER = 65.0f;
+const int CODXE_USERMAPS_FEEDER = 65;
+const int CODXE_USERMAP_TAGS_FEEDER = 66;
 const char *const CODXE_USERMAPS_DIRECTORY = "usermaps";
 const char *const CODXE_PREVIEW_MATERIAL = "$codxe_usermap_preview";
 const char *const CODXE_PREVIEW_IMAGE = "codxe_usermap_preview";
@@ -82,15 +83,6 @@ struct DDSHeader
 };
 static_assert(sizeof(DDSHeader) == 128, "");
 
-struct UsermapEntry
-{
-    std::string name;
-    std::string displayName;
-    std::string description;
-    usermaps::Credits credits;
-    std::string previewPath;
-};
-
 struct LobbyPreview
 {
     std::string mapName;
@@ -99,7 +91,10 @@ struct LobbyPreview
     bool needsRefresh;
 };
 
-std::vector<UsermapEntry> usermaps;
+std::vector<usermaps::Entry> usermaps;
+usermaps::TagFilter usermapFilter;
+int highlightedTag = 0;
+UiContext *filterContext = nullptr;
 int selectedUsermap = 0;
 bool usermapsScanned = false;
 bool usermapDvarsRegistered = false;
@@ -127,6 +122,9 @@ void EnsureUsermapDvarsRegistered()
     Dvar_RegisterString("ui_codxe_usermap_author", "", DVAR_FLAG_NONE, "Selected custom map author");
     Dvar_RegisterString("ui_codxe_usermap_revision", "", DVAR_FLAG_NONE, "Selected custom map revision");
     Dvar_RegisterString("ui_codxe_usermap_count", "", DVAR_FLAG_NONE, "Selected custom map index");
+    Dvar_RegisterBool("ui_codxe_usermap_has_tags", false, DVAR_FLAG_NONE, "Custom maps have filter tags");
+    Dvar_RegisterString("ui_codxe_usermap_tag", "", DVAR_FLAG_NONE, "Selected custom map filter");
+    Dvar_RegisterBool("ui_codxe_usermap_apply_filter", false, DVAR_FLAG_NONE, "Apply the selected custom map filter");
 
     usermapDvarsRegistered = true;
 }
@@ -295,10 +293,10 @@ void UpdateSelectedUsermap()
         return;
     }
 
-    const UsermapEntry &entry = usermaps[selectedUsermap];
+    const usermaps::Entry &entry = usermaps[selectedUsermap];
     char count[32];
-    _snprintf_s(count, ARRAYSIZE(count), _TRUNCATE, "%u / %u", static_cast<unsigned int>(selectedUsermap + 1),
-                static_cast<unsigned int>(usermaps.size()));
+    _snprintf_s(count, ARRAYSIZE(count), _TRUNCATE, "%d / %d", usermapFilter.RowForMap(selectedUsermap) + 1,
+                usermapFilter.MapCount());
     SetMenuDvar("ui_codxe_usermap_name", entry.displayName);
     SetMenuDvar("ui_codxe_usermap_description", entry.description);
     SetMenuDvar("ui_codxe_usermap_author", entry.credits.author);
@@ -309,6 +307,12 @@ void UpdateSelectedUsermap()
     SetMenuDvar("ui_codxe_usermap_has_preview", replaced ? "1" : "0");
     if (!replaced)
         RestoreDefaultPreview();
+}
+
+void UpdateFilterLabel()
+{
+    SetMenuDvar("ui_codxe_usermap_has_tags", usermapFilter.HasTags() ? "1" : "0");
+    SetMenuDvar("ui_codxe_usermap_tag", usermapFilter.Prompt());
 }
 
 void ScanUsermaps()
@@ -328,6 +332,8 @@ void ScanUsermaps()
     if (findHandle == INVALID_HANDLE_VALUE)
     {
         DbgPrint("[codxe][T4 SP][UI] Usermap directory is unavailable: %s\n", root.c_str());
+        usermapFilter.Reset(usermaps);
+        UpdateFilterLabel();
         UpdateSelectedUsermap();
         return;
     }
@@ -346,13 +352,14 @@ void ScanUsermaps()
         if (!filesystem::FileExists(fastfile.c_str()))
             continue;
 
-        UsermapEntry entry;
+        usermaps::Entry entry;
         entry.name = name;
         arena::Fields fields;
         usermaps::ReadMetadata(directory, name, fields);
         entry.displayName = fields["longname"];
         entry.description = fields["description"];
         entry.credits = usermaps::ReadCredits(fields);
+        entry.tags = usermaps::ReadTags(fields);
         if (entry.displayName.empty())
             entry.displayName = name;
 
@@ -364,8 +371,10 @@ void ScanUsermaps()
     } while (FindNextFileA(findHandle, &findData));
     FindClose(findHandle);
 
-    std::sort(usermaps.begin(), usermaps.end(), [](const UsermapEntry &left, const UsermapEntry &right)
+    std::sort(usermaps.begin(), usermaps.end(), [](const usermaps::Entry &left, const usermaps::Entry &right)
               { return _stricmp(left.displayName.c_str(), right.displayName.c_str()) < 0; });
+    usermapFilter.Reset(usermaps);
+    UpdateFilterLabel();
 
     const char *currentMap = Dvar_GetVariantString("ui_mapname");
     if (selectedName.empty() && currentMap)
@@ -392,10 +401,10 @@ void EnsureUsermapsScanned()
 void ActivateSelectedUsermap()
 {
     EnsureUsermapsScanned();
-    if (selectedUsermap < 0 || selectedUsermap >= static_cast<int>(usermaps.size()))
+    if (usermapFilter.RowForMap(selectedUsermap) < 0)
         return;
 
-    const UsermapEntry &entry = usermaps[selectedUsermap];
+    const usermaps::Entry &entry = usermaps[selectedUsermap];
     SetMenuDvar("ui_mapname", entry.name);
     SetMenuDvar("ui_preview_map", entry.name);
     SetMenuDvar("ui_codxe_usermap_active", "1");
@@ -423,17 +432,19 @@ void ActivateSelectedUsermap()
 
 int UI_FeederCount_Hook(int localClientNum, float feederID)
 {
+    if (feederID == CODXE_USERMAP_TAGS_FEEDER)
+        return usermapFilter.TagCount();
     if (feederID != CODXE_USERMAPS_FEEDER)
         return UI_FeederCount_Detour.GetOriginal<decltype(UI_FeederCount)>()(localClientNum, feederID);
 
     EnsureUsermapsScanned();
-    return static_cast<int>(usermaps.size());
+    return usermapFilter.MapCount();
 }
 
 const char *UI_FeederItemText_Hook(int localClientNum, itemDef_s *item, float feederID, int index, unsigned int column,
                                    Material **handle)
 {
-    if (feederID != CODXE_USERMAPS_FEEDER)
+    if (feederID != CODXE_USERMAPS_FEEDER && feederID != CODXE_USERMAP_TAGS_FEEDER)
     {
         return UI_FeederItemText_Detour.GetOriginal<decltype(UI_FeederItemText)>()(localClientNum, item, feederID,
                                                                                    index, column, handle);
@@ -441,12 +452,21 @@ const char *UI_FeederItemText_Hook(int localClientNum, itemDef_s *item, float fe
 
     if (handle)
         *handle = nullptr;
+    if (feederID == CODXE_USERMAP_TAGS_FEEDER)
+        return usermapFilter.TagText(index);
     EnsureUsermapsScanned();
-    return index >= 0 && index < static_cast<int>(usermaps.size()) ? usermaps[index].displayName.c_str() : "";
+    const int map = usermapFilter.MapIndex(index);
+    return map >= 0 ? usermaps[map].displayName.c_str() : "";
 }
 
 void UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
 {
+    if (feederID == CODXE_USERMAP_TAGS_FEEDER)
+    {
+        if (index >= 0 && index < usermapFilter.TagCount())
+            highlightedTag = index;
+        return;
+    }
     if (feederID != CODXE_USERMAPS_FEEDER)
     {
         UI_FeederSelection_Detour.GetOriginal<decltype(UI_FeederSelection)>()(localClientNum, feederID, index);
@@ -454,10 +474,11 @@ void UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
     }
 
     EnsureUsermapsScanned();
-    if (index < 0 || index >= static_cast<int>(usermaps.size()))
+    const int map = usermapFilter.MapIndex(index);
+    if (map < 0 || selectedUsermap == map)
         return;
 
-    selectedUsermap = index;
+    selectedUsermap = map;
     UpdateSelectedUsermap();
 }
 
@@ -554,6 +575,7 @@ dvar_s *UI_Init_Hook(int localClientNum)
 {
     // The frontend can reuse the image pool address after its zones reload.
     lobbyPreview = LobbyPreview();
+    filterContext = nullptr;
     previewImage = nullptr;
     defaultPreviewPixels.clear();
     return UI_Init_Detour.GetOriginal<decltype(UI_Init)>()(localClientNum);
@@ -564,6 +586,20 @@ void UI_Refresh_Hook(int localClientNum)
     if (localClientNum == 0)
         UpdateLobbyPreview(localClientNum);
     UI_Refresh_Detour.GetOriginal<decltype(UI_Refresh)>()(localClientNum);
+
+    if (std::strcmp(Dvar_GetVariantString("ui_codxe_usermap_apply_filter"), "1") == 0)
+    {
+        SetMenuDvar("ui_codxe_usermap_apply_filter", "0");
+        if (filterContext)
+        {
+            usermapFilter.SelectTag(highlightedTag);
+            const int row = (std::max)(0, usermapFilter.RowForMap(selectedUsermap));
+            selectedUsermap = usermapFilter.MapIndex(row);
+            UpdateFilterLabel();
+            Menu_SetFeederSelection(filterContext, nullptr, CODXE_USERMAPS_FEEDER, row, "codxe_usermaps");
+            UpdateSelectedUsermap();
+        }
+    }
 
     // Menu files can request activation using stock setdvar handling, avoiding a custom UI script command.
     if (std::strcmp(Dvar_GetVariantString("ui_codxe_usermap_activate"), "1") == 0)
@@ -643,6 +679,15 @@ void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
         Campaign_UnlockAll();
 
     Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+
+    if (std::strcmp(menuName, "codxe_usermaps") == 0 && usermapFilter.MapCount() > 0)
+        Menu_SetFeederSelection(dc, nullptr, CODXE_USERMAPS_FEEDER, selectedUsermap, "codxe_usermaps");
+    if (std::strcmp(menuName, "codxe_usermap_filter") == 0)
+    {
+        filterContext = dc;
+        highlightedTag = usermapFilter.SelectedTag();
+        Menu_SetFeederSelection(dc, nullptr, CODXE_USERMAP_TAGS_FEEDER, highlightedTag, "codxe_usermap_filter");
+    }
 }
 
 ui::ui()

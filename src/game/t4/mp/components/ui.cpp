@@ -21,7 +21,7 @@ void Menus_AddMenuList_Hook(UiContext *dc, MenuList *menuList)
 
     // Append before UI_Init initializes the registered menus and their item parents.
     // Rebuilding the stock list with reference assets can retain default menu stubs.
-    const char *browsers[] = {"ui_mp/mods_menu.menu"};
+    const char *browsers[] = {"ui_mp/mods_menu.menu", "ui_mp/codxe_usermap_filter.menu"};
     for (size_t i = 0; i < ARRAYSIZE(browsers); ++i)
     {
         auto browser = reinterpret_cast<MenuList *>(DB_FindXAssetHeader(ASSET_TYPE_MENULIST, browsers[i], false, 0));

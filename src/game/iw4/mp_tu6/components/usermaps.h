@@ -19,6 +19,7 @@ class Usermaps : public Module
     static void Select(int localClientNum, int index);
     static void Load(int localClientNum, const char **args);
     static void Apply(int localClientNum, const char **args);
+    static void ApplyFilter(int localClientNum, const char **args);
     static void Close(int localClientNum, const char **args);
 };
 } // namespace mp_tu6

@@ -11,6 +11,8 @@ namespace mp
 namespace
 {
 std::vector<usermaps::Entry> maps;
+usermaps::TagFilter filter;
+int highlightedTag = 0;
 int selected = 0;
 bool previewRefreshPending = false;
 Detour StringTable_Lookup_Detour;
@@ -69,7 +71,7 @@ void UpdateSelection(bool uploadPreview = true)
     Dvar_SetStringByName("ui_codxe_usermap_author", entry ? entry->credits.author.c_str() : "");
     Dvar_SetStringByName("ui_codxe_usermap_revision", entry ? entry->credits.revision.c_str() : "");
     Dvar_SetStringByName("ui_codxe_usermap_mapname", entry ? entry->name.c_str() : "");
-    Dvar_SetIntByName("ui_codxe_usermap_count", static_cast<int>(maps.size()));
+    Dvar_SetIntByName("ui_codxe_usermap_count", filter.MapCount());
 
     // Reuse one zone-owned texture. No previews are retained for unselected maps.
     bool uploaded = false;
@@ -86,10 +88,18 @@ void UpdateSelection(bool uploadPreview = true)
     Dvar_SetIntByName("ui_codxe_usermap_has_preview", uploaded ? 1 : 0);
 }
 
+void UpdateFilterLabel()
+{
+    Dvar_SetStringByName("ui_codxe_usermap_has_tags", filter.HasTags() ? "1" : "0");
+    Dvar_SetStringByName("ui_codxe_usermap_tag", filter.Prompt().c_str());
+}
+
 void Scan(int localClientNum)
 {
     const std::string previous = selected >= 0 && selected < static_cast<int>(maps.size()) ? maps[selected].name : "";
     maps = usermaps::ScanMultiplayer();
+    filter.Reset(maps);
+    UpdateFilterLabel();
     selected = 0;
     for (size_t i = 0; i < maps.size(); ++i)
     {
@@ -105,7 +115,8 @@ void Scan(int localClientNum)
 void Usermaps::OnDvarInit()
 {
     const char *strings[] = {"ui_codxe_usermap_name", "ui_codxe_usermap_description", "ui_codxe_usermap_author",
-                             "ui_codxe_usermap_revision", "ui_codxe_usermap_mapname"};
+                             "ui_codxe_usermap_revision", "ui_codxe_usermap_mapname", "ui_codxe_usermap_has_tags",
+                             "ui_codxe_usermap_tag"};
     for (size_t i = 0; i < ARRAYSIZE(strings); ++i)
         Dvar_RegisterString(strings[i], "", DVAR_FLAG_NONE, "Custom map metadata");
     Dvar_SetIntByName("ui_codxe_usermap_count", 0);
@@ -153,27 +164,60 @@ void Usermaps::OnUIRefresh()
 
 int Usermaps::Count()
 {
-    return static_cast<int>(maps.size());
+    return filter.MapCount();
 }
 
 const char *Usermaps::Text(int index)
 {
-    return index >= 0 && index < Count() ? maps[index].displayName.c_str() : "";
+    const int map = filter.MapIndex(index);
+    return map >= 0 ? maps[map].displayName.c_str() : "";
 }
 
 void Usermaps::Select(int index)
 {
-    if (index >= 0 && index < Count() && selected != index)
+    const int map = filter.MapIndex(index);
+    if (map >= 0 && selected != map)
     {
-        selected = index;
+        selected = map;
         UpdateSelection();
     }
+}
+
+int Usermaps::TagCount()
+{
+    return filter.TagCount();
+}
+
+const char *Usermaps::TagText(int index)
+{
+    return filter.TagText(index);
+}
+
+void Usermaps::SelectTag(int index)
+{
+    if (index >= 0 && index < TagCount())
+        highlightedTag = index;
 }
 
 bool Usermaps::RunMenuScript(int localClientNum, const char *command)
 {
     if (_stricmp(command, "LoadUsermaps") == 0)
         Scan(localClientNum);
+    else if (_stricmp(command, "LoadUsermapFilters") == 0)
+    {
+        highlightedTag = filter.SelectedTag();
+        Menu_SetFeederSelection(UI_GetContext(localClientNum), nullptr, TAGS_FEEDER_ID, highlightedTag,
+                                "codxe_usermap_filter");
+    }
+    else if (_stricmp(command, "ApplyUsermapFilter") == 0)
+    {
+        filter.SelectTag(highlightedTag);
+        const int row = (std::max)(0, filter.RowForMap(selected));
+        selected = filter.MapIndex(row);
+        UpdateFilterLabel();
+        Menu_SetFeederSelection(UI_GetContext(localClientNum), nullptr, FEEDER_ID, row, "settings");
+        UpdateSelection();
+    }
     else if (_stricmp(command, "CloseUsermaps") == 0)
     {
         // Cancelling the browser restores the lobby's chosen map in the shared texture.
@@ -192,7 +236,7 @@ bool Usermaps::RunMenuScript(int localClientNum, const char *command)
     }
     else if (_stricmp(command, "ApplyUsermap") == 0)
     {
-        if (selected >= 0 && selected < Count())
+        if (filter.RowForMap(selected) >= 0)
         {
             const usermaps::Entry &entry = maps[selected];
             Dvar_SetStringByName("ui_mapname", entry.name.c_str());

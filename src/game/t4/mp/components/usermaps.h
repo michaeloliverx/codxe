@@ -12,6 +12,7 @@ class Usermaps : public Module
     Usermaps();
 
     static const int FEEDER_ID = 60;
+    static const int TAGS_FEEDER_ID = 66;
     static void OnDvarInit();
     static void OnUIInit();
     static void OnUIRefresh();
@@ -19,6 +20,9 @@ class Usermaps : public Module
     static int Count();
     static const char *Text(int index);
     static void Select(int index);
+    static int TagCount();
+    static const char *TagText(int index);
+    static void SelectTag(int index);
 };
 } // namespace mp
 } // namespace t4

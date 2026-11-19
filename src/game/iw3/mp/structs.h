@@ -210,7 +210,8 @@ struct ListBoxColumn
 
 struct listBoxDef_s
 {
-    unsigned char _pad0[0x30];
+    int startPos[4];
+    unsigned char _pad0[0x20];
     unsigned int columnCount;
     ListBoxColumn columns[16];
 };

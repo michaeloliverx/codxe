@@ -14,6 +14,7 @@ const UIScriptEntry UIScript::Scripts[] = {
     {"ClearMods", ModList::ClearModsScript},  {"LoadOfflineStats", Stats::LoadStatsScript},
     {"CloseUsermaps", Usermaps::CloseScript}, {"LoadUsermaps", Usermaps::LoadScript},
     {"ApplyMap", Usermaps::ApplyScript},
+    {"LoadUsermapFilters", Usermaps::LoadFilters}, {"ApplyUsermapFilter", Usermaps::ApplyFilter},
 };
 
 Detour UIScript::UI_RunMenuScript_Detour;

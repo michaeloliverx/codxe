@@ -1,0 +1,94 @@
+{
+    menuDef
+    {
+        name "codxe_usermap_filter"
+        rect -164 -136 328 272 2 2
+        popup
+        style 1
+        visible 1
+        focuscolor 1 1 1 1
+        onOpen
+        {
+            uiScript LoadUsermapFilters;
+            setfocus usermap_tags;
+        }
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            rect -600 -800 2000 2000 0 0
+            style 3
+            decoration
+            visible 1
+            forecolor 0 0 0 0.65
+            background "white"
+        }
+        itemDef
+        {
+            rect 0 0 328 272 2 2
+            style 3
+            decoration
+            visible 1
+            border 1
+            borderSize 1
+            bordercolor 0.4 0.4 0.42 1
+            forecolor 0.1 0.1 0.12 0.98
+            background "white"
+        }
+        itemDef
+        {
+            rect 18 5 292 26 2 2
+            decoration
+            visible 1
+            text "Filter by Tag"
+            textfont 1
+            textscale 0.45
+            textalign 8
+        }
+        itemDef
+        {
+            name "usermap_tags"
+            rect 14 35 300 198 2 2
+            type 6
+            visible 1
+            textscale 0.381
+            textstyle 6
+            textfont 1
+            forecolor 0.85 0.85 0.85 1
+            focusColor 1 1 1 1
+            elementwidth 27
+            elementheight 22
+            feeder 66
+            columns 1
+                    18 250 48 0
+            selectIcon "ui_button_xenon_3d_a_32x32"
+            highlightTexture "menu_button_backing_highlight"
+            doubleclick
+            {
+                play mouse_click;
+                uiScript ApplyUsermapFilter;
+                close self;
+            }
+            execKeyInt 2
+            {
+                close self;
+            }
+            execKeyInt 3
+            {
+                close self;
+            }
+        }
+        itemDef
+        {
+            rect 18 239 292 24 2 2
+            decoration
+            visible 1
+            text "@PLATFORM_BACK"
+            textfont 1
+            textscale 0.375
+            textalign 8
+        }
+    }
+}

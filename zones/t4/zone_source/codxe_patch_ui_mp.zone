@@ -7,6 +7,7 @@ menulist,ui_mp/menu_gamesetup_systemlink.menu
 menulist,ui_mp/patch_mp_menus.txt
 // The mod browser is appended when the engine registers its stock frontend list.
 menulist,ui_mp/mods_menu.menu
+menulist,ui_mp/codxe_usermap_filter.menu
 // Settings retains separate stock-map and custom-map feeders.
 menulist,ui_mp/settings.menu
 localize,codxe_ui_mp

@@ -85,6 +85,118 @@ Credits ReadCredits(const arena::Fields &fields)
     return credits;
 }
 
+std::vector<std::string> ReadTags(const arena::Fields &fields)
+{
+    std::vector<std::string> tags;
+    const auto field = fields.find("tags");
+    if (field == fields.end())
+        return tags;
+
+    const std::string &list = field->second;
+    size_t start = 0;
+    while (start < list.size() && tags.size() < 16)
+    {
+        const size_t separator = list.find('|', start);
+        const size_t end = separator == std::string::npos ? list.size() : separator;
+        const size_t first = list.find_first_not_of(" \t", start);
+        if (first < end)
+        {
+            const size_t last = list.find_last_not_of(" \t", end - 1);
+            const std::string label = list.substr(first, last - first + 1);
+            if (label.size() <= 48 && label[0] != '@' && label.find('^') == std::string::npos &&
+                std::find_if(label.begin(), label.end(), [](unsigned char c) { return c < ' ' || c == 127; }) ==
+                    label.end() &&
+                _stricmp(label.c_str(), "All Maps") != 0 &&
+                std::none_of(tags.begin(), tags.end(),
+                             [&](const std::string &tag) { return _stricmp(tag.c_str(), label.c_str()) == 0; }))
+            {
+                tags.push_back(label);
+            }
+        }
+        if (separator == std::string::npos)
+            break;
+        start = separator + 1;
+    }
+    return tags;
+}
+
+void TagFilter::Reset(const std::vector<Entry> &maps)
+{
+    Option all;
+    all.label = "All Maps";
+    std::map<std::string, Option> tags;
+    for (size_t i = 0; i < maps.size(); ++i)
+    {
+        const int index = static_cast<int>(i);
+        all.maps.push_back(index);
+        const std::vector<std::string> &labels = maps[i].tags;
+        for (size_t j = 0; j < labels.size(); ++j)
+        {
+            const std::string &label = labels[j];
+            Option &tag = tags[arena::Lower(label)];
+            if (tag.label.empty() || label < tag.label)
+                tag.label = label;
+            tag.maps.push_back(index);
+        }
+    }
+    options.clear();
+    options.reserve(tags.size() + 1);
+    options.push_back(std::move(all));
+    for (auto tag = tags.begin(); tag != tags.end(); ++tag)
+        options.push_back(std::move(tag->second));
+    selectedTag = 0;
+}
+
+void TagFilter::SelectTag(int index)
+{
+    if (index >= 0 && index < TagCount())
+        selectedTag = index;
+}
+
+bool TagFilter::HasTags() const
+{
+    return TagCount() > 1;
+}
+
+int TagFilter::TagCount() const
+{
+    return static_cast<int>(options.size());
+}
+
+int TagFilter::SelectedTag() const
+{
+    return selectedTag;
+}
+
+const char *TagFilter::TagText(int index) const
+{
+    return index >= 0 && index < TagCount() ? options[index].label.c_str() : "";
+}
+
+std::string TagFilter::Prompt() const
+{
+    return std::string("\x03 Filter: ") + TagText(selectedTag);
+}
+
+int TagFilter::MapCount() const
+{
+    return options.empty() ? 0 : static_cast<int>(options[selectedTag].maps.size());
+}
+
+int TagFilter::MapIndex(int row) const
+{
+    return row >= 0 && row < MapCount() ? options[selectedTag].maps[row] : -1;
+}
+
+int TagFilter::RowForMap(int index) const
+{
+    if (options.empty())
+        return -1;
+    const auto &maps = options[selectedTag].maps;
+    const auto row = std::lower_bound(maps.begin(), maps.end(), index);
+    return row != maps.end() && *row == index ? static_cast<int>(row - maps.begin()) : -1;
+}
+
 std::vector<Entry> ScanMultiplayer()
 {
     std::vector<Entry> result;
@@ -112,6 +224,7 @@ std::vector<Entry> ScanMultiplayer()
         entry.displayName = fields["longname"];
         entry.description = fields["description"];
         entry.credits = ReadCredits(fields);
+        entry.tags = ReadTags(fields);
         if (entry.displayName.empty())
             entry.displayName = map;
         const std::string preview = filesystem::JoinPath(directory.c_str(), "preview.dds");

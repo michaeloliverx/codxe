@@ -201,6 +201,10 @@
             elementwidth 300
             elementheight 18
             feeder FEEDER_CODXE_USERMAPS
+            execKeyInt BUTTON_X
+            {
+                uiScript openMenuOnDvar ui_codxe_usermap_has_tags 1 codxe_usermap_filter;
+            }
             // Native paging: D-pad up/down jumps a page; the analog stick moves one row.
             usepaging
             // Both columns use native text rendering so textaligny applies to the name and A glyph.
@@ -356,24 +360,127 @@
         itemDef
         {
             text "@PLATFORM_BACK_CAPS"
-            rect -64 -20 336 24 1 3
+            rect 0 -20 0 24 1 3
             decoration
             visible 1
-            textalign 6
-            textalignx -30
+            textalign 4
+            textscale 0.375
+            textfont 3
+        }
+        itemDef
+        {
+            rect 96 -20 0 24 1 3
+            decoration
+            visible when(dvarbool("ui_codxe_usermap_has_tags"));
+            exp text (dvarstring("ui_codxe_usermap_tag"));
+            textalign 4
             textscale 0.375
             textfont 3
         }
         itemDef
         {
             text "@PLATFORM_SELECT_CAPS"
-            rect -292 -20 292 24 3 3
+            rect 0 -20 0 24 3 3
             decoration
             visible when(dvarint(ui_codxe_usermap_count) > 0);
-            textalign 4
-            textalignx 10
+            textalign 6
+            textalignx -10
             textscale 0.375
             textfont 3
+        }
+    }
+
+    menuDef
+    {
+        name "codxe_usermap_filter"
+        rect -164 -136 328 272 2 2
+        popup
+        style 1
+        visible 1
+        focuscolor 1 1 1 1
+        onOpen
+        {
+            uiScript LoadUsermapFilters;
+            setfocus usermap_tags;
+        }
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            rect -600 -800 2000 2000 0 0
+            style 3
+            decoration
+            visible 1
+            forecolor 0 0 0 0.65
+            background "white"
+        }
+        itemDef
+        {
+            rect 0 0 328 272 2 2
+            style 3
+            decoration
+            visible 1
+            border 1
+            borderSize 1
+            bordercolor 0.4 0.4 0.42 1
+            forecolor 0.1 0.1 0.12 0.98
+            background "white"
+        }
+        itemDef
+        {
+            rect 18 5 292 26 2 2
+            decoration
+            visible 1
+            text "Filter by Tag"
+            textfont 3
+            textscale 0.45
+            textalign 8
+        }
+        itemDef
+        {
+            name "usermap_tags"
+            rect 14 35 300 198 2 2
+            style 1
+            type 6
+            visible 1
+            textfont 3
+            textscale 0.375
+            textaligny 1
+            forecolor 1 1 1 1
+            outlinecolor 1 1 1 0.18
+            elementwidth 266
+            elementheight 22
+            feeder 66
+            columns 2
+                    8 238 48 0
+                    260 18 1 0
+            selectBorder 0 0 0 0
+            doubleclick
+            {
+                play mouse_click;
+                uiScript ApplyUsermapFilter;
+                close self;
+            }
+            execKeyInt 2
+            {
+                close self;
+            }
+            execKeyInt 3
+            {
+                close self;
+            }
+        }
+        itemDef
+        {
+            rect 18 239 292 24 2 2
+            decoration
+            visible 1
+            text "@PLATFORM_BACK"
+            textfont 3
+            textscale 0.375
+            textalign 8
         }
     }
 }

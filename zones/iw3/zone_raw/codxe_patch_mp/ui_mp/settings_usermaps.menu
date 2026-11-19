@@ -115,6 +115,10 @@
             rect                        64 84 240 322 0 0
             CODXE_FEEDER_LIST_STYLE(215, 178, 190, 2)
             feeder                      FEEDER_CODXE_USERMAPS
+            execKeyInt BUTTON_X
+            {
+                uiScript openMenuOnDvar ui_codxe_usermap_has_tags 1 codxe_usermap_filter;
+            }
             doubleClick
             {
                 play mouse_click;
@@ -275,6 +279,17 @@
         }
         itemDef
         {
+            rect 80 -4 0 0 1 3
+            decoration
+            borderSize 1
+            visible when(dvarbool("ui_codxe_usermap_has_tags"));
+            exp text (dvarstring("ui_codxe_usermap_tag"));
+            textfont UI_FONT_NORMAL
+            textscale 0.375
+            textalign 12
+        }
+        itemDef
+        {
             text                        "@PLATFORM_BACK"
             rect                        18 -4 0 0 1 3
             decoration
@@ -283,6 +298,98 @@
             textalign                   12
             textscale                   0.375
             textfont                    UI_FONT_NORMAL
+        }
+    }
+
+    menuDef
+    {
+        name "codxe_usermap_filter"
+        rect -164 -136 328 272 2 2
+        popup
+        style 1
+        visible 1
+        focuscolor 1 1 1 1
+        onOpen
+        {
+            uiScript LoadUsermapFilters;
+            setfocus usermap_tags;
+        }
+        onESC
+        {
+            close self;
+        }
+        itemDef
+        {
+            rect -600 -800 2000 2000 0 0
+            style 3
+            decoration
+            visible 1
+            forecolor 0 0 0 0.65
+            background "white"
+        }
+        itemDef
+        {
+            rect 0 0 328 272 2 2
+            style 3
+            decoration
+            visible 1
+            border 1
+            borderSize 1
+            bordercolor 0.4 0.4 0.42 1
+            forecolor 0.1 0.1 0.12 0.98
+            background "white"
+        }
+        itemDef
+        {
+            rect 18 5 292 26 2 2
+            decoration
+            visible 1
+            text "Filter by Tag"
+            textfont 1
+            textscale 0.45
+            textalign 8
+        }
+        itemDef
+        {
+            name "usermap_tags"
+            rect 14 35 300 198 2 2
+            CODXE_FEEDER_LIST_STYLE(274, 244, 251, 0)
+            feeder 66
+            doubleclick
+            {
+                play mouse_click;
+                uiScript ApplyUsermapFilter;
+                close self;
+            }
+            execKeyInt BUTTON_A
+            {
+                play mouse_click;
+                uiScript ApplyUsermapFilter;
+                close self;
+            }
+            execKeyInt 13
+            {
+                uiScript ApplyUsermapFilter;
+                close self;
+            }
+            execKeyInt 2
+            {
+                close self;
+            }
+            execKeyInt 3
+            {
+                close self;
+            }
+        }
+        itemDef
+        {
+            rect 18 239 292 24 2 2
+            decoration
+            visible 1
+            text "@PLATFORM_BACK"
+            textfont 1
+            textscale 0.375
+            textalign 8
         }
     }
 }

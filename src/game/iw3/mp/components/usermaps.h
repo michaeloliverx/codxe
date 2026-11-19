@@ -15,6 +15,8 @@ class Usermaps : public Module
     static void LoadScript(int localClientNum, const char **args);
     static void ApplyScript(int localClientNum, const char **args);
     static void CloseScript(int localClientNum, const char **args);
+    static void LoadFilters(int localClientNum, const char **args);
+    static void ApplyFilter(int localClientNum, const char **args);
 };
 } // namespace mp
 } // namespace iw3

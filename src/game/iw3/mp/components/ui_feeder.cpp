@@ -111,7 +111,12 @@ int UIFeeder::UI_FeederCount_Hook(int localClientNum, itemDef_s *item, float fee
             SetSelectedIndex(feederID, index);
         }
 
-        item->cursorPos[localClientNum] = index;
+        if (item->cursorPos[localClientNum] != index)
+        {
+            item->cursorPos[localClientNum] = index;
+            if (auto *list = static_cast<listBoxDef_s *>(item->typeData))
+                list->startPos[localClientNum] = index;
+        }
     }
 
     return count;
