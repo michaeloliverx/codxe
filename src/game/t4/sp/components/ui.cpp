@@ -44,6 +44,7 @@ const float CODXE_USERMAPS_FEEDER = 65.0f;
 const char *const CODXE_USERMAPS_DIRECTORY = "usermaps";
 const char *const CODXE_PREVIEW_MATERIAL = "$codxe_usermap_preview";
 const char *const CODXE_PREVIEW_IMAGE = "codxe_usermap_preview";
+const char *const BLANK_PREVIEW_MATERIAL = "menu_black_line";
 
 const uint32_t DDS_MAGIC = MAKEFOURCC('D', 'D', 'S', ' ');
 const uint32_t DDS_HEADER_SIZE = 124;
@@ -91,12 +92,19 @@ struct UsermapEntry
     std::string previewPath;
 };
 
+struct LobbyPreview
+{
+    std::string mapName;
+    std::string title;
+    bool hasPreview;
+    bool needsRefresh;
+};
+
 std::vector<UsermapEntry> usermaps;
 int selectedUsermap = 0;
 bool usermapsScanned = false;
 bool usermapDvarsRegistered = false;
-bool usermapNameLookupLogged = false;
-bool usermapPreviewLookupLogged = false;
+LobbyPreview lobbyPreview = {};
 GfxImage *previewImage = nullptr;
 std::vector<unsigned char> defaultPreviewPixels;
 
@@ -120,7 +128,6 @@ void EnsureUsermapDvarsRegistered()
     Dvar_RegisterString("ui_codxe_usermap_author", "", DVAR_FLAG_NONE, "Selected custom map author");
     Dvar_RegisterString("ui_codxe_usermap_revision", "", DVAR_FLAG_NONE, "Selected custom map revision");
     Dvar_RegisterString("ui_codxe_usermap_count", "", DVAR_FLAG_NONE, "Selected custom map index");
-    Dvar_RegisterString("ui_codxe_usermap_mapname", "", DVAR_FLAG_NONE, "Selected custom map fastfile name");
 
     usermapDvarsRegistered = true;
 }
@@ -157,6 +164,8 @@ GfxImage *GetPreviewImage()
 {
     const XAssetHeader header = DB_FindXAssetHeader(ASSET_TYPE_IMAGE, CODXE_PREVIEW_IMAGE, false, -1);
     GfxImage *image = header.image;
+    if (image && (!image->name || std::strcmp(image->name, CODXE_PREVIEW_IMAGE) != 0))
+        image = nullptr;
     if (image != previewImage)
     {
         previewImage = image;
@@ -271,6 +280,10 @@ void SetMenuDvar(const char *name, const std::string &value)
 
 void UpdateSelectedUsermap()
 {
+    // The browser and lobby share the texture. Reapply the lobby map when the browser closes.
+    lobbyPreview.hasPreview = false;
+    lobbyPreview.needsRefresh = true;
+
     if (selectedUsermap < 0 || selectedUsermap >= static_cast<int>(usermaps.size()))
     {
         SetMenuDvar("ui_codxe_usermap_name", "No custom maps found");
@@ -407,10 +420,7 @@ void ActivateSelectedUsermap()
     const UsermapEntry &entry = usermaps[selectedUsermap];
     SetMenuDvar("ui_mapname", entry.name);
     SetMenuDvar("ui_preview_map", entry.name);
-    SetMenuDvar("ui_codxe_usermap_mapname", entry.name);
     SetMenuDvar("ui_codxe_usermap_active", "1");
-    usermapNameLookupLogged = false;
-    usermapPreviewLookupLogged = false;
     SetMenuDvar("credits", "0");
     SetMenuDvar("credits_active", "0");
 
@@ -473,34 +483,80 @@ void UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
     UpdateSelectedUsermap();
 }
 
-const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColumn, const char *value, int valueColumn)
+bool IsMapPreviewMenuVisible(int localClientNum)
 {
-    if (table && table->name && value && comparisonColumn == 0 && _stricmp(table->name, "maps/mapsTable.csv") == 0 &&
-        std::strcmp(Dvar_GetVariantString("ui_codxe_usermap_active"), "1") == 0 &&
-        _stricmp(value, Dvar_GetVariantString("ui_codxe_usermap_mapname")) == 0)
+    const char *const menus[] = {"settings", "menu_splitscreen_lobby", "menu_systemlink_lobby",
+                                 "menu_xboxlive_lobby", "menu_xboxlive_privatelobby"};
+    for (size_t i = 0; i < ARRAYSIZE(menus); ++i)
     {
-        if (valueColumn == 3)
+        if (Menu_IsMenuOpenAndVisible(localClientNum, menus[i]))
+            return true;
+    }
+    return false;
+}
+
+void UpdateLobbyPreview(int localClientNum)
+{
+    if (Menu_IsMenuOpenAndVisible(localClientNum, "codxe_usermaps"))
+        return;
+
+    if (!IsMapPreviewMenuVisible(localClientNum))
+    {
+        if (!lobbyPreview.mapName.empty())
+            lobbyPreview = LobbyPreview();
+        return;
+    }
+
+    // The stock party-state receiver updates ui_mapname on guests as well as on the host.
+    const char *mapName = Dvar_GetVariantString("ui_mapname");
+    if (!lobbyPreview.needsRefresh && _stricmp(lobbyPreview.mapName.c_str(), mapName) == 0)
+        return;
+
+    lobbyPreview.mapName = mapName;
+    lobbyPreview.title.clear();
+    lobbyPreview.hasPreview = false;
+    lobbyPreview.needsRefresh = false;
+
+    // Reuse entries enumerated locally. Guests can resolve an installed pack without opening the browser.
+    for (size_t i = 0; i < usermaps.size(); ++i)
+    {
+        if (_stricmp(usermaps[i].name.c_str(), mapName) == 0)
         {
-            if (!usermapNameLookupLogged)
-            {
-                DbgPrint("[codxe][T4 SP][UI] Supplying virtual mapsTable name for %s\n", value);
-                usermapNameLookupLogged = true;
-            }
-            return Dvar_GetVariantString("ui_codxe_usermap_name");
-        }
-        if (valueColumn == 4)
-        {
-            if (!usermapPreviewLookupLogged)
-            {
-                DbgPrint("[codxe][T4 SP][UI] Supplying virtual mapsTable preview for %s\n", value);
-                usermapPreviewLookupLogged = true;
-            }
-            return CODXE_PREVIEW_MATERIAL;
+            lobbyPreview.title = usermaps[i].displayName;
+            lobbyPreview.hasPreview = !usermaps[i].previewPath.empty() && ReplacePreview(usermaps[i].previewPath);
+            return;
         }
     }
 
-    return StringTable_Lookup_Detour.GetOriginal<decltype(StringTable_Lookup)>()(table, comparisonColumn, value,
-                                                                                 valueColumn);
+    if (!usermaps::IsSafeName(mapName) || usermaps::IsMultiplayerName(mapName))
+        return;
+
+    const std::string directory = filesystem::JoinPath(usermaps::GetDirectory(), mapName);
+    const std::string fastfile = filesystem::JoinPath(directory.c_str(), (lobbyPreview.mapName + ".ff").c_str());
+    if (!filesystem::FileExists(fastfile.c_str()))
+        return;
+
+    arena::Fields fields;
+    usermaps::ReadMetadata(directory, lobbyPreview.mapName, fields);
+    lobbyPreview.title = fields["longname"].empty() ? lobbyPreview.mapName : fields["longname"];
+    const std::string path = filesystem::JoinPath(directory.c_str(), "preview.dds");
+    lobbyPreview.hasPreview = filesystem::FileExists(path.c_str()) && ReplacePreview(path);
+}
+
+const char *StringTable_Lookup_Hook(const StringTable *table, int comparisonColumn, const char *value, int valueColumn)
+{
+    const auto original = StringTable_Lookup_Detour.GetOriginal<decltype(StringTable_Lookup)>();
+    const char *stock = original(table, comparisonColumn, value, valueColumn);
+    if (!table || !table->name || !value || comparisonColumn != 0 || (valueColumn != 3 && valueColumn != 4) ||
+        _stricmp(table->name, "maps/mapsTable.csv") != 0 || lobbyPreview.mapName.empty() ||
+        _stricmp(value, lobbyPreview.mapName.c_str()) != 0 || (lobbyPreview.title.empty() && stock && *stock))
+    {
+        return stock;
+    }
+
+    if (valueColumn == 3)
+        return lobbyPreview.title.empty() ? value : lobbyPreview.title.c_str();
+    return lobbyPreview.hasPreview ? CODXE_PREVIEW_MATERIAL : BLANK_PREVIEW_MATERIAL;
 }
 
 } // namespace
@@ -514,9 +570,21 @@ void DrawBranding(int localClientNum)
 }
 
 Detour UI_Refresh_Detour;
+Detour UI_Init_Detour;
+
+dvar_s *UI_Init_Hook(int localClientNum)
+{
+    // The frontend can reuse the image pool address after its zones reload.
+    lobbyPreview = LobbyPreview();
+    previewImage = nullptr;
+    defaultPreviewPixels.clear();
+    return UI_Init_Detour.GetOriginal<decltype(UI_Init)>()(localClientNum);
+}
 
 void UI_Refresh_Hook(int localClientNum)
 {
+    if (localClientNum == 0)
+        UpdateLobbyPreview(localClientNum);
     UI_Refresh_Detour.GetOriginal<decltype(UI_Refresh)>()(localClientNum);
 
     // Menu files can request activation using stock setdvar handling, avoiding a custom UI script command.
@@ -607,6 +675,9 @@ ui::ui()
 
     UI_Refresh_Detour = Detour(UI_Refresh, UI_Refresh_Hook);
     UI_Refresh_Detour.Install();
+
+    UI_Init_Detour = Detour(UI_Init, UI_Init_Hook);
+    UI_Init_Detour.Install();
 
     Menus_OpenByName_Detour = Detour(Menus_OpenByName, Menus_OpenByName_Hook);
     Menus_OpenByName_Detour.Install();
