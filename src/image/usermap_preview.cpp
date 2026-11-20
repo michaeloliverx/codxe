@@ -77,7 +77,8 @@ bool UploadDDS(const std::string &path, D3DBaseTexture *texture, unsigned char *
     backend.waitIdle(*backend.device);
     if (backend.invalidate)
     {
-        XMemCpyStreaming_WriteCombined(destination, tiled.data(), tiled.size());
+        // Let the SDK select the copy routine for the destination's page protection.
+        XMemCpyStreaming(destination, tiled.data(), tiled.size());
         __sync();
         backend.invalidate(*backend.device, destination, tiledSize);
     }

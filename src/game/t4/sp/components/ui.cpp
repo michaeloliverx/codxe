@@ -199,7 +199,7 @@ bool UploadPreviewPixels(unsigned char *destination, const unsigned char *source
     // hands it back. Do not wake the backend midway through this UI frame.
     R_SyncRenderThread();
     D3DDevice_BlockUntilIdle_Native(*gfxDevice);
-    XMemCpyStreaming_WriteCombined(destination, source, size);
+    XMemCpyStreaming(destination, source, size);
     __sync();
     D3D_InvalidateCaches(*gfxDevice, destination, static_cast<unsigned int>(size));
     return true;
