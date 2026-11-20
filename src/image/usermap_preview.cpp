@@ -75,12 +75,22 @@ bool UploadDDS(const std::string &path, D3DBaseTexture *texture, unsigned char *
         return false;
     backend.sync();
     backend.waitIdle(*backend.device);
-    XMemCpyStreaming_WriteCombined(destination, tiled.data(), tiled.size());
-    __sync();
     if (backend.invalidate)
+    {
+        XMemCpyStreaming_WriteCombined(destination, tiled.data(), tiled.size());
+        __sync();
         backend.invalidate(*backend.device, destination, tiledSize);
+    }
     else
+    {
+        // IW3 TU4 stores fastfile texture pixels in cached memory. Write back
+        // the CPU cache lines before invalidating the GPU's copy of the texture.
+        std::memcpy(destination, tiled.data(), tiled.size());
+        for (size_t offset = 0; offset < tiled.size(); offset += 128)
+            __dcbf(0, destination + offset);
+        __sync();
         InvalidateIW3(*backend.device, destination, tiledSize, backend.reserve);
+    }
     return true;
 }
 } // namespace preview
