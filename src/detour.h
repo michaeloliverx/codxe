@@ -285,6 +285,18 @@ class Detour
 
         const auto HookSize = Detour::WriteFarBranch(NULL, this->HookTarget, false, false);
 
+        // Each displaced instruction and the return jump can take a preserving far branch.
+        const auto MaxTrampolineSize =
+            (HookSize / sizeof(UINT32) + 1) * Detour::WriteFarBranch(NULL, this->HookTarget, false, true);
+        if (Detour::TrampolineSize + MaxTrampolineSize > sizeof(Detour::TrampolineBuffer))
+        {
+            this->TrampolineAddress = static_cast<BYTE *>(this->HookSource);
+            DbgPrint("[codxe][Detour] ERROR: Trampoline pool exhausted (%p -> %p, %u/%u bytes used, need up to %u).\n",
+                     this->HookSource, this->HookTarget, static_cast<unsigned>(Detour::TrampolineSize),
+                     static_cast<unsigned>(sizeof(Detour::TrampolineBuffer)), static_cast<unsigned>(MaxTrampolineSize));
+            return false;
+        }
+
         //
         // Save the original instructions for unhooking later on.
         //
@@ -357,7 +369,7 @@ class Detour
     //
     // Shared
     //
-    static BYTE TrampolineBuffer[200 * 20];
+    static BYTE TrampolineBuffer[8 * 1024];
     static SIZE_T TrampolineSize;
 };
 
