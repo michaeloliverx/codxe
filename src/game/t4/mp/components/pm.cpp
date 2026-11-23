@@ -64,7 +64,9 @@ void PmoveSingle_Hook(pmove_t *pm)
 pm::pm()
 {
     PmoveSingle_Detour = Detour(PmoveSingle, PmoveSingle_Hook);
-    PmoveSingle_Detour.Install();
+    // TU7 saves r27 at r1-0x30 before allocating its frame. The trampoline can
+    // clobber volatile r0 on return to the prologue and keep the saved r27 intact.
+    PmoveSingle_Detour.Install(false);
 
     CL_AddViewAngles_Detour = Detour(CL_AddViewAngles, CL_AddViewAngles_Hook);
     CL_AddViewAngles_Detour.Install();

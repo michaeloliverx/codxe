@@ -10,9 +10,9 @@ namespace
 ClientViewParams stockViewParams[8];
 const ClientViewParams horizontalViewParams[2] = {{0.0f, 0.0f, 1.0f, 0.5f}, {0.0f, 0.5f, 1.0f, 0.5f}};
 
-Detour SetViewDetour;
-Detour UpdateViewDetour;
-Detour DrawViewDetour;
+Detour CG_SetView_Detour;
+Detour CG_UpdateView_Detour;
+Detour RB_DrawView_Detour;
 const dvar_s *horizontalDvar = nullptr;
 bool horizontalLayout = false;
 
@@ -71,21 +71,21 @@ unsigned int CG_SetView_Hook(int localClientNum, int activeClientIndex, int acti
     if (changed && activeClientCount == 2 && localClientNum >= 0 && localClientNum < 2)
     {
         // Refresh the other player's viewport and HUD placement when toggled during setup.
-        SetViewDetour.GetOriginal<CG_SetView_t>()(localClientNum ^ 1, activeClientIndex ^ 1, activeClientCount);
+        CG_SetView_Detour.GetOriginal<CG_SetView_t>()(localClientNum ^ 1, activeClientIndex ^ 1, activeClientCount);
     }
-    return SetViewDetour.GetOriginal<CG_SetView_t>()(localClientNum, activeClientIndex, activeClientCount);
+    return CG_SetView_Detour.GetOriginal<CG_SetView_t>()(localClientNum, activeClientIndex, activeClientCount);
 }
 
 unsigned int CG_UpdateView_Hook(int time)
 {
     const bool changed = UpdateLayout();
-    const auto result = UpdateViewDetour.GetOriginal<CG_UpdateView_t>()(time);
+    const auto result = CG_UpdateView_Detour.GetOriginal<CG_UpdateView_t>()(time);
     if (changed && CL_LocalClientActiveCount() == 2)
     {
         // The stock updater only calls CG_SetView while an animation changes the rectangle.
         // Recalculate both clients even when they are already at their split-screen endpoints.
         for (int client = 0; client < 2; ++client)
-            SetViewDetour.GetOriginal<CG_SetView_t>()(client, client, 2);
+            CG_SetView_Detour.GetOriginal<CG_SetView_t>()(client, client, 2);
     }
     return result;
 }
@@ -98,7 +98,7 @@ void *RB_DrawView_Hook(uint32_t view)
     // Both masks describe the stock layout and would cover the new viewports.
     if (HorizontalEnabled() && (overlay == 1 || overlay == 2))
         splitScreenOverlay = 0;
-    const auto result = DrawViewDetour.GetOriginal<RB_DrawView_t>()(view);
+    const auto result = RB_DrawView_Detour.GetOriginal<RB_DrawView_t>()(view);
     splitScreenOverlay = overlay;
     return result;
 }
@@ -114,14 +114,16 @@ SplitScreen::SplitScreen()
 {
     std::memcpy(stockViewParams, defaultViewParams, sizeof(stockViewParams));
 
-    SetViewDetour = Detour(CG_SetView, CG_SetView_Hook);
-    SetViewDetour.Install();
+    CG_SetView_Detour = Detour(CG_SetView, CG_SetView_Hook);
+    CG_SetView_Detour.Install();
 
-    UpdateViewDetour = Detour(CG_UpdateView, CG_UpdateView_Hook);
-    UpdateViewDetour.Install();
+    CG_UpdateView_Detour = Detour(CG_UpdateView, CG_UpdateView_Hook);
+    // TU7 saves r27 at r1-0x30 before allocating its frame. The continuation
+    // can clobber r0, so avoid a spill over the saved register.
+    CG_UpdateView_Detour.Install(false);
 
-    DrawViewDetour = Detour(RB_DrawView, RB_DrawView_Hook);
-    DrawViewDetour.Install();
+    RB_DrawView_Detour = Detour(RB_DrawView, RB_DrawView_Hook);
+    RB_DrawView_Detour.Install();
 }
 } // namespace sp
 } // namespace t4

@@ -275,7 +275,7 @@ class Detour
         }
     }
 
-    bool Install()
+    bool Install(bool PreserveReturnRegister = true)
     {
         //
         // Check if we are already hooked.
@@ -323,7 +323,8 @@ class Detour
         const auto AfterBranchAddress = (void *)((UINT32)this->HookSource + HookSize);
 
         Detour::TrampolineSize +=
-            Detour::WriteFarBranch(&Detour::TrampolineBuffer[Detour::TrampolineSize], AfterBranchAddress, false, true);
+            Detour::WriteFarBranch(&Detour::TrampolineBuffer[Detour::TrampolineSize], AfterBranchAddress, false,
+                                   PreserveReturnRegister);
 
         //
         // Finally write the branch to the function that we are hooking.
