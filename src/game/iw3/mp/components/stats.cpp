@@ -21,6 +21,25 @@ const unsigned int OFFLINE_STATS_VERSION = 1;
 
 Detour LiveStorage_ReadStats_Detour;
 Detour LiveStorage_UploadStats_Detour;
+Detour CL_CheckForResend_Detour;
+
+Detour ClassEditorInput_Detour;
+Detour ClassEditorGetStat_Detour;
+Detour ClassEditorSetStat_Detour;
+Detour ClassEditorCommand_Detour;
+Detour ClassEditorQueue_Detour;
+Detour ClassEditorKeyboardComplete_Detour;
+
+struct ClassEditor
+{
+    UiContext *context;
+    menuDef_t *popup;
+    int controller;
+    int previousProfile;
+};
+
+ClassEditor classEditor = {};
+int inputController = -1;
 
 const char *TableLookup(const StringTable *table, int row, int column)
 {
@@ -467,6 +486,50 @@ bool SaveStats(unsigned int controllerIndex)
     return true;
 }
 
+bool RestoreEmptyCustomClasses(unsigned int controllerIndex)
+{
+    const unsigned __int8 *stats = controllerStatData[controllerIndex].playerStats + 4;
+    const StringTable *classTable = nullptr;
+    bool restored = false;
+    for (int base = 200; base < 250; base += 10)
+    {
+        // An empty slot has no class data and no Create-a-Class initialization marker.
+        if (!std::all_of(stats + base, stats + base + 10, [](unsigned __int8 value) { return value == 0; }))
+            continue;
+
+        if (!classTable)
+        {
+            classTable = FindStringTable("mp/classtable.csv");
+            if (!classTable)
+                break;
+        }
+
+        const int fieldCount = 9;
+        int values[fieldCount] = {};
+        int count = 0;
+        for (int row = 0; row < classTable->rowCount; ++row)
+        {
+            int stat;
+            int value;
+            if (TryParseInt(TableLookup(classTable, row, 1), &stat) && stat > base && stat <= base + fieldCount &&
+                TryParseInt(TableLookup(classTable, row, 5), &value) && value >= 0 && value < 256)
+            {
+                values[stat - base - 1] = value;
+                ++count;
+            }
+        }
+
+        if (count != fieldCount || !values[0])
+            continue;
+
+        for (int i = 0; i < fieldCount; ++i)
+            StatSet(controllerIndex, base + 1 + i, values[i]);
+
+        restored = true;
+    }
+    return restored;
+}
+
 void InitializeStats(unsigned int controllerIndex)
 {
     playerStatNetworkData &statData = controllerStatData[controllerIndex];
@@ -500,6 +563,135 @@ bool IsOfflineGame()
     return Dvar_GetBool("systemlink") || Dvar_GetBool("splitscreen");
 }
 
+bool IsMenuOnStack(const UiContext *dc, const menuDef_t *menu)
+{
+    if (!menu)
+        return false;
+
+    for (int i = dc->openMenuCount - 1; i >= 0; --i)
+    {
+        if (dc->menuStack[i] == menu)
+            return true;
+    }
+    return false;
+}
+
+int GetClassEditorController()
+{
+    if (classEditor.context && clientUIActives[0].connectionState == CA_DISCONNECTED &&
+        IsMenuOnStack(classEditor.context, classEditor.popup))
+        return classEditor.controller;
+
+    return -1;
+}
+
+void FinishClassEditIfClosed()
+{
+    if (!classEditor.context || GetClassEditorController() >= 0)
+        return;
+
+    const int controller = classEditor.controller;
+    const int previousProfile = classEditor.previousProfile;
+    classEditor = ClassEditor();
+    if (controllerStatData[controller].statWriteNeeded)
+        SaveStats(controller);
+    if (previousProfile != controller)
+        GamerProfile_UpdateDvarsFromProfile(previousProfile);
+}
+
+void ClassEditorInput_Hook(int localClientNum, int controllerIndex, int key, int down, unsigned int time)
+{
+    FinishClassEditIfClosed();
+    const int editor = GetClassEditorController();
+    if (editor >= 0 && down && editor != controllerIndex)
+        return;
+
+    const int previousInput = inputController;
+    inputController = down ? controllerIndex : -1;
+    ClassEditorInput_Detour.GetOriginal<decltype(CL_GamepadButtonEvent)>()(localClientNum, controllerIndex, key, down,
+                                                                        time);
+    inputController = previousInput;
+    FinishClassEditIfClosed();
+}
+
+int ClassEditorGetStat_Hook(int controllerIndex, int stat)
+{
+    // TU4 stat(), statRangeAnyBitsSet(), and the two menu stat bitmask commands.
+    const auto caller = reinterpret_cast<uintptr_t>(_ReturnAddress());
+    if (caller == 0x821F6D20 || caller == 0x821F6C6C || caller == 0x821E7B8C || caller == 0x821E7C0C)
+    {
+        const int editor = GetClassEditorController();
+        if (editor >= 0)
+            controllerIndex = editor;
+    }
+    return ClassEditorGetStat_Detour.GetOriginal<decltype(LiveStorage_GetStat)>()(controllerIndex, stat);
+}
+
+void ClassEditorSetStat_Hook(int controllerIndex, int stat, unsigned int value)
+{
+    // TU4 menu statClearBitMask, statSetBitMask, and statSetUsingTable.
+    const auto caller = reinterpret_cast<uintptr_t>(_ReturnAddress());
+    if (caller == 0x821E7BA0 || caller == 0x821E7C20 || caller == 0x821E7E90)
+    {
+        const int editor = GetClassEditorController();
+        if (editor >= 0)
+            controllerIndex = editor;
+    }
+    ClassEditorSetStat_Detour.GetOriginal<LiveStorage_SetStat_t>()(controllerIndex, stat, value);
+}
+
+int ClassEditorCommand_Hook(int localClientNum, int controllerIndex, const char *command)
+{
+    const auto execute = ClassEditorCommand_Detour.GetOriginal<decltype(Cmd_ExecuteSingleCommand)>();
+    const int editor = localClientNum == 0 ? GetClassEditorController() : -1;
+    if (editor < 0)
+        return execute(localClientNum, controllerIndex, command);
+
+    if (Equals(command, "updategamerprofile"))
+    {
+        // The stock command defaults to the last input port unless passed an explicit controller.
+        char update[] = "updategamerprofile 0";
+        update[sizeof(update) - 2] += static_cast<char>(editor);
+        return execute(localClientNum, editor, update);
+    }
+
+    if (I_strnicmp(command, "statset ", 8) == 0 || I_strnicmp(command, "statGetInDvar ", 14) == 0 ||
+        I_strnicmp(command, "ui_keyboard ", 12) == 0 || Equals(command, "uploadstats"))
+        controllerIndex = editor;
+
+    return execute(localClientNum, controllerIndex, command);
+}
+
+void ClassEditorQueue_Hook(int localClientNum, const char *text)
+{
+    const int editor = localClientNum == 0 ? GetClassEditorController() : -1;
+    // The stock slot popup queues these after opening the editor. Bind the write before the
+    // popup can close in the same frame and leave the command running under the lobby profile.
+    if (editor >= 0 && (Equals(text, "statset 210 1\n") || Equals(text, "statset 220 1\n") ||
+                        Equals(text, "statset 230 1\n") || Equals(text, "statset 240 1\n")))
+    {
+        Cmd_ExecuteSingleCommand(localClientNum, editor, text);
+        return;
+    }
+    ClassEditorQueue_Detour.GetOriginal<decltype(Cbuf_AddText)>()(localClientNum, text);
+}
+
+void *ClassEditorKeyboardComplete_Hook(int controllerIndex)
+{
+    const int editor = GetClassEditorController();
+    return ClassEditorKeyboardComplete_Detour.GetOriginal<decltype(CL_GuideKeyboardComplete)>()(
+        editor >= 0 ? editor : controllerIndex);
+}
+
+void CL_CheckForResend_Hook(int localClientNum)
+{
+    // The stock sender snapshots controller stats here, before the class menu opens.
+    if (IsValidControllerIndex(localClientNum) && clientUIActives[localClientNum].connectionState == CA_SENDINGSTATS)
+        Stats::EnsureOfflineStats(localClientNum);
+
+    CL_CheckForResend_Detour.GetOriginal<decltype(CL_CheckForResend)>()(localClientNum);
+}
+
 void LiveStorage_ReadStats_Hook(unsigned int controllerIndex)
 {
     if (!IsSignedInToLive(controllerIndex))
@@ -513,7 +705,7 @@ void LiveStorage_ReadStats_Hook(unsigned int controllerIndex)
 
 void LiveStorage_UploadStats_Hook(unsigned int controllerIndex)
 {
-    if (IsOfflineGame())
+    if (IsOfflineGame() || GetClassEditorController() == static_cast<int>(controllerIndex))
     {
         SaveStats(controllerIndex);
         return;
@@ -523,19 +715,43 @@ void LiveStorage_UploadStats_Hook(unsigned int controllerIndex)
 }
 } // namespace
 
+void Stats::BeginSplitScreenClassEdit(UiContext *dc)
+{
+    FinishClassEditIfClosed();
+    if (classEditor.context || dc->localClientNum != 0 || clientUIActives[0].connectionState != CA_DISCONNECTED ||
+        !IsMenuOnStack(dc, Menus_FindByName(dc, "menu_gamesetup_splitscreen")))
+        return;
+
+    const int controller = inputController >= 0 ? inputController : CL_ControllerIndexFromClientNum(0);
+    auto *popup = Menus_FindByName(dc, "live_cac_popup");
+    if (!popup || !IsValidControllerIndex(controller))
+        return;
+
+    if (!IsSignedInToLive(controller) && !controllerStatData[controller].statsFetched)
+        LoadOrInitializeStats(controller);
+
+    const int previousProfile = *cl_controller_in_use;
+    classEditor.context = dc;
+    classEditor.popup = popup;
+    classEditor.controller = controller;
+    classEditor.previousProfile = IsValidControllerIndex(previousProfile) ? previousProfile : 0;
+    GamerProfile_UpdateDvarsFromProfile(controller);
+}
+
 void Stats::EnsureOfflineStats(int localClientNum)
 {
     if (localClientNum < 0 || localClientNum >= 4 || !Dvar_GetBool("splitscreen") || Dvar_GetBool("onlinegame"))
         return;
 
     const int controllerIndex = CL_ControllerIndexFromClientNum(localClientNum);
-    if (!IsValidControllerIndex(controllerIndex) || IsSignedInToLive(controllerIndex) ||
-        controllerStatData[controllerIndex].statsFetched)
+    if (!IsValidControllerIndex(controllerIndex) || IsSignedInToLive(controllerIndex))
         return;
 
-    LoadOrInitializeStats(controllerIndex);
-    DbgPrint("[codxe][IW3][Stats] Prepared split-screen class stats: local client %i, controller %i, ready %i\n",
-             localClientNum, controllerIndex, controllerStatData[controllerIndex].statsFetched);
+    if (!controllerStatData[controllerIndex].statsFetched)
+        LoadOrInitializeStats(controllerIndex);
+
+    if (RestoreEmptyCustomClasses(controllerIndex))
+        SaveStats(controllerIndex);
 }
 
 void Stats::LoadStatsScript(int localClientNum, const char ** /*args*/)
@@ -565,6 +781,22 @@ Stats::Stats()
 
     LiveStorage_UploadStats_Detour = Detour(LiveStorage_UploadStats, LiveStorage_UploadStats_Hook);
     LiveStorage_UploadStats_Detour.Install();
+
+    CL_CheckForResend_Detour = Detour(CL_CheckForResend, CL_CheckForResend_Hook);
+    CL_CheckForResend_Detour.Install();
+
+    ClassEditorInput_Detour = Detour(CL_GamepadButtonEvent, ClassEditorInput_Hook);
+    ClassEditorInput_Detour.Install();
+    ClassEditorGetStat_Detour = Detour(LiveStorage_GetStat, ClassEditorGetStat_Hook);
+    ClassEditorGetStat_Detour.Install();
+    ClassEditorSetStat_Detour = Detour(LiveStorage_SetStat, ClassEditorSetStat_Hook);
+    ClassEditorSetStat_Detour.Install();
+    ClassEditorCommand_Detour = Detour(Cmd_ExecuteSingleCommand, ClassEditorCommand_Hook);
+    ClassEditorCommand_Detour.Install();
+    ClassEditorQueue_Detour = Detour(Cbuf_AddText, ClassEditorQueue_Hook);
+    ClassEditorQueue_Detour.Install();
+    ClassEditorKeyboardComplete_Detour = Detour(CL_GuideKeyboardComplete, ClassEditorKeyboardComplete_Hook);
+    ClassEditorKeyboardComplete_Detour.Install();
 }
 } // namespace mp
 } // namespace iw3

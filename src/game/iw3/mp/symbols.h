@@ -41,6 +41,8 @@ static auto AngleNormalize360 = reinterpret_cast<float (*)(float angle)>(0x821D9
 static auto Cbuf_AddText = reinterpret_cast<void (*)(int localClientNum, const char *text)>(0x82239FD0);
 static auto Cbuf_ExecuteBuffer =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, const char *buffer)>(0x8223AAE8);
+static auto Cmd_ExecuteSingleCommand =
+    reinterpret_cast<int (*)(int localClientNum, int controllerIndex, const char *text)>(0x8223A7A0);
 
 typedef void (*CG_DrawActive_t)(int localClientNum);
 static CG_DrawActive_t CG_DrawActive = reinterpret_cast<CG_DrawActive_t>(0x8231E6E0);
@@ -61,6 +63,7 @@ static Field_AdjustScroll_t Field_AdjustScroll = reinterpret_cast<Field_AdjustSc
 static auto CL_GamepadButtonEvent =
     reinterpret_cast<void (*)(int localClientNum, int controllerIndex, int key, int down, unsigned int time)>(
         0x822DD1E8);
+static auto CL_GuideKeyboardComplete = reinterpret_cast<void *(*)(int controllerIndex)>(0x822C8F28);
 
 typedef int (*CL_ControllerIndexFromClientNum_t)(int localClientNum);
 static CL_ControllerIndexFromClientNum_t CL_ControllerIndexFromClientNum =
@@ -161,7 +164,8 @@ typedef void (*Item_ListBox_SetCursorPos_t)(int localClientNum, itemDef_s *item,
 static Item_ListBox_SetCursorPos_t Item_ListBox_SetCursorPos =
     reinterpret_cast<Item_ListBox_SetCursorPos_t>(0x821E0BE8);
 
-static auto Menus_OpenByName = reinterpret_cast<void (*)(UiContext *dc, const char *menuName)>(0x821E5B38);
+static auto Menus_FindByName = reinterpret_cast<menuDef_t *(*)(UiContext *dc, const char *menuName)>(0x821DE230);
+static auto Menus_OpenByName = reinterpret_cast<int (*)(UiContext *dc, const char *menuName)>(0x821E5B38);
 
 typedef void (*Party_SetDisplayMapName_t)(const char *rawMapName);
 static Party_SetDisplayMapName_t Party_SetDisplayMapName = reinterpret_cast<Party_SetDisplayMapName_t>(0x822BFAB8);
@@ -296,6 +300,8 @@ typedef void (*UI_RunMenuScript_t)(int localClientNum, const char **args, const 
 static UI_RunMenuScript_t UI_RunMenuScript = reinterpret_cast<UI_RunMenuScript_t>(0x821F0418);
 static auto UI_SafeTranslateString = reinterpret_cast<const char *(*)(char *reference)>(0x821ECA78);
 static auto UI_GetMapDisplayName = reinterpret_cast<const char *(*)(const char *mapName)>(0x821ED5A8);
+static auto UILocalVar_FindOrCreate = reinterpret_cast<UILocalVar *(*)(UILocalVarContext *, const char *)>(0x821F3638);
+static auto UILocalVar_SetString = reinterpret_cast<void (*)(UILocalVar *, const char *)>(0x821F3720);
 
 static auto va = reinterpret_cast<char *(*)(char *format, ...)>(0x821CD858);
 
@@ -354,11 +360,15 @@ static LiveStorage_ReadStats_t LiveStorage_ReadStats = reinterpret_cast<LiveStor
 typedef void (*LiveStorage_ResetStats_t)(int controllerIndex);
 static LiveStorage_ResetStats_t LiveStorage_ResetStats = reinterpret_cast<LiveStorage_ResetStats_t>(0x821A2C48);
 
+static auto LiveStorage_GetStat = reinterpret_cast<int (*)(int controllerIndex, int index)>(0x821A2430);
+
 typedef void (*LiveStorage_SetStat_t)(int controllerIndex, int index, unsigned int value);
 static LiveStorage_SetStat_t LiveStorage_SetStat = reinterpret_cast<LiveStorage_SetStat_t>(0x821A29D8);
 
 typedef void (*LiveStorage_UploadStats_t)(unsigned int controllerIndex);
 static LiveStorage_UploadStats_t LiveStorage_UploadStats = reinterpret_cast<LiveStorage_UploadStats_t>(0x821A2508);
+static auto CL_CheckForResend = reinterpret_cast<void (*)(int localClientNum)>(0x822D1870);
+static auto GamerProfile_UpdateDvarsFromProfile = reinterpret_cast<void (*)(int controllerIndex)>(0x821B3BD8);
 
 typedef int (*String_Parse_t)(const char **p, char *out, int len);
 static String_Parse_t String_Parse = reinterpret_cast<String_Parse_t>(0x821E11D0);
@@ -553,6 +563,9 @@ typedef void (*Cmd_Init_t)();
 static Cmd_Init_t Cmd_Init = reinterpret_cast<Cmd_Init_t>(0x8223B228);
 
 // Variables
+static const int *cl_controller_in_use = reinterpret_cast<const int *>(0x850274B8);
+static const auto gamerSettings = reinterpret_cast<const GamerSettingState *>(0x84C01908);
+
 typedef playerStatNetworkData *controllerStatData_t;
 static controllerStatData_t controllerStatData = reinterpret_cast<controllerStatData_t>(0x84C5E238);
 

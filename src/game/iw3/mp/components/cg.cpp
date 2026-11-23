@@ -111,19 +111,40 @@ const char *UI_SafeTranslateString_Hook(char *reference)
 
 Detour Menus_OpenByName_Detour;
 
-void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
+void SetSplitScreenClassNames(UiContext *dc)
+{
+    const unsigned int controllerIndex = CL_ControllerIndexFromClientNum(dc->localClientNum);
+    if (controllerIndex >= 4)
+        return;
+
+    const auto &names = gamerSettings[controllerIndex].customClass;
+    for (size_t slot = 0; slot < ARRAYSIZE(names); ++slot)
+    {
+        char variable[] = "codxe_class_name1";
+        char defaultName[] = "@CLASS_SLOT1";
+        variable[sizeof(variable) - 2] += static_cast<char>(slot);
+        defaultName[sizeof(defaultName) - 2] += static_cast<char>(slot);
+        const char *name = names[slot];
+        UILocalVar_SetString(UILocalVar_FindOrCreate(&dc->localVars, variable), *name ? name : defaultName);
+    }
+}
+
+int Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 {
     // Unfetched stat reads open "Downloading game settings" on local client 0.
     // Prepare each player before team/class menu activation evaluates stat expressions.
     if (dc && (strncmp(menuName, "changeclass", 11) == 0 || strcmp(menuName, "team_marinesopfor_splitscreen") == 0))
         Stats::EnsureOfflineStats(dc->localClientNum);
 
-    if (strcmp(menuName, "settings_map_splitscreen") == 0)
-        // Splitscreen map list only contains a subset of maps
-        // Opening the full map settings menu allows selecting any map
-        Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, "settings_map");
-    else
-        Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+    if (dc && strcmp(menuName, "changeclass_splitscreen") == 0)
+        SetSplitScreenClassNames(dc);
+
+    if (dc && strcmp(menuName, "live_cac_popup") == 0)
+        Stats::BeginSplitScreenClassEdit(dc);
+
+    // The full map menu exposes maps missing from the split-screen list.
+    const char *targetMenu = strcmp(menuName, "settings_map_splitscreen") == 0 ? "settings_map" : menuName;
+    const int opened = Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, targetMenu);
 
     // Increase the maximum number of clients in xboxlive private match and systemlink from 18 > 24
     if (strcmp(menuName, "menu_xboxlive_privatelobby") == 0)
@@ -134,6 +155,8 @@ void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
     {
         Cbuf_AddText(0, "set sv_maxclients 24");
     }
+
+    return opened;
 }
 
 static const float colorWhiteRGBA[4] = {1.0f, 1.0f, 1.0f, 1.0f};

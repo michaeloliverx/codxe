@@ -1,3 +1,9 @@
+// The preset table and the selected controller's saved classes share the same field IDs.
+#define CLASS_VALUE(field) \
+    int(stat(localvarint("codxe_class_preview_base") + field) * localvarint("codxe_class_preview_custom") + \
+        int(tablelookup("mp/classTable.csv", 1, localvarint("codxe_class_preview_base") + field, 5)) * \
+        (1 - localvarint("codxe_class_preview_custom")))
+
 {
     menuDef
     {
@@ -6,10 +12,11 @@
         borderSize                  1
         focuscolor                  1 1 1 1
         blurWorld                   7
-        legacySplitScreenScale
         onOpen
         {
-            execNow "statGetInDvar 2301 ui_stat_rankxp";
+            setLocalVarInt codxe_class_preview_base 200;
+            setLocalVarInt codxe_class_preview_custom 0;
+            focusFirst;
         }
         onESC
         {
@@ -31,7 +38,7 @@
         }
         itemDef
         {
-            rect                        0 0 854 75 4 0
+            rect                        0 0 640 75 4 4
             style                       3
             decoration
             borderSize                  1
@@ -41,7 +48,7 @@
         }
         itemDef
         {
-            rect                        0 405 854 75 4 0
+            rect                        0 405 640 75 4 4
             style                       3
             decoration
             borderSize                  1
@@ -51,7 +58,7 @@
         }
         itemDef
         {
-            rect                        48 40 0 0 0 0
+            rect                        -260 25 0 0 2 1
             decoration
             borderSize                  1
             visible                     1
@@ -61,72 +68,6 @@
             textfont                    1
             forecolor                   1 0.8 0.4 1
             exp text                    ("@MPUI_CHOOSE_CLASS_CAP");
-        }
-        itemDef
-        {
-            rect                        -120 0 420 68 0 0
-            style                       3
-            decoration
-            borderSize                  1
-            visible                     when(1);
-            textscale                   0.55
-            forecolor                   0.9 0.9 0.95 0.175
-            background                  "white"
-        }
-        itemDef
-        {
-            rect                        300 0 16 -68 0 0
-            style                       3
-            decoration
-            borderSize                  1
-            visible                     when(1);
-            textscale                   0.55
-            forecolor                   0.9 0.9 0.95 0.175
-            background                  "button_highlight_end"
-        }
-        itemDef
-        {
-            rect                        -120 414 1200 64 0 0
-            style                       3
-            decoration
-            borderSize                  1
-            visible                     when(1 && 0);
-            textscale                   0.55
-            forecolor                   0.9 0.9 0.95 0.175
-            background                  "white"
-        }
-        itemDef
-        {
-            rect                        -120 416 420 64 0 0
-            style                       3
-            decoration
-            borderSize                  1
-            visible                     when(1 && (0 == 0));
-            textscale                   0.55
-            forecolor                   0.9 0.9 0.95 0.175
-            background                  "white"
-        }
-        itemDef
-        {
-            rect                        300 416 16 64 0 0
-            style                       3
-            decoration
-            borderSize                  1
-            visible                     when(1 && (0 == 0));
-            textscale                   0.55
-            forecolor                   0.9 0.9 0.95 0.175
-            background                  "button_highlight_end"
-        }
-        itemDef
-        {
-            rect                        316 432 440 64 0 0
-            style                       3
-            decoration
-            borderSize                  1
-            visible                     when(1 && (0 == 0));
-            textscale                   0.55
-            forecolor                   0.9 0.9 0.95 0.175
-            background                  "white"
         }
         itemDef
         {
@@ -236,7 +177,7 @@
         }
         itemDef
         {
-            rect                        10 58 128 128 1 1
+            rect                        -250 58 128 128 2 1
             style                       3
             decoration
             borderSize                  1
@@ -247,7 +188,7 @@
         }
         itemDef
         {
-            rect                        10 58 128 128 1 1
+            rect                        -250 58 128 128 2 1
             style                       3
             decoration
             borderSize                  1
@@ -258,7 +199,7 @@
         }
         itemDef
         {
-            rect                        10 58 128 128 1 1
+            rect                        -250 58 128 128 2 1
             style                       3
             decoration
             borderSize                  1
@@ -269,7 +210,7 @@
         }
         itemDef
         {
-            rect                        10 58 128 128 1 1
+            rect                        -250 58 128 128 2 1
             style                       3
             decoration
             borderSize                  1
@@ -280,7 +221,7 @@
         }
         itemDef
         {
-            rect                        10 196 128 128 1 1
+            rect                        -250 196 128 128 2 1
             decoration
             borderSize                  1
             visible                     when(team("name") == "TEAM_ALLIES");
@@ -292,7 +233,7 @@
         }
         itemDef
         {
-            rect                        10 196 128 128 1 1
+            rect                        -250 196 128 128 2 1
             decoration
             borderSize                  1
             visible                     when(team("name") == "TEAM_FREE" && localvarstring("ui_team") == "marines");
@@ -304,7 +245,7 @@
         }
         itemDef
         {
-            rect                        10 196 128 128 1 1
+            rect                        -250 196 128 128 2 1
             decoration
             borderSize                  1
             visible                     when(team("name") == "TEAM_AXIS");
@@ -316,7 +257,7 @@
         }
         itemDef
         {
-            rect                        10 196 128 128 1 1
+            rect                        -250 196 128 128 2 1
             decoration
             borderSize                  1
             visible                     when(team("name") == "TEAM_FREE" && localvarstring("ui_team") == "opfor");
@@ -328,7 +269,7 @@
         }
         itemDef
         {
-            rect                        0 41 240 0.5 1 1
+            rect                        -260 41 240 0.5 2 1
             style                       3
             decoration
             borderSize                  1
@@ -339,7 +280,7 @@
         }
         itemDef
         {
-            rect                        20 42 200 10 1 1
+            rect                        -240 42 200 10 2 1
             style                       3
             decoration
             borderSize                  1
@@ -350,7 +291,7 @@
         }
         itemDef
         {
-            rect                        0 53 240 0.5 1 1
+            rect                        -260 53 240 0.5 2 1
             style                       3
             decoration
             borderSize                  1
@@ -361,7 +302,7 @@
         }
         itemDef
         {
-            rect                        0 33 240 24 1 1
+            rect                        -260 33 240 24 2 1
             decoration
             borderSize                  1
             visible                     1
@@ -374,7 +315,7 @@
         }
         itemDef
         {
-            rect                        0 58 218.5 22 1 1
+            rect                        -260 58 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -385,7 +326,7 @@
         }
         itemDef
         {
-            rect                        218.5 58 5.5 22 1 1
+            rect                        -41.5 58 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -396,7 +337,7 @@
         }
         itemDef
         {
-            rect                        0 58 218.5 22 1 1
+            rect                        -260 58 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -408,7 +349,7 @@
         }
         itemDef
         {
-            rect                        218.5 58 5.5 22 1 1
+            rect                        -41.5 58 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -420,7 +361,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 59 224 22 1 1
+            rect                        -264 59 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 2 && localvarstring("ui_choicegroup") == "" && 1);
@@ -431,7 +372,7 @@
         }
         itemDef
         {
-            rect                        0 58 224 22 1 1
+            rect                        -260 58 224 22 2 1
             type                        1
             borderSize                  1
             visible                     1
@@ -446,7 +387,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 2;
                 setLocalVarString ui_choicegroup "";
-                execnow "set ui_class_offset 200; set ui_multi_s 1000; set ui_multi_dt 0";
+                setLocalVarInt codxe_class_preview_base 200;
+                setLocalVarInt codxe_class_preview_custom 0;
             }
             leaveFocus
             {
@@ -462,7 +404,7 @@
         }
         itemDef
         {
-            rect                        0 82 218.5 22 1 1
+            rect                        -260 82 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -473,7 +415,7 @@
         }
         itemDef
         {
-            rect                        218.5 82 5.5 22 1 1
+            rect                        -41.5 82 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -484,7 +426,7 @@
         }
         itemDef
         {
-            rect                        0 82 218.5 22 1 1
+            rect                        -260 82 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -496,7 +438,7 @@
         }
         itemDef
         {
-            rect                        218.5 82 5.5 22 1 1
+            rect                        -41.5 82 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -508,7 +450,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 83 224 22 1 1
+            rect                        -264 83 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 3 && localvarstring("ui_choicegroup") == "" && 1);
@@ -519,7 +461,7 @@
         }
         itemDef
         {
-            rect                        0 82 224 22 1 1
+            rect                        -260 82 224 22 2 1
             type                        1
             borderSize                  1
             visible                     1
@@ -534,7 +476,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 3;
                 setLocalVarString ui_choicegroup "";
-                execnow "set ui_class_offset 210; set ui_multi_s 1000; set ui_multi_dt 0";
+                setLocalVarInt codxe_class_preview_base 210;
+                setLocalVarInt codxe_class_preview_custom 0;
             }
             leaveFocus
             {
@@ -550,7 +493,7 @@
         }
         itemDef
         {
-            rect                        0 106 218.5 22 1 1
+            rect                        -260 106 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -561,7 +504,7 @@
         }
         itemDef
         {
-            rect                        218.5 106 5.5 22 1 1
+            rect                        -41.5 106 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -572,7 +515,7 @@
         }
         itemDef
         {
-            rect                        0 106 218.5 22 1 1
+            rect                        -260 106 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -584,7 +527,7 @@
         }
         itemDef
         {
-            rect                        218.5 106 5.5 22 1 1
+            rect                        -41.5 106 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -596,7 +539,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 107 224 22 1 1
+            rect                        -264 107 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 4 && localvarstring("ui_choicegroup") == "" && 1);
@@ -607,7 +550,7 @@
         }
         itemDef
         {
-            rect                        0 106 224 22 1 1
+            rect                        -260 106 224 22 2 1
             type                        1
             borderSize                  1
             visible                     1
@@ -622,7 +565,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 4;
                 setLocalVarString ui_choicegroup "";
-                execnow "set ui_class_offset 220; set ui_multi_s 1000; set ui_multi_dt 0";
+                setLocalVarInt codxe_class_preview_base 220;
+                setLocalVarInt codxe_class_preview_custom 0;
             }
             leaveFocus
             {
@@ -638,7 +582,7 @@
         }
         itemDef
         {
-            rect                        0 130 218.5 22 1 1
+            rect                        -260 130 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -649,7 +593,7 @@
         }
         itemDef
         {
-            rect                        218.5 130 5.5 22 1 1
+            rect                        -41.5 130 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -660,7 +604,7 @@
         }
         itemDef
         {
-            rect                        0 130 218.5 22 1 1
+            rect                        -260 130 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -672,7 +616,7 @@
         }
         itemDef
         {
-            rect                        218.5 130 5.5 22 1 1
+            rect                        -41.5 130 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -684,7 +628,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 131 224 22 1 1
+            rect                        -264 131 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 5 && localvarstring("ui_choicegroup") == "" && stat(257) >= 1);
@@ -695,7 +639,7 @@
         }
         itemDef
         {
-            rect                        0 130 224 22 1 1
+            rect                        -260 130 224 22 2 1
             type                        1
             borderSize                  1
             visible                     when(stat(257) >= 1);
@@ -710,7 +654,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 5;
                 setLocalVarString ui_choicegroup "";
-                execnow "set ui_class_offset 230; set ui_multi_s 1000; set ui_multi_dt 0";
+                setLocalVarInt codxe_class_preview_base 230;
+                setLocalVarInt codxe_class_preview_custom 0;
             }
             leaveFocus
             {
@@ -726,7 +671,7 @@
         }
         itemDef
         {
-            rect                        0 130 218.5 22 1 1
+            rect                        -260 130 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -737,7 +682,7 @@
         }
         itemDef
         {
-            rect                        218.5 130 5.5 22 1 1
+            rect                        -41.5 130 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -748,7 +693,7 @@
         }
         itemDef
         {
-            rect                        0 130 224 22 1 1
+            rect                        -260 130 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(stat(257) < 1);
@@ -762,7 +707,7 @@
         }
         itemDef
         {
-            rect                        226 132 44 22 1 1
+            rect                        -34 132 44 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -772,7 +717,7 @@
         }
         itemDef
         {
-            rect                        0 154 218.5 22 1 1
+            rect                        -260 154 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -783,7 +728,7 @@
         }
         itemDef
         {
-            rect                        218.5 154 5.5 22 1 1
+            rect                        -41.5 154 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -794,7 +739,7 @@
         }
         itemDef
         {
-            rect                        0 154 218.5 22 1 1
+            rect                        -260 154 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -806,7 +751,7 @@
         }
         itemDef
         {
-            rect                        218.5 154 5.5 22 1 1
+            rect                        -41.5 154 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -818,7 +763,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 155 224 22 1 1
+            rect                        -264 155 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 6 && localvarstring("ui_choicegroup") == "" && stat(258) >= 1);
@@ -829,7 +774,7 @@
         }
         itemDef
         {
-            rect                        0 154 224 22 1 1
+            rect                        -260 154 224 22 2 1
             type                        1
             borderSize                  1
             visible                     when(stat(258) >= 1);
@@ -844,7 +789,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 6;
                 setLocalVarString ui_choicegroup "";
-                execnow "set ui_class_offset 240; set ui_multi_s 1000; set ui_multi_dt 0";
+                setLocalVarInt codxe_class_preview_base 240;
+                setLocalVarInt codxe_class_preview_custom 0;
             }
             leaveFocus
             {
@@ -860,7 +806,7 @@
         }
         itemDef
         {
-            rect                        0 154 218.5 22 1 1
+            rect                        -260 154 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -871,7 +817,7 @@
         }
         itemDef
         {
-            rect                        218.5 154 5.5 22 1 1
+            rect                        -41.5 154 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -882,7 +828,7 @@
         }
         itemDef
         {
-            rect                        0 154 224 22 1 1
+            rect                        -260 154 224 22 2 1
             decoration
             borderSize                  1
             visible                     when((stat(258) < 1));
@@ -896,7 +842,7 @@
         }
         itemDef
         {
-            rect                        226 156 44 22 1 1
+            rect                        -34 156 44 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -906,7 +852,7 @@
         }
         itemDef
         {
-            rect                        0 209 240 0.5 1 1
+            rect                        -260 209 240 0.5 2 1
             style                       3
             decoration
             borderSize                  1
@@ -917,7 +863,7 @@
         }
         itemDef
         {
-            rect                        20 210 200 10 1 1
+            rect                        -240 210 200 10 2 1
             style                       3
             decoration
             borderSize                  1
@@ -928,7 +874,7 @@
         }
         itemDef
         {
-            rect                        0 221 240 0.5 1 1
+            rect                        -260 221 240 0.5 2 1
             style                       3
             decoration
             borderSize                  1
@@ -939,7 +885,7 @@
         }
         itemDef
         {
-            rect                        0 201 240 24 1 1
+            rect                        -260 201 240 24 2 1
             decoration
             borderSize                  1
             visible                     when(stat(260) > 0);
@@ -952,7 +898,7 @@
         }
         itemDef
         {
-            rect                        0 226 218.5 22 1 1
+            rect                        -260 226 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -963,7 +909,7 @@
         }
         itemDef
         {
-            rect                        218.5 226 5.5 22 1 1
+            rect                        -41.5 226 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -974,7 +920,7 @@
         }
         itemDef
         {
-            rect                        0 226 218.5 22 1 1
+            rect                        -260 226 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -986,7 +932,7 @@
         }
         itemDef
         {
-            rect                        218.5 226 5.5 22 1 1
+            rect                        -41.5 226 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -998,7 +944,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 227 224 22 1 1
+            rect                        -264 227 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 9 && localvarstring("ui_choicegroup") == "" && 1);
@@ -1009,7 +955,7 @@
         }
         itemDef
         {
-            rect                        0 226 224 22 1 1
+            rect                        -260 226 224 22 2 1
             type                        1
             borderSize                  1
             visible                     when(stat(260) > 0);
@@ -1024,8 +970,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 9;
                 setLocalVarString ui_choicegroup "";
-                setdvar ui_custom_class_highlighted 0;
-                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+                setLocalVarInt codxe_class_preview_base 200;
+                setLocalVarInt codxe_class_preview_custom 1;
             }
             leaveFocus
             {
@@ -1037,11 +983,11 @@
                 scriptMenuResponse "custom1,0";
                 close self;
             }
-            exp text                    (dvarstring("customclass1"));
+            exp text                    (localvarstring("codxe_class_name1"));
         }
         itemDef
         {
-            rect                        0 250 218.5 22 1 1
+            rect                        -260 250 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1052,7 +998,7 @@
         }
         itemDef
         {
-            rect                        218.5 250 5.5 22 1 1
+            rect                        -41.5 250 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1063,7 +1009,7 @@
         }
         itemDef
         {
-            rect                        0 250 218.5 22 1 1
+            rect                        -260 250 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -1075,7 +1021,7 @@
         }
         itemDef
         {
-            rect                        218.5 250 5.5 22 1 1
+            rect                        -41.5 250 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1087,7 +1033,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 251 224 22 1 1
+            rect                        -264 251 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 10 && localvarstring("ui_choicegroup") == "" && 1);
@@ -1098,7 +1044,7 @@
         }
         itemDef
         {
-            rect                        0 250 224 22 1 1
+            rect                        -260 250 224 22 2 1
             type                        1
             borderSize                  1
             visible                     when(stat(210) > 0);
@@ -1113,8 +1059,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 10;
                 setLocalVarString ui_choicegroup "";
-                setdvar ui_custom_class_highlighted 10;
-                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+                setLocalVarInt codxe_class_preview_base 210;
+                setLocalVarInt codxe_class_preview_custom 1;
             }
             leaveFocus
             {
@@ -1126,11 +1072,11 @@
                 scriptMenuResponse "custom2,0";
                 close self;
             }
-            exp text                    (dvarstring("customclass2"));
+            exp text                    (localvarstring("codxe_class_name2"));
         }
         itemDef
         {
-            rect                        0 274 218.5 22 1 1
+            rect                        -260 274 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1141,7 +1087,7 @@
         }
         itemDef
         {
-            rect                        218.5 274 5.5 22 1 1
+            rect                        -41.5 274 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1152,7 +1098,7 @@
         }
         itemDef
         {
-            rect                        0 274 218.5 22 1 1
+            rect                        -260 274 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -1164,7 +1110,7 @@
         }
         itemDef
         {
-            rect                        218.5 274 5.5 22 1 1
+            rect                        -41.5 274 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1176,7 +1122,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 275 224 22 1 1
+            rect                        -264 275 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 11 && localvarstring("ui_choicegroup") == "" && 1);
@@ -1187,7 +1133,7 @@
         }
         itemDef
         {
-            rect                        0 274 224 22 1 1
+            rect                        -260 274 224 22 2 1
             type                        1
             borderSize                  1
             visible                     when(stat(220) > 0);
@@ -1202,8 +1148,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 11;
                 setLocalVarString ui_choicegroup "";
-                setdvar ui_custom_class_highlighted 20;
-                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+                setLocalVarInt codxe_class_preview_base 220;
+                setLocalVarInt codxe_class_preview_custom 1;
             }
             leaveFocus
             {
@@ -1215,11 +1161,11 @@
                 scriptMenuResponse "custom3,0";
                 close self;
             }
-            exp text                    (dvarstring("customclass3"));
+            exp text                    (localvarstring("codxe_class_name3"));
         }
         itemDef
         {
-            rect                        0 298 218.5 22 1 1
+            rect                        -260 298 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1230,7 +1176,7 @@
         }
         itemDef
         {
-            rect                        218.5 298 5.5 22 1 1
+            rect                        -41.5 298 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1241,7 +1187,7 @@
         }
         itemDef
         {
-            rect                        0 298 218.5 22 1 1
+            rect                        -260 298 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -1253,7 +1199,7 @@
         }
         itemDef
         {
-            rect                        218.5 298 5.5 22 1 1
+            rect                        -41.5 298 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1265,7 +1211,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 299 224 22 1 1
+            rect                        -264 299 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 12 && localvarstring("ui_choicegroup") == "" && 1);
@@ -1276,7 +1222,7 @@
         }
         itemDef
         {
-            rect                        0 298 224 22 1 1
+            rect                        -260 298 224 22 2 1
             type                        1
             borderSize                  1
             visible                     when(stat(230) > 0);
@@ -1291,8 +1237,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 12;
                 setLocalVarString ui_choicegroup "";
-                setdvar ui_custom_class_highlighted 30;
-                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+                setLocalVarInt codxe_class_preview_base 230;
+                setLocalVarInt codxe_class_preview_custom 1;
             }
             leaveFocus
             {
@@ -1304,11 +1250,11 @@
                 scriptMenuResponse "custom4,0";
                 close self;
             }
-            exp text                    (dvarstring("customclass4"));
+            exp text                    (localvarstring("codxe_class_name4"));
         }
         itemDef
         {
-            rect                        0 322 218.5 22 1 1
+            rect                        -260 322 218.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1319,7 +1265,7 @@
         }
         itemDef
         {
-            rect                        218.5 322 5.5 22 1 1
+            rect                        -41.5 322 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1330,7 +1276,7 @@
         }
         itemDef
         {
-            rect                        0 322 218.5 22 1 1
+            rect                        -260 322 218.5 22 2 1
             style                       3
             decoration
             borderSize                  2
@@ -1342,7 +1288,7 @@
         }
         itemDef
         {
-            rect                        218.5 322 5.5 22 1 1
+            rect                        -41.5 322 5.5 22 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1354,7 +1300,7 @@
         itemDef
         {
             text                        "@PLATFORM_UI_SELECTBUTTON"
-            rect                        -4 323 224 22 1 1
+            rect                        -264 323 224 22 2 1
             decoration
             borderSize                  1
             visible                     when(localvarint("ui_highlight") == 13 && localvarstring("ui_choicegroup") == "" && 1);
@@ -1365,7 +1311,7 @@
         }
         itemDef
         {
-            rect                        0 322 224 22 1 1
+            rect                        -260 322 224 22 2 1
             type                        1
             borderSize                  1
             visible                     when(stat(240) > 0);
@@ -1380,8 +1326,8 @@
                 play mouse_over;
                 setLocalVarInt ui_highlight 13;
                 setLocalVarString ui_choicegroup "";
-                setdvar ui_custom_class_highlighted 40;
-                exec "set ui_multi_s 0; set ui_multi_dt 1000";
+                setLocalVarInt codxe_class_preview_base 240;
+                setLocalVarInt codxe_class_preview_custom 1;
             }
             leaveFocus
             {
@@ -1393,7 +1339,7 @@
                 scriptMenuResponse "custom5,0";
                 close self;
             }
-            exp text                    (dvarstring("customclass5"));
+            exp text                    (localvarstring("codxe_class_name5"));
         }
         itemDef
         {
@@ -1445,7 +1391,7 @@
         }
         itemDef
         {
-            rect                        -274 50 278 326 3 1
+            rect                        -14 50 278 326 2 1
             style                       3
             decoration
             visible                     1
@@ -1455,7 +1401,7 @@
         }
         itemDef
         {
-            rect                        -294 34 -20 342 3 1
+            rect                        -34 34 -20 342 2 1
             style                       3
             decoration
             visible                     1
@@ -1465,7 +1411,7 @@
         }
         itemDef
         {
-            rect                        4 34 20 358 3 1
+            rect                        264 34 20 358 2 1
             style                       3
             decoration
             visible                     1
@@ -1475,7 +1421,7 @@
         }
         itemDef
         {
-            rect                        -274 54 69.5 80 3 1
+            rect                        -14 54 69.5 80 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1483,11 +1429,11 @@
             textscale                   0.55
             forecolor                   1 1 1 0.5
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, CLASS_VALUE(9), 6));
         }
         itemDef
         {
-            rect                        -204.5 54 69.5 80 3 1
+            rect                        55.5 54 69.5 80 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1495,11 +1441,11 @@
             textscale                   0.55
             forecolor                   1 1 1 0.5
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, CLASS_VALUE(9), 6));
         }
         itemDef
         {
-            rect                        -135 54 69.5 80 3 1
+            rect                        125 54 69.5 80 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1507,11 +1453,11 @@
             textscale                   0.55
             forecolor                   1 1 1 0.5
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, CLASS_VALUE(9), 6));
         }
         itemDef
         {
-            rect                        -65.5 54 69.5 80 3 1
+            rect                        194.5 54 69.5 80 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1519,11 +1465,11 @@
             textscale                   0.55
             forecolor                   1 1 1 0.5
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/attachmenttable.csv", 11, int(min(stat(dvarint("ui_custom_class_highlighted") + 209) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 9), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/attachmenttable.csv", 11, CLASS_VALUE(9), 6));
         }
         itemDef
         {
-            rect                        -274 34 278 20 3 1
+            rect                        -14 34 278 20 2 1
             style                       3
             decoration
             visible                     1
@@ -1533,7 +1479,7 @@
         }
         itemDef
         {
-            rect                        -274 34 278 20 3 1
+            rect                        -14 34 278 20 2 1
             style                       3
             decoration
             visible                     1
@@ -1543,7 +1489,7 @@
         }
         itemDef
         {
-            rect                        -274 54 278 16 3 1
+            rect                        -14 54 278 16 2 1
             style                       3
             decoration
             visible                     when(1);
@@ -1553,7 +1499,7 @@
         }
         itemDef
         {
-            rect                        -274 18 278 16 3 1
+            rect                        -14 18 278 16 2 1
             style                       3
             decoration
             visible                     when(0);
@@ -1563,7 +1509,7 @@
         }
         itemDef
         {
-            rect                        -274 376 278 16 3 1
+            rect                        -14 376 278 16 2 1
             style                       3
             decoration
             visible                     1
@@ -1573,7 +1519,7 @@
         }
         itemDef
         {
-            rect                        -274 376 278 16 3 1
+            rect                        -14 376 278 16 2 1
             style                       3
             decoration
             visible                     1
@@ -1583,7 +1529,7 @@
         }
         itemDef
         {
-            rect                        -274 392 278 16 3 1
+            rect                        -14 392 278 16 2 1
             style                       3
             decoration
             visible                     when(0);
@@ -1593,7 +1539,7 @@
         }
         itemDef
         {
-            rect                        -274 360 278 16 3 1
+            rect                        -14 360 278 16 2 1
             style                       3
             decoration
             visible                     when(1);
@@ -1603,7 +1549,7 @@
         }
         itemDef
         {
-            rect                        -274 134 278 8 3 1
+            rect                        -14 134 278 8 2 1
             style                       3
             decoration
             visible                     1
@@ -1613,7 +1559,7 @@
         }
         itemDef
         {
-            rect                        -274 134 278 8 3 1
+            rect                        -14 134 278 8 2 1
             style                       3
             decoration
             visible                     1
@@ -1623,7 +1569,7 @@
         }
         itemDef
         {
-            rect                        -274 142 278 16 3 1
+            rect                        -14 142 278 16 2 1
             style                       3
             decoration
             visible                     when(1);
@@ -1633,7 +1579,7 @@
         }
         itemDef
         {
-            rect                        -274 118 278 16 3 1
+            rect                        -14 118 278 16 2 1
             style                       3
             decoration
             visible                     when(1);
@@ -1643,7 +1589,7 @@
         }
         itemDef
         {
-            rect                        -274 222 278 16 3 1
+            rect                        -14 222 278 16 2 1
             style                       3
             decoration
             visible                     1
@@ -1653,7 +1599,7 @@
         }
         itemDef
         {
-            rect                        -274 222 278 16 3 1
+            rect                        -14 222 278 16 2 1
             style                       3
             decoration
             visible                     1
@@ -1663,7 +1609,7 @@
         }
         itemDef
         {
-            rect                        -274 238 278 16 3 1
+            rect                        -14 238 278 16 2 1
             style                       3
             decoration
             visible                     when(1);
@@ -1673,7 +1619,7 @@
         }
         itemDef
         {
-            rect                        -274 206 278 16 3 1
+            rect                        -14 206 278 16 2 1
             style                       3
             decoration
             visible                     when(1);
@@ -1683,7 +1629,7 @@
         }
         itemDef
         {
-            rect                        -274 219 278 20 3 1
+            rect                        -14 219 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1696,7 +1642,7 @@
         }
         itemDef
         {
-            rect                        -274 34 278 20 3 1
+            rect                        -14 34 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1709,7 +1655,7 @@
         }
         itemDef
         {
-            rect                        -270 58 278 20 3 1
+            rect                        -10 58 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1718,11 +1664,11 @@
             textscale                   0.4583
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 201) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 1), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, CLASS_VALUE(1), 3));
         }
         itemDef
         {
-            rect                        -270 112 278 20 3 1
+            rect                        -10 112 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1731,33 +1677,33 @@
             textscale                   0.375
             textstyle                   3
             forecolor                   0.69 0.69 0.69 1
-            exp text                    ("@" + tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 202) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 2), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/attachmenttable.csv", 9, CLASS_VALUE(2), 3));
         }
         itemDef
         {
-            rect                        -196 48 180 90 3 1
+            rect                        64 48 180 90 2 1
             style                       3
             decoration
             borderSize                  1
             visible                     1
             textscale                   0.55
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 201) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 1), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/statstable.csv", 0, CLASS_VALUE(1), 6));
         }
         itemDef
         {
-            rect                        -268 80 32 32 3 1
+            rect                        -8 80 32 32 2 1
             style                       3
             decoration
             borderSize                  1
             visible                     1
             textscale                   0.55
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 202) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 2), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/attachmenttable.csv", 9, CLASS_VALUE(2), 6));
         }
         itemDef
         {
-            rect                        -270 146 278 20 3 1
+            rect                        -10 146 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1766,11 +1712,11 @@
             textscale                   0.4583
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 203) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 3), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, CLASS_VALUE(3), 3));
         }
         itemDef
         {
-            rect                        -270 200 278 20 3 1
+            rect                        -10 200 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1779,72 +1725,72 @@
             textscale                   0.375
             textstyle                   3
             forecolor                   0.69 0.69 0.69 1
-            exp text                    ("@" + tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 204) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 4), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/attachmenttable.csv", 9, CLASS_VALUE(4), 3));
         }
         itemDef
         {
-            rect                        -196 136 180 90 3 1
+            rect                        64 136 180 90 2 1
             style                       3
             decoration
             borderSize                  1
-            visible                     when("specialty_twoprimaries" == tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 4));
+            visible                     when("specialty_twoprimaries" == tablelookup("mp/statstable.csv", 1, CLASS_VALUE(6), 4));
             textscale                   0.55
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 203) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 3), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/statstable.csv", 0, CLASS_VALUE(3), 6));
         }
         itemDef
         {
-            rect                        -110 136 90 90 3 1
+            rect                        150 136 90 90 2 1
             style                       3
             decoration
             borderSize                  1
-            visible                     when("specialty_twoprimaries" != tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 4));
+            visible                     when("specialty_twoprimaries" != tablelookup("mp/statstable.csv", 1, CLASS_VALUE(6), 4));
             textscale                   0.55
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 203) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 3), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/statstable.csv", 0, CLASS_VALUE(3), 6));
         }
         itemDef
         {
-            rect                        -268 168 32 32 3 1
+            rect                        -8 168 32 32 2 1
             style                       3
             decoration
             borderSize                  1
             visible                     1
             textscale                   0.55
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/attachmenttable.csv", 9, int(min(stat(dvarint("ui_custom_class_highlighted") + 204) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 4), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/attachmenttable.csv", 9, CLASS_VALUE(4), 6));
         }
         itemDef
         {
-            rect                        -234 244 278 20 3 1
+            rect                        26 244 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) != "specialty_specialgrenade");
             textalign                   8
             textaligny                  -2
             textscale                   0.375
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 3));
         }
         itemDef
         {
-            rect                        -234 244 278 20 3 1
+            rect                        26 244 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_specialgrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) == "specialty_specialgrenade");
             textalign                   8
             textaligny                  -2
             textscale                   0.375
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@PERKS_3X_" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 208) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 8), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@PERKS_3X_" + tablelookup("mp/statstable.csv", 0, CLASS_VALUE(8), 3));
         }
         itemDef
         {
-            rect                        -270 244 32 32 3 1
+            rect                        -10 244 32 32 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1852,11 +1798,11 @@
             textscale                   0.55
             forecolor                   1 1 1 0.65
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 6));
         }
         itemDef
         {
-            rect                        -274 278 278 1 3 1
+            rect                        -14 278 278 1 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1868,7 +1814,7 @@
         }
         itemDef
         {
-            rect                        -238 260 14 14 3 1
+            rect                        22 260 14 14 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1880,7 +1826,7 @@
         }
         itemDef
         {
-            rect                        -222 259 278 20 3 1
+            rect                        38 259 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1890,11 +1836,11 @@
             textscale                   0.375
             textstyle                   3
             forecolor                   0.69 0.69 0.69 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 7));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 7));
         }
         itemDef
         {
-            rect                        -234 280 278 20 3 1
+            rect                        26 280 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1904,11 +1850,11 @@
             textscale                   0.375
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, CLASS_VALUE(6), 3));
         }
         itemDef
         {
-            rect                        -270 280 32 32 3 1
+            rect                        -10 280 32 32 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1916,11 +1862,11 @@
             textscale                   0.55
             forecolor                   1 1 1 0.65
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/statstable.csv", 1, CLASS_VALUE(6), 6));
         }
         itemDef
         {
-            rect                        -274 314 278 1 3 1
+            rect                        -14 314 278 1 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1932,7 +1878,7 @@
         }
         itemDef
         {
-            rect                        -238 296 14 14 3 1
+            rect                        22 296 14 14 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1944,7 +1890,7 @@
         }
         itemDef
         {
-            rect                        -222 295 278 20 3 1
+            rect                        38 295 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1954,11 +1900,11 @@
             textscale                   0.375
             textstyle                   3
             forecolor                   0.69 0.69 0.69 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 206) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 6), 5)) + dvarint("ui_multi_dt"))), 7));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, CLASS_VALUE(6), 7));
         }
         itemDef
         {
-            rect                        -234 316 278 20 3 1
+            rect                        26 316 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -1968,11 +1914,11 @@
             textscale                   0.375
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 207) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 7), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, CLASS_VALUE(7), 3));
         }
         itemDef
         {
-            rect                        -270 316 32 32 3 1
+            rect                        -10 316 32 32 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1980,11 +1926,11 @@
             textscale                   0.55
             forecolor                   1 1 1 0.65
             bordercolor                 1 1 1 1
-            exp material                (tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 207) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 7), 5)) + dvarint("ui_multi_dt"))), 6));
+            exp material                (tablelookup("mp/statstable.csv", 1, CLASS_VALUE(7), 6));
         }
         itemDef
         {
-            rect                        -274 350 278 1 3 1
+            rect                        -14 350 278 1 2 1
             style                       3
             decoration
             borderSize                  1
@@ -1996,7 +1942,7 @@
         }
         itemDef
         {
-            rect                        -238 332 14 14 3 1
+            rect                        22 332 14 14 2 1
             style                       3
             decoration
             borderSize                  1
@@ -2008,7 +1954,7 @@
         }
         itemDef
         {
-            rect                        -222 331 278 20 3 1
+            rect                        38 331 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
@@ -2018,28 +1964,28 @@
             textscale                   0.375
             textstyle                   3
             forecolor                   0.69 0.69 0.69 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 207) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 7), 5)) + dvarint("ui_multi_dt"))), 7));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 1, CLASS_VALUE(7), 7));
         }
         itemDef
         {
-            rect                        -234 352 278 20 3 1
+            rect                        26 352 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_fraggrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) != "specialty_fraggrenade");
             textalign                   8
             textscale                   0.375
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@PERKS_FRAG_1_" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 208) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 8), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@PERKS_FRAG_1_" + tablelookup("mp/statstable.csv", 0, CLASS_VALUE(8), 3));
         }
         itemDef
         {
-            rect                        -234 352 278 20 3 1
+            rect                        26 352 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_specialgrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) == "specialty_specialgrenade");
             textalign                   8
             textscale                   0.375
             textstyle                   3
@@ -2048,57 +1994,57 @@
         }
         itemDef
         {
-            rect                        -234 352 278 20 3 1
+            rect                        26 352 278 20 2 1
             decoration
             autowrapped
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_fraggrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) == "specialty_fraggrenade");
             textalign                   8
             textscale                   0.375
             textstyle                   3
             forecolor                   1 0.8 0.4 1
-            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, int(min(stat(dvarint("ui_custom_class_highlighted") + 208) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 8), 5)) + dvarint("ui_multi_dt"))), 3));
+            exp text                    ("@" + tablelookup("mp/statstable.csv", 0, CLASS_VALUE(8), 3));
         }
         itemDef
         {
-            rect                        -270 347 32 32 3 1
+            rect                        -10 347 32 32 2 1
             style                       3
             decoration
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_specialgrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) == "specialty_specialgrenade");
             textscale                   0.55
             bordercolor                 1 1 1 1
             exp material                ("weapon_fraggrenade");
         }
         itemDef
         {
-            rect                        -270 347 32 32 3 1
+            rect                        -10 347 32 32 2 1
             style                       3
             decoration
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) == "specialty_fraggrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) == "specialty_fraggrenade");
             textscale                   0.55
             bordercolor                 1 1 1 1
             exp material                ("weapon_smokegrenade");
         }
         itemDef
         {
-            rect                        -276 347 32 32 3 1
+            rect                        -16 347 32 32 2 1
             style                       3
             decoration
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_fraggrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) != "specialty_fraggrenade");
             textscale                   0.55
             bordercolor                 1 1 1 1
             exp material                ("weapon_fraggrenade");
         }
         itemDef
         {
-            rect                        -262 347 32 32 3 1
+            rect                        -2 347 32 32 2 1
             style                       3
             decoration
             borderSize                  1
-            visible                     when(tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, int(min(stat(dvarint("ui_custom_class_highlighted") + 205) + dvarint("ui_multi_s"), int(tablelookup("mp/classTable.csv", 1, (dvarint("ui_class_offset") + 5), 5)) + dvarint("ui_multi_dt"))), 4) != "specialty_fraggrenade");
+            visible                     when(tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) != "specialty_specialgrenade" && tablelookup("mp/statstable.csv", 1, CLASS_VALUE(5), 4) != "specialty_fraggrenade");
             textscale                   0.55
             bordercolor                 1 1 1 1
             exp material                ("weapon_smokegrenade");

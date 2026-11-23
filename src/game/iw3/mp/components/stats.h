@@ -12,6 +12,7 @@ class Stats : public Module
     Stats();
 
     static void EnsureOfflineStats(int localClientNum);
+    static void BeginSplitScreenClassEdit(UiContext *dc);
 
   private:
     friend class UIScript;

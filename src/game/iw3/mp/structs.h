@@ -4391,6 +4391,15 @@ struct cgMedia_t
 };
 static_assert(sizeof(cgMedia_t) == 0x27A8, "");
 
+struct GamerSettingState
+{
+    char _pad[0xB05];
+    char customClass[5][16];
+    char _padEnd[0xB];
+};
+static_assert(offsetof(GamerSettingState, customClass) == 0xB05, "");
+static_assert(sizeof(GamerSettingState) == 0xB60, "");
+
 struct __declspec(align(2)) playerStatNetworkData
 {
     unsigned __int8 playerStats[8192];
