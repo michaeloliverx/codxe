@@ -291,6 +291,17 @@ typedef const char *(*UI_FeederItemText_t)(int localClientNum, itemDef_s *item, 
 static UI_FeederItemText_t UI_FeederItemText = reinterpret_cast<UI_FeederItemText_t>(0x821EDFB0);
 typedef void (*UI_FeederSelection_t)(int localClientNum, float feederID, itemDef_s *item, int index);
 static UI_FeederSelection_t UI_FeederSelection = reinterpret_cast<UI_FeederSelection_t>(0x821EBE50);
+
+struct StreamFileName;
+struct CacheFileName;
+struct StreamFile;
+
+static auto StreamFileNameGetCacheName =
+    reinterpret_cast<void *(*)(const StreamFileName *streamFileName, CacheFileName *fileName)>(0x821CC0F8);
+static auto StreamFileOpen =
+    reinterpret_cast<HANDLE (*)(StreamFile *streamFile, const CacheFileName *fileName)>(0x821CC498);
+static auto StreamFileClose = reinterpret_cast<HANDLE (*)(StreamFile *streamFile)>(0x821CBFC0);
+
 // TU4 StringTable_Lookup; also used by the native tablelookup menu expression.
 static auto StringTable_Lookup =
     reinterpret_cast<const char *(*)(const StringTable *, int, const char *, int)>(0x821D55D8);

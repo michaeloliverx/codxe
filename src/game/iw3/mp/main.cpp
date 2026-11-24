@@ -20,6 +20,7 @@
 #include "components/patches.h"
 #include "components/pm.h"
 #include "components/scr_parser.h"
+#include "components/sound_packs.h"
 #include "components/stats.h"
 #include "components/sv_bots.h"
 #include "components/ui_feeder.h"
@@ -58,6 +59,7 @@ IW3_MP_Plugin::IW3_MP_Plugin()
     RegisterModule(new console());
     RegisterModule(new ModList());
     RegisterModule(new FastFiles());
+    RegisterModule(new SoundPacks());
     RegisterModule(new GSC());
     RegisterModule(new GSCFields());
     RegisterModule(new GSCFunctions());
