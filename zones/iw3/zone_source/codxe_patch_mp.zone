@@ -7,6 +7,7 @@ localize,codxe_ui_mp
 menulist,ui_mp/main.menu
 menulist,ui_mp/settings_map.menu
 menulist,ui_mp/patch_mp_menus.txt
+rawfile,maps/mp/gametypes/_teams.gsc
 
 // Offline class menus use materials already resident in the stock startup zones.
 material,,gradient_top
