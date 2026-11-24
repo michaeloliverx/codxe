@@ -157,6 +157,7 @@ static auto G_SetOrigin = reinterpret_cast<void (*)(gentity_s *ent, float *origi
 
 static auto I_strnicmp = reinterpret_cast<int (*)(const char *s0, const char *s1, int n)>(0x821CDA98);
 
+static auto Item_ListBox_Viewmax = reinterpret_cast<int (*)(itemDef_s *item)>(0x821DF128);
 typedef void (*Item_ListBox_Scroll_t)(int localClientNum, itemDef_s *item, int max, int scrollMax, int viewMax,
                                       int delta);
 static Item_ListBox_Scroll_t Item_ListBox_Scroll = reinterpret_cast<Item_ListBox_Scroll_t>(0x821E0D28);

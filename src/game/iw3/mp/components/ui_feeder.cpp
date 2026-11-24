@@ -115,7 +115,14 @@ int UIFeeder::UI_FeederCount_Hook(int localClientNum, itemDef_s *item, float fee
         {
             item->cursorPos[localClientNum] = index;
             if (auto *list = static_cast<listBoxDef_s *>(item->typeData))
-                list->startPos[localClientNum] = index;
+            {
+                // Keep the restored selection visible without scrolling past the last full page.
+                const int visibleRows = (std::max)(1, Item_ListBox_Viewmax(item));
+                const int minStart = (std::max)(0, index - visibleRows + 1);
+                const int maxStart = (std::min)(index, (std::max)(0, count - visibleRows));
+                int &start = list->startPos[localClientNum];
+                start = (std::max)(minStart, (std::min)(start, maxStart));
+            }
         }
     }
 
