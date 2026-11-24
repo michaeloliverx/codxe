@@ -2,9 +2,10 @@
 
 #define HAS_MAP_AUTHOR (dvarstring("ui_codxe_usermap_author") != "")
 #define HAS_MAP_REVISION (dvarstring("ui_codxe_usermap_revision") != "")
-#define HAS_MAP_METADATA (HAS_MAP_AUTHOR || HAS_MAP_REVISION)
-#define MAP_METADATA_SECOND_ROW ((HAS_MAP_AUTHOR && HAS_MAP_REVISION) * 17)
-#define MAP_DESCRIPTION_Y (296 + HAS_MAP_METADATA * 21 + MAP_METADATA_SECOND_ROW)
+#define HAS_MAP_TAGS (dvarstring("ui_codxe_usermap_tags") != "")
+#define MAP_CREDIT_HEIGHT ((HAS_MAP_AUTHOR + HAS_MAP_REVISION) * 17)
+#define MAP_METADATA_HEIGHT (MAP_CREDIT_HEIGHT + HAS_MAP_TAGS * 17)
+#define MAP_DESCRIPTION_Y (296 + MAP_METADATA_HEIGHT + (MAP_METADATA_HEIGHT > 0) * 4)
 #include "ui_mp/codxe_feeder_menu.inc"
 
 {
@@ -214,11 +215,39 @@
         }
         itemDef
         {
+            rect 328 275 60 17 0 0
+            decoration
+            visible when(HAS_MAP_TAGS);
+            exp rect Y (275 + MAP_CREDIT_HEIGHT);
+            textalign 0
+            textaligny 12
+            textscale 0.375
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.69 0.69 0.69 1
+            text "Tags:"
+        }
+        itemDef
+        {
+            name "usermap_tags"
+            rect 388 275 207 17 0 0
+            decoration
+            visible when(HAS_MAP_TAGS);
+            exp rect Y (275 + MAP_CREDIT_HEIGHT);
+            textalign 0
+            textaligny 12
+            textfont UI_FONT_NORMAL
+            textscale 0.375
+            textstyle ITEM_TEXTSTYLE_SHADOWED
+            forecolor 0.9 0.9 0.9 1
+            exp text (dvarstring("ui_codxe_usermap_tags"));
+        }
+        itemDef
+        {
             rect 328 298 267 1 0 0
             style WINDOW_STYLE_SHADER
             decoration
-            visible when(HAS_MAP_METADATA && dvarstring("ui_codxe_usermap_description") != "");
-            exp rect Y (298 + MAP_METADATA_SECOND_ROW);
+            visible when(MAP_METADATA_HEIGHT > 0 && dvarstring("ui_codxe_usermap_description") != "");
+            exp rect Y (281 + MAP_METADATA_HEIGHT);
             forecolor 0.5 0.5 0.5 0.4
             background "line_horizontal"
         }

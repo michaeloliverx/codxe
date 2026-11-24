@@ -43,6 +43,50 @@ void SetMetadata(const char *name, const char *value)
         Dvar_SetStringFromSource(dvar, value, DVAR_SOURCE_INTERNAL);
 }
 
+std::string FormatMapTags(const std::vector<std::string> &tags)
+{
+    std::string text;
+    for (size_t i = 0; i < tags.size(); ++i)
+    {
+        if (!text.empty())
+            text += ", ";
+        text += tags[i];
+    }
+    if (text.empty())
+        return text;
+
+    // Match the font, scale, and width of usermap_tags in the menu.
+    const float scale = 0.375f;
+    const unsigned int width = 207;
+    Font_s *font = UI_GetFontHandle(1, scale);
+    if (!font || font->pixelHeight <= 0)
+        return text;
+
+    const float drawScale = scale * 48.0f / font->pixelHeight;
+    if (R_TextWidth(text.c_str(), 0, font) * drawScale <= width)
+        return text;
+
+    const char ellipsis[] = "...";
+    const float prefixWidth = width - R_TextWidth(ellipsis, 0, font) * drawScale;
+    if (prefixWidth <= 0)
+        return ellipsis;
+
+    const char *start = text.c_str();
+    const char *end = start;
+    int chars = 0;
+    while (*end && R_TextWidth(start, ++chars, font) * drawScale <= prefixWidth)
+    {
+        int bytes = 0;
+        SEH_DecodeLetter(end[0], end[1], &bytes);
+        if (bytes <= 0)
+            break;
+        end += bytes;
+    }
+    while (end > start && (end[-1] == ' ' || end[-1] == ','))
+        --end;
+    return std::string(start, end) + ellipsis;
+}
+
 void UpdateUsermapSelection()
 {
     const usermaps::Entry *entry =
@@ -56,6 +100,7 @@ void UpdateUsermapSelection()
     SetMetadata("ui_codxe_usermap_description", entry ? entry->description.c_str() : "");
     SetMetadata("ui_codxe_usermap_author", entry ? entry->credits.author.c_str() : "");
     SetMetadata("ui_codxe_usermap_revision", entry ? entry->credits.revision.c_str() : "");
+    SetMetadata("ui_codxe_usermap_tags", entry ? FormatMapTags(entry->tags).c_str() : "");
     char count[16];
     _snprintf_s(count, ARRAYSIZE(count), _TRUNCATE, "%d", filter.MapCount());
     SetMetadata("ui_codxe_usermap_count", count);
@@ -238,7 +283,7 @@ void Usermaps::CloseScript(int /*localClientNum*/, const char ** /*args*/)
 void Usermaps::OnDvarInit()
 {
     const char *names[] = {"ui_codxe_usermap_counter", "ui_codxe_usermap_name", "ui_codxe_usermap_description",
-                           "ui_codxe_usermap_author", "ui_codxe_usermap_revision",
+                           "ui_codxe_usermap_author", "ui_codxe_usermap_revision", "ui_codxe_usermap_tags",
                            "ui_codxe_usermap_count", "ui_codxe_usermap_has_preview", "ui_codxe_usermap_has_tags",
                            "ui_codxe_usermap_tag"};
     for (size_t i = 0; i < ARRAYSIZE(names); ++i)
