@@ -315,6 +315,22 @@ void UpdateFilterLabel()
     SetMenuDvar("ui_codxe_usermap_tag", usermapFilter.Prompt());
 }
 
+void RestoreListSelection(UiContext *dc, const char *menuName, const char *itemName, int row, int count)
+{
+    itemDef_s *item = Menu_FindItemByName(Menus_FindByName(dc, menuName), itemName);
+    if (!item || item->type != 6 || !item->typeData.listBox)
+        return;
+
+    // The stock feeder setter can leave the selected row below the visible list.
+    const int localClientNum = dc->localClientNum;
+    const int visibleRows = (std::max)(1, Item_ListBox_Viewmax(item));
+    const int firstVisible = (std::max)(0, row - visibleRows + 1);
+    const int lastVisible = (std::min)(row, (std::max)(0, count - visibleRows));
+    int &start = item->typeData.listBox->startPos[localClientNum];
+    start = (std::max)(firstVisible, (std::min)(start, lastVisible));
+    item->cursorPos[localClientNum] = row;
+}
+
 void ScanUsermaps()
 {
     std::string selectedName;
@@ -596,7 +612,7 @@ void UI_Refresh_Hook(int localClientNum)
             const int row = (std::max)(0, usermapFilter.RowForMap(selectedUsermap));
             selectedUsermap = usermapFilter.MapIndex(row);
             UpdateFilterLabel();
-            Menu_SetFeederSelection(filterContext, nullptr, CODXE_USERMAPS_FEEDER, row, "codxe_usermaps");
+            RestoreListSelection(filterContext, "codxe_usermaps", "codxe_usermap_list", row, usermapFilter.MapCount());
             UpdateSelectedUsermap();
         }
     }
@@ -668,26 +684,33 @@ int Item_Slider_HandleKey_Hook(UiContext *dc, itemDef_s *item, int key)
     return handled;
 }
 
-void Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
+int Menus_OpenByName_Hook(UiContext *dc, const char *menuName)
 {
     EnsureUsermapDvarsRegistered();
 
-    if (std::strcmp(menuName, "codxe_usermaps") == 0)
+    const bool openingUsermaps = std::strcmp(menuName, "codxe_usermaps") == 0;
+    if (openingUsermaps)
         ScanUsermaps();
 
     if (std::strcmp(menuName, "main_solo") == 0 || std::strcmp(menuName, "main_online") == 0)
         Campaign_UnlockAll();
 
-    Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+    const int opened = Menus_OpenByName_Detour.GetOriginal<decltype(Menus_OpenByName)>()(dc, menuName);
+    if (!opened)
+        return opened;
 
-    if (std::strcmp(menuName, "codxe_usermaps") == 0 && usermapFilter.MapCount() > 0)
-        Menu_SetFeederSelection(dc, nullptr, CODXE_USERMAPS_FEEDER, selectedUsermap, "codxe_usermaps");
-    if (std::strcmp(menuName, "codxe_usermap_filter") == 0)
+    if (openingUsermaps)
+    {
+        const int row = (std::max)(0, usermapFilter.RowForMap(selectedUsermap));
+        RestoreListSelection(dc, "codxe_usermaps", "codxe_usermap_list", row, usermapFilter.MapCount());
+    }
+    else if (std::strcmp(menuName, "codxe_usermap_filter") == 0)
     {
         filterContext = dc;
         highlightedTag = usermapFilter.SelectedTag();
-        Menu_SetFeederSelection(dc, nullptr, CODXE_USERMAP_TAGS_FEEDER, highlightedTag, "codxe_usermap_filter");
+        RestoreListSelection(dc, "codxe_usermap_filter", "usermap_tags", highlightedTag, usermapFilter.TagCount());
     }
+    return opened;
 }
 
 ui::ui()

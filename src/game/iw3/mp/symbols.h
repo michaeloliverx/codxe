@@ -290,7 +290,7 @@ static UI_FeederItemColor_t UI_FeederItemColor = reinterpret_cast<UI_FeederItemC
 typedef const char *(*UI_FeederItemText_t)(int localClientNum, itemDef_s *item, float feederID, int index,
                                            unsigned int column, Material **handle);
 static UI_FeederItemText_t UI_FeederItemText = reinterpret_cast<UI_FeederItemText_t>(0x821EDFB0);
-typedef void (*UI_FeederSelection_t)(int localClientNum, float feederID, itemDef_s *item, int index);
+typedef void (*UI_FeederSelection_t)(int localClientNum, float feederID, int index);
 static UI_FeederSelection_t UI_FeederSelection = reinterpret_cast<UI_FeederSelection_t>(0x821EBE50);
 
 struct StreamFileName;

@@ -561,13 +561,21 @@ struct XZoneInfo
 };
 static_assert(sizeof(XZoneInfo) == 0xC, "");
 
-struct UiContext;
+struct UiContext
+{
+    int localClientNum;
+};
+
 struct Material;
 struct menuDef_t;
 struct snd_alias_list_t;
-struct listBoxDef_s;
 struct multiDef_s;
 struct expressionEntry;
+
+struct listBoxDef_s
+{
+    int startPos[4];
+};
 
 struct rectDef_s
 {
@@ -685,6 +693,7 @@ struct itemDef_s
     statement_s forecolorAExp;
 };
 static_assert(offsetof(itemDef_s, dvar) == 0x160, "");
+static_assert(offsetof(itemDef_s, cursorPos) == 0x180, "");
 static_assert(offsetof(itemDef_s, typeData) == 0x190, "");
 static_assert(sizeof(itemDef_s) == 0x1D8, "");
 

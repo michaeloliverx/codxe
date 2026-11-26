@@ -21,7 +21,7 @@ class UIFeeder : public Module
                                               unsigned int column, Material **handle);
     static void UI_FeederItemColor_Hook(int localClientNum, itemDef_s *item, float feederID, int index, int column,
                                         float *color);
-    static void UI_FeederSelection_Hook(int localClientNum, float feederID, itemDef_s *item, int index);
+    static void UI_FeederSelection_Hook(int localClientNum, float feederID, int index);
     static void Item_ListBox_Scroll_Hook(int localClientNum, itemDef_s *item, int max, int scrollMax, int viewMax,
                                          int delta);
 

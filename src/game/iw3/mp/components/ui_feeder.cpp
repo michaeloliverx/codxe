@@ -111,18 +111,15 @@ int UIFeeder::UI_FeederCount_Hook(int localClientNum, itemDef_s *item, float fee
             SetSelectedIndex(feederID, index);
         }
 
-        if (item->cursorPos[localClientNum] != index)
+        item->cursorPos[localClientNum] = index;
+        if (auto *list = static_cast<listBoxDef_s *>(item->typeData))
         {
-            item->cursorPos[localClientNum] = index;
-            if (auto *list = static_cast<listBoxDef_s *>(item->typeData))
-            {
-                // Keep the restored selection visible without scrolling past the last full page.
-                const int visibleRows = (std::max)(1, Item_ListBox_Viewmax(item));
-                const int minStart = (std::max)(0, index - visibleRows + 1);
-                const int maxStart = (std::min)(index, (std::max)(0, count - visibleRows));
-                int &start = list->startPos[localClientNum];
-                start = (std::max)(minStart, (std::min)(start, maxStart));
-            }
+            // The saved row and the visible page can change independently.
+            const int visibleRows = (std::max)(1, Item_ListBox_Viewmax(item));
+            const int minStart = (std::max)(0, index - visibleRows + 1);
+            const int maxStart = (std::min)(index, (std::max)(0, count - visibleRows));
+            int &start = list->startPos[localClientNum];
+            start = (std::max)(minStart, (std::min)(start, maxStart));
         }
     }
 
@@ -186,12 +183,12 @@ void UIFeeder::UI_FeederItemColor_Hook(int localClientNum, itemDef_s *item, floa
     UI_FeederItemColor_Detour.GetOriginal<UI_FeederItemColor_t>()(localClientNum, item, feederID, index, column, color);
 }
 
-void UIFeeder::UI_FeederSelection_Hook(int localClientNum, float feederID, itemDef_s *item, int index)
+void UIFeeder::UI_FeederSelection_Hook(int localClientNum, float feederID, int index)
 {
     const std::map<float, UIFeederCallbacks>::const_iterator feeder = Feeders.find(feederID);
     if (feeder == Feeders.end())
     {
-        UI_FeederSelection_Detour.GetOriginal<UI_FeederSelection_t>()(localClientNum, feederID, item, index);
+        UI_FeederSelection_Detour.GetOriginal<UI_FeederSelection_t>()(localClientNum, feederID, index);
         return;
     }
 
